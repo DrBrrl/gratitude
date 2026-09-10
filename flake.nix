@@ -13,6 +13,7 @@
           default = pkgs.mkShell {
             packages = [ pkgs.nodejs_24 pkgs.chromium pkgs.python3 pkgs.gh pkgs.actionlint ];
             PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
+            FONTCONFIG_FILE = pkgs.makeFontsConf { fontDirectories = [ pkgs.dejavu_fonts ]; };
             PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
           };
         });

@@ -8,12 +8,25 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
+  updateSnapshots: 'none',
+  snapshotPathTemplate: '{testDir}/{testFileDir}/screenshots/{arg}{ext}',
   timeout: 30_000,
-  expect: { timeout: 2_000 },
+  expect: {
+    timeout: 2_000,
+    toHaveScreenshot: {
+      maxDiffPixels: 0,
+      threshold: 0,
+      animations: 'disabled',
+      caret: 'hide',
+      fullPage: true,
+      scale: 'css'
+    }
+  },
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL,
     browserName: 'chromium',
+    deviceScaleFactor: 1,
     colorScheme: 'dark',
     locale: 'en-AU',
     timezoneId: 'Australia/Hobart',
@@ -23,7 +36,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     launchOptions: {
       executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
-      args: ['--disable-gpu', '--font-render-hinting=none']
+      args: ['--disable-gpu', '--font-render-hinting=none', '--disable-font-subpixel-positioning', '--disable-lcd-text']
     }
   },
   projects: [

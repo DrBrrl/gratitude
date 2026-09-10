@@ -6,7 +6,7 @@ The aim is to make reflection approachable, personal, and useful—whether someo
 
 ## Status
 
-The repository contains a Svelte 5 / SvelteKit application with a responsive dark landing page, a Nix development shell, Playwright smoke tests, and GitHub Pages deployment. Journaling, AI integration, and persistent storage are not implemented yet.
+The repository contains a Svelte 5 / SvelteKit application with a responsive dark landing page, a Nix development shell, Playwright functional and screenshot tests, and GitHub Pages deployment. Journaling, AI integration, and persistent storage are not implemented yet.
 
 ## Intended experience
 
