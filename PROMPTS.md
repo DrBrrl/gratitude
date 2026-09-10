@@ -19,3 +19,15 @@ in the vision, all that belongs is end-state statemetn; no roadmap, judgement, e
 ```text
 use gh to log in, create a github repo for the project and put up these files as the first PR
 ```
+
+## 2026-09-10 — GitHub login completed
+
+```text
+hacker noises we're in
+```
+
+## 2026-09-10 — Repository visibility
+
+```text
+use a public repo
+```

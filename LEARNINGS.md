@@ -51,3 +51,7 @@ Evidence: the vision content correction in [PROMPTS.md](PROMPTS.md). Future visi
 GitHub CLI was not on PATH. Running `nix shell nixpkgs#gh -c gh …` makes it available without changing the system configuration. GitHub CLI initially had no authenticated account; browser device authorization is required to log in.
 
 An empty initial commit on `main` provides the base for a separate documentation branch, allowing all six project files to be reviewed together in the first pull request.
+
+## 2026-09-10 — GitHub authentication and visibility
+
+GitHub CLI authentication completed successfully for `DrBrrl`, using HTTPS for Git operations. The user explicitly requested a public repository; this supersedes the assistant's proposed private default.
