@@ -67,3 +67,15 @@ Writing requires an explicit distinction between a draft preserved on the device
 Image generation produced readable concept boards but introduced redundant hamburger navigation on one board and varied navigation icon shapes between boards. A targeted image edit removed the redundant menus. Use the written interaction specification for behavior, and standardize icons and measure accessibility in implementation. Static mockups cannot establish keyboard behavior, contrast compliance, or data durability.
 
 Exact image generation prompts are stored separately under docs/ux/prompts, and final PNG assets are stored in docs/ux/mockups. All example reflections are fictional. The end-state-only vision was left intact.
+
+## 2026-09-10 — Dark glass revision, journal browsing, and discovery
+
+The user's design review replaces the light surface direction with a dark-mode-only glassmorphic application. It also requires rainbow entry colours, larger consistently sized collapsed cards, journal search, a few onboarding questions, Markdown alongside JSON export, a visible Settings mockup, and top-level access to AI settings. This supersedes the initial three-tab navigation and JSON-only design.
+
+The revised proposal uses Today / Journal / AI / Settings tabs and three optional onboarding questions about topics, tone, and time. Entry colours are assigned from a repeating rainbow palette and remain stable during edits and search. Equal-height cards prioritize response text so short entries can be read without opening them. Long entries open in a full view; accessibility text enlargement increases the shared preview height rather than squeezing text.
+
+Search must match full saved text rather than previews. No-results, empty-journal, unavailable-cache, and search-failure states have different meanings. Both export formats include complete saved entries, independent of a current search. The specific colour cycle, 256-pixel default card height, search matching rules, and export layout are design proposals, not usability findings.
+
+The revised boards are generated through the built-in image tool using the prior boards as references where applicable. Initial image inspection found unequal collapsed card heights despite an explicit equal-height prompt, requiring a targeted layout edit. Generated images communicate the style but precise sizing and contrast still require implementation checks.
+
+The first card-sizing edit had little visual effect. A second edit shortened the fictional example and recomposed typography, producing a more uniform layout. Small height differences and an omitted search highlight remain documented in UX_DESIGN.md; implementation must enforce fixed card dimensions and match highlighting. All seven final boards were visually inspected, and their document links and PNG files were checked.
