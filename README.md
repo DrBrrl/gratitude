@@ -43,6 +43,8 @@ The storage, authentication, and AI integration architecture remains to be selec
 ## Project records
 
 - [VISION.md](VISION.md): the project’s intended end state.
+- [MVP_DESIGN.md](MVP_DESIGN.md): proposed MVP architecture, user-action events, and replayable cached projections.
+- [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md): reviewable implementation increments and acceptance gates.
 - [UX_DESIGN.md](UX_DESIGN.md): mobile user stories, generated screen mockups, and interaction behavior.
 - [PROMPTS.md](PROMPTS.md): verbatim user instructions given to the coding assistant, recorded chronologically. This is separate from the application's daily gratitude prompts.
 - [LEARNINGS.md](LEARNINGS.md): discoveries, decisions, assumptions, and open questions for the eventual project retrospective.
