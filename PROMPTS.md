@@ -37,3 +37,9 @@ use a public repo
 ```text
 We want to start with the UX_DESIGN for this project. We anticipate a mobile-first user, so let's focus on mockups of the mobile experience. Use image generation to create mockups for all the core user stories and put up the design as a new PR we can review (the previous one is merged; start from main)
 ```
+
+## 2026-09-10 — Dark glass design and expanded mobile flows
+
+```text
+the overall design looks pretty good. however we want this to be a dark mode only application, glassmorphic design aesthetic; we'd like each journal entry to have a different colour so that scrolling through journal logs has a rainbow effect; we'd like the collapsed journal log to be a consistently sized larger card that often might ocntain an entire small journal entry; we'd like to be able to search journal entries. onboarding could have a few questions to enable the AI to get to know the user. we'd like to be able to export o markdown as well as JSON. updat the mockups and design accordingly. we think the settings page should be shown as a mockup and the ai settings should be reachable from the top level.
+```
