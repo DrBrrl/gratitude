@@ -73,3 +73,15 @@ ok this is now rebased and merged. Now refer to github.com:anicolao/food and rea
 ```text
 you haven't done the e2e test properly. the test step helper is supposed to diff the screenshot, teh readme is supposed to be generated witht he screenshot embedded and the checks should be shown underneat the screenshot in the genrated readme. perhaps also review hwo github.com:anicolao/jaipur works if it wasn't clear enough from food how this is meant to be done. fix the pr and update it
 ```
+
+## 2026-09-10 — MVP design and implementation plan
+
+```text
+OK that is rebased and merged onto main and we are ready to write an MVP_DESIGN and an IMPLEMENTATION_PLAN for review. we want an event sourced design similar to the jaipur and food implementations; the local projection shoudl be cached to avoid complete replay all the time, but a complete replay shoudl always be able to recreate the state. the events should *never* contain computed values; they ware always user actions only and the projections contain all the state. put these documents up as a new PR.
+```
+
+## 2026-09-10 — Firebase, Google sign-in, and recorded Gemini responses
+
+```text
+so there won't be deterministic AI. food, your other reference repo, shows how to do this correctly: ai responses are events and replay does not redo AI requests. also our backend will be firebase, you should make a firebase project to persist the event stream to, usign google sign in to authenticate the user and ensure they ahve acceess to their event stream across devices. Finally note there is a GEMINI_API_KEY secret in the repository for enabling using teh Gemini API. Update the design accordingly
+```
