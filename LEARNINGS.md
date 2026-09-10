@@ -55,3 +55,15 @@ An empty initial commit on `main` provides the base for a separate documentation
 ## 2026-09-10 — GitHub authentication and visibility
 
 GitHub CLI authentication completed successfully for `DrBrrl`, using HTTPS for Git operations. The user explicitly requested a public repository; this supersedes the assistant's proposed private default.
+
+## 2026-09-10 — Mobile UX proposal
+
+The user prioritized a mobile-first experience and requested image-generated mockups for the core stories. Work began on `design/mobile-ux` from the merged `main` at `536603d`.
+
+The proposal covers fifteen screens on five boards: starting and receiving prompts, writing and feedback, alternatives and history, personalization and data controls, and failure recovery. UX_DESIGN.md maps these screens to stories and records interaction behavior. These are design decisions for review, not findings from user testing.
+
+Writing requires an explicit distinction between a draft preserved on the device and a successfully saved journal entry. Generation failures need a bundled starter prompt, while save failures must retain the text and provide retry. The storage architecture remains undecided; the design does not imply synchronization is already available.
+
+Image generation produced readable concept boards but introduced redundant hamburger navigation on one board and varied navigation icon shapes between boards. A targeted image edit removed the redundant menus. Use the written interaction specification for behavior, and standardize icons and measure accessibility in implementation. Static mockups cannot establish keyboard behavior, contrast compliance, or data durability.
+
+Exact image generation prompts are stored separately under docs/ux/prompts, and final PNG assets are stored in docs/ux/mockups. All example reflections are fictional. The end-state-only vision was left intact.

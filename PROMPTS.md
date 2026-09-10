@@ -31,3 +31,9 @@ hacker noises we're in
 ```text
 use a public repo
 ```
+
+## 2026-09-10 — Mobile UX design request
+
+```text
+We want to start with the UX_DESIGN for this project. We anticipate a mobile-first user, so let's focus on mockups of the mobile experience. Use image generation to create mockups for all the core user stories and put up the design as a new PR we can review (the previous one is merged; start from main)
+```
