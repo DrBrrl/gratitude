@@ -11,4 +11,6 @@ test('the landing page serves', async ({ page }, testInfo) => {
     { description: 'The page identifies itself as Gratitude', check: async () => { await expect(page).toHaveTitle('Gratitude'); } },
     { description: 'The main heading is visible', check: async () => { await expect(page.getByRole('heading', { level: 1, name: 'Gratitude', exact: true })).toBeVisible(); } }
   ]);
+  steps.generateDocs('The Gratitude landing page',
+    'A visitor opens the production build and sees the Gratitude introduction.');
 });

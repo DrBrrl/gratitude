@@ -67,3 +67,9 @@ ai settings being listed in the settings page is sufficiently top level it doesn
 ```text
 ok this is now rebased and merged. Now refer to github.com:anicolao/food and read its E2E_GUIDE.md and create a similar guide for this project on a new branch. Then scaffold the project as a svelte/sveltekit application with a basic e2e test that just verifies the landing page serves; set up individual PRs to provide a PR preview on gh pages and main to automatically deploy to gh pages, and put that up as a PR of the initial app scaffold
 ```
+
+## 2026-09-10 — Correct visual E2E tests and generated documentation
+
+```text
+you haven't done the e2e test properly. the test step helper is supposed to diff the screenshot, teh readme is supposed to be generated witht he screenshot embedded and the checks should be shown underneat the screenshot in the genrated readme. perhaps also review hwo github.com:anicolao/jaipur works if it wasn't clear enough from food how this is meant to be done. fix the pr and update it
+```

@@ -1,10 +1,10 @@
 # End-to-end testing guide
 
-Gratitude uses Playwright to check user-visible behaviour against a production build. This guide adapts the numbered scenarios, explicit verification steps, and reproducible evidence approach in [anicolao/food's E2E_GUIDE.md](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/E2E_GUIDE.md) to a mobile-first gratitude journal.
+Gratitude's E2E tests combine functional checks, screenshot comparisons, and generated scenario documentation. This follows [food's E2E guide](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/E2E_GUIDE.md) and [Jaipur's TestStepHelper](https://github.com/anicolao/jaipur/blob/76cc8bcaa8d4f111c2ebc26b67162ca646b4576a/tests/e2e/helpers/test-step-helper.ts). Every documented step compares its screenshot with a committed baseline. Each generated README embeds the screenshot with its checks underneath.
 
 ## Run the tests
 
-On Nix, from the repository root:
+From the repository root:
 
 ```sh
 nix develop
@@ -14,9 +14,9 @@ npm run test:e2e
 npm run test:e2e:report
 ```
 
-The locked development shell provides Node 24 and a working Nix Chromium executable. It sets `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` and skips Playwright's browser download. On a conventional Linux system with Node 24, install dependencies with `npm ci`, then run `npx playwright install --with-deps chromium` before testing. CI uses that installation method with the Playwright version in `package-lock.json`.
+The locked Nix shell provides Node 24, Chromium, and a font configuration containing pinned DejaVu fonts. CI uses the same shell. Screenshot baselines are maintained on x86_64 Linux, matching CI; use that environment when updating baselines. Other platforms or browser installations are not interchangeable baseline generators.
 
-`npm run test:e2e` builds the app and starts its production preview server automatically. It does not test the development server. Playwright waits for the configured URL to respond and stops its server when the run ends. A process already occupying port 4173 causes a failure rather than silently testing an unrelated server.
+`npm run test:e2e` builds the app and starts its production preview server automatically. Playwright waits for the configured URL and stops its server after testing. Port 4173 must be available; the runner does not reuse an unrelated server.
 
 Check the paths used on GitHub Pages:
 
@@ -25,50 +25,76 @@ BASE_PATH=/gratitude npm run test:e2e
 BASE_PATH=/gratitude/pr-preview/pr-123 npm run test:e2e
 ```
 
-Check an already deployed site without building or starting a local server:
+Check an already deployed site without rebuilding or starting a local server:
 
 ```sh
 E2E_BASE_URL=https://drbrrl.github.io/gratitude/pr-preview/pr-123/ npx playwright test
 ```
 
-Keep the trailing slash in an external URL. Tests navigate with `page.goto('./')`; `/` would discard the repository and preview path.
+Keep the trailing slash in an external URL. Tests navigate with `page.goto('./')`; `/` would discard the repository and preview path. Deployed tests perform the same screenshot comparisons as local tests.
 
-## Current coverage
+## Current coverage and files
 
-Scenario `001-landing` checks the HTTP response is 200, the document title is `Gratitude`, and the main Gratitude heading is visible. It runs in Chromium at mobile (390 × 844, touch enabled) and desktop (1280 × 800) sizes. This proves the landing page serves; it does not establish journal persistence, AI behaviour, accessibility compliance, or full device compatibility.
-
-The application currently has a static landing page. Add tests for journal and personalization stories when those behaviours are implemented. Use fictional journal entries and photos in fixtures, never private reflections.
-
-## Scenario structure
+Scenario `001-landing` verifies HTTP 200, the document title, a visible main heading, and the rendered landing page. It runs in Chromium at mobile (390 × 844, touch enabled) and desktop (1280 × 800) sizes. This does not establish journal persistence, AI behaviour, accessibility compliance, or full device compatibility.
 
 ```text
 tests/e2e/
   helpers/test-step-helper.ts
   001-landing/
-    README.md
     001-landing.spec.ts
+    README.md                         # generated mobile walkthrough
+    README.desktop-chromium.md        # generated desktop walkthrough
+    screenshots/
+      000-landing-serves-mobile-chromium.png
+      000-landing-serves-desktop-chromium.png
 ```
 
-Give each scenario the next three-digit number and a short descriptive name. Its README states the user story, setup, actions, and expected results. Keep assertions close to the action they verify and use accessible roles and names where possible.
+The PNGs are both comparison baselines and images embedded in the generated READMEs. Commit both images and documentation so reviewers can see the tested experience directly in GitHub. Generated Playwright reports, failure screenshots, and diffs remain in ignored `playwright-report/` and `test-results/`; CI retains those as the `e2e-report` artifact for fourteen days.
 
-`TestStepHelper.step(name, description, verifications)` groups a step's checks and captures a numbered screenshot and Markdown verification record after they pass. Each verification has a `description` and an asynchronous `check` function; the landing scenario demonstrates the actual API. Keep these descriptions readable as test evidence. Playwright's HTML report contains the step records and images. Failures retain traces and screenshots through the runner configuration.
+## Writing a scenario
 
-Generated evidence belongs in ignored `test-results/` and `playwright-report/`, not in the source tree. CI uploads these directories as the `e2e-report` artifact, retained for 14 days. Download the artifact to inspect its HTML report locally. The scenario README remains the committed account of the test's intent.
+Give each scenario the next three-digit number and a short descriptive name. Keep one test per scenario folder, with its steps in interaction order. Use accessible roles and names for assertions where possible.
 
-## Deterministic behaviour
+Create `TestStepHelper(page, testInfo)` and call `step(name, description, verifications)` for each observable state. Each verification contains a `description` and an asynchronous `check`. The helper:
 
-Tests use a fixed locale (`en-AU`), timezone (`Australia/Hobart`), dark colour scheme, and reduced motion. Screenshots disable animations. Chromium launches with GPU rendering disabled and font hinting disabled to reduce variation.
+1. Runs the functional verifications inside named Playwright steps.
+2. Moves the pointer away from interactive content.
+3. Calls `expect(page).toHaveScreenshot(...)` against the scenario's committed PNG with zero differing pixels and zero colour-distance threshold.
+4. Records the step for documentation only after all checks and the comparison succeed.
 
-As time-dependent behaviour is added, freeze the clock at a declared instant before opening the page. Seed any randomized colours or identifiers and provide explicit storage fixtures. Stub AI responses and photo summaries at the application boundary; ordinary CI should not depend on live model output, credentials, cost, or network timing. Test a real provider separately when integration coverage is introduced.
+After all steps, call `generateDocs(title, description)`. The helper writes a Markdown heading and description, then each step's embedded image followed by its verification checkboxes, including the screenshot comparison. Mobile owns `README.md`; desktop owns `README.desktop-chromium.md`, so parallel projects cannot overwrite each other's documentation. The test code is the source of truth for these documents; do not edit generated READMEs by hand.
 
-Wait for observable conditions with Playwright assertions. Do not use fixed sleeps to wait for rendering or network completion. Assertions and actions have a two-second budget; a whole test has 30 seconds and the server has 30 seconds to start. Change a timeout only with a concrete explanation of the behaviour that needs it.
+CI checks that generated documentation matches the committed files and that no untracked scenario files were created. A screenshot or functional failure blocks publication and does not rewrite the baseline or claim the failed step passed.
 
-## Screenshots and future visual checks
+## Reviewing and updating baselines
 
-Current screenshots document passing steps; they are **not** baseline comparisons. The food guide's zero-pixel approach is not an established guarantee here. Nix Chromium and Playwright's downloaded Chromium can have different versions and font rendering even with the same launch flags.
+Ordinary tests use `updateSnapshots: 'none'`: a missing baseline fails, as does a changed screenshot. CI never accepts new screenshots automatically. Playwright's failure report includes expected, actual, and diff images when a comparison differs.
 
-When visual regression tests are introduced, pin the browser, operating-system image, fonts, viewport, and fixtures used to produce and compare baselines. Review baseline changes alongside the intended design change. Do not accept new baselines merely to make a failing test green. Keep functional checks even when a screenshot comparison is added.
+For an intentional UI change or a new scenario, use the pinned Nix environment:
+
+```sh
+npm run build
+npx playwright test --update-snapshots=all
+```
+
+Inspect every changed PNG and generated README. Confirm that the image represents the intended behaviour and that its checks appear underneath it. Then run without update mode:
+
+```sh
+npx playwright test
+git diff -- tests/e2e
+git status --short tests/e2e
+```
+
+Commit the reviewed baselines, generated documents, and test changes together. Do not update baselines merely to clear a failure. When changing the browser or fonts in `flake.lock`, review screenshot changes as part of that dependency change.
+
+## Determinism and waits
+
+The runner fixes the locale (`en-AU`), timezone (`Australia/Hobart`), dark colour scheme, reduced motion, and device scale factor. Screenshot comparisons disable animations and hide the caret. Chromium disables GPU rendering, font hinting, LCD text, and font subpixel positioning. The browser and fonts come from the same Nix lock locally and in CI.
+
+As time-dependent behaviour is implemented, freeze the clock before opening the page. Seed randomized colours and identifiers and provide explicit storage fixtures. Stub AI responses and photo summaries at the application boundary; normal CI should not depend on live model output, credentials, cost, or network timing. Use fictional entries and photos, never private reflections.
+
+Wait for observable conditions with Playwright assertions; do not use fixed sleeps. Assertions and actions have a two-second budget, each test has 30 seconds, and server startup has 30 seconds. A timeout change requires an explanation of the behaviour that needs it.
 
 ## Related checks
 
-`npm run check` checks Svelte and TypeScript. `npm run test:deployment` exercises production replacement, preview isolation, closed-preview cleanup, and rejection of unsafe build inputs. These checks support the E2E test but do not replace it. See [DEPLOYMENT.md](DEPLOYMENT.md) for the publication workflow.
+`npm run check` checks Svelte and TypeScript. `npm run test:deployment` verifies production replacement, preview isolation, closed-preview cleanup, and rejection of unsafe build inputs. These support the E2E checks; see [DEPLOYMENT.md](DEPLOYMENT.md) for publication behaviour.

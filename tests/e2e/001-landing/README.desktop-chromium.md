@@ -4,11 +4,11 @@
 
 A visitor opens the production build and sees the Gratitude introduction.
 
-Viewport: mobile-chromium.
+Viewport: desktop-chromium.
 
 ## A visitor can open Gratitude
 
-![A visitor can open Gratitude](./screenshots/000-landing-serves-mobile-chromium.png)
+![A visitor can open Gratitude](./screenshots/000-landing-serves-desktop-chromium.png)
 
 **Verifications:**
 

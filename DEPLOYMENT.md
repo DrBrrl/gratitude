@@ -10,7 +10,7 @@ Successful `main` builds publish to [the production site](https://drbrrl.github.
 
 ## Build and publication
 
-SvelteKit uses `adapter-static`, prerendering, and trailing slashes. `BASE_PATH` is `/gratitude` for production and `/gratitude/pr-preview/pr-<number>` for a preview. CI runs the E2E tests against a build with that exact base path. New routes must remain compatible with static prerendering; use SvelteKit's path helpers for internal links and assets. GitHub Pages provides no application server or private secret storage.
+SvelteKit uses `adapter-static`, prerendering, and trailing slashes. `BASE_PATH` is `/gratitude` for production and `/gratitude/pr-preview/pr-<number>` for a preview. CI runs the E2E tests, including zero-pixel screenshot comparisons, against a build with that exact base path. It uses the locked Nix browser and fonts and verifies generated scenario READMEs are committed. New routes must remain compatible with static prerendering; use SvelteKit's path helpers for internal links and assets. GitHub Pages provides no application server or private secret storage.
 
 The `gh-pages` branch stores the combined production site and open previews. `scripts/assemble_pages.py` replaces only the destination being published, preserves the others, and prunes previews whose PRs are closed. Publication is serialized across the repository. Stale builds are skipped before assembling; queued runs can be superseded, so each publication reconciles all closed previews rather than relying only on close events. A failed build leaves the previously published site available. Reopen a PR or push another commit to rebuild its preview.
 
