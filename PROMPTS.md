@@ -61,3 +61,9 @@ also journal entries should show the prompt, and the current day's entry should 
 ```text
 ai settings being listed in the settings page is sufficiently top level it doesn't also need to be in the very top nav
 ```
+
+## 2026-09-10 — SvelteKit scaffold, E2E guide, and Pages deployment
+
+```text
+ok this is now rebased and merged. Now refer to github.com:anicolao/food and read its E2E_GUIDE.md and create a similar guide for this project on a new branch. Then scaffold the project as a svelte/sveltekit application with a basic e2e test that just verifies the landing page serves; set up individual PRs to provide a PR preview on gh pages and main to automatically deploy to gh pages, and put that up as a PR of the initial app scaffold
+```
