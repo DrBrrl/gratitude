@@ -27,6 +27,7 @@ Early technical decisions include the frontend framework, persistence and authen
 ## Project records
 
 - [VISION.md](VISION.md): the project’s intended end state.
+- [UX_DESIGN.md](UX_DESIGN.md): mobile user stories, generated screen mockups, and interaction behavior.
 - [PROMPTS.md](PROMPTS.md): verbatim user instructions given to the coding assistant, recorded chronologically. This is separate from the application's daily gratitude prompts.
 - [LEARNINGS.md](LEARNINGS.md): discoveries, decisions, assumptions, and open questions for the eventual project retrospective.
 - [AGENTS.md](AGENTS.md): instructions for maintaining these records during future assistant work.
