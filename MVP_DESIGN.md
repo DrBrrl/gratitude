@@ -1,146 +1,156 @@
 # Gratitude MVP design
 
-This proposal defines the first usable Gratitude application. It follows [UX_DESIGN.md](UX_DESIGN.md) and the event-sourcing requirements recorded in [PROMPTS.md](PROMPTS.md). Implementation work is sequenced in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). The current application is the merged SvelteKit scaffold; these are design decisions for review.
+This proposal defines the first usable Gratitude application, following [UX_DESIGN.md](UX_DESIGN.md). The backend is Firebase, users authenticate with Google, and Gemini supplies daily prompts and photo summaries. [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) sequences the work. The current application is the merged SvelteKit scaffold.
 
-## Product scope
+## Event-sourcing contract
 
-The MVP is a private, local-first journal on one browser installation. It provides optional onboarding, a daily personalized prompt, replacement and skipping, durable drafts, saving and editing, freeform prompt feedback, photos with editable AI summaries, rainbow history, local search, AI settings, and Markdown/JSON export. Today, Journal, and Settings are the three top-level destinations. Settings contains the AI settings row.
+**The source of truth is the ordered event stream: user actions plus recorded external AI responses. Projections contain application state and can always be rebuilt. Replay never calls Gemini.**
 
-Use the existing dark glass, yellow accent, and ink-background design. Reserve the day's colour before writing; display the prompt on both drafts and saved entries. Collapsed journal cards share the prescribed height and reflow consistently for enlarged text. No streaks, mandatory onboarding answers, or inferred sensitive user profiles.
+The user's clarification establishes AI responses as external facts that belong in events. They are not locally computed journal state. Entries, draft status, palette positions, search indexes, counts, and effective personalization context remain derived values and must not be copied into events as state snapshots.
 
-Proposed deployment: retain the static SvelteKit client on GitHub Pages, add IndexedDB storage and a service worker for previously installed application assets. Accounts, cross-device synchronization, shared journals, hosted AI credentials, and import are outside this first release. Browser storage is the journal store, not a backup. Explain that clearing site data removes it and offer exports. This scope choice needs review alongside the AI feasibility gate below.
+A prompt or image summary is generated once during live processing, durably recorded, and subsequently read from its event. Neither a new device nor a cache rebuild needs the original model, model weights, API availability, or a repeated generation request. A later change of model affects new requests only. This replaces the earlier deterministic-inference proposal and its proposed loss of dependent prompts after source-data deletion.
 
-## Architectural invariants
+## Product and deployment
 
-1. **Events contain user actions only.** Persist what the user entered, selected, requested, corrected, or explicitly confirmed. Never persist a result of applying that action in its event.
-2. **All application state lives in projections.** Entries, drafts, settings, prompt text, image summaries, personalization context, colour assignments, search indexes, and job eligibility are derived. No component or background worker can author a competing journal state.
-3. **Every projection is disposable.** A complete replay from the retained action history and original input assets, using the preserved implementation versions, reconstructs the same logical state. A projection checkpoint is never an authoritative backup.
-4. **Incremental and complete replay use the same projection functions.** Restoring a valid checkpoint and applying the remaining actions must equal replaying from the beginning.
-5. **Replay has no external effects.** It does not append actions, send requests, emit notifications, or export files. It does not read the current clock, network responses, mutable model aliases, or unseeded randomness.
-6. **A successful save means a committed local action.** In-memory changes, an optimistic screen, or a computed projection alone do not constitute durable saving.
+The MVP includes Google sign-in, optional onboarding, daily prompts and alternatives, skipping/resuming, durable drafts, save/edit, freeform feedback, photos with editable summaries, rainbow history, local search, AI controls, and Markdown/JSON export. Signing in to the same Google account on another device restores the same user-owned journal from Firebase.
 
-"User actions only" rules out `PromptGenerated`, `PhotoSummarized`, `EntryStateUpdated`, `ColourAssigned`, `SearchIndexed`, and `PersonalizationComputed`. Renaming a model response to `UserAcceptedPrompt` and copying its text into that payload also violates the rule. Acceptance records a reference to the suggestion being accepted, not its computed contents.
+Today, Journal, and Settings remain the three tabs; AI settings is the first Settings row. Preserve the dark glass, yellow accent, ink background, prompt-visible cards, stable daily colour, common collapsed-card height, and accessibility rules in the UX. Add Google sign-in before opening the cloud journal; onboarding answers remain optional. Provide clear sign-in cancellation, expired-session, sign-out, and account-switch states. A separate guest journal and anonymous-to-account migration are outside the MVP.
 
-## Reference implementations and deliberate differences
+| Component | Responsibility |
+| --- | --- |
+| GitHub Pages | Static SvelteKit production application and per-PR previews |
+| Firebase Authentication | Google sign-in; stable Firebase UID for journal ownership |
+| Cloud Firestore | Authoritative per-user event stream, ordered append metadata, disposable server projections and operational jobs |
+| Cloud Storage for Firebase | Private, metadata-stripped photo assets referenced by events |
+| Cloud Functions for Firebase | Authenticated command validation, ordered append, Gemini integration, upload finalization and deletion |
+| IndexedDB | Confirmed-event cache, versioned local projection checkpoints, pending user-action outbox and photo staging |
+| Service worker | Base-path-scoped application assets for previously loaded offline use |
 
-| Reference inspected | Pattern carried into Gratitude | Difference required here |
-| --- | --- | --- |
-| [Jaipur event types and lobby reducer](https://github.com/anicolao/jaipur/blob/76cc8bcaa8d4f111c2ebc26b67162ca646b4576a/src/lib/game-events.ts) | Typed actions, explicit schema/rules versions, state derived from actions | Use a closed payload union and reject unsupported histories visibly; do not silently omit unknown actions and present a complete journal. |
-| [Jaipur game rules](https://github.com/anicolao/jaipur/blob/76cc8bcaa8d4f111c2ebc26b67162ca646b4576a/src/lib/jaipur-rules.ts) | Seeded, repeatable computation of state from action inputs | AI inference must meet the same deterministic requirement; storing a seed alone does not make a hosted model repeatable. |
-| [Jaipur repository](https://github.com/anicolao/jaipur/blob/76cc8bcaa8d4f111c2ebc26b67162ca646b4576a/src/lib/game-repository.ts) | Separate persistence, ordering, pending work, and derived views | Its event cache is not a projection checkpoint. Gratitude explicitly caches versioned projections and replays only the tail. |
-| [Food store](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/src/lib/store.ts) and [IndexedDB repository](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/src/lib/db.ts) | Local persistence and incremental projection application | Do not copy complete entry/analysis objects into action payloads or maintain settings outside replay. |
-| [Food MVP design](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/MVP_DESIGN.md) | Distinguishes the event source from read models | Its `aiEstimateReceived` result event is expressly excluded by Gratitude's stricter contract. |
+Use separate production and development Firebase projects when enabling live previews. Until a development backend is provisioned, previews use emulators/fixtures and must not connect to the production journal or receive its Gemini secret. Namespacing IndexedDB by Firebase project, UID, stream generation, and deployment base path prevents accidental cache reuse; it is not a security boundary between scripts hosted on the same GitHub Pages origin.
 
-## Boundaries and data flow
+## Reference patterns
+
+[Food's MVP design](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/MVP_DESIGN.md) records nondeterministic AI responses as events, then derives read models. Gratitude follows that boundary directly. Its [store](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/src/lib/store.ts) and [IndexedDB repository](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/src/lib/db.ts) illustrate separate event persistence and incremental projections.
+
+[Jaipur's event types](https://github.com/anicolao/jaipur/blob/76cc8bcaa8d4f111c2ebc26b67162ca646b4576a/src/lib/game-events.ts) and [Firebase repository](https://github.com/anicolao/jaipur/blob/76cc8bcaa8d4f111c2ebc26b67162ca646b4576a/src/lib/game-repository.ts) inform versioned reducers, authenticated streams, pending actions, and cached recovery. Gratitude adds an explicit projection checkpoint and server-assigned sequence rather than replaying all cached events on each launch or relying on client clocks for cross-device order.
 
 ```mermaid
 flowchart TD
-  UI[User interaction] --> Commands[Validate action against current projection]
-  Commands --> Repository[Transactional IndexedDB repository]
-  Repository --> Actions[Ordered user-action log]
-  Repository --> Inputs[Original photo input assets]
-  Actions --> Projector[Versioned deterministic projection engine]
-  Inputs --> Projector
-  Models[Immutable rules, model and preprocessing versions] --> Projector
-  Checkpoint[Disposable local projection checkpoint] --> Projector
-  Projector --> Views[Drafts, journal, AI context, search and settings]
-  Projector --> Checkpoint
-  Views --> UI
+  User[Signed-in user] --> Client[SvelteKit client and local outbox]
+  Client --> Commands[Authenticated command function]
+  Commands --> Stream[Firestore user event stream]
+  Commands --> Jobs[Transactional live-work outbox]
+  Jobs --> Worker[Gemini worker]
+  Worker --> Gemini[Gemini API]
+  Gemini --> Worker
+  Worker -->|Recorded response event| Stream
+  Stream --> Projector[Pure versioned projector]
+  Cache[Disposable local checkpoint] --> Projector
+  Projector --> Cache
+  Projector --> UI[Journal, drafts, prompts, settings and search]
 ```
 
-Use TypeScript domain modules independent of Svelte. The command boundary validates intent; the repository handles transactions and identities; the projection engine owns domain decisions. Svelte renders projection selectors and keeps only ephemeral interaction state such as focus, an unsubmitted input buffer, an open dialog, or the current search query. These transient details are not part of the durable replay guarantee.
+The projector has no Gemini client and no effect-dispatch API. Live command/worker processing is separate from subscriptions, hydration, and replay.
 
-## Actions, identities, and ordering
+## Identity, authorization, and data layout
 
-The domain event is `{ id, schemaVersion, rulesVersion, type, input, context }`. `input` is an exact typed user action. `context` captures the observed interaction timestamp and IANA timezone at the boundary. Those observations and immutable version identifiers are replay inputs, not derived journal values. Entity references identify things the user acted on. New entity identities derive from the creating action's ID; no generated entry snapshot is recorded.
+Enable Google in Firebase Authentication and register the production application's authorized domain. Use Firebase's supported popup/redirect flow and validate redirect behaviour on the mobile browsers being supported. Journal ownership uses `request.auth.uid`, never an email or a UID supplied by the caller. [Firebase Google sign-in documentation](https://firebase.google.com/docs/auth/web/google-signin)
 
-IDs, storage sequence numbers, encryption nonces, checksums, and schema identifiers are infrastructure metadata, not computed domain state. Store the monotonically increasing sequence alongside the event in its database row; never include projected counts, palette indices, selected context, AI output, or state hashes in the domain payload. Validate schemas with unknown fields rejected.
+Proposed paths:
 
-For the single-installation MVP, an IndexedDB read/write transaction allocates the next sequence and inserts the unique action ID. Sequence, not wall-clock time, determines order. Multiple tabs serialize through the repository transaction, verify the expected head before accepting a stale edit, and notify one another after commit. A retry uses the same action ID and payload; an identical duplicate is acknowledged once and a different payload with that ID is an error. Stale edits retain the user's text and offer reload/reapply rather than overwriting silently. Multi-device ordering is a future design problem, not an implied capability.
+```text
+users/{uid}/streams/{generation}                 # ordered head and integrity metadata
+users/{uid}/streams/{generation}/events/{eventId}
+users/{uid}/projections/{projectionVersion}      # disposable server validation cache
+users/{uid}/jobs/{requestId}                     # delivery/lease bookkeeping
+users/{uid}/assets/{assetId}                     # upload/erasure bookkeeping
+Storage: users/{uid}/{generation}/{assetId}
+```
 
-| User action | Allowed input | Projection consequences; never event payload |
+The active generation is repository metadata, changed during whole-journal deletion to prevent stale offline devices restoring an erased history. Settings that must survive journal deletion remain in a separately scoped user-settings stream. Replay merges that scope using explicit referenced settings revisions, not an unspecified interleaving of two streams.
+
+Firestore rules permit an authenticated user to read only their own stream. Clients cannot write, update, or delete committed events, forge AI responses, edit head metadata, or read jobs and other users' data. All appends go through authenticated functions. Functions derive the UID from verified auth, validate payload allowlists, and enforce ownership on every referenced entry/photo/request. The Admin SDK bypasses Firestore rules, so this validation and least-privilege service IAM are mandatory. [Firestore security documentation](https://firebase.google.com/docs/firestore/security/get-started)
+
+Storage rules likewise constrain access to the authenticated UID and generation. Use immutable object IDs and validated upload finalization; do not expose public download-token URLs. App Check, request size limits, per-user rate limits, and backend concurrency limits protect the command/Gemini endpoints in addition to authentication. The callable protocol carries Firebase authentication, but each function must enforce its required authenticated-user policy. [Callable Functions documentation](https://firebase.google.com/docs/functions/callable)
+
+## Events and computed state
+
+A committed record carries `eventId`, `schemaVersion`, `rulesVersion`, `source` (`user` or `gemini`/service outcome), `type`, typed `payload`, causation/request references, observed client time/timezone where relevant, and server-assigned sequence/time. Identity, sequence, versions, integrity hashes, and transport bookkeeping are infrastructure metadata rather than derived journal state.
+
+| Events | Persisted facts/inputs | Projection output |
 | --- | --- | --- |
-| `OnboardingAnswersSubmitted`, `AnswersChanged`, `AnswersCleared` | Explicit selected answers, or no fields for clear | Effective answers and prompt context |
-| `AIChoicesConfirmed`, `PhotoSummaryChoiceChanged` | Explicit chosen switches | Eligible sources and queued-work eligibility |
-| `DayOpened` | Observed time and timezone in context | Local date, day identity, next reserved palette position, initial prompt request |
-| `ReflectionWriteOpened`, `StarterPromptChosen` | Day and chosen prompt-request or bundled-starter reference | Draft bound to the exact chosen prompt; no copied prompt text |
-| `AnotherPromptRequested`, `DaySkipped`, `DayResumed` | Day reference; explicit discard-draft choice where applicable | Replacement ordinal, skipped status, retained or discarded draft |
-| `DraftTextChanged` | Day/entry reference and literal user-authored replacement text | Current draft, dirty state, word counts |
-| `ReflectionSaveRequested`, `ReflectionEditOpened` | Target reference only | Saved entry from the prior draft; same entry identity on edit |
-| `PromptFeedbackSubmitted`, `PromptFeedbackRemoved` | Prompt reference and literal feedback, or feedback reference | Remembered feedback and eligible future context |
-| `PhotoAttached`, `PhotoRemoved` | Target and selected original input-asset reference; explicit summary choice | Attachment list, summary request identity and eligibility |
-| `PhotoSummaryRetryRequested`, `PhotoSummaryAccepted` | Photo/request reference | Retry request or accepted summary reference |
-| `PhotoDescriptionEdited`, `PhotoDescriptionCleared` | Photo/base-description reference and user edit operations (selected range and inserted literal text), or clear reference | Manual description takes precedence over AI output |
-| `PersonalizationResetRequested` | Explicit confirmation only | Cleared answers/feedback, disabled personalization sources |
-| `ReflectionDeletionRequested`, `JournalDeletionRequested` | Target reference or explicit whole-journal confirmation | Deleted entities and required erasure work |
+| `AnswersSubmitted`, `AnswersCleared`, `AIChoicesConfirmed`, `PersonalizationResetRequested` | Explicit answers and choices; confirmation references | Effective settings, allowed context sources and remembered feedback |
+| `DayOpened`, `PromptRequested`, `AnotherPromptRequested`, `StarterPromptChosen` | Interaction time/timezone, target/request identity, user's discard choice or starter reference | Day identity, reserved colour, active request and draft binding |
+| `PromptResponseReceived` | Exact Gemini prompt text, request ID, actual model identifier, response/finish metadata and outbound-context provenance | Displayed prompt, explanation of source use, request completion |
+| `AIRequestFailed` | Request/attempt ID and sanitized observed provider/transport outcome | Retry/fallback availability, without invented prompt text |
+| `DaySkipped`, `DayResumed`, `ReflectionWriteOpened`, `ReflectionEditOpened` | User-selected day/entry/prompt references | Navigation-independent daily state and editable draft |
+| `DraftTextChanged`, `ReflectionSaveRequested` | Literal user-entered text and target revision, or save reference | Saved entry, dirty state, word counts |
+| `PromptFeedbackSubmitted`, `PromptFeedbackRemoved` | Prompt reference and literal feedback, or feedback reference | Remembered feedback and future context eligibility |
+| `PhotoAttached`, `PhotoRemoved`, `PhotoSummaryRetryRequested` | User-selected private asset reference and summary choice, or target/request reference | Attachment relationships and pending summary status |
+| `PhotoSummaryResponseReceived` | Exact Gemini summary text and response metadata, photo version and request ID | Image description suggestion and summary status |
+| `PhotoDescriptionEdited`, `PhotoDescriptionCleared` | Explicit user edit/clear against a description revision | Manual description overriding AI suggestions |
+| `ReflectionDeletionRequested`, `JournalDeletionRequested` | Explicit target/whole-journal confirmation | Tombstones and required erasure work |
 
-Editing an AI description records only the user's edit operations against an identified base; do not serialize unchanged generated text back into an event as part of a whole-field replacement. A description written from an empty base can contain the complete user-authored text.
+AI result events retain the consumed response exactly, including safe response metadata needed to interpret it. Store bounded text/JSON responses in Firestore; never put image bytes, credentials, hidden model reasoning, or entire projected entries there. Context provenance records the actual outbound request boundary: template version, input source/revision references and enabled sources. Avoid duplicating private source text in provenance. Operational exception stacks and secrets never enter user events.
 
-An autosaved draft action represents the user's edit, not an automatic snapshot of the entire draft projection. Coalesce uncommitted typing, flush on blur/save, and distinguish the input buffer from the last committed text. A save first commits any pending edit, then the save action in the same transaction. Auto-resume of already authorized work does not create a synthetic user event.
+For an edited AI description, record user edit operations against the response/manual revision, not an automatic snapshot of the entry. Accepting an unchanged suggestion needs only its response reference. Starter text comes from a versioned bundled catalogue; no AI call or AI-response event is invented for it.
 
-`DayOpened` corresponds to the user's initial or renewed visit to Today. Repeated opens on the same derived date reuse the existing day. Date derivation uses the observed time/timezone and pinned date rules, never the replay machine's current timezone. Reserve the next palette position from the number of prior distinct opened days; replacement, editing, filtering, and deletion do not advance it. Colours exist only in the projection. A draft retains its originating day across midnight.
+## Ordered writes and cross-device conflicts
 
-## AI output and exact replay: release gate
+The append function transactionally checks the event ID, current stream generation, relevant entity/settings revisions and canonical head, then allocates the next sequence, appends accepted events, and advances metadata. Identical retries return the original result; an existing ID with a different payload is rejected. Settings revision references used by a request are resolved and validated in the same acceptance transaction. Server projections used for validation are disposable and must match the validated stream head.
 
-The strict proposal assumes **no separately authoritative AI-response archive**. Storing generated text only in a checkpoint would make that checkpoint indispensable. Re-requesting a hosted model would not reproduce the original prompt reliably, including with temperature zero or a seed. Either approach fails the stated replay contract.
+A pending draft edit and its Save action can be submitted as one ordered command batch. Sequence is authoritative; client timestamps serve only as recorded interaction context. Concurrent text edits use explicit expected revisions. A stale write returns a conflict while retaining the unsent text; the user can reload or explicitly reapply it. Do not silently apply last-write-wins to journal prose. Sync acknowledgements remove matching pending IDs once, not append duplicate events.
 
-The proposed compatible route is deterministic local inference, executed as part of projection computation in a worker:
+An offline outbox is separate from the confirmed stream and checkpoint. It contains user commands, original base revisions, generation, and stable IDs. Render a provisional overlay while offline; on reconnect, fetch confirmed changes, submit commands, and rebase or surface conflicts. Pending commands never acquire invented server sequences. An offline day colour is labeled provisional until its first cloud commit because another device may reserve a day first; once confirmed, its colour never changes. This is the explicit cross-device amendment to the original same-device colour promise.
 
-- Preserve immutable model weights, tokenizer, preprocessing, prompt templates, inference runtime, and decoding rules by content identity. A rules version maps to that complete bundle; never silently substitute a newer model.
-- Use a canonical deterministic CPU/WASM execution path and deterministic decoding. GPU-dependent inference is not the reference replay path. Prove identical output across supported environments before adopting a model/runtime.
-- Derive request identity and any seed from the originating user-action ID. Derive the model input from the projection **at that action's sequence**, not from later answers or entries. Replay can therefore reconstruct the actual context behind an old prompt.
-- Personalization initially means explicit answers and remembered feedback supplied to future prompts, with saved-entry context only when enabled. No fine-tuning, hidden inferred traits, or separately authoritative model memory. Select at most the five most recent eligible saved entries and twenty most recent eligible feedback items at the request boundary, using sequence order and deterministic input-length limits defined by the bundle.
-- Image summarization uses a pinned image preprocessing and vision model pipeline. The selected photo bytes are user input assets. Model-generated summaries, embeddings, thumbnails, and selected context are projection data, never events.
-- Cache completed AI projection nodes by rules version, request identity, and input fingerprint. Removing every such cache must still allow recomputation. Inference scheduling and progress are transient; the computed result and user decisions define settled domain state.
+Repeated opens for the same observed local date resolve to one canonical day. Its palette position derives from earlier canonical distinct day openings; no `ColourAssigned` event or palette payload is needed. Midnight/timezone changes do not rebind an existing draft. Two devices choosing prompts for the same day reconcile through the canonical request/day revision, not competing unversioned overwrites.
 
-Computation timing must not decide durable state: user references such as opening a reflection with a particular prompt or accepting a photo summary bind the chosen request. Unaccepted obsolete results are discarded consistently after replacement or revoked eligibility, whether or not a worker happened to finish earlier. Tests must permute worker completion order and confirm the same settled projection for the same action sequence.
+## Gemini execution and credentials
 
-No suitable model/runtime has been selected or measured. The MVP may not claim AI completion until prompt quality, mobile resource use, vision support, and exact replay pass the first implementation gate. Preserve historical bundles for retained histories; absence of a required bundle is an explicit incomplete-rebuild state, not permission to change old text. A bundled deterministic starter prompt allows writing when AI is unavailable, but does not satisfy the AI feature's acceptance criterion.
+The repository already contains the Actions secret **`GEMINI_API_KEY`**, verified by secret name only. It must remain server-side. The Pages build must never receive it through a public/Vite environment variable or embed it in JavaScript, source maps, artifacts, logs, or browser storage. A backend proxy is the appropriate boundary for the private Gemini key. [Gemini API key guidance](https://ai.google.dev/gemini-api/docs/api-key)
 
-An alternative for review is immutable AI response artifacts outside the event log. That would keep events user-action-only, but full replay would require those additional authoritative computed artifacts. It changes the strict proposal and must be explicitly accepted before a hosted-model implementation is planned. This document does not quietly treat it as a disposable cache.
+A trusted backend deployment workflow on `main` will authenticate to Google Cloud with GitHub OIDC/Workload Identity Federation, copy the existing Actions secret to Secret Manager using protected stdin, and deploy functions that explicitly bind that secret. GitHub secret values cannot be read back through `gh secret list`; the value is made available to an authorized workflow. The Firebase browser configuration is separate public application configuration, not this Gemini key. Secret provisioning is not performed by public PR preview jobs. [Functions secret configuration](https://firebase.google.com/docs/functions/config-env)
 
-## Projection shape and cache protocol
+Live request processing:
 
-The logical projection contains settings and explicit personalization memory; opened days and reserved colours; prompt requests and results; drafts; saved entries; attachment relationships and summaries; deletion state; and search data. Saved entries reference the original prompt request and derive their displayed prompt from it. Manual photo text wins over late results. A removed/replaced photo or revoked authorization makes pending work ineligible. Save does not wait for summarization once the photo input is durable.
+1. An authorized user command commits a request event and an operational outbox record in one transaction. The command defines which immutable request/settings revision applies; duplicate submissions reuse its identity.
+2. A worker claims a lease, reconstructs context at that request boundary, and rechecks current consent, target existence, generation and request eligibility immediately before dispatch. Select at most five most recent eligible entries and twenty feedback items, with versioned deterministic length limits. No hidden inferred profile or fine-tuning is required for MVP personalization.
+3. The worker calls a configured supported Gemini text/vision model **outside** the Firestore transaction. Record the actual model/version in the response; model selection is deploy configuration and never a replay dependency.
+4. Persist the exact response and terminal job status atomically, using a deterministic response-event ID derived from the request ID. Only the backend may append it. Reveal a cloud-ready prompt/summary only after that commit.
+5. Duplicate function deliveries find the existing terminal result and do not append another. A manual retry creates a new request identity linked to the old attempt. Errors preserve the current prompt/photo and produce the UX's retry/starter state.
 
-Persist a checkpoint containing the projection schema/rules version, journal generation, last applied sequence and action ID, verified prefix fingerprint, asset manifest version, and projected state. Computed metadata belongs here or in repository indexes, never in action payloads. Each checkpoint declares its completed AI nodes and unresolved derivations; do not advance a dependency's completion marker until its result is durable.
+Trigger delivery can repeat and ordering is not guaranteed, so the worker must use the canonical sequence and idempotency controls rather than delivery order. A crash after Gemini responds but before the result commit can cause another provider invocation; the design guarantees one accepted response per request, **not exactly-once provider billing**. Leases and bounded retries reduce duplication. [Firestore trigger delivery semantics](https://firebase.google.com/docs/functions/firestore-events)
 
-Startup and recovery:
+Recovering an unfinished live outbox job is separate from replay. Tests rebuilding a projection run with effects disabled and must assert **zero Gemini requests**, including when the stream contains an unfinished request. A late summary never overwrites a manual description; response correlation and reducer precedence handle that consistently. Removed targets, revoked sharing, and superseded requests are rechecked before storing a result to avoid restoring deleted content.
 
-1. Read the log head and a checkpoint in a consistent transaction. Verify its versions, generation, prefix identity, and required input assets. Fast validation uses transaction-maintained integrity metadata; it does not read/reduce the complete prefix on each startup.
-2. If valid, hydrate the cached projection and apply actions after its cursor through the same versioned functions used by full replay. Reuse valid completed AI nodes and schedule unresolved nodes. UI distinguishes loading/incomplete reconstruction from an empty journal.
-3. If missing, corrupt, ahead of the log, or incompatible, discard the checkpoint and rebuild from sequence one in a worker. Never delete the user-action source to repair a projection. An unknown event version stops at a clearly identified incomplete history.
-4. Commit each ordinary action and its immediate projection/cursor update atomically. Expensive deterministic inference runs outside that transaction and installs a cache result only if its input identity still matches. No computed-result event is appended.
-5. A crash after an action commit but before an AI cache write leaves derivable pending work. A crash during checkpoint replacement leaves either the old complete checkpoint or the new one. No partially advanced cursor is valid.
+## Cached projections and complete replay
 
-Rules that define historical semantics remain available. Changing the projection representation invalidates its checkpoint; changing an AI bundle applies to new actions using a new rules version. Pure schema upcasters may translate input structure but must not enrich an event with computed business values.
+The local checkpoint contains projection schema/rules versions, Firebase project/UID/generation, confirmed cursor and event ID, prefix integrity identity, and all projected journal/settings/search state. Keep pending commands outside it. Read models may include prompt and summary text because those values are recoverable from response events.
 
-The principal test equation is `settle(replay(allActions)) == settle(resume(checkpointAtK, actionsAfterK))` for every tested split point, with identical original assets and version bundles. Compare canonical logical state, excluding elapsed time, worker progress, object URLs, and cache bookkeeping. Also rebuild after deleting **all** projection and AI caches to prove there is no hidden source of truth.
+1. After authentication, compare generation and checkpoint metadata with the authoritative server head. Restore a matching checkpoint and request only events after its sequence. Validate contiguous order and deduplicate by ID before advancing the cursor.
+2. Apply the confirmed tail through the same pure reducer used by a full rebuild. Commit cached events, projected state, and cursor atomically in IndexedDB. Overlay pending commands separately; a remote acknowledgement removes the overlay without duplicating its effect.
+3. If the checkpoint is missing, corrupt, incompatible, or from an old generation, discard that checkpoint and rebuild from Firestore in pages. Preserve compatible unsent commands for explicit reconciliation; never treat clearing a checkpoint as permission to delete an outbox.
+4. A fresh second device downloads the complete relevant event history and assets after Google sign-in, constructs its projection, and then follows the tail. A warm device does not replay or download the whole stream on each launch.
+5. Changing a reducer/schema version invalidates incompatible checkpoints. Preserve input interpretation through explicit pure upcasters; unknown versions stop with an incomplete-history message rather than silently hiding entries.
 
-## Photos, privacy, and deletion
+Required equality: `replay(allConfirmedEvents) == resume(checkpointAtK, confirmedTailAfterK)` for the same rules and retained assets. Compare canonical logical state, excluding network progress, object URLs, and cache bookkeeping. Delete every local/server projection and rebuild from the canonical event streams plus photo inputs; the same prompts and summaries must return with the Gemini adapter replaced by one that throws on every call.
 
-Ingestion accepts the UX's JPEG/PNG/WebP limits (four per entry, 10 MB each), normalizes orientation and strips metadata before retaining the selected input copy. The ingestion format is versioned; replay uses those retained input bytes, not a second transformation of a missing original. Bytes and their `PhotoAttached` action must become durable together before showing success. An input asset is user-provided material, not a generated summary. Derived thumbnails are disposable.
+Event timestamps and server sequence are fixed observations, not reads of the current replay clock. Loading, incomplete sync and missing assets are explicit; they must not appear as an empty journal or zero search results. Sign-out/account switching stops listeners, discards in-memory private views and separates pending commands by UID; pending data is never uploaded to the next account.
 
-Local inference sends no answers, feedback, entries, or photos to an AI service. Update the implementation disclosure accordingly while retaining the separate personalization and photo-processing choices. Do not display the mockup's remote-upload disclosure for a local model. A future remote provider requires a separate data-sharing decision.
+## Photos, export, deletion and offline use
 
-Appending deletion actions while retaining plaintext history does not erase private text. Proposed erasure uses scoped encryption for sensitive action inputs and original photo assets, with separately deletable per-entry and personalization keys. Keep minimal non-sensitive action identities, target references, and ordering metadata available to reconstruct deletion tombstones and the stable day/colour sequence. Whole-journal deletion preserves explicit answers as the UX requires; personalization reset erases its answers/feedback scope separately.
+Photos use the UX's limits (JPEG/PNG/WebP, four per entry, 10 MB each), stripped metadata and normalized orientation. Stage locally before uploading to the authenticated private Storage path. Storage and Firestore cannot share one transaction: finalize an attachment event only after verifying its immutable object exists and belongs to the UID. Keep failed uploads staged for retry and clean abandoned uploads. A device-only photo is labeled pending until cloud finalization. Saving a photo-only reflection does not wait for Gemini summarization.
 
-There is an additional dependency constraint: an older answer, feedback item, or journal entry may have influenced a prompt retained on another entry. Erasing that input makes exact recomputation of the dependent prompt impossible. The strict proposal therefore invalidates those dependent AI results in both the live projection and full replay and displays “Prompt unavailable after source data was deleted,” while preserving the surviving entry's user-authored text. This is a proposed UX amendment requiring review, not a claim that the original prompt remains reproducible. Conservatively invalidate every historical AI request whose eligible context prefix intersects an erased scope; do not rely on a now-missing cached context-selection result to discover dependencies. Subsequent prompts use the surviving inputs.
+Search is a disposable local index over full saved prompts, responses and accepted/manual summaries. Exports use a consistent fully synchronized head and include the UX's Markdown/JSON/ZIP content, independent of search. Offer synchronization before an export labeled “All saved reflections”; do not silently substitute a partial cache. Computed colours and counts are appropriate in exports, which are read models rather than source events.
 
-If preserving every original prompt after erasing its source data is required, the strict source-only design cannot meet that requirement without retaining the result or its original inputs. Resolve that tradeoff explicitly at the first implementation gate; an immutable computed artifact archive would change the source contract.
+Deleting an input no longer requires discarding another entry's historical prompt: the response event preserves the exact output independently. Deletion must still erase the selected entity's own text, photos and response events/private payloads. A tombstone alone does not remove historical private content. Implement restart-safe scoped erasure with retained non-sensitive deletion/ordering metadata, a generation/invalidation mechanism for all caches, and verified cleanup of operational request data. Replay reconstructs the current post-deletion state from surviving events and tombstones, not pre-deletion private content. Whole-journal deletion advances its generation while retaining explicit answers in the settings scope; personalization reset clears its answers/remembered feedback and disables the sources while existing journal prompts remain recorded.
 
-Full replay first identifies erased scopes from retained deletion actions before decrypting content actions, then reconstructs only the surviving state. Cache invalidation includes every affected request dependency, not only the deleted entry row. This prepass is required after erasure or complete rebuild; ordinary warm starts use the matching generation and cached erasure projection.
+A disconnected device cannot be remotely wiped immediately. On reconnection it must check generation/erasure metadata before rendering a stale cloud cache or submitting its old outbox, purge erased scopes, and require explicit reconciliation of rejected commands. UI must distinguish device cleanup, server completion, and pending other-device synchronization. Explain that prior exports and provider retention are outside app-managed deletion; do not promise to retract Gemini requests already sent.
 
-Before releasing deletion, prove that a replay can skip erased scopes and reconstruct the **current post-deletion state** from surviving action metadata without their content or an old checkpoint. It cannot and must not resurrect erased content or reproduce pre-erasure private states. A deletion request is the user event; key-removal bookkeeping is storage infrastructure, not a synthetic domain event. Resume incomplete erasure on restart, clear every affected projection/cache/asset, and show success only after the managed stores confirm removal. This is app-managed erasure, not a promise of forensic deletion from browser backups or previously downloaded exports.
+Previously loaded offline users can read cached entries, search the available journal, and queue user edits. Show “Saved on this device; waiting to sync” separately from “Synced.” First sign-in and Gemini generation require connectivity; provide the labeled bundled starter path offline. Consent disclosures identify Gemini and the actual fields sent, with separate photo processing and journal-context choices. Complete reconstruction requires the cloud stream when the local event cache is incomplete, but never needs Gemini.
 
-## Search, export, and offline behaviour
+## Provisioning and implementation status
 
-Search is a derived local index over full saved prompt, response, and accepted/manual summary text. Apply the UX's case/accent-insensitive, all-query-words matching and newest-first ordering without persisting search queries as domain events. Rebuild the index from the same projection after cache loss. Loading or incomplete reconstruction must not appear as zero matches.
+The Firebase project, Google provider, Firestore database, private Storage bucket, functions, rules and deployment identity are tracked in [FIREBASE_SETUP.md](FIREBASE_SETUP.md). The setup record distinguishes verified resources from pending configuration. The project bootstrap is authorized; Google login and any billing linkage are external setup prerequisites, not evidence that application features are already deployed.
 
-Export reads a consistent settled projection at a captured action-log head. Include all saved entries and the personalization appendix specified in the UX, including stable IDs and derived palette indices. Computed values are appropriate in exports because exports are read models, not event logs. Markdown/JSON plus photos in ZIP remain the user-facing formats; exclude unsaved drafts and credentials. These readable exports are not a full event-history backup or an implied import format.
-
-Cache application assets within the deployment's base path. Production and PR preview installations use separate database/cache namespaces to avoid accidentally opening the production journal in a preview. Previously loaded models and retained assets support offline work. Missing model assets yield a labeled starter-prompt path; storage failures retain uncommitted writing and offer copy/retry. Never call a local draft synchronized or guarantee recovery after browser storage is cleared.
-
-## Review decisions
-
-Review the single-installation scope, deterministic local AI feasibility gate, and scoped-erasure design before implementation. If an external response archive is preferred, revise the replay source contract explicitly. The action-only rule, disposable projections, stable replay, and generated screenshot E2E evidence remain requirements, not optional implementation shortcuts.
+The implementation plan now starts with Firebase/authentication and recorded external-response events. There is no deterministic-model feasibility gate, no local-only MVP scope, and no proposed separate authoritative AI artifact archive.
