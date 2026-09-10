@@ -79,3 +79,17 @@ Search must match full saved text rather than previews. No-results, empty-journa
 The revised boards are generated through the built-in image tool using the prior boards as references where applicable. Initial image inspection found unequal collapsed card heights despite an explicit equal-height prompt, requiring a targeted layout edit. Generated images communicate the style but precise sizing and contrast still require implementation checks.
 
 The first card-sizing edit had little visual effect. A second edit shortened the fictional example and recomposed typography, producing a more uniform layout. Small height differences and an omitted search highlight remain documented in UX_DESIGN.md; implementation must enforce fixed card dimensions and match highlighting. All seven final boards were visually inspected, and their document links and PNG files were checked.
+
+## 2026-09-10 — Yellow ink, text feedback, photos, and simpler navigation
+
+The user selected yellow as the main accent and requested clouds or ink in water instead of the aurora background. This revision chooses static dark ink-in-water plumes. Rainbow entry tints remain separate from the yellow action colour. Short freeform prompt feedback replaces binary ratings and reason chips; a proposed 300-character limit keeps it lightweight.
+
+Follow-up instructions require the prompt to appear on journal entries, today's assigned colour to be visible before saving, photo attachments with AI text summaries, and AI settings as a row in Settings rather than a fourth navigation tab. The resulting navigation is Today / Journal / Settings. This supersedes the previous four-tab decision, response-only collapsed previews, and colour assignment at save time.
+
+The daily colour is reserved when the prompt is opened and carried through the draft and saved entry. Cards now reserve room for prompt and response, with a larger proposed 360-pixel common height. Summaries are editable and searchable; photo processing has independent disclosure and controls rather than silently enabling journal-based prompt personalization. Summary failures must retain the attachment and allow retry or manual text.
+
+Photos affect export and deletion: photo-bearing exports include the Markdown or JSON file plus image assets in a ZIP, and entry deletion also removes its photos and summaries. These are design proposals; storage, image-model integration, and file handling are not implemented.
+
+The navigation and photo instructions arrived during image generation. Earlier yellow renders are intermediate drafts; the final review set incorporates the later instructions. Exact prompts are retained separately so this iteration remains traceable.
+
+All eight selected boards were visually inspected. The final images show three-tab navigation, yellow actions, visible journal prompts, freeform feedback, and the photo-summary flow. Generated journal samples abbreviate some text and card dimensions vary slightly; the specification requires preserving actual entry text and enforcing a shared height. Final asset links and PNG files were checked before publishing.

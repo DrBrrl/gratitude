@@ -1,19 +1,22 @@
 # Image generation record
 
-The seven `*-dark.txt` files contain the exact prompts for the current M01–M21 boards, generated with the built-in image tool. The matching final PNGs are in `../mockups/`. No CLI/API fallback was used.
+The eight `*-yellow-final.txt` files contain the exact prompts for the final M01–M24 boards. They were submitted to the built-in image tool; no CLI/API fallback was used. Final PNGs are in `../mockups/`. User instructions remain verbatim in the root PROMPTS.md.
 
-The first six calls revised existing images, supplied through `referenced_image_paths`. The seventh was a new generation. Reference images are retained in Git history at commit `40c7879` under `docs/ux/mockups/`. Their original generation prompts are preserved in `archive/`.
+The first seven final calls are image edits using `referenced_image_paths`; the photo board is a new generation.
 
-| Current prompt | Reference image at 40c7879 |
-| --- | --- |
-| 01-onboarding-dark.txt | 01-start-and-today.png |
-| 02-today-and-choice-dark.txt | 01-start-and-today.png |
-| 03-writing-and-feedback-dark.txt | 02-write-and-save.png |
-| 04-rainbow-journal-search-dark.txt | 03-choice-and-history.png |
-| 05-settings-ai-export-dark.txt | 04-personalization-and-data.png |
-| 06-privacy-and-recovery-dark.txt | 05-recovery-and-empty.png |
-| 07-empty-search-and-explanation-dark.txt | None — new generation |
+| Final prompt | Reference image | Source |
+| --- | --- | --- |
+| 01-onboarding-yellow-final.txt | 01-onboarding-dark.png | Onboarding intermediate |
+| 02-today-and-choice-yellow-final.txt | 02-today-and-choice-dark.png | Today intermediate |
+| 03-writing-and-feedback-yellow-final.txt | 03-writing-and-feedback-dark.png | 90c4e4c |
+| 04-rainbow-journal-search-yellow-final.txt | 04-rainbow-journal-search-dark.png | 90c4e4c |
+| 05-settings-ai-export-yellow-final.txt | 05-settings-ai-export-dark.png | 90c4e4c |
+| 06-privacy-and-recovery-yellow-final.txt | 06-privacy-and-recovery-dark.png | 90c4e4c |
+| 07-empty-search-and-explanation-yellow-final.txt | 07-empty-search-and-explanation-dark.png | 90c4e4c |
+| 08-photos-and-summaries-yellow-final.txt | None | New generation |
 
-For board 04, apply `04-rainbow-journal-search-dark-edit.txt` to the first result, then `04-rainbow-journal-search-dark-edit2.txt` to that edited result. The first correction had little visual effect; the second recomposed the card typography and layout. Only the final selected image is committed. Exact pixel equality and search highlights remain requirements in UX_DESIGN.md; generated geometry is illustrative.
+References marked `90c4e4c` are the prior mockups under `docs/ux/mockups/` at that Git commit. For onboarding and Today, first apply the corresponding prompt in `archive/yellow-intermediate/` to that prior mockup, then use its result as the final edit reference. These two intermediate renders were inspected before editing.
 
-User instructions remain verbatim in the root PROMPTS.md.
+The remaining first-pass yellow renders were superseded by the navigation and photo instructions arriving during generation and are not part of the review set. All first-pass prompts are retained in `archive/yellow-intermediate/`; the earlier dark-aurora prompts and card-layout corrections are in `archive/violet-aurora/`. Original light-mode prompts remain directly in `archive/`. Earlier image files remain in Git history.
+
+Generated mockups illustrate appearance; UX_DESIGN.md defines exact layout, full prompt preservation, photo-summary handling, and interaction behavior.
