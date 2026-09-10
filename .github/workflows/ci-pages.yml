@@ -1,0 +1,142 @@
+name: CI and Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Every publication updates the same Pages site. Serialize the entire operation.
+# Every publish also prunes closed PRs, including any superseded queued close run.
+concurrency:
+  group: gratitude-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE_PATH: ${{ github.event_name == 'pull_request' && format('/{0}/pr-preview/pr-{1}', github.event.repository.name, github.event.number) || format('/{0}', github.event.repository.name) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run test:deployment
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: static-build
+          path: build/
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: e2e-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  publish:
+    needs: build
+    if: >-
+      always() && !cancelled() &&
+      (needs.build.result == 'success' || github.event.action == 'closed') &&
+      ((github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+       (github.event_name != 'pull_request' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+      pull-requests: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ github.event.number }}
+      EVENT_NAME: ${{ github.event_name }}
+      EVENT_ACTION: ${{ github.event.action }}
+      EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Check whether this run is still current
+        id: current
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == pull_request && "$EVENT_ACTION" != closed ]]; then
+            actual=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '[.state, .head.sha] | join(" ")')
+            [[ "$actual" == "open $EXPECTED_SHA" ]] || { echo 'Outdated PR build; skipping publication.'; exit 0; }
+          elif [[ "$EVENT_NAME" != pull_request ]]; then
+            actual=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+            [[ "$actual" == "$EXPECTED_SHA" ]] || { echo 'Outdated main build; skipping publication.'; exit 0; }
+          fi
+          echo 'publish=true' >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        if: steps.current.outputs.publish == 'true' && github.event.action != 'closed'
+        with:
+          name: static-build
+          path: build/
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: steps.current.outputs.publish == 'true'
+        with:
+          ref: gh-pages
+          path: .pages-state
+      - name: Assemble production and open previews
+        if: steps.current.outputs.publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" --jq '.[].number' | jq -s '.' > "$RUNNER_TEMP/open-prs.json"
+          args=(--state .pages-state --open-prs "$RUNNER_TEMP/open-prs.json")
+          if [[ "$EVENT_ACTION" != closed ]]; then
+            args+=(--source build)
+            if [[ "$EVENT_NAME" == pull_request ]]; then args+=(--preview "$PR_NUMBER"); fi
+          fi
+          python3 scripts/assemble_pages.py "${args[@]}"
+          git -C .pages-state config user.name 'github-actions[bot]'
+          git -C .pages-state config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C .pages-state add --all
+          if ! git -C .pages-state diff --cached --quiet; then
+            git -C .pages-state commit -m "Publish build from $GITHUB_SHA"
+            git -C .pages-state push origin HEAD:gh-pages
+          fi
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        if: steps.current.outputs.publish == 'true'
+        with:
+          path: .pages-state/
+      - uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+        if: steps.current.outputs.publish == 'true'
+        id: deploy
+      - name: Publish preview link
+        if: steps.current.outputs.publish == 'true'
+        env:
+          PAGE_URL: ${{ steps.deploy.outputs.page_url }}
+        shell: bash
+        run: |
+          if [[ "$EVENT_NAME" == pull_request && "$EVENT_ACTION" != closed ]]; then
+            printf 'Preview: %spr-preview/pr-%s/\n' "$PAGE_URL" "$PR_NUMBER" >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$EVENT_ACTION" == closed ]]; then
+            printf 'Closed PR previews removed. Production: %s\n' "$PAGE_URL" >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf 'Production: %s\n' "$PAGE_URL" >> "$GITHUB_STEP_SUMMARY"
+          fi

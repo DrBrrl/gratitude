@@ -6,7 +6,7 @@ The aim is to make reflection approachable, personal, and useful—whether someo
 
 ## Status
 
-This repository currently contains the project documentation. The application, AI integration, storage model, and development environment have not been implemented.
+The repository contains a Svelte 5 / SvelteKit application with a responsive dark landing page, a Nix development shell, Playwright smoke tests, and GitHub Pages deployment. Journaling, AI integration, and persistent storage are not implemented yet.
 
 ## Intended experience
 
@@ -20,9 +20,25 @@ These are product intentions, not currently available features. See [VISION.md](
 
 ## Development
 
-The project is being started on a Nix system. We intend to provide a reproducible Nix development environment once the application stack is selected. There is no `flake.nix`, development shell, or runnable application yet.
+Use the locked Nix shell for Node 24, Chromium, and repository tooling:
 
-Early technical decisions include the frontend framework, persistence and authentication approach, AI provider or local model, and the mechanism for adapting prompts. Each decision should account for accessibility, privacy, cost, and maintainability.
+```sh
+nix develop
+npm ci
+npm run dev -- --host 127.0.0.1
+```
+
+Open the local URL printed by Vite. To validate a production build:
+
+```sh
+npm run check
+npm run test:deployment
+npm run test:e2e
+```
+
+See [E2E_GUIDE.md](E2E_GUIDE.md) for scenarios, reports, and testing on Nix or other systems. [DEPLOYMENT.md](DEPLOYMENT.md) explains automatic production deployments and per-PR previews on GitHub Pages. Production is served at [drbrrl.github.io/gratitude](https://drbrrl.github.io/gratitude/) after the scaffold is merged and its workflow succeeds.
+
+The storage, authentication, and AI integration architecture remains to be selected. See the design for the intended experience beyond this initial scaffold.
 
 ## Project records
 

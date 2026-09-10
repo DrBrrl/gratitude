@@ -93,3 +93,13 @@ Photos affect export and deletion: photo-bearing exports include the Markdown or
 The navigation and photo instructions arrived during image generation. Earlier yellow renders are intermediate drafts; the final review set incorporates the later instructions. Exact prompts are retained separately so this iteration remains traceable.
 
 All eight selected boards were visually inspected. The final images show three-tab navigation, yellow actions, visible journal prompts, freeform feedback, and the photo-summary flow. Generated journal samples abbreviate some text and card dimensions vary slightly; the specification requires preserving actual entry text and enforcing a shared height. Final asset links and PNG files were checked before publishing.
+
+## 2026-09-10 — Initial SvelteKit scaffold and Pages previews
+
+Started `feat/initial-sveltekit-scaffold` from merged main at `5eeccfb`. Read anicolao/food's E2E_GUIDE.md at commit `578663f1204a9064de47dd63eda7a143c38288a6`. Adapted its numbered scenarios, documented verification steps, and screenshot evidence into Gratitude's guide and helper. Screenshots are evidence only; pixel comparison is not implemented and Nix/CI browser rendering is not assumed identical.
+
+The official Svelte CLI supplied the initial Svelte 5 / SvelteKit / TypeScript files. The app uses adapter-static with prerendered routes and Node 24. The CLI's initial inline auto-adapter configuration needed replacing with a plain `sveltekit()` Vite plugin call so the static adapter in svelte.config.js is used. Nix supplies Chromium directly because Playwright's downloaded Linux browser is not a reliable executable on Nix systems; CI installs Playwright's matching browser on Ubuntu.
+
+The landing page is a static introduction using dark glass and yellow accents. It does not implement journaling or AI. Svelte checks passed with no errors or warnings. The landing scenario passed at mobile and desktop sizes with the root base path, `/gratitude`, and `/gratitude/pr-preview/pr-999`. Five deployment unit tests passed, and actionlint accepted the workflow.
+
+GitHub Pages has one site per repository, so the deployment stores production and per-PR directories together on a generated gh-pages branch. Official Pages artifact deployment publishes that combined state; a GITHUB_TOKEN branch push alone would not trigger a branch-source Pages build. Publication is serialized and prunes closed PRs on every update. Fork PRs receive checks only; same-repository PRs can publish. Pages environment restrictions must permit PR refs for that workflow. AI credentials and a backend will require a separate architecture decision because Pages is static hosting.
