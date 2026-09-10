@@ -43,3 +43,21 @@ We want to start with the UX_DESIGN for this project. We anticipate a mobile-fir
 ```text
 the overall design looks pretty good. however we want this to be a dark mode only application, glassmorphic design aesthetic; we'd like each journal entry to have a different colour so that scrolling through journal logs has a rainbow effect; we'd like the collapsed journal log to be a consistently sized larger card that often might ocntain an entire small journal entry; we'd like to be able to search journal entries. onboarding could have a few questions to enable the AI to get to know the user. we'd like to be able to export o markdown as well as JSON. updat the mockups and design accordingly. we think the settings page should be shown as a mockup and the ai settings should be reachable from the top level.
 ```
+
+## 2026-09-10 — Yellow accent, ink background, and text feedback
+
+```text
+if there is going to be a main colour, let's make it yellow; and the background could be clouds or ink in water rather than the northern-lights type effect that is chosen. Let's regenerate the mockups with that in mind. also instead of helpful/not helpful let's have it bepossible to provide short freeform text feedback
+```
+
+## 2026-09-10 — Prompts, daily colour, and journal photos
+
+```text
+also journal entries should show the prompt, and the current day's entry should have the oclour that has been chosen so you know what'll be in the rainbow later. would like to be able to add photos to the journal entry, and the AI should provide a text summary of that image when it is attached
+```
+
+## 2026-09-10 — AI settings navigation clarification
+
+```text
+ai settings being listed in the settings page is sufficiently top level it doesn't also need to be in the very top nav
+```
