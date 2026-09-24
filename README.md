@@ -51,7 +51,7 @@ nix develop -c npm run test:firebase:all
 
 For interactive use, run `nix develop -c npm run emulators` and, in another terminal, `nix develop -c npm run dev:firebase`. Open `/journal/` and create a fictional Google account in the Auth emulator popup. Tests use `demo-gratitude` and never call the live project or Gemini.
 
-Saved user actions are appended in a browser transaction. Security Rules enforce ownership, exact schemas, contiguous ordering, expected revisions and immutable events. The head and per-entry event pointer must be updated atomically with each event. IndexedDB holds a disposable checkpoint and a pending-save outbox; rebuilding the local view replays the cloud stream. Editor text is persisted only when Save is selected. Offline cold starts, automatic draft saving, photos, AI, search, export and deletion are future increments.
+Saved user actions are appended in a browser transaction. Security Rules enforce ownership, exact schemas, contiguous ordering, expected revisions and immutable events. The head and per-entry event pointer must be updated atomically with each event. IndexedDB holds a disposable checkpoint and a pending-save outbox; rebuilding the local view replays the cloud stream. Editor drafts persist on this device as you type and recover after reload. Today/Journal/Settings navigation, equal-height rainbow cards, full-entry editing and accent-insensitive search are implemented. Offline cold starts, cross-device drafts, photos, AI, export and deletion remain future increments.
 
 ## Project records
 
