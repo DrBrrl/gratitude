@@ -4,7 +4,7 @@
   import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
   import { createFirebaseClient, googleSignIn, type FirebaseClient } from '$lib/firebase/client';
   import { JournalRepository, type JournalView } from '$lib/firebase/repository';
-  import { emptyProjection, STARTER_ID, STARTER_PROMPT, type Entry } from '$lib/domain';
+  import { emptyProjection, STARTER_ID, STARTER_PROMPT, type Entry, type Action } from '$lib/domain';
 
   let client: FirebaseClient | null = null;
   let repository: JournalRepository | null = null;
@@ -16,6 +16,14 @@
   let text = $state('');
   let editing = $state<Entry | null>(null);
   let view = $state<JournalView>({ state: emptyProjection(), pending: null, status: '', error: '', ready: false });
+  let draft = $state<Action | null>(null);
+  let draftLoaded = $state(false);
+  let draftRestored = $state(false);
+  let draftStatus = $state('');
+  let discardOpen = $state(false);
+  let discardDialog = $state<HTMLDialogElement>();
+  $effect(() => { if (discardOpen) discardDialog?.showModal(); else discardDialog?.close(); });
+  let draftWrite = 0;
   let tab = $state<'today' | 'journal' | 'settings'>('today');
   let query = $state('');
   let selectedId = $state<string | null>(null);
@@ -29,6 +37,32 @@
   async function openEntry(entry: Entry) { journalScroll = window.scrollY; selectedId = entry.id; await tick(); document.getElementById('entry-heading')?.focus(); window.scrollTo(0, 0); }
   async function closeEntry() { const id = selectedId; selectedId = null; await tick(); document.getElementById(`view-${id}`)?.focus({ preventScroll: true }); window.scrollTo(0, journalScroll); }
 
+  $effect(() => {
+    if (draftLoaded && view.ready && !draftRestored) {
+      if (draft) {
+        text = draft.payload.text;
+        const original = view.state.entries.find((entry) => entry.id === draft?.payload.entryId);
+        editing = original ? { ...original, revision: draft.payload.expectedRevision } : null;
+        draftStatus = 'Draft saved on this device';
+      }
+      draftRestored = true;
+    }
+  });
+  async function persistDraft(value = text) {
+    text = value;
+    if (!repository || !draftRestored) return;
+    const version = ++draftWrite;
+    draft = { eventId: draft?.eventId ?? crypto.randomUUID(), type: 'ReflectionWritten', schemaVersion: 1,
+      payload: { entryId: editing?.id ?? draft?.payload.entryId ?? crypto.randomUUID(), text, expectedRevision: editing?.revision ?? 0, starterId: STARTER_ID } };
+    draftStatus = 'Saving draft on this device…';
+    try { await repository.writeDraft($state.snapshot(draft)); if (version === draftWrite) draftStatus = 'Draft saved on this device'; }
+    catch { if (version === draftWrite) draftStatus = 'Draft could not be saved on this device. Keep this page open.'; }
+  }
+  async function discardDraft() {
+    try { await repository?.clearDraft(); draftWrite++; draft = null; text = ''; editing = null; discardOpen = false; draftStatus = ''; }
+    catch { error = 'Could not discard the draft. Your text is still here.'; }
+  }
+
   onMount(() => {
     let stopAuth = () => {};
     let session = 0;
@@ -38,14 +72,15 @@
         stopAuth = onAuthStateChanged(client.auth, (next) => {
           const current = ++session;
           repository?.stop(); repository = null;
-          user = next; text = ''; editing = null; error = ''; tab = 'today'; selectedId = null; query = '';
+          user = next; text = ''; editing = null; error = ''; draft = null; draftLoaded = false; draftRestored = false; draftStatus = ''; draftWrite++; tab = 'today'; selectedId = null; query = '';
           view = { state: emptyProjection(), pending: null, status: '', error: '', ready: false };
           initialized = true;
           if (next && client) {
             repository = new JournalRepository(client, next.uid, (value) => {
               if (session === current) view = value;
             });
-            void repository.start().catch(() => { if (session === current) error = 'Local storage is unavailable. Your journal could not be opened.'; });
+            const opened = repository;
+            void opened.start().then(() => opened.readDraft()).then((saved) => { if (session === current) { draft = saved; draftLoaded = true; } }).catch(() => { if (session === current) error = 'Local storage is unavailable. Your journal could not be opened.'; });
           }
         });
       } else initialized = true;
@@ -62,22 +97,28 @@
     finally { busy = false; }
   }
   async function leave() {
-    if (!client || (text.trim() && !confirm('Discard the text in this editor and sign out?'))) return;
+    if (!client) return;
+    if (text.trim()) await persistDraft();
     try { await signOut(client.auth); } catch { error = 'Sign-out failed. Please try again.'; }
   }
   async function save() {
     if (!repository) return;
+    const savingRepository = repository;
     busy = true; error = '';
     try {
-      await repository.save({ eventId: crypto.randomUUID(), type: 'ReflectionWritten', schemaVersion: 1,
-        payload: { entryId: editing?.id ?? crypto.randomUUID(), text, expectedRevision: editing?.revision ?? 0, starterId: STARTER_ID } });
+      if (!draft) await persistDraft();
+      await savingRepository.save($state.snapshot(draft!));
+      if (repository !== savingRepository) return;
+      await savingRepository.clearDraft();
+      if (repository !== savingRepository) return;
+      draftWrite++; draft = null; draftStatus = '';
       text = ''; editing = null; tab = 'journal';
     } catch (cause) { error = cause instanceof Error ? cause.message : 'Save failed. Your text is still here.'; }
     finally { busy = false; }
   }
   async function edit(entry: Entry) {
     if (text.trim() && !confirm('Replace the unsaved text in this editor?')) return;
-    editing = { ...entry }; text = entry.text; tab = 'today'; selectedId = null; await tick();
+    editing = { ...entry }; text = entry.text; draft = null; tab = 'today'; selectedId = null; await persistDraft(); await tick();
     document.getElementById('reflection')?.focus();
   }
   async function recoverPending() {
@@ -88,6 +129,7 @@
       await repository.discardPending();
       text = pending.payload.text;
       editing = view.state.entries.find((entry) => entry.id === pending.payload.entryId) ?? null;
+      draft = null; tab = 'today'; await persistDraft();
     } catch (cause) { error = cause instanceof Error ? cause.message : 'Please try again.'; }
   }
 </script>
@@ -109,10 +151,10 @@
         <section class="editor tinted" style:--entry-colour={editorColour}>
           <p class="eyebrow">Starter prompt</p><h2>{editing?.prompt ?? STARTER_PROMPT}</h2>
           <label for="reflection">Your reflection</label>
-          <textarea id="reflection" bind:value={text} maxlength="10000" rows="7" placeholder="A few words are enough…"></textarea>
-          <p class="hint">Your text is saved when you choose Save reflection. AI prompts are coming later.</p>
+          <textarea id="reflection" value={text} oninput={(event) => void persistDraft(event.currentTarget.value)} disabled={busy || !draftRestored} maxlength="10000" rows="7" placeholder="A few words are enough…"></textarea>
+          <p class="hint">{draftStatus || 'Drafts stay on this device until you save a reflection.'}</p>
           <button onclick={save} disabled={busy || !text.trim() || !!view.pending}>{editing ? 'Save changes' : 'Save reflection'}</button>
-          {#if editing}<button class="secondary" onclick={() => { editing = null; text = ''; }}>Cancel edit</button>{/if}
+          {#if text}<button class="secondary" onclick={() => discardOpen = true}>Discard draft</button>{/if}
         </section>
       {/if}
     {:else if tab === 'journal'}
@@ -144,12 +186,13 @@
       {/if}
     {:else}
       <p class="eyebrow">Make this space yours</p><h1>Settings</h1>
-      <section><h2>Your account</h2><p class="account-email">{user.email}</p><p>Reflections are private to your Google account.</p><button class="secondary" onclick={leave}>Sign out</button></section>
+      <section><h2>Your account</h2><p class="account-email">{user.email}</p><p>Reflections are private to your Google account.</p><button class="secondary" onclick={leave} disabled={busy}>Sign out</button></section>
       <details><summary>Journal recovery</summary><p>Rebuild this device’s view from your saved account history. Your reflections stay in your account.</p><button class="secondary" onclick={() => repository?.rebuild().catch(() => error = 'Could not rebuild. Please reload and try again.')} disabled={busy}>Rebuild local view</button></details>
     {/if}
     {#if view.pending}
       <section><h2>A reflection is waiting to sync</h2><p class="entry-text">{view.pending.payload.text}</p><button onclick={() => repository?.retry()} disabled={busy}>Retry sync</button><button class="secondary" onclick={recoverPending}>Return text to editor</button></section>
     {/if}
+    <dialog bind:this={discardDialog} onclose={() => discardOpen = false} aria-labelledby="discard-title"><h2 id="discard-title">Discard this draft?</h2><p>Your saved reflections will remain in your journal.</p><button onclick={() => discardOpen = false}>Keep writing</button><button class="secondary" onclick={discardDraft}>Discard draft permanently</button></dialog>
     <nav aria-label="Journal navigation">{#each [{ id: 'today', label: 'Today', icon: '⌂' }, { id: 'journal', label: 'Journal', icon: '▤' }, { id: 'settings', label: 'Settings', icon: '⚙' }] as item}<button aria-current={tab === item.id ? 'page' : undefined} onclick={() => navigate(item.id as typeof tab)}><span aria-hidden="true">{item.icon}</span>{item.label}</button>{/each}</nav>
   {/if}
   {#if error || view.error}<p role="alert">{error || view.error}</p>{/if}
@@ -171,6 +214,7 @@
   .prompt-preview, .text-preview { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; } .prompt-preview { -webkit-line-clamp: 2; line-clamp: 2; } .text-preview { -webkit-line-clamp: 4; line-clamp: 4; } .detail p { overflow-wrap: anywhere; }
   .search { display: flex; gap: 8px; align-items: center; } .search button { margin: 0; } .entry-text { white-space: pre-wrap; overflow-wrap: anywhere; } [role=alert] { color: #ffc1ba; padding: 16px; background: #341b19; border-radius: 12px; }
   nav { position: fixed; z-index: 10; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 600px); display: flex; background: #151619f2; border-top: 1px solid #ffffff15; padding: 8px 0 max(8px, env(safe-area-inset-bottom)); } nav button { flex: 1; border: 0; background: none; color: #bebbb3; margin: 0; border-radius: 0; display: grid; gap: 4px; font-size: 11px; } nav span { font-size: 22px; } nav button[aria-current] { color: #f4d35e; text-decoration: underline; text-underline-offset: 5px; }
+  dialog { max-width: min(420px, calc(100vw - 64px)); color: inherit; background: #262521; border: 1px solid #807764; border-radius: 24px; padding: 24px; } dialog::backdrop { background: #000a; }
   :focus-visible { outline: 2px solid #f4d35e; outline-offset: 4px; } @media (max-width: 340px) { .card { height: 410px; } .private { display: none; } }
   @media (prefers-reduced-transparency: reduce) { section, article, details { background: #242321; backdrop-filter: none; } }
 </style>

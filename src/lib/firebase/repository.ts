@@ -19,6 +19,7 @@ export class JournalRepository {
   private sending = false;
   private unsubscribe: (() => void) | undefined;
   private chain = Promise.resolve();
+  private draftChain = Promise.resolve();
   private ready = false;
   private status = 'Opening your journal…';
   private error = '';
@@ -70,6 +71,27 @@ export class JournalRepository {
     this.emit();
     if (this.pending) void this.retry();
   }
+  async readDraft(): Promise<Action | null> {
+    const draft = await this.db.get('outbox', 'draft') as Action | undefined;
+    if (!draft) return null;
+    if (this.pending?.eventId === draft.eventId) { await this.clearDraft(); return null; }
+    try {
+      const committed = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${draft.eventId}`));
+      if (committed.exists()) { await this.clearDraft(); return null; }
+    } catch { /* Offline drafts remain recoverable; append deduplicates the stable action ID. */ }
+    return draft;
+  }
+  writeDraft(draft: Action) {
+    const copy = structuredClone(draft);
+    const write = this.draftChain.then(() => this.db.put('outbox', copy, 'draft')).then(() => {});
+    this.draftChain = write.catch(() => {});
+    return write;
+  }
+  clearDraft() {
+    const write = this.draftChain.then(() => this.db.delete('outbox', 'draft'));
+    this.draftChain = write.catch(() => {});
+    return write;
+  }
   async save(action: Action) {
     if (this.pending) throw new Error('Retry or discard the pending save first.');
     if (!this.ready || this.stopped) throw new Error('Wait for your journal to load.');
@@ -114,6 +136,6 @@ export class JournalRepository {
   stop() {
     this.stopped = true;
     this.unsubscribe?.();
-    void this.chain.finally(() => this.db?.close());
+    void Promise.all([this.chain, this.draftChain]).finally(() => this.db?.close());
   }
 }
