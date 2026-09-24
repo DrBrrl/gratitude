@@ -4,7 +4,7 @@ This proposal defines the first usable Gratitude application, following [UX_DESI
 
 ## Implemented foundation in PR #4
 
-The `/journal/` route implements Google sign-in, save/edit against a fixed versioned starter prompt, a private ordered Firestore stream, live subscriptions, a checksummed IndexedDB projection checkpoint, and a durable pending-save outbox. A second browser can reconstruct the same journal. Recovery discards the checkpoint and replays all events. Callable validation, idempotent retries, revision conflicts and owner-only rules are emulator-tested. Live resource activation is tracked in [FIREBASE_SETUP.md](FIREBASE_SETUP.md).
+The `/journal/` route implements Google sign-in, save/edit against a fixed versioned starter prompt, a private ordered Firestore stream, live subscriptions, a checksummed IndexedDB projection checkpoint, and a durable pending-save outbox. A second browser can reconstruct the same journal. Recovery discards the checkpoint and replays all events. Callable validation, idempotent retries, revision conflicts and owner-only rules are emulator-tested. Live provisioning and the remaining Functions billing prerequisite are tracked in [FIREBASE_SETUP.md](FIREBASE_SETUP.md).
 
 This slice uses `ReflectionWritten` with entry ID, original text, expected revision and starter ID. Sequence, timestamp and input digest are infrastructure metadata; prompt text, entry revision and rainbow position are derived. The server revision index is disposable and is reconstructed from events when missing. The stream head is transactionally maintained append metadata. The complete MVP event vocabulary below remains planned; preserve or explicitly migrate this first schema when extending it.
 

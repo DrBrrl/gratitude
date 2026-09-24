@@ -158,3 +158,12 @@ A follow-up browser test deliberately corrupts a checkpoint and interrupts a sav
 At the user’s suggestion, checked the Google Cloud CLI route. `gcloud` had no active account, so reused a short-lived token from the existing Firebase login through a mode-0600 temporary file, removed after the command. `gcloud services enable firebase.googleapis.com --project=gratitude-drbrrl` succeeded. A direct Management API `projects.addFirebase` call then still returned 403 `PERMISSION_DENIED`; API enablement alone does not complete Firebase activation. No credentials were printed or committed.
 
 The documented `gcloud alpha firebase projects create` command can provision into an existing project, but also initializes resources in `us-west1`, so it was not used for our Sydney design. Used the narrower documented Management API activation operation instead. The terms explanation remains a hypothesis; the API provides no more specific reason. Sources: [gcloud command](https://docs.cloud.google.com/sdk/gcloud/reference/alpha/firebase/projects/create), [Firebase activation and troubleshooting](https://firebase.google.com/docs/projects/use-firebase-with-existing-cloud-project).
+
+
+## 2026-09-24 — Activation succeeded after terms acceptance
+
+The owner reported accepting Firebase terms. The next `projects:addfirebase gratitude-drbrrl` operation succeeded, resolving the previous 403. Registered web app `1:696882301155:web:3fdeda713681e3ed685dd6`, enabled Google sign-in, verified the OAuth client exists and authorized the Firebase domains, Pages origin and localhost. Created the default Native/Standard Firestore database in Sydney (`australia-southeast1`) and deployed repository rules and indexes successfully. Setup did not create journal data.
+
+Firebase CLI 15.30.0 supports auth provisioning from a temporary `auth.providers.googleSignIn` configuration. It automatically adds the Firebase auth handler redirect URI; supplying that URI explicitly caused a duplicate-URL error. Retrying without the duplicate succeeded. The support email came from the owner’s existing CLI account; no OAuth secret or personal support email was committed.
+
+The project has no billing account linked, and Cloud Billing lists no accounts accessible to the current login. The owner has been asked to link their intended account so Cloud Functions can deploy. Activation, configured authentication and deployed Firestore rules are confirmed; deployed Functions, mobile OAuth verification, deployment IAM and a working hosted journal remain outstanding.
