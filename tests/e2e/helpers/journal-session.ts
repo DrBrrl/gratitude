@@ -29,6 +29,6 @@ export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, 
   await steps.step('signed-in', 'Complete sign-in and open Today', [{ description: 'The private journal is synchronized', check: async () => { await expect(page.getByRole('status')).toHaveText('Synced', { timeout: 15_000 }); await expect(page.getByLabel('Your reflection')).toBeVisible(); } }]);
 }
 export async function writeReflection(page: Page, steps: TestStepHelper, text: string, id: string) {
-  await steps.action(`${id}-type`, 'Write a reflection', () => page.getByLabel('Your reflection').fill(text), async () => { await expect(page.getByLabel('Your reflection')).toHaveValue(text); });
+  await steps.action(`${id}-type`, 'Write a reflection', () => page.getByLabel('Your reflection').fill(text), async () => { await expect(page.getByLabel('Your reflection')).toHaveValue(text); await expect(page.getByText('Draft saved on this device', { exact: true })).toBeVisible(); });
   await steps.action(`${id}-save`, 'Save the reflection to the journal', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => { await expect(page.getByRole('status')).toHaveText('Synced'); await expect(page.locator('article').filter({ hasText: text })).toBeVisible(); });
 }
