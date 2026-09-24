@@ -133,3 +133,21 @@ I accepted the terms, try again! :)
 ```text
 why do we need cloud functions for this application? I don't think we do
 ```
+
+## 2026-09-24 — PR preview sign-in availability
+
+```text
+did you redeploy the PR preview? It still says sign in not avaialble
+```
+
+## 2026-09-24 — Finish the working Firebase preview
+
+```text
+ok so finish it
+```
+
+## 2026-09-24 — Run a GitHub flake
+
+```text
+I want to run a flake from github, remind me the syntax
+```

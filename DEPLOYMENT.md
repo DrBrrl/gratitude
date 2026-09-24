@@ -37,6 +37,10 @@ A failed publication can be rerun in Actions. After this workflow is on `main`, 
 
 ## Firebase foundation
 
-Pages remains a static deployment. The separate `firebase` CI job runs emulator integration tests and mobile/desktop journal screenshot comparisons; both frontend and Firebase jobs must pass before Pages publication. Its emulator-configured build is never uploaded as the production Pages artifact.
+Pages remains a static deployment. The separate `firebase` CI job runs emulator integration tests and mobile/desktop journal screenshot comparisons; both frontend and Firebase jobs must pass before publication. Emulator-configured builds are never uploaded as the Pages artifact.
 
-The manual, main-only **Deploy Firebase** workflow tests and deploys Firestore rules/indexes and Functions using Workload Identity Federation. It requires external resource and identity setup and does not run for PRs. Current resource inventory, the Functions billing prerequisite, configuration and deployment commands are in [FIREBASE_SETUP.md](FIREBASE_SETUP.md). Until configured, the hosted journal route explains that sign-in is unavailable; review the emulator walkthrough in [the generated journal scenario](tests/e2e/002-firebase-journal/README.md).
+Before the Pages build, `scripts/configure_firebase_build.py` selects committed public web configuration: pull requests use `config/firebase-preview.json` (`gratitude-drbrrl-dev`); main uses `config/firebase-production.json` (`gratitude-drbrrl`). These identifiers and Firebase API keys are public SDK configuration, not administrative or Gemini secrets. Access is enforced by Firebase Auth and Firestore rules. The existing Gemini repository secret is unused.
+
+The journal uses Firestore browser transactions; there are no Cloud Functions to deploy or bill. Rules and indexes are deployed explicitly to each project with `npx firebase deploy --only firestore --project <project-id>`. The optional manual, main-only **Deploy Firebase** workflow deploys production rules/indexes after emulator checks; its Workload Identity Federation variables still need provisioning before that workflow can be used. Current rules were deployed through the authenticated CLI. See [FIREBASE_SETUP.md](FIREBASE_SETUP.md).
+
+Previews share a development backend and must use test reflections. GitHub Pages paths share an origin; separate Firebase projects and cache names are not browser-origin isolation. The [generated journal walkthrough](tests/e2e/002-firebase-journal/README.md) documents the emulator-tested flow.

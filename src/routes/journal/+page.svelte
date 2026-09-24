@@ -4,7 +4,7 @@
   import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
   import { createFirebaseClient, googleSignIn, type FirebaseClient } from '$lib/firebase/client';
   import { JournalRepository, type JournalView } from '$lib/firebase/repository';
-  import { emptyProjection, STARTER_ID, STARTER_PROMPT, type Entry } from '../../../functions/src/domain';
+  import { emptyProjection, STARTER_ID, STARTER_PROMPT, type Entry } from '$lib/domain';
 
   let client: FirebaseClient | null = null;
   let repository: JournalRepository | null = null;

@@ -1,16 +1,59 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function owns(uid) { return request.auth != null && request.auth.uid == uid; }
+    function owns(uid) {
+      return request.auth != null && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+    function validId(id) { return id is string && id.matches('^[a-zA-Z0-9_-]{1,80}$'); }
     match /users/{uid}/streams/{generation} {
+      function root() { return /databases/$(database)/documents/users/$(uid)/streams/$(generation); }
+      function eventPath(id) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/events/$(id); }
+      function pointerPath(id) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/entries/$(id); }
+      function nextSequence() { return exists(root()) ? get(root()).data.sequence + 1 : 1; }
+      function nextRevision(entryId) {
+        return exists(pointerPath(entryId))
+          ? get(eventPath(get(pointerPath(entryId)).data.lastEventId)).data.payload.expectedRevision + 1 : 0;
+      }
       allow read: if owns(uid);
-      allow write: if false;
+      allow create, update: if owns(uid) && generation == 'v1'
+        && request.resource.data.keys().hasOnly(['sequence', 'lastEventId'])
+        && validId(request.resource.data.lastEventId)
+        && request.resource.data.sequence == nextSequence()
+        && !exists(eventPath(request.resource.data.lastEventId))
+        && getAfter(eventPath(request.resource.data.lastEventId)).data.sequence == request.resource.data.sequence;
+      allow delete: if false;
       match /events/{eventId} {
         allow read: if owns(uid);
-        allow write: if false;
+        allow create: if owns(uid) && generation == 'v1' && validId(eventId)
+          && request.resource.data.keys().hasOnly(['eventId', 'type', 'schemaVersion', 'payload', 'sequence', 'recordedAt'])
+          && request.resource.data.eventId == eventId
+          && request.resource.data.type == 'ReflectionWritten' && request.resource.data.schemaVersion == 1
+          && request.resource.data.recordedAt == request.time
+          && request.resource.data.sequence == nextSequence()
+          && request.resource.data.payload.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'starterId'])
+          && validId(request.resource.data.payload.entryId)
+          && request.resource.data.payload.text is string
+          && request.resource.data.payload.text.size() > 0 && request.resource.data.payload.text.size() <= 10000
+          && request.resource.data.payload.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+          && request.resource.data.payload.starterId == 'small-moment-v1'
+          && request.resource.data.payload.expectedRevision is int
+          && request.resource.data.payload.expectedRevision == nextRevision(request.resource.data.payload.entryId)
+          && getAfter(root()).data.sequence == request.resource.data.sequence
+          && getAfter(root()).data.lastEventId == eventId
+          && getAfter(pointerPath(request.resource.data.payload.entryId)).data.lastEventId == eventId;
+        allow update, delete: if false;
+      }
+      match /entries/{entryId} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && generation == 'v1' && validId(entryId)
+          && request.resource.data.keys().hasOnly(['lastEventId'])
+          && validId(request.resource.data.lastEventId)
+          && !exists(eventPath(request.resource.data.lastEventId))
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.payload.entryId == entryId;
+        allow delete: if false;
       }
     }
-    // Server-only validation projections, jobs, and all unknown collections.
     match /{document=**} { allow read, write: if false; }
   }
 }

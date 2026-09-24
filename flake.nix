@@ -30,7 +30,6 @@
           };
         in {
           default = shellFor pkgs.nodejs_24;
-          firebase = shellFor pkgs.nodejs_22;
         });
     };
 }

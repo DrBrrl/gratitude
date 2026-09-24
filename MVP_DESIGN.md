@@ -4,9 +4,9 @@ This proposal defines the first usable Gratitude application, following [UX_DESI
 
 ## Implemented foundation in PR #4
 
-The `/journal/` route implements Google sign-in, save/edit against a fixed versioned starter prompt, a private ordered Firestore stream, live subscriptions, a checksummed IndexedDB projection checkpoint, and a durable pending-save outbox. A second browser can reconstruct the same journal. Recovery discards the checkpoint and replays all events. Callable validation, idempotent retries, revision conflicts and owner-only rules are emulator-tested. Live provisioning and the remaining Functions billing prerequisite are tracked in [FIREBASE_SETUP.md](FIREBASE_SETUP.md).
+The `/journal/` route implements Google sign-in, save/edit against a fixed versioned starter prompt, a private ordered Firestore stream, live subscriptions, a checksummed IndexedDB projection checkpoint, and a durable pending-save outbox. A second browser can reconstruct the same journal. Recovery discards the checkpoint and replays all events. Browser transactions, Security Rules validation, idempotent retries, revision conflicts and owner-only access are emulator-tested. Live provisioning is tracked in [FIREBASE_SETUP.md](FIREBASE_SETUP.md).
 
-This slice uses `ReflectionWritten` with entry ID, original text, expected revision and starter ID. Sequence, timestamp and input digest are infrastructure metadata; prompt text, entry revision and rainbow position are derived. The server revision index is disposable and is reconstructed from events when missing. The stream head is transactionally maintained append metadata. The complete MVP event vocabulary below remains planned; preserve or explicitly migrate this first schema when extending it.
+This slice uses `ReflectionWritten` with entry ID, original text, expected revision and starter ID. Sequence and server timestamp are infrastructure metadata; prompt text, entry revision and rainbow position are derived. The stream head and per-entry last-event pointer are transactionally maintained append indexes, reconstructable from the event stream. Rules derive the expected revision from the prior immutable event; no entry snapshots are stored in these indexes. Missing/damaged cloud indexes require controlled repair, while local projection caches can be discarded by the user. The complete MVP event vocabulary below remains planned; preserve or explicitly migrate this first schema when extending it.
 
 No AI requests or AI events are implemented yet. There is no daily-entry reservation, autosaved draft, service worker, persistent local event cache, photo pipeline, search, export or erasure flow. Offline recovery currently means preserving a failed explicit save for retry; cold offline startup is not supported. Storage rules deny all access until the photo increment. The initial journal is a functional foundation, not the complete approved UX.
 
@@ -28,37 +28,36 @@ Today, Journal, and Settings remain the three tabs; AI settings is the first Set
 | --- | --- |
 | GitHub Pages | Static SvelteKit production application and per-PR previews |
 | Firebase Authentication | Google sign-in; stable Firebase UID for journal ownership |
-| Cloud Firestore | Authoritative per-user event stream, ordered append metadata, disposable server projections and operational jobs |
+| Cloud Firestore | Authoritative per-user event stream and atomic append indexes, protected by Security Rules |
 | Cloud Storage for Firebase | Private, metadata-stripped photo assets referenced by events |
-| Cloud Functions for Firebase | Authenticated command validation, ordered append, Gemini integration, upload finalization and deletion |
+| Firebase AI Logic (planned) | Managed Gemini access from the client; responses recorded as events |
 | IndexedDB | Confirmed-event cache, versioned local projection checkpoints, pending user-action outbox and photo staging |
 | Service worker | Base-path-scoped application assets for previously loaded offline use |
 
-Use separate production and development Firebase projects when enabling live previews. Until a development backend is provisioned, hosted previews show a setup-unavailable state and local previews use emulators and must not connect to the production journal or receive its Gemini secret. Namespacing IndexedDB by Firebase project, UID, stream generation, and deployment base path prevents accidental cache reuse; it is not a security boundary between scripts hosted on the same GitHub Pages origin.
+Production uses `gratitude-drbrrl`; PR previews use `gratitude-drbrrl-dev`. Both have Google authentication and Sydney Firestore. CI explicitly selects their public SDK configuration; no Gemini secret enters the build. No Cloud Functions are required for the journal foundation. Firebase AI Logic, photo storage and their quotas/billing conditions must be assessed when those features are implemented.
+
+IndexedDB is namespaced by project, UID, stream generation and deployment base path. Namespacing and separate backend projects are not a browser security boundary between scripts on the shared GitHub Pages origin; use preview accounts/test data and consider separate origins before production release.
 
 ## Reference patterns
 
 [Food's MVP design](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/MVP_DESIGN.md) records nondeterministic AI responses as events, then derives read models. Gratitude follows that boundary directly. Its [store](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/src/lib/store.ts) and [IndexedDB repository](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/src/lib/db.ts) illustrate separate event persistence and incremental projections.
 
-[Jaipur's event types](https://github.com/anicolao/jaipur/blob/76cc8bcaa8d4f111c2ebc26b67162ca646b4576a/src/lib/game-events.ts) and [Firebase repository](https://github.com/anicolao/jaipur/blob/76cc8bcaa8d4f111c2ebc26b67162ca646b4576a/src/lib/game-repository.ts) inform versioned reducers, authenticated streams, pending actions, and cached recovery. Gratitude adds an explicit projection checkpoint and server-assigned sequence rather than replaying all cached events on each launch or relying on client clocks for cross-device order.
+[Jaipur's event types](https://github.com/anicolao/jaipur/blob/76cc8bcaa8d4f111c2ebc26b67162ca646b4576a/src/lib/game-events.ts) and [Firebase repository](https://github.com/anicolao/jaipur/blob/76cc8bcaa8d4f111c2ebc26b67162ca646b4576a/src/lib/game-repository.ts) inform versioned reducers, authenticated streams, pending actions, and cached recovery. Gratitude adds an explicit projection checkpoint and transactionally allocated sequence rather than replaying all cached events on each launch or relying on client clocks for cross-device order.
 
 ```mermaid
 flowchart TD
   User[Signed-in user] --> Client[SvelteKit client and local outbox]
-  Client --> Commands[Authenticated command function]
-  Commands --> Stream[Firestore user event stream]
-  Commands --> Jobs[Transactional live-work outbox]
-  Jobs --> Worker[Gemini worker]
-  Worker --> Gemini[Gemini API]
-  Gemini --> Worker
-  Worker -->|Recorded response event| Stream
+  Client --> Transaction[Firestore transaction and Security Rules]
+  Transaction --> Stream[Private immutable event stream]
+  Client -->|Live requests only, planned| AI[Firebase AI Logic / Gemini]
+  AI -->|Exact response recorded by client| Transaction
   Stream --> Projector[Pure versioned projector]
   Cache[Disposable local checkpoint] --> Projector
   Projector --> Cache
   Projector --> UI[Journal, drafts, prompts, settings and search]
 ```
 
-The projector has no Gemini client and no effect-dispatch API. Live command/worker processing is separate from subscriptions, hydration, and replay.
+The projector has no Gemini client and no effect-dispatch API. Live user-request processing is separate from subscriptions, hydration, and replay.
 
 ## Identity, authorization, and data layout
 
@@ -69,21 +68,20 @@ Proposed paths:
 ```text
 users/{uid}/streams/{generation}                 # ordered head and integrity metadata
 users/{uid}/streams/{generation}/events/{eventId}
-users/{uid}/projections/{projectionVersion}      # disposable server validation cache
-users/{uid}/jobs/{requestId}                     # delivery/lease bookkeeping
+users/{uid}/streams/{generation}/entries/{entryId} # last-event pointer for append validation
 users/{uid}/assets/{assetId}                     # upload/erasure bookkeeping
 Storage: users/{uid}/{generation}/{assetId}
 ```
 
 The active generation is repository metadata, changed during whole-journal deletion to prevent stale offline devices restoring an erased history. Settings that must survive journal deletion remain in a separately scoped user-settings stream. Replay merges that scope using explicit referenced settings revisions, not an unspecified interleaving of two streams.
 
-Firestore rules permit an authenticated user to read only their own stream. Clients cannot write, update, or delete committed events, forge AI responses, edit head metadata, or read jobs and other users' data. All appends go through authenticated functions. Functions derive the UID from verified auth, validate payload allowlists, and enforce ownership on every referenced entry/photo/request. The Admin SDK bypasses Firestore rules, so this validation and least-privilege service IAM are mandatory. [Firestore security documentation](https://firebase.google.com/docs/firestore/security/get-started)
+Firestore rules permit a Google-authenticated user to read only their own stream. A browser transaction creates one event and advances the head and entry pointer atomically. Rules independently validate the exact action schema, ownership, next sequence, expected revision, server timestamp and all cross-document links using `getAfter`. Event updates/deletes and unrelated collection writes are denied. The client cannot bypass these checks by modifying JavaScript. [Atomic transactions and Rules](https://firebase.google.com/docs/firestore/manage-data/transactions)
 
-Storage rules likewise constrain access to the authenticated UID and generation. Use immutable object IDs and validated upload finalization; do not expose public download-token URLs. App Check, request size limits, per-user rate limits, and backend concurrency limits protect the command/Gemini endpoints in addition to authentication. The callable protocol carries Firebase authentication, but each function must enforce its required authenticated-user policy. [Callable Functions documentation](https://firebase.google.com/docs/functions/callable)
+Storage is currently denied entirely. The photo increment needs owner-scoped rules and explicit upload/cleanup design. Firebase AI Logic will need App Check and quota controls; it is not enabled in this foundation. Future AI responses written by the client are user-owned records, not server-attested evidence of a provider response. Replay requires the recorded text, not an attestation. The current rules reject all unimplemented event types, including AI results.
 
 ## Events and computed state
 
-A committed record carries `eventId`, `schemaVersion`, `rulesVersion`, `source` (`user` or `gemini`/service outcome), `type`, typed `payload`, causation/request references, observed client time/timezone where relevant, and server-assigned sequence/time. Identity, sequence, versions, integrity hashes, and transport bookkeeping are infrastructure metadata rather than derived journal state.
+A committed record carries `eventId`, `schemaVersion`, `rulesVersion`, `source` (`user` or `gemini`/service outcome), `type`, typed `payload`, causation/request references, observed client time/timezone where relevant, and transactionally allocated sequence/time. Identity, sequence, versions, integrity hashes, and transport bookkeeping are infrastructure metadata rather than derived journal state.
 
 | Events | Persisted facts/inputs | Projection output |
 | --- | --- | --- |
@@ -105,7 +103,9 @@ For an edited AI description, record user edit operations against the response/m
 
 ## Ordered writes and cross-device conflicts
 
-The append function transactionally checks the event ID, current stream generation, relevant entity/settings revisions and canonical head, then allocates the next sequence, appends accepted events, and advances metadata. Identical retries return the original result; an existing ID with a different payload is rejected. Settings revision references used by a request are resolved and validated in the same acceptance transaction. Server projections used for validation are disposable and must match the validated stream head.
+The browser transaction checks the stable event ID, reads the canonical head and the entry's previous event, checks the expected revision, then appends the new event with `serverTimestamp()` and advances both indexes. Rules repeat validation independently. Identical retries return the original event after confirming its full action payload; reused IDs with changed input fail. Concurrent attempts can receive a Rules denial before the SDK retries a precondition, so the client checks for an identical committed event and makes bounded transaction retries. Text conflicts retain the pending text for explicit recovery.
+
+Cloud head/pointer indexes are operational metadata, not independent sources of domain state. They must only advance with an event. Local projections are rebuilt through the pure reducer; cloud-index repair, if ever needed, must reconstruct from the validated full stream through administrative tooling rather than weakening client rules.
 
 A pending draft edit and its Save action can be submitted as one ordered command batch. Sequence is authoritative; client timestamps serve only as recorded interaction context. Concurrent text edits use explicit expected revisions. A stale write returns a conflict while retaining the unsent text; the user can reload or explicitly reapply it. Do not silently apply last-write-wins to journal prose. Sync acknowledgements remove matching pending IDs once, not append duplicate events.
 
@@ -115,21 +115,17 @@ Repeated opens for the same observed local date resolve to one canonical day. It
 
 ## Gemini execution and credentials
 
-The repository already contains the Actions secret **`GEMINI_API_KEY`**, verified by secret name only. It must remain server-side. The Pages build must never receive it through a public/Vite environment variable or embed it in JavaScript, source maps, artifacts, logs, or browser storage. A backend proxy is the appropriate boundary for the private Gemini key. [Gemini API key guidance](https://ai.google.dev/gemini-api/docs/api-key)
+Use Firebase AI Logic for managed Gemini access from the client in a later increment. The repository's existing `GEMINI_API_KEY` remains unused and private; it must never be copied to Vite configuration or the browser. Evaluate the supported Gemini Developer API no-cost tier, quotas, App Check and data-use terms before enabling real journaling inputs. This integration does not require a custom Cloud Function. [Firebase AI Logic pricing](https://firebase.google.com/docs/ai-logic/pricing)
 
-A trusted backend deployment workflow on `main` will authenticate to Google Cloud with GitHub OIDC/Workload Identity Federation, copy the existing Actions secret to Secret Manager using protected stdin, and deploy functions that explicitly bind that secret. GitHub secret values cannot be read back through `gh secret list`; the value is made available to an authorized workflow. The Firebase browser configuration is separate public application configuration, not this Gemini key. Secret provisioning is not performed by public PR preview jobs. [Functions secret configuration](https://firebase.google.com/docs/functions/config-env)
+Live processing is separate from replay:
 
-Live request processing:
+1. An explicit user action commits a request event with stable request identity and consent/settings references.
+2. The live client reconstructs eligible context (at most five recent entries and twenty feedback items with versioned size limits), rechecks consent and calls Gemini outside any Firestore transaction. Use a transactional claim if coordinating multiple active devices.
+3. Store the exact consumed response, actual model, request identity and context provenance in a response event. Deduplicate acceptance by stable response ID. Recheck current generation/consent/target before accepting late output.
+4. Only committed response events supply the durable prompt or summary. Persist an already-received result locally for retry rather than issuing inference again merely because the event write failed.
+5. An interrupted browser cannot execute background work after it closes. Show unfinished requests with explicit resume/retry; replay and subscriptions must never dispatch inference. Provider calls may repeat across crash boundaries, so do not promise exactly-once billing.
 
-1. An authorized user command commits a request event and an operational outbox record in one transaction. The command defines which immutable request/settings revision applies; duplicate submissions reuse its identity.
-2. A worker claims a lease, reconstructs context at that request boundary, and rechecks current consent, target existence, generation and request eligibility immediately before dispatch. Select at most five most recent eligible entries and twenty feedback items, with versioned deterministic length limits. No hidden inferred profile or fine-tuning is required for MVP personalization.
-3. The worker calls a configured supported Gemini text/vision model **outside** the Firestore transaction. Record the actual model/version in the response; model selection is deploy configuration and never a replay dependency.
-4. Persist the exact response and terminal job status atomically, using a deterministic response-event ID derived from the request ID. Only the backend may append it. Reveal a cloud-ready prompt/summary only after that commit.
-5. Duplicate function deliveries find the existing terminal result and do not append another. A manual retry creates a new request identity linked to the old attempt. Errors preserve the current prompt/photo and produce the UX's retry/starter state.
-
-Trigger delivery can repeat and ordering is not guaranteed, so the worker must use the canonical sequence and idempotency controls rather than delivery order. A crash after Gemini responds but before the result commit can cause another provider invocation; the design guarantees one accepted response per request, **not exactly-once provider billing**. Leases and bounded retries reduce duplication. [Firestore trigger delivery semantics](https://firebase.google.com/docs/functions/firestore-events)
-
-Recovering an unfinished live outbox job is separate from replay. Tests rebuilding a projection run with effects disabled and must assert **zero Gemini requests**, including when the stream contains an unfinished request. A late summary never overwrites a manual description; response correlation and reducer precedence handle that consistently. Removed targets, revoked sharing, and superseded requests are rechecked before storing a result to avoid restoring deleted content.
+AI event schemas and Security Rules remain future work. The browser can author records only in its own account; managed model access does not make client-written response records provider-attested. Historical text remains reproducible because replay reads events, never calls a model. Late summaries cannot override manual descriptions. Removed targets and revoked sharing invalidate pending work.
 
 ## Cached projections and complete replay
 
@@ -159,6 +155,6 @@ Previously loaded offline users can read cached entries, search the available jo
 
 ## Provisioning and implementation status
 
-The Firebase project, Google provider, Firestore database, private Storage bucket, functions, rules and deployment identity are tracked in [FIREBASE_SETUP.md](FIREBASE_SETUP.md). The setup record distinguishes verified resources from pending configuration. The project bootstrap is authorized; Google login and any billing linkage are external setup prerequisites, not evidence that application features are already deployed.
+The Firebase project, Google provider, Firestore database, planned private Storage bucket, rules and optional deployment identity are tracked in [FIREBASE_SETUP.md](FIREBASE_SETUP.md). The setup record distinguishes verified resources from pending configuration. Google login authorized provisioning; billing is not required by this journal foundation. The setup inventory distinguishes provisioned resources from verified application behavior.
 
 The implementation plan now starts with Firebase/authentication and recorded external-response events. There is no deterministic-model feasibility gate, no local-only MVP scope, and no proposed separate authoritative AI artifact archive.

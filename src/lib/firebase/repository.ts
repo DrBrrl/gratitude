@@ -1,8 +1,8 @@
 import { collection, doc, getDocFromServer, onSnapshot, orderBy, query, where } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
+import { appendReflection, decodeEvent } from './append';
 import { openDB, type IDBPDatabase } from 'idb';
 import { base } from '$app/paths';
-import { applyEvent, emptyProjection, GENERATION, type Action, type JournalEvent, type Projection } from '../../../functions/src/domain';
+import { applyEvent, emptyProjection, GENERATION, type Action, type Projection } from '../domain';
 import type { FirebaseClient } from './client';
 
 type Checkpoint = { state: Projection; digest: string };
@@ -51,10 +51,10 @@ export class JournalRepository {
     this.unsubscribe = onSnapshot(query(events, where('sequence', '>', this.state.cursor), orderBy('sequence')),
       { includeMetadataChanges: true }, (snapshot) => {
         this.chain = this.chain.then(async () => {
-          if (this.stopped) return;
+          if (this.stopped || snapshot.metadata.hasPendingWrites) return;
           let next = this.state;
           for (const item of snapshot.docs) {
-            const event = item.data() as JournalEvent;
+            const event = decodeEvent(item.data());
             if (event.sequence > next.cursor) next = applyEvent(next, event);
           }
           const checkpoint: Checkpoint = { state: next, digest: await digest(next) };
@@ -85,8 +85,8 @@ export class JournalRepository {
     this.status = 'Saved on this device; syncing…';
     this.emit();
     try {
-      const append = httpsCallable<Action, { sequence: number; eventId: string }>(this.client.functions, 'appendReflection');
-      await append(this.pending);
+      if (!navigator.onLine) throw new Error('You are offline. Your text is saved on this device.');
+      await appendReflection(this.client.db, this.uid, this.pending);
       if (this.stopped) return;
       await this.db.delete('outbox', 'pending');
       this.pending = null;

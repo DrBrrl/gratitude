@@ -1,13 +1,27 @@
 {
-  "functions": [{ "source": "functions", "codebase": "gratitude", "predeploy": ["npm --prefix functions run build"] }],
-  "firestore": { "rules": "firestore.rules", "indexes": "firestore.indexes.json" },
-  "storage": { "rules": "storage.rules" },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "emulators": {
-    "auth": { "host": "127.0.0.1", "port": 19099 },
-    "firestore": { "host": "127.0.0.1", "port": 18080 },
-    "functions": { "host": "127.0.0.1", "port": 15001 },
-    "storage": { "host": "127.0.0.1", "port": 19199 },
-    "ui": { "enabled": false },
+    "auth": {
+      "host": "127.0.0.1",
+      "port": 19099
+    },
+    "firestore": {
+      "host": "127.0.0.1",
+      "port": 18080
+    },
+    "storage": {
+      "host": "127.0.0.1",
+      "port": 19199
+    },
+    "ui": {
+      "enabled": false
+    },
     "singleProjectMode": true
   }
 }
