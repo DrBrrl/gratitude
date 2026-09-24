@@ -5,7 +5,8 @@ const baseURL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:4173${basePath}/`;
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  fullyParallel: false,
+  workers: 1, // Auth-emulator account picker is shared; keep action screenshots deterministic.
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
   updateSnapshots: 'none',

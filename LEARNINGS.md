@@ -185,3 +185,25 @@ Replaced the callable save function with browser Firestore transactions and inde
 Concurrent browser transactions can receive permission-denied from Rules before the SDK retries a conflicting precondition. An identical, server-confirmed event is accepted as a retry acknowledgement; otherwise bounded retries reread the head and revision. Emulator tests cover concurrent new entries, conflicting edits, duplicate retries, cross-user/anonymous/non-Google access, forged fields, wrong timestamps/sequences, unknown generations, detached head/pointer writes and event mutation. Browser tests retain zero-pixel screenshots and verify corrupted-cache recovery and a saved offline outbox across unloading/reopening the page.
 
 Created development project `gratitude-drbrrl-dev` (`959183629113`), web app `1:959183629113:web:33d4c1d0ab65759fe796e8`, Google provider and Sydney Firestore. Preview data is separate from production; both authorize the Pages origin. No billing account was linked, no Gemini secret was exposed, and AI integration remains planned. Client-written future AI response records will be private user records rather than provider-attested evidence; replay still consumes their exact recorded text without inference.
+
+## 2026-09-24 — Production feature series: journal navigation and search
+
+Started `feat/production-journal` from merged main `84d69b1`. The first increment adds Today/Journal/Settings navigation, equal-height rainbow cards, full-entry views, editing and all-word case/accent-insensitive search with highlighted matches. The editor shows the next projected colour before saving. Colours remain derived from events and are not recomputed from filtered results.
+
+The user requested a screenshot after every action. The walkthrough helper now supports action-plus-check-plus-screenshot and popup capture. The existing foundation scenario was expanded to include every navigation, click, text input and connectivity action; the new search scenario demonstrates the full browse/edit flow. Auth emulator account state is reset per scenario and scenarios run serially so the Google account picker is reproducible. Server-generated dates are masked explicitly; all other pixels retain zero tolerance. Rounded blurred surfaces produced intermittent edge rasterization differences, so the interface keeps translucent tinted surfaces without backdrop blur. No screenshot tolerance was relaxed.
+
+## 2026-09-24 — Durable local drafts
+
+The second feature increment persists raw unfinished save actions in the per-account IndexedDB outbox as the user types. A draft keeps its stable action/entry IDs and original edit revision; reload can detect an already committed save before restoring the editor. Ordered local writes prevent a late autosave from resurrecting a discarded draft. Saving clears the local draft only after the action is safely in the durable save outbox. These are device drafts, not cross-device cloud draft events; the UI states that limit explicitly.
+
+Added a native confirmation dialog for discard, local-save status, navigation/reload recovery and a step-by-step E2E scenario including cancel, save, discard and subsequent reload. Storage errors keep the editor text and do not claim persistence. Future offline cold-start and cross-device draft synchronization remain separate work.
+
+## 2026-09-24 — Complete journal export
+
+The third feature exports Markdown and JSON from a verified immutable event prefix fetched from Firestore. Search filters and local projection checkpoints cannot silently truncate the export. Drafts are excluded, pending saves must finish first, and offline export reports that a connection is required. Markdown escapes user-authored formatting/HTML; JSON preserves exact text. Both retain the original prompt, date and projected colour. The E2E walkthrough inspects actual downloaded files and places these checks under the corresponding screenshots.
+
+## 2026-09-24 — Live AI feasibility, separate from the released journal
+
+Provisioned Firebase AI Logic for the development project only using the authenticated Firebase CLI provisioning API. A fictional one-question smoke request through the browser-compatible Firebase SDK succeeded with `gemini-3.6-flash`, without reading or exposing the repository Gemini secret and without linking billing. `gemini-2.5-flash` returned a provider error saying it is unavailable to new users; model availability must be verified, not assumed. A 128-token output budget truncated the answer; 1024 produced a complete question.
+
+This is service feasibility evidence, not an implemented AI feature. App Check enforcement, quotas, explicit sharing controls, durable request/response events and replay tests remain required before exposing generation in the app. No journal data was sent. Production AI Logic was not provisioned. See the official [Firebase AI Logic setup](https://firebase.google.com/docs/ai-logic/get-started) and [App Check guidance](https://firebase.google.com/docs/ai-logic/app-check).

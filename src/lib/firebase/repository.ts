@@ -1,8 +1,8 @@
-import { collection, doc, getDocFromServer, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { appendReflection, decodeEvent } from './append';
 import { openDB, type IDBPDatabase } from 'idb';
 import { base } from '$app/paths';
-import { applyEvent, emptyProjection, GENERATION, type Action, type Projection } from '../domain';
+import { applyEvent, emptyProjection, replay, GENERATION, type Action, type Projection } from '../domain';
 import type { FirebaseClient } from './client';
 
 type Checkpoint = { state: Projection; digest: string };
@@ -19,6 +19,7 @@ export class JournalRepository {
   private sending = false;
   private unsubscribe: (() => void) | undefined;
   private chain = Promise.resolve();
+  private draftChain = Promise.resolve();
   private ready = false;
   private status = 'Opening your journal…';
   private error = '';
@@ -70,6 +71,27 @@ export class JournalRepository {
     this.emit();
     if (this.pending) void this.retry();
   }
+  async readDraft(): Promise<Action | null> {
+    const draft = await this.db.get('outbox', 'draft') as Action | undefined;
+    if (!draft) return null;
+    if (this.pending?.eventId === draft.eventId) { await this.clearDraft(); return null; }
+    try {
+      const committed = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${draft.eventId}`));
+      if (committed.exists()) { await this.clearDraft(); return null; }
+    } catch { /* Offline drafts remain recoverable; append deduplicates the stable action ID. */ }
+    return draft;
+  }
+  writeDraft(draft: Action) {
+    const copy = structuredClone(draft);
+    const write = this.draftChain.then(() => this.db.put('outbox', copy, 'draft')).then(() => {});
+    this.draftChain = write.catch(() => {});
+    return write;
+  }
+  clearDraft() {
+    const write = this.draftChain.then(() => this.db.delete('outbox', 'draft'));
+    this.draftChain = write.catch(() => {});
+    return write;
+  }
   async save(action: Action) {
     if (this.pending) throw new Error('Retry or discard the pending save first.');
     if (!this.ready || this.stopped) throw new Error('Wait for your journal to load.');
@@ -101,6 +123,19 @@ export class JournalRepository {
     await this.db.delete('outbox', 'pending');
     this.pending = null; this.error = ''; this.status = 'Pending save returned to editor'; this.emit();
   }
+  async exportSnapshot() {
+    if (this.pending || this.sending) throw new Error('Sync your pending save before exporting.');
+    if (!navigator.onLine) throw new Error('Connect to export your complete saved journal.');
+    const path = `users/${this.uid}/streams/${GENERATION}`;
+    const head = await getDocFromServer(doc(this.client.db, path));
+    if (!head.exists()) return emptyProjection();
+    const cursor = head.get('sequence');
+    const snapshot = await getDocsFromServer(query(collection(this.client.db, `${path}/events`), where('sequence', '<=', cursor), orderBy('sequence')));
+    const state = replay(snapshot.docs.map((item) => decodeEvent(item.data())));
+    if (state.cursor !== cursor || state.lastEventId !== head.get('lastEventId')) throw new Error('Journal history is incomplete. Try exporting again after synchronization.');
+    if (this.stopped) throw new Error('Sign in again before exporting.');
+    return state;
+  }
   async rebuild() {
     if (this.stopped) return;
     this.unsubscribe?.();
@@ -114,6 +149,6 @@ export class JournalRepository {
   stop() {
     this.stopped = true;
     this.unsubscribe?.();
-    void this.chain.finally(() => this.db?.close());
+    void Promise.all([this.chain, this.draftChain]).finally(() => this.db?.close());
   }
 }
