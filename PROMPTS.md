@@ -127,3 +127,9 @@ can't you add firegbase to the project using gcloud?
 ```text
 I accepted the terms, try again! :)
 ```
+
+## 2026-09-24 — Questioning the Cloud Functions requirement
+
+```text
+why do we need cloud functions for this application? I don't think we do
+```
