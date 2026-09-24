@@ -13,10 +13,11 @@ Checked on 2026-09-24:
 | Firebase CLI | Locked through `package-lock.json`; administrative login completed |
 | Google Cloud project | **Created:** `gratitude-drbrrl`, number `696882301155`, display name `Gratitude`, lifecycle `ACTIVE` |
 | Administrative permissions | Current account has `roles/owner`; required project/update/service-enable permissions verified |
+| Firebase Management API | Enabled successfully through `gcloud services enable firebase.googleapis.com --project=gratitude-drbrrl` |
 | Firebase activation | `projects:addfirebase gratitude-drbrrl` returns HTTP 403 `PERMISSION_DENIED` |
 | Firebase web app, Google provider, database, functions, deployment identity | Not yet provisioned |
 
-Do not create another Cloud project. Firebase documents unaccepted Firebase terms as one possible cause of this 403, alongside missing permissions. The owner has been asked to open the [Firebase console](https://console.firebase.google.com/), choose **Add Firebase to Google Cloud project**, select `gratitude-drbrrl`, and review any terms/setup prompt. This is a possible cause, not a confirmed diagnosis. [Official troubleshooting](https://firebase.google.com/docs/projects/use-firebase-with-existing-cloud-project)
+Do not create another Cloud project. Firebase documents unaccepted Firebase terms as one possible cause of this 403, alongside missing permissions. The owner has been asked to open the [Firebase console](https://console.firebase.google.com/), choose **Add Firebase to Google Cloud project**, select `gratitude-drbrrl`, and review any terms/setup prompt. This is a possible cause, not a confirmed diagnosis. A follow-up check enabled the Firebase Management API successfully through gcloud, then called `projects.addFirebase` directly with the existing authenticated account; the activation request still returned the same 403. [Official troubleshooting](https://firebase.google.com/docs/projects/use-firebase-with-existing-cloud-project)
 
 `.firebaserc` records the actual Cloud project. Emulator scripts explicitly target `demo-gratitude`, so the default alias cannot direct tests at live data.
 

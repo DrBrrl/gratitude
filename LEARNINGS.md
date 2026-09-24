@@ -151,3 +151,10 @@ The generated journal walkthroughs use real Auth-emulator popup interaction and 
 The backend deploy workflow is manual and main-only, with emulator checks before Workload Identity Federation authentication. Cloud resources, billing and deployment IAM remain external prerequisites; no service-account key or Gemini key is included in frontend builds.
 
 A follow-up browser test deliberately corrupts a checkpoint and interrupts a save across reload. It exposed a status race: a successful stream read overwrote “not synced” while the outbox still held an unacknowledged write. The listener now preserves pending-write status; a read is not evidence that a write succeeded. The regression checks recovery from corrupt cache and durable retry without duplicate entries.
+
+
+## 2026-09-24 — Checking the gcloud activation route
+
+At the user’s suggestion, checked the Google Cloud CLI route. `gcloud` had no active account, so reused a short-lived token from the existing Firebase login through a mode-0600 temporary file, removed after the command. `gcloud services enable firebase.googleapis.com --project=gratitude-drbrrl` succeeded. A direct Management API `projects.addFirebase` call then still returned 403 `PERMISSION_DENIED`; API enablement alone does not complete Firebase activation. No credentials were printed or committed.
+
+The documented `gcloud alpha firebase projects create` command can provision into an existing project, but also initializes resources in `us-west1`, so it was not used for our Sydney design. Used the narrower documented Management API activation operation instead. The terms explanation remains a hypothesis; the API provides no more specific reason. Sources: [gcloud command](https://docs.cloud.google.com/sdk/gcloud/reference/alpha/firebase/projects/create), [Firebase activation and troubleshooting](https://firebase.google.com/docs/projects/use-firebase-with-existing-cloud-project).

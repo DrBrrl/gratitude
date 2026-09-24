@@ -115,3 +115,9 @@ Can we implement Firebase in this same PR, please?
 ```text
 Logged in!
 ```
+
+## 2026-09-24 — Try gcloud for Firebase activation
+
+```text
+can't you add firegbase to the project using gcloud?
+```
