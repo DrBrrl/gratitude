@@ -1,7 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { connectAuthEmulator, getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
-import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 
 export function createFirebaseClient() {
   const emulators = import.meta.env.VITE_FIREBASE_EMULATORS === 'true';
@@ -22,13 +21,11 @@ export function createFirebaseClient() {
   const app = existing ?? initializeApp(options, 'gratitude');
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const functions = getFunctions(app, 'australia-southeast1');
   if (emulators && !existing) {
     connectAuthEmulator(auth, 'http://127.0.0.1:19099', { disableWarnings: true });
     connectFirestoreEmulator(db, '127.0.0.1', 18080);
-    connectFunctionsEmulator(functions, '127.0.0.1', 15001);
   }
-  return { auth, db, functions, projectId: options.projectId as string };
+  return { auth, db, projectId: options.projectId as string };
 }
 export function googleSignIn(client: NonNullable<ReturnType<typeof createFirebaseClient>>) {
   const provider = new GoogleAuthProvider();

@@ -25,8 +25,7 @@ jobs:
           persist-credentials: false
       - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
       - run: nix develop -c npm ci
-      - run: nix develop .#firebase -c npm --prefix functions ci
-      - run: nix develop .#firebase -c npm run test:firebase
+      - run: nix develop -c npm run test:firebase
       - name: Verify deployment identity configuration
         env:
           PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -36,4 +35,4 @@ jobs:
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
-      - run: nix develop .#firebase -c npx firebase deploy --project gratitude-drbrrl --only firestore,functions --non-interactive
+      - run: nix develop -c npx firebase deploy --project gratitude-drbrrl --only firestore --non-interactive

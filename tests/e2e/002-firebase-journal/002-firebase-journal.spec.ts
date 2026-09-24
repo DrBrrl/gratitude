@@ -15,7 +15,7 @@ async function login(page: Page, email: string, existing = false) {
     await popup.locator('#display-name-input').fill('Gratitude visitor');
     await popup.locator('#sign-in').click();
   }
-  // Auth handshake and the first emulator function invocation can involve cold startup.
+  // Auth handshake and initial Firestore connection can involve cold startup.
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('status')).toHaveText('Synced', { timeout: 15_000 });
 }
@@ -88,16 +88,16 @@ test('Google sign-in, private saving, a second device and cached recovery', asyn
     { description: 'The editor remains empty after recovery', check: async () => { await expect(page.getByLabel('Your reflection')).toHaveValue(''); } }
   ]);
   // A failed explicit save is durable even if the tab reloads before retry.
-  await page.route('**/australia-southeast1/appendReflection', (route) => route.abort());
+  await page.context().setOffline(true);
   await page.getByLabel('Your reflection').fill('A friend checked in today.');
   await page.getByRole('button', { name: 'Save reflection', exact: true }).click();
   await expect(page.getByRole('status')).toHaveText('Saved on this device; not synced');
-  await page.reload();
   await expect(page.getByRole('heading', { name: 'A reflection is waiting to sync' })).toBeVisible();
   await expect(page.getByText('A friend checked in today.', { exact: true })).toBeVisible();
-  await expect(page.getByRole('status')).toHaveText('Saved on this device; not synced');
-  await page.unroute('**/australia-southeast1/appendReflection');
-  await page.getByRole('button', { name: 'Retry sync' }).click();
+  // Unload before going online, so recovery must read the persisted outbox in a new page.
+  await page.goto('about:blank');
+  await page.context().setOffline(false);
+  await page.goto('./journal/');
   await expect(page.locator('article')).toHaveCount(2);
   await expect(page.locator('article').filter({ hasText: 'A friend checked in today.' })).toHaveCount(1);
   await expect(page.getByRole('heading', { name: 'A reflection is waiting to sync' })).toHaveCount(0);

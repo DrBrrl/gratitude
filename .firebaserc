@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "gratitude-drbrrl"
+    "default": "gratitude-drbrrl",
+    "preview": "gratitude-drbrrl-dev"
   }
 }

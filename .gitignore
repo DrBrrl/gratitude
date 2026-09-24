@@ -31,7 +31,6 @@ __pycache__/
 .pages-state/
 
 # Firebase emulator/build output
-functions/lib/
 *-debug.log
 .firebase/
 

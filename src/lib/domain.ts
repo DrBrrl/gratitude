@@ -1,4 +1,4 @@
-/** Pure event contract shared by backend validation and browser replay. No SDK imports. */
+/** Pure event contract shared by client validation and replay. No SDK imports. */
 export const GENERATION = 'v1';
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';

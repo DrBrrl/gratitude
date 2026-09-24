@@ -101,22 +101,21 @@ Wait for observable conditions with Playwright assertions; do not use fixed slee
 
 ## Firebase foundation scenario
 
-`002-firebase-journal` uses Auth, Firestore, Functions and Storage emulators with fictional accounts. It exercises the Google popup, reflection save, a second independent signed-in browser, warm reload, full projection rebuild and sign-out. Its generated mobile and desktop READMEs embed full-page screenshot baselines above the checks.
+`002-firebase-journal` uses Auth, Firestore and Storage emulators with fictional accounts. It exercises the Google popup, reflection save, a second independent signed-in browser, warm reload, full projection rebuild and sign-out. Its generated mobile and desktop READMEs embed full-page screenshot baselines above the checks.
 
 ```sh
 nix develop -c npm ci
-nix develop .#firebase -c npm --prefix functions ci
-nix develop .#firebase -c npm run test:firebase:all
+nix develop -c npm run test:firebase:all
 ```
 
-The Firebase shell uses Node 22, matching the Functions runtime, plus pinned Chromium/fonts and Java 21. The ordinary shell continues to use Node 24 for frontend development. Emulator ports are auth 19099, Firestore 18080, Functions 15001 and Storage 19199, bound to loopback. Tests use only `demo-gratitude`; no Google administrative login, live journal or Gemini key is needed.
+The Nix shell uses Node 24, pinned Chromium/fonts and Java 21. Emulator ports are auth 19099, Firestore 18080, Storage 19199, bound to loopback. Tests use only `demo-gratitude`; no Google administrative login, live journal or Gemini key is needed.
 
-The integration suite also checks owner isolation, rejected client mutations and forged inputs, duplicate command handling, stale revisions, disposable server revision recovery and cached/full replay equivalence. Screenshot assertions explicitly set full-page capture and zero-pixel tolerance in the step helper.
+The integration suite also checks owner isolation, rejected client mutations and forged inputs, duplicate command handling, stale revisions, simultaneous new-entry ordering, atomic metadata enforcement and cached/full replay equivalence. Screenshot assertions explicitly set full-page capture and zero-pixel tolerance in the step helper.
 
 For an intentional visual update, start fresh emulators and run:
 
 ```sh
-nix develop .#firebase -c npx firebase emulators:exec --project demo-gratitude --only auth,firestore,functions,storage 'VITE_FIREBASE_EMULATORS=true npm run build && E2E_FIREBASE=true npx playwright test --update-snapshots'
+nix develop -c npx firebase emulators:exec --project demo-gratitude --only auth,firestore,storage 'VITE_FIREBASE_EMULATORS=true npm run build && E2E_FIREBASE=true npx playwright test --update-snapshots'
 ```
 
-Build Functions first if their source changed. Review regenerated PNGs and READMEs, then run the ordinary suite. The normal `test:e2e` build skips the Firebase scenario; CI runs it separately against emulators and checks that generated documentation remains committed. Real mobile OAuth and deployed IAM still require live verification after provisioning.
+Review regenerated PNGs and READMEs, then run the ordinary suite. The normal `test:e2e` build skips the Firebase scenario; CI runs it separately against emulators and checks that generated documentation remains committed. Real mobile OAuth and deployed IAM still require live verification after provisioning.

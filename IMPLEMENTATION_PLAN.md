@@ -4,9 +4,9 @@ This plan implements [MVP_DESIGN.md](MVP_DESIGN.md) on the merged SvelteKit scaf
 
 ## Current implementation
 
-PR #4 provides a tested subset of increments 0–3: emulator configuration and deny-by-default rules; Google sign-in; validated, ordered and idempotent reflection append; cross-device reads; pure replay; a checksummed local checkpoint and pending-save outbox; mobile/desktop screenshot walkthroughs. A main-only manual backend workflow is defined but needs a provisioned deployment identity. Firebase is activated, its web app and Google provider are configured, and Sydney Firestore has deployed rules. Functions deployment awaits billing; real Google sign-in verification and deployment IAM remain pending. See [FIREBASE_SETUP.md](FIREBASE_SETUP.md).
+PR #4 implements Google sign-in, direct Firestore transactions validated by Security Rules, immutable ordered events, retry/conflict handling, cross-device reads, cached pure replay and a durable pending-save outbox. Production and development Firebase projects are provisioned with Google authentication and Sydney Firestore. Pages builds select the appropriate public configuration. There are no Cloud Functions or billing prerequisite for this foundation. See [FIREBASE_SETUP.md](FIREBASE_SETUP.md). The optional manual rules deployment workflow still needs a federated identity; current rules deploy through the authenticated CLI.
 
-This does not mark any complete MVP increment finished: the full event vocabulary, AI integration, automatic drafts, offline cold starts, production resources, photos and remaining UX still follow below. The implemented foundation scenario is `002-firebase-journal`.
+This does not mark any complete MVP increment finished: the full event vocabulary, AI integration, automatic drafts, offline cold starts, photos and remaining UX still follow below. The implemented foundation scenario is `002-firebase-journal`.
 
 ## Acceptance contract
 
@@ -14,20 +14,15 @@ The MVP supports the mobile stories in [UX_DESIGN.md](UX_DESIGN.md), adds Google
 
 Each user-visible increment adds Playwright scenarios using [E2E_GUIDE.md](E2E_GUIDE.md): screenshot comparisons, committed baselines, and generated READMEs with screenshots above their verification lists. Keep the pinned Nix browser/fonts, zero-pixel comparisons, explicit baseline review, and CI's generated-document check. Emulators and recorded Gemini fixtures make tests reproducible without pretending live inference is deterministic.
 
-## 0. Firebase project and backend deployment foundation
+## 0. Firebase project and deployment foundation
 
-**Deliverable:** the real Firebase project, web app registration, Google authentication provider, database, private photo bucket and a reproducible backend deployment configuration.
+**Deliverable:** separate production/preview Firebase projects, registered web apps, Google authentication, Sydney Firestore databases, owner-scoped Rules and explicit Pages build configuration. These resources are provisioned for the foundation; photo storage is a later increment.
 
-- Complete authorized project creation using an authenticated Google account. Record the actual project ID/number and web app ID, not a placeholder presented as provisioned.
-- Select `australia-southeast1` (Sydney) for regional Firestore/Functions/Storage where supported. Confirm database location before creation; record any product-specific constraints. Determine the billing account needed for Functions/Storage rather than assuming a repository secret grants Firebase access or billing.
-- Enable Google sign-in and authorized domains. Add production configuration as public Firebase app configuration. Add a separate development Firebase project before previews can access a live backend; otherwise use emulators/fixtures.
-- Define Firestore and Storage rules, indexes, Emulator Suite configuration and backend service identities. Deny unauthorized/cross-user access from the outset.
-- Configure a trusted `main` backend deployment workflow using Google Workload Identity Federation. Provision the existing repository `GEMINI_API_KEY` into Secret Manager through that workflow, bind it only to Gemini functions, and keep it out of the Pages build and PR jobs.
-- Retain the existing Pages production/preview deployment. A backend deployment is a distinct workflow with explicit project targeting, emulator checks and least-privilege permissions.
+Keep emulator test builds separate from published artifacts. Deploy rules/indexes explicitly with project IDs. An optional federated main-only workflow can automate production rule deployment once its IAM identity is configured. No application Functions runtime or private Gemini credential is required by this increment.
 
-**Evidence:** verify the resource inventory and authenticated access; inspect deployment configuration without printing secret values. Emulator rules tests must deny anonymous access, another UID, direct client event writes and forged response events. Check production bundles for accidental secret injection. A key's existence is not proof that runtime binding, quota or provider restrictions are configured.
+**Evidence:** inspect resource inventory, authorized domains and deployed rules. Deny anonymous/cross-user reads and writes, mutation of committed events, malformed new events and incomplete event/head/pointer transactions. Verify PR builds select the development project and main selects production. Exercise the deployed sign-in entry point; real Google authentication on supported mobile browsers remains a release check.
 
-**Dependency:** Google/Firebase login, appropriate project permissions and identified billing setup. Domain/replay implementation can proceed independently while external provisioning is pending.
+**Dependency:** Firebase administrative access, already established. No billing linkage is requested for this foundation.
 
 ## 1. Typed events and pure projection kernel
 
@@ -41,11 +36,11 @@ Implement user actions and `PromptResponseReceived`, `PhotoSummaryResponseReceiv
 
 ## 2. Authenticated canonical event append and synchronization
 
-**Deliverable:** Google sign-in UI, authenticated command functions, per-UID Firestore streams, server-assigned ordering, subscriptions and conflict responses.
+**Deliverable:** Google sign-in UI, browser transactions protected by Security Rules, per-UID Firestore streams, canonical ordering, subscriptions and conflict responses.
 
 Use Firebase UID as ownership, verify auth server-side, and reject arbitrary UID/asset references. Append accepted command batches and their head metadata atomically. Validate entity/settings revisions, reuse stable IDs for retries, and reject conflicting duplicate payloads. Keep settings and journal scopes explicitly linked by revision so whole-journal deletion can retain answers. Reject old generations from stale devices.
 
-**Evidence:** Auth/Firestore/Functions emulator integration tests use two distinct users and two independent browser contexts signed in as the same user. Verify cross-user reads/writes fail, same-user events appear on both devices, ordering converges, retry commits once, and simultaneous edits preserve a recoverable conflict rather than silently overwriting prose. Test cancelled sign-in, expired auth, sign-out and account switching. Add scenario `002-google-signin-and-user-isolation` with generated walkthroughs; manually validate the real Google popup/redirect flow on supported mobile browsers before release.
+**Evidence:** Auth/Firestore emulator integration tests use two distinct users and two independent browser contexts signed in as the same user. Verify cross-user reads/writes fail, same-user events appear on both devices, ordering converges, retry commits once, and simultaneous edits preserve a recoverable conflict rather than silently overwriting prose. Test cancelled sign-in, expired auth, sign-out and account switching. Add scenario `002-google-signin-and-user-isolation` with generated walkthroughs; manually validate the real Google popup/redirect flow on supported mobile browsers before release.
 
 **Dependency:** increments 0's emulator configuration and 1. Live end-to-end sign-in additionally needs completed provider configuration.
 
@@ -71,17 +66,17 @@ Search full saved text, prompts and accepted/manual summaries using the UX's nor
 
 **Dependency:** increments 1–3.
 
-## 5. Gemini workers and durable response events
+## 5. Firebase AI Logic and durable response events
 
-**Deliverable:** authenticated live request orchestration, transactional work outbox, leased workers, private secret binding, bounded retries and exact response persistence.
+**Deliverable:** managed Gemini access, explicit live request handling, consent-bound context, bounded retries and exact response events. Configure App Check and quotas; assess supported models, no-cost limits and data-use terms. The existing private repository Gemini key stays unused and out of the frontend.
 
-Commit the user request and operational work record atomically. Reconstruct request-boundary context, then recheck current consent and target eligibility before calling Gemini outside any database transaction. Apply the documented source and size limits. Record the actual model, template/context provenance and exact consumed response before showing cloud-ready content. Persist a deterministic response-event ID and terminal job status together; duplicate deliveries must not create duplicate responses.
+Commit user request events before inference; call the managed model outside database transactions. Record actual model, input references and exact consumed output with a stable response identity. Coordinate active devices with transactional claims and deduplicate response acceptance. Persist received-but-unsent results locally. Require explicit resume/retry after a browser interruption; do not resume inference from projection hydration. There is no guarantee of background completion when all tabs are closed, or exactly-once provider billing.
 
-Do not connect replay or cache hydration to the effect dispatcher. Resume genuinely unfinished jobs in the backend only, with bounded retry and observable sanitized failure state. A crash after provider response but before persistence may invoke the provider again; do not claim exactly-once billing. Explicit user retry creates a new request identity. Recheck deletion/revocation before accepting late output.
+Extend schemas and Rules only for implemented AI events. Client-written results are private user records, not provider attestations. Preserve replay with zero model requests, including unfinished requests; recheck consent and deletion before accepting late results.
 
-**Evidence:** scenario `007-gemini-prompts-and-feedback` with a provider stub, plus backend integration tests for duplicate trigger delivery, leases, crash boundaries, superseded requests, denied consent, provider failure, manual retry and immutable historical responses after a model change. Test that clearing every cache, opening a second device and replaying an unfinished request each cause zero provider calls from the projector. Use a separately controlled live Gemini smoke check with fictional input after secret provisioning; ordinary CI requires no real Gemini traffic.
+**Evidence:** scenario `007-gemini-prompts-and-feedback` with a provider stub covers duplicate requests, concurrent devices, crashes, consent changes, failures, explicit retries and immutable history after model changes. A separately controlled fictional-input live smoke test verifies managed model configuration. Normal CI makes no real Gemini requests.
 
-**Dependency:** increments 0–4.
+**Dependency:** increments 0–4; no custom Functions runtime.
 
 ## 6. Private photos and recorded image summaries
 
@@ -89,7 +84,7 @@ Do not connect replay or cache hydration to the effect dispatcher. Resume genuin
 
 Enforce four photos per entry, 10 MB each, and JPEG/PNG/WebP; normalize orientation and strip metadata before upload. Since Firestore and Storage do not share a transaction, append the attachment only after verifying the immutable uploaded object. Make orphan cleanup and retry idempotent. Keep cloud attachment status separate from device-only staging and summary status separate from saving.
 
-Use the independent photo-processing disclosure/control. Manual corrections override late response events; replacing/removing a photo invalidates matching pending work. Do not create public asset URLs or allow functions to fetch an arbitrary caller-supplied URL.
+Use the independent photo-processing disclosure/control. Manual corrections override late response events; replacing/removing a photo invalidates matching pending work. Do not create public asset URLs or fetch arbitrary caller-supplied URLs.
 
 **Evidence:** scenario `008-photos-and-summaries` covers failures, offline staging, reconnection, unsupported files, retry, remove/replace, manual correction and photo-only save. Verify another signed-in device can access the same authorized photo and another UID cannot. Rebuild summaries from response events with no Gemini calls or dependency on the original camera file. Test orphan uploads and the boundary between successful upload and event finalization.
 
@@ -111,7 +106,7 @@ Implement scoped erasure of the selected entity's private historical payloads/ph
 
 **Deliverable:** application cache lifecycle, complete sync/replay diagnostics, storage recovery, final backend deployment and full mobile walkthrough.
 
-Complete separate production/development Firebase configurations, authorized domains, rate/quota controls and secret binding. Verify the Pages frontend never embeds `GEMINI_API_KEY`. Keep emulator E2E jobs separate from live backend deployment and leave public previews on fixture mode until a development backend exists. Test real Google sign-in and a same-account second device against the deployed backend.
+Complete separate production/development Firebase configurations, authorized domains, App Check and rate/quota controls. Verify the Pages frontend never embeds `GEMINI_API_KEY`. Keep emulator E2E jobs separate from live backend deployment and keep preview builds connected only to the development backend. Test real Google sign-in and a same-account second device against the deployed backend.
 
 **Evidence:** scenario `010-offline-and-replay-recovery` covers offline reading/writing, reconnect conflicts, missing caches, incomplete cloud history, storage exhaustion and app updates with pending edits. Run all browser scenarios at production and nested preview base paths; retain zero-pixel baseline comparisons and generated READMEs. Review cloud costs/limits with measured usage and verify that a full replay causes no Gemini charges or requests. All core UX stories, access-control tests and replay invariants must pass before calling the MVP complete.
 
