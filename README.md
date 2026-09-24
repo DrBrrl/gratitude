@@ -1,6 +1,6 @@
 # Gratitude
 
-Gratitude is a planned responsive single-page application (SPA) for daily gratitude reflection. Each day, an AI generates a prompt the user can respond to. Over time, it should learn which prompts suit that person and adapt to their preferences and feedback.
+Gratitude is a responsive single-page application (SPA) for daily gratitude reflection. Its intended daily experience starts with an AI-generated prompt the user can respond to. Over time, it should learn which prompts suit that person and adapt to their preferences and feedback.
 
 The aim is to make reflection approachable, personal, and useful—whether someone has a few words to share or wants to write at length.
 
@@ -38,7 +38,7 @@ npm run test:e2e
 
 See [E2E_GUIDE.md](E2E_GUIDE.md) for scenarios, reports, and testing on Nix or other systems. [DEPLOYMENT.md](DEPLOYMENT.md) explains automatic production deployments and per-PR previews on GitHub Pages. Production is served at [drbrrl.github.io/gratitude](https://drbrrl.github.io/gratitude/) through the Pages workflow.
 
-The proposed MVP uses Firebase with Google sign-in for cross-device event streams and planned Firebase AI Logic calls whose responses are recorded as events. See [MVP_DESIGN.md](MVP_DESIGN.md), [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md), and [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for the design and provisioning status. This PR implements the first Firebase slice; Gemini integration remains planned.
+The proposed MVP uses Firebase with Google sign-in for cross-device event streams and planned Firebase AI Logic calls whose responses are recorded as events. See [MVP_DESIGN.md](MVP_DESIGN.md), [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md), and [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for the design and provisioning status. The journal now includes browsing, search, durable local drafts and Markdown/JSON export; Gemini integration remains planned.
 
 ## Firebase development
 
@@ -51,7 +51,7 @@ nix develop -c npm run test:firebase:all
 
 For interactive use, run `nix develop -c npm run emulators` and, in another terminal, `nix develop -c npm run dev:firebase`. Open `/journal/` and create a fictional Google account in the Auth emulator popup. Tests use `demo-gratitude` and never call the live project or Gemini.
 
-Saved user actions are appended in a browser transaction. Security Rules enforce ownership, exact schemas, contiguous ordering, expected revisions and immutable events. The head and per-entry event pointer must be updated atomically with each event. IndexedDB holds a disposable checkpoint and a pending-save outbox; rebuilding the local view replays the cloud stream. Editor drafts persist on this device as you type and recover after reload. Today/Journal/Settings navigation, equal-height rainbow cards, full-entry editing and accent-insensitive search are implemented. Offline cold starts, cross-device drafts, photos, AI, export and deletion remain future increments.
+Saved user actions are appended in a browser transaction. Security Rules enforce ownership, exact schemas, contiguous ordering, expected revisions and immutable events. The head and per-entry event pointer must be updated atomically with each event. IndexedDB holds a disposable checkpoint and a pending-save outbox; rebuilding the local view replays the cloud stream. Editor drafts persist on this device as you type and recover after reload. Today/Journal/Settings navigation, equal-height rainbow cards, full-entry editing and accent-insensitive search are implemented. Markdown and JSON exports reconstruct all saved entries from a verified cloud event prefix, independent of search filters; they exclude unfinished drafts and require a connection. Offline cold starts, cross-device drafts, photos, AI and deletion remain future increments.
 
 ## Project records
 

@@ -31,6 +31,9 @@
   const selected = $derived(view.state.entries.find((entry) => entry.id === selectedId));
   const results = $derived(searchEntries(view.state.entries, query));
   const editorColour = $derived(colours[editing?.colour ?? view.state.entries.length % colours.length]);
+  import { exportJournal } from '$lib/export';
+  let exportStatus = $state('');
+  let exporting = $state(false);
   import { colours, searchEntries, dateLabel } from '$lib/journal';
   import HighlightedText from '$lib/components/HighlightedText.svelte';
   async function navigate(next: typeof tab) { tab = next; selectedId = null; await tick(); window.scrollTo(0, 0); }
@@ -58,6 +61,21 @@
     try { await repository.writeDraft($state.snapshot(draft)); if (version === draftWrite) draftStatus = 'Draft saved on this device'; }
     catch { if (version === draftWrite) draftStatus = 'Draft could not be saved on this device. Keep this page open.'; }
   }
+  async function downloadJournal(format: 'markdown' | 'json') {
+    const active = repository;
+    if (!active) return;
+    exporting = true; exportStatus = '';
+    try {
+      const state = await active.exportSnapshot();
+      if (repository !== active) return;
+      const file = exportJournal(state, format);
+      const url = URL.createObjectURL(new Blob([file.content], { type: `${file.type};charset=utf-8` }));
+      const link = document.createElement('a'); link.href = url; link.download = file.name; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      exportStatus = `Export ready: ${state.entries.length} saved ${state.entries.length === 1 ? 'reflection' : 'reflections'}.`;
+    } catch (cause) { if (repository === active) exportStatus = cause instanceof Error ? cause.message : 'Export failed. Please try again.'; }
+    finally { if (repository === active) exporting = false; }
+  }
   async function discardDraft() {
     try { await repository?.clearDraft(); draftWrite++; draft = null; text = ''; editing = null; discardOpen = false; draftStatus = ''; }
     catch { error = 'Could not discard the draft. Your text is still here.'; }
@@ -72,7 +90,7 @@
         stopAuth = onAuthStateChanged(client.auth, (next) => {
           const current = ++session;
           repository?.stop(); repository = null;
-          user = next; text = ''; editing = null; error = ''; draft = null; draftLoaded = false; draftRestored = false; draftStatus = ''; draftWrite++; tab = 'today'; selectedId = null; query = '';
+          user = next; text = ''; editing = null; error = ''; draft = null; draftLoaded = false; draftRestored = false; draftStatus = ''; draftWrite++; exportStatus = ''; exporting = false; tab = 'today'; selectedId = null; query = '';
           view = { state: emptyProjection(), pending: null, status: '', error: '', ready: false };
           initialized = true;
           if (next && client) {
@@ -187,6 +205,7 @@
     {:else}
       <p class="eyebrow">Make this space yours</p><h1>Settings</h1>
       <section><h2>Your account</h2><p class="account-email">{user.email}</p><p>Reflections are private to your Google account.</p><button class="secondary" onclick={leave} disabled={busy}>Sign out</button></section>
+      <section><h2>Export journal</h2><p>Take all your saved reflections with you, including their original prompts. Search filters do not limit the export.</p><p class="hint">Unfinished drafts are excluded. A connection is needed to verify your complete journal.</p><button onclick={() => downloadJournal('markdown')} disabled={exporting || !!view.pending}>Download Markdown</button><button class="secondary" onclick={() => downloadJournal('json')} disabled={exporting || !!view.pending}>Download JSON</button>{#if exportStatus}<p class="export-status" aria-live="polite">{exportStatus}</p>{/if}</section>
       <details><summary>Journal recovery</summary><p>Rebuild this device’s view from your saved account history. Your reflections stay in your account.</p><button class="secondary" onclick={() => repository?.rebuild().catch(() => error = 'Could not rebuild. Please reload and try again.')} disabled={busy}>Rebuild local view</button></details>
     {/if}
     {#if view.pending}

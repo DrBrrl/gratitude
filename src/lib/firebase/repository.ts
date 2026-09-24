@@ -1,8 +1,8 @@
-import { collection, doc, getDocFromServer, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { appendReflection, decodeEvent } from './append';
 import { openDB, type IDBPDatabase } from 'idb';
 import { base } from '$app/paths';
-import { applyEvent, emptyProjection, GENERATION, type Action, type Projection } from '../domain';
+import { applyEvent, emptyProjection, replay, GENERATION, type Action, type Projection } from '../domain';
 import type { FirebaseClient } from './client';
 
 type Checkpoint = { state: Projection; digest: string };
@@ -122,6 +122,19 @@ export class JournalRepository {
     if (this.sending) throw new Error('Wait for the current save to finish.');
     await this.db.delete('outbox', 'pending');
     this.pending = null; this.error = ''; this.status = 'Pending save returned to editor'; this.emit();
+  }
+  async exportSnapshot() {
+    if (this.pending || this.sending) throw new Error('Sync your pending save before exporting.');
+    if (!navigator.onLine) throw new Error('Connect to export your complete saved journal.');
+    const path = `users/${this.uid}/streams/${GENERATION}`;
+    const head = await getDocFromServer(doc(this.client.db, path));
+    if (!head.exists()) return emptyProjection();
+    const cursor = head.get('sequence');
+    const snapshot = await getDocsFromServer(query(collection(this.client.db, `${path}/events`), where('sequence', '<=', cursor), orderBy('sequence')));
+    const state = replay(snapshot.docs.map((item) => decodeEvent(item.data())));
+    if (state.cursor !== cursor || state.lastEventId !== head.get('lastEventId')) throw new Error('Journal history is incomplete. Try exporting again after synchronization.');
+    if (this.stopped) throw new Error('Sign in again before exporting.');
+    return state;
   }
   async rebuild() {
     if (this.stopped) return;

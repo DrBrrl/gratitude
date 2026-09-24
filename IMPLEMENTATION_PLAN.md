@@ -6,7 +6,14 @@ This plan implements [MVP_DESIGN.md](MVP_DESIGN.md) on the merged SvelteKit scaf
 
 PR #4 implements Google sign-in, direct Firestore transactions validated by Security Rules, immutable ordered events, retry/conflict handling, cross-device reads, cached pure replay and a durable pending-save outbox. Production and development Firebase projects are provisioned with Google authentication and Sydney Firestore. Pages builds select the appropriate public configuration. There are no Cloud Functions or billing prerequisite for this foundation. See [FIREBASE_SETUP.md](FIREBASE_SETUP.md). The optional manual rules deployment workflow still needs a federated identity; current rules deploy through the authenticated CLI.
 
-This does not mark any complete MVP increment finished: the full event vocabulary, AI integration, automatic drafts, offline cold starts, photos and remaining UX still follow below. The implemented foundation scenario is `002-firebase-journal`.
+The next feature series adds Today/Journal/Settings navigation, equal-height rainbow cards, full-entry editing, normalized full-text search, device-local autosaved drafts with recovery/discard, and complete Markdown/JSON exports. Each feature has its own commit and action-by-action screenshot walkthrough on mobile and desktop:
+
+- `002-firebase-journal`: synchronization, replay recovery and pending saves (expanded foundation evidence).
+- `003-journal-search`: stable colours, search, full entries and editing.
+- `004-draft-recovery`: navigation/reload recovery, save and confirmed discard.
+- `005-export`: complete downloadable Markdown/JSON, literal text and offline errors.
+
+These are implemented slices of increments 3, 4 and 7, not completion of the full MVP. The current prompt remains the fixed starter. Onboarding, personalized AI, request/response events, skip/resume, feedback, photos, deletion and offline cold starts remain below. Device drafts are not yet synchronized across devices. Live AI Logic has been smoke-tested only in the development project; it is not called by the app.
 
 ## Acceptance contract
 

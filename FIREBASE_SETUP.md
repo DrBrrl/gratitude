@@ -22,7 +22,7 @@ Both projects authorize their own `firebaseapp.com` and `web.app` domains, `drbr
 
 The Pages build runs `scripts/configure_firebase_build.py` to select preview configuration for PRs and production configuration for main. It supplies the four `VITE_FIREBASE_*` values used by the client. The emulator CI job uses only `demo-gratitude` and never publishes its build. The Firebase API keys in these files are public web configuration, not privileged credentials. Auth and Security Rules enforce data access.
 
-The private repository `GEMINI_API_KEY` is unused. It is never supplied to Pages or embedded in frontend configuration. Firebase AI Logic is the proposed later AI integration; response events will preserve historical output without rerunning inference on replay.
+The private repository `GEMINI_API_KEY` is unused. It is never supplied to Pages or embedded in frontend configuration. Firebase AI Logic is provisioned in the development project only. A fictional smoke request with `gemini-3.6-flash` succeeded without the repository secret. It is not exposed in the application: App Check, quotas, sharing controls and durable response events remain outstanding. Production AI Logic is not provisioned. Historical output will be recorded without rerunning inference on replay.
 
 For local live testing, copy the four values from the chosen public configuration into `.env.local` using `.env.example` as a template. Prefer emulators for automated tests. Real Google account completion and supported mobile-browser sign-in should be checked by the owner; automated emulator tests cover sign-in, save/edit, cross-device reads, isolation and recovery.
 

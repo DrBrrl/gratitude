@@ -197,3 +197,13 @@ The user requested a screenshot after every action. The walkthrough helper now s
 The second feature increment persists raw unfinished save actions in the per-account IndexedDB outbox as the user types. A draft keeps its stable action/entry IDs and original edit revision; reload can detect an already committed save before restoring the editor. Ordered local writes prevent a late autosave from resurrecting a discarded draft. Saving clears the local draft only after the action is safely in the durable save outbox. These are device drafts, not cross-device cloud draft events; the UI states that limit explicitly.
 
 Added a native confirmation dialog for discard, local-save status, navigation/reload recovery and a step-by-step E2E scenario including cancel, save, discard and subsequent reload. Storage errors keep the editor text and do not claim persistence. Future offline cold-start and cross-device draft synchronization remain separate work.
+
+## 2026-09-24 — Complete journal export
+
+The third feature exports Markdown and JSON from a verified immutable event prefix fetched from Firestore. Search filters and local projection checkpoints cannot silently truncate the export. Drafts are excluded, pending saves must finish first, and offline export reports that a connection is required. Markdown escapes user-authored formatting/HTML; JSON preserves exact text. Both retain the original prompt, date and projected colour. The E2E walkthrough inspects actual downloaded files and places these checks under the corresponding screenshots.
+
+## 2026-09-24 — Live AI feasibility, separate from the released journal
+
+Provisioned Firebase AI Logic for the development project only using the authenticated Firebase CLI provisioning API. A fictional one-question smoke request through the browser-compatible Firebase SDK succeeded with `gemini-3.6-flash`, without reading or exposing the repository Gemini secret and without linking billing. `gemini-2.5-flash` returned a provider error saying it is unavailable to new users; model availability must be verified, not assumed. A 128-token output budget truncated the answer; 1024 produced a complete question.
+
+This is service feasibility evidence, not an implemented AI feature. App Check enforcement, quotas, explicit sharing controls, durable request/response events and replay tests remain required before exposing generation in the app. No journal data was sent. Production AI Logic was not provisioned. See the official [Firebase AI Logic setup](https://firebase.google.com/docs/ai-logic/get-started) and [App Check guidance](https://firebase.google.com/docs/ai-logic/app-check).
