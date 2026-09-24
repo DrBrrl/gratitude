@@ -8,10 +8,10 @@
       forAllSystems = nixpkgs.lib.genAttrs systems;
     in {
       devShells = forAllSystems (system:
-        let pkgs = import nixpkgs { inherit system; };
-        in {
-          default = pkgs.mkShell {
-            packages = [ pkgs.nodejs_24 pkgs.chromium pkgs.python3 pkgs.gh pkgs.actionlint ];
+        let
+          pkgs = import nixpkgs { inherit system; };
+          shellFor = node: pkgs.mkShell {
+            packages = [ node pkgs.jdk21_headless pkgs.chromium pkgs.python3 pkgs.gh pkgs.actionlint ];
             PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
             # No host/user font directories or configuration: baselines must be portable to CI.
             FONTCONFIG_FILE = pkgs.writeText "gratitude-e2e-fonts.conf" ''
@@ -28,6 +28,9 @@
             '';
             PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
           };
+        in {
+          default = shellFor pkgs.nodejs_24;
+          firebase = shellFor pkgs.nodejs_22;
         });
     };
 }

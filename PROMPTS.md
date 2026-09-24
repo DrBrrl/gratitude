@@ -85,3 +85,33 @@ OK that is rebased and merged onto main and we are ready to write an MVP_DESIGN 
 ```text
 so there won't be deterministic AI. food, your other reference repo, shows how to do this correctly: ai responses are events and replay does not redo AI requests. also our backend will be firebase, you should make a firebase project to persist the event stream to, usign google sign in to authenticate the user and ensure they ahve acceess to their event stream across devices. Finally note there is a GEMINI_API_KEY secret in the repository for enabling using teh Gemini API. Update the design accordingly
 ```
+
+## 2026-09-24 — Project status and proposed next step
+
+```text
+Hi friend! Can you give me a summary of where we have got to in this project and propose a next step?
+```
+
+## 2026-09-24 — Missing follow-up prompt records
+
+These prompts were answered previously but omitted from this log.
+
+```text
+Is there a PR preview for PR#4?
+```
+
+```text
+Can you give me the link to pr4 to copy into my browser?
+```
+
+## 2026-09-24 — Implement Firebase in the existing PR
+
+```text
+Can we implement Firebase in this same PR, please?
+```
+
+## 2026-09-24 — Firebase login completed
+
+```text
+Logged in!
+```

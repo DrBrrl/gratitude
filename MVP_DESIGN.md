@@ -1,6 +1,14 @@
 # Gratitude MVP design
 
-This proposal defines the first usable Gratitude application, following [UX_DESIGN.md](UX_DESIGN.md). The backend is Firebase, users authenticate with Google, and Gemini supplies daily prompts and photo summaries. [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) sequences the work. The current application is the merged SvelteKit scaffold.
+This proposal defines the first usable Gratitude application, following [UX_DESIGN.md](UX_DESIGN.md). The backend is Firebase, users authenticate with Google, and Gemini supplies daily prompts and photo summaries. [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) sequences the work. The current branch implements the first Firebase foundation described below.
+
+## Implemented foundation in PR #4
+
+The `/journal/` route implements Google sign-in, save/edit against a fixed versioned starter prompt, a private ordered Firestore stream, live subscriptions, a checksummed IndexedDB projection checkpoint, and a durable pending-save outbox. A second browser can reconstruct the same journal. Recovery discards the checkpoint and replays all events. Callable validation, idempotent retries, revision conflicts and owner-only rules are emulator-tested. Live resource activation is tracked in [FIREBASE_SETUP.md](FIREBASE_SETUP.md).
+
+This slice uses `ReflectionWritten` with entry ID, original text, expected revision and starter ID. Sequence, timestamp and input digest are infrastructure metadata; prompt text, entry revision and rainbow position are derived. The server revision index is disposable and is reconstructed from events when missing. The stream head is transactionally maintained append metadata. The complete MVP event vocabulary below remains planned; preserve or explicitly migrate this first schema when extending it.
+
+No AI requests or AI events are implemented yet. There is no daily-entry reservation, autosaved draft, service worker, persistent local event cache, photo pipeline, search, export or erasure flow. Offline recovery currently means preserving a failed explicit save for retry; cold offline startup is not supported. Storage rules deny all access until the photo increment. The initial journal is a functional foundation, not the complete approved UX.
 
 ## Event-sourcing contract
 
@@ -26,7 +34,7 @@ Today, Journal, and Settings remain the three tabs; AI settings is the first Set
 | IndexedDB | Confirmed-event cache, versioned local projection checkpoints, pending user-action outbox and photo staging |
 | Service worker | Base-path-scoped application assets for previously loaded offline use |
 
-Use separate production and development Firebase projects when enabling live previews. Until a development backend is provisioned, previews use emulators/fixtures and must not connect to the production journal or receive its Gemini secret. Namespacing IndexedDB by Firebase project, UID, stream generation, and deployment base path prevents accidental cache reuse; it is not a security boundary between scripts hosted on the same GitHub Pages origin.
+Use separate production and development Firebase projects when enabling live previews. Until a development backend is provisioned, hosted previews show a setup-unavailable state and local previews use emulators and must not connect to the production journal or receive its Gemini secret. Namespacing IndexedDB by Firebase project, UID, stream generation, and deployment base path prevents accidental cache reuse; it is not a security boundary between scripts hosted on the same GitHub Pages origin.
 
 ## Reference patterns
 

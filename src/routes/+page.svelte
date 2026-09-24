@@ -1,3 +1,6 @@
+<script lang="ts">
+  import { base } from '$app/paths';
+</script>
 <svelte:head>
   <title>Gratitude</title>
   <meta name="description" content="A little space to notice what you appreciate. A daily gratitude practice, at your own pace." />
@@ -16,7 +19,7 @@
     </section>
     <footer>
       <span>Your pace. No streaks.</span>
-      <a href="https://github.com/DrBrrl/gratitude">About the project <span aria-hidden="true">↗</span></a>
+      <a href={`${base}/journal/`}>Open your journal <span aria-hidden="true">→</span></a>
     </footer>
   </main>
 </div>

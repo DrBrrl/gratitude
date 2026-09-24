@@ -51,11 +51,38 @@ jobs:
             test-results/
           retention-days: 14
 
+  firebase:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_PATH: /gratitude/pr-preview/firebase-check
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+      - run: nix develop -c npm ci
+      - run: nix develop .#firebase -c npm --prefix functions ci
+      - run: nix develop .#firebase -c npm run test:firebase:all
+      - name: Check generated Firebase walkthroughs
+        run: |
+          git diff --exit-code -- tests/e2e
+          test -z "$(git ls-files --others --exclude-standard tests/e2e)"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: firebase-e2e-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
   publish:
-    needs: build
+    needs: [build, firebase]
     if: >-
       always() && !cancelled() &&
-      (needs.build.result == 'success' || github.event.action == 'closed') &&
+      ((needs.build.result == 'success' && needs.firebase.result == 'success') || github.event.action == 'closed') &&
       ((github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
        (github.event_name != 'pull_request' && github.ref == 'refs/heads/main'))
     runs-on: ubuntu-latest

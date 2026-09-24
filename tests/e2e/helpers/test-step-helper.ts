@@ -19,7 +19,10 @@ export class TestStepHelper {
         await test.step(verification.description, verification.check);
       }
       await this.page.mouse.move(0, 0);
-      await expect(this.page).toHaveScreenshot(filename);
+      await expect(this.page).toHaveScreenshot(filename, {
+        fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css',
+        maxDiffPixels: 0, threshold: 0
+      });
       this.steps.push({
         description,
         image: `./screenshots/${filename}`,
