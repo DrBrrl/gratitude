@@ -119,3 +119,9 @@ nix develop -c npx firebase emulators:exec --project demo-gratitude --only auth,
 ```
 
 Review regenerated PNGs and READMEs, then run the ordinary suite. The normal `test:e2e` build skips the Firebase scenario; CI runs it separately against emulators and checks that generated documentation remains committed. Real mobile OAuth and deployed IAM still require live verification after provisioning.
+
+## Action-by-action feature walkthroughs
+
+Every new user navigation, click, fill, selection and reload must be followed by `TestStepHelper.action` (or a `step` immediately after the action for popups/downloads). Include a meaningful state assertion before comparing the screenshot. Do not combine several UI actions into one undocumented jump. The shared sign-in helper captures the Auth emulator popup and each field separately. Fault injection and backend fixture setup are test setup, not user actions.
+
+Scenarios run serially to isolate the shared Auth emulator account chooser. Server-generated dates inside `time` elements are masked in screenshots; assert date semantics separately when relevant. The rest of each full-page image is compared at zero tolerance. Explicitly suppress the typing caret in screenshot styles. Generated READMEs put the screenshot above that action's checks.
