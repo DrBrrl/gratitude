@@ -34,3 +34,9 @@ For this repository the initial setup is performed with the scaffold PR. Product
 Run the commands in [E2E_GUIDE.md](E2E_GUIDE.md) for local and deployed checks. CI retains the tested static build for seven days and the browser reports for fourteen days. Deployment assembly also has Python unit tests (`npm run test:deployment`).
 
 A failed publication can be rerun in Actions. After this workflow is on `main`, manually dispatch it on `main` to rebuild production and reconcile preview cleanup. Preserve the `gh-pages` branch: it contains the currently retained previews. It is generated deployment state, not the branch for application development. If the branch is lost, restore it from history or bootstrap it again, then rebuild production and each open PR preview.
+
+## Firebase foundation
+
+Pages remains a static deployment. The separate `firebase` CI job runs emulator integration tests and mobile/desktop journal screenshot comparisons; both frontend and Firebase jobs must pass before Pages publication. Its emulator-configured build is never uploaded as the production Pages artifact.
+
+The manual, main-only **Deploy Firebase** workflow tests and deploys Firestore rules/indexes and Functions using Workload Identity Federation. It requires external resource and identity setup and does not run for PRs. Current resource inventory, the activation blocker, configuration and deployment commands are in [FIREBASE_SETUP.md](FIREBASE_SETUP.md). Until configured, the hosted journal route explains that sign-in is unavailable; review the emulator walkthrough in [the generated journal scenario](tests/e2e/002-firebase-journal/README.md).

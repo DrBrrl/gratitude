@@ -6,7 +6,7 @@ The aim is to make reflection approachable, personal, and useful—whether someo
 
 ## Status
 
-The repository contains a Svelte 5 / SvelteKit application with a responsive dark landing page, a Nix development shell, Playwright functional and screenshot tests, and GitHub Pages deployment. Journaling, AI integration, and persistent storage are not implemented yet.
+The repository contains a Svelte 5 / SvelteKit application with a responsive dark landing page, a Nix development shell, Playwright functional and screenshot tests, and GitHub Pages deployment. The Firebase foundation adds Google sign-in, a private event stream, reflection save/edit, cross-device synchronization, and cached projection recovery. It is tested with local emulators; live Firebase activation is still pending (see [setup status](FIREBASE_SETUP.md)). AI prompts and the remaining MVP experience are planned.
 
 ## Intended experience
 
@@ -16,7 +16,7 @@ The repository contains a Svelte 5 / SvelteKit application with a responsive dar
 - Receive prompts that become more relevant over time, with control over personalization.
 - Revisit past reflections in a private journal.
 
-These are product intentions, not currently available features. See [VISION.md](VISION.md) for the project’s intended end state.
+The full experience below remains the product target; the current journal uses a fixed starter prompt. See [VISION.md](VISION.md) for the project’s intended end state.
 
 ## Development
 
@@ -36,9 +36,23 @@ npm run test:deployment
 npm run test:e2e
 ```
 
-See [E2E_GUIDE.md](E2E_GUIDE.md) for scenarios, reports, and testing on Nix or other systems. [DEPLOYMENT.md](DEPLOYMENT.md) explains automatic production deployments and per-PR previews on GitHub Pages. Production is served at [drbrrl.github.io/gratitude](https://drbrrl.github.io/gratitude/) after the scaffold is merged and its workflow succeeds.
+See [E2E_GUIDE.md](E2E_GUIDE.md) for scenarios, reports, and testing on Nix or other systems. [DEPLOYMENT.md](DEPLOYMENT.md) explains automatic production deployments and per-PR previews on GitHub Pages. Production is served at [drbrrl.github.io/gratitude](https://drbrrl.github.io/gratitude/) through the Pages workflow.
 
-The proposed MVP uses Firebase with Google sign-in for cross-device event streams and backend Gemini calls whose responses are recorded as events. See [MVP_DESIGN.md](MVP_DESIGN.md), [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md), and [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for the design and provisioning status. These capabilities are not implemented in the scaffold yet.
+The proposed MVP uses Firebase with Google sign-in for cross-device event streams and backend Gemini calls whose responses are recorded as events. See [MVP_DESIGN.md](MVP_DESIGN.md), [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md), and [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for the design and provisioning status. This PR implements the first Firebase slice; Gemini integration remains planned.
+
+## Firebase development
+
+Install both dependency trees, then use the Node 22 shell for Functions and emulators (Java is included):
+
+```sh
+nix develop -c npm ci
+nix develop .#firebase -c npm --prefix functions ci
+nix develop .#firebase -c npm run test:firebase:all
+```
+
+For interactive use, run `nix develop .#firebase -c npm run emulators` and, in another terminal, `nix develop -c npm run dev:firebase`. Open `/journal/` and create a fictional Google account in the Auth emulator popup. Tests use `demo-gratitude` and never call the live project or Gemini.
+
+Saved user actions are appended by a callable function. Browser writes to Firestore are denied. IndexedDB holds a disposable checkpoint and a pending-save outbox; rebuilding the local view replays the cloud stream. Editor text is persisted only when Save is selected. Offline cold starts, automatic draft saving, photos, AI, search, export and deletion are future increments.
 
 ## Project records
 

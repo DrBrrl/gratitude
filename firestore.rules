@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owns(uid) { return request.auth != null && request.auth.uid == uid; }
+    match /users/{uid}/streams/{generation} {
+      allow read: if owns(uid);
+      allow write: if false;
+      match /events/{eventId} {
+        allow read: if owns(uid);
+        allow write: if false;
+      }
+    }
+    // Server-only validation projections, jobs, and all unknown collections.
+    match /{document=**} { allow read, write: if false; }
+  }
+}
