@@ -4,7 +4,7 @@ This plan implements [MVP_DESIGN.md](MVP_DESIGN.md) on the merged SvelteKit scaf
 
 ## Current implementation
 
-PR #4 provides a tested subset of increments 0–3: emulator configuration and deny-by-default rules; Google sign-in; validated, ordered and idempotent reflection append; cross-device reads; pure replay; a checksummed local checkpoint and pending-save outbox; mobile/desktop screenshot walkthroughs. A main-only manual backend workflow is defined but needs a provisioned deployment identity. The Google Cloud project exists; Firebase activation and real Google sign-in verification are pending. See [FIREBASE_SETUP.md](FIREBASE_SETUP.md).
+PR #4 provides a tested subset of increments 0–3: emulator configuration and deny-by-default rules; Google sign-in; validated, ordered and idempotent reflection append; cross-device reads; pure replay; a checksummed local checkpoint and pending-save outbox; mobile/desktop screenshot walkthroughs. A main-only manual backend workflow is defined but needs a provisioned deployment identity. Firebase is activated, its web app and Google provider are configured, and Sydney Firestore has deployed rules. Functions deployment awaits billing; real Google sign-in verification and deployment IAM remain pending. See [FIREBASE_SETUP.md](FIREBASE_SETUP.md).
 
 This does not mark any complete MVP increment finished: the full event vocabulary, AI integration, automatic drafts, offline cold starts, production resources, photos and remaining UX still follow below. The implemented foundation scenario is `002-firebase-journal`.
 

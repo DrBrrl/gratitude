@@ -121,3 +121,9 @@ Logged in!
 ```text
 can't you add firegbase to the project using gcloud?
 ```
+
+## 2026-09-24 — Firebase terms accepted
+
+```text
+I accepted the terms, try again! :)
+```

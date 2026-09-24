@@ -6,7 +6,7 @@ The aim is to make reflection approachable, personal, and useful—whether someo
 
 ## Status
 
-The repository contains a Svelte 5 / SvelteKit application with a responsive dark landing page, a Nix development shell, Playwright functional and screenshot tests, and GitHub Pages deployment. The Firebase foundation adds Google sign-in, a private event stream, reflection save/edit, cross-device synchronization, and cached projection recovery. It is tested with local emulators; live Firebase activation is still pending (see [setup status](FIREBASE_SETUP.md)). AI prompts and the remaining MVP experience are planned.
+The repository contains a Svelte 5 / SvelteKit application with a responsive dark landing page, a Nix development shell, Playwright functional and screenshot tests, and GitHub Pages deployment. The Firebase foundation adds Google sign-in, a private event stream, reflection save/edit, cross-device synchronization, and cached projection recovery. It is tested with local emulators; the live project, Google provider and database are provisioned, while Functions deployment awaits billing (see [setup status](FIREBASE_SETUP.md)). AI prompts and the remaining MVP experience are planned.
 
 ## Intended experience
 

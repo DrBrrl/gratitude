@@ -14,27 +14,30 @@ Checked on 2026-09-24:
 | Google Cloud project | **Created:** `gratitude-drbrrl`, number `696882301155`, display name `Gratitude`, lifecycle `ACTIVE` |
 | Administrative permissions | Current account has `roles/owner`; required project/update/service-enable permissions verified |
 | Firebase Management API | Enabled successfully through `gcloud services enable firebase.googleapis.com --project=gratitude-drbrrl` |
-| Firebase activation | `projects:addfirebase gratitude-drbrrl` returns HTTP 403 `PERMISSION_DENIED` |
-| Firebase web app, Google provider, database, functions, deployment identity | Not yet provisioned |
+| Firebase activation | **Succeeded** after the owner accepted Firebase terms |
+| Firebase web app | `Gratitude`, app ID `1:696882301155:web:3fdeda713681e3ed685dd6`, state `ACTIVE` |
+| Google authentication | Enabled; OAuth client configured; authorized domains verified: `gratitude-drbrrl.firebaseapp.com`, `gratitude-drbrrl.web.app`, `drbrrl.github.io`, `localhost` |
+| Firestore | `(default)`, Native mode, Standard edition, Sydney `australia-southeast1`; repository rules and indexes deployed successfully |
+| Billing | Not linked (`billingEnabled: false`); current account lists no accessible billing accounts |
+| Functions and deployment identity | Not yet deployed/provisioned; Functions needs billing |
 
-Do not create another Cloud project. Firebase documents unaccepted Firebase terms as one possible cause of this 403, alongside missing permissions. The owner has been asked to open the [Firebase console](https://console.firebase.google.com/), choose **Add Firebase to Google Cloud project**, select `gratitude-drbrrl`, and review any terms/setup prompt. This is a possible cause, not a confirmed diagnosis. A follow-up check enabled the Firebase Management API successfully through gcloud, then called `projects.addFirebase` directly with the existing authenticated account; the activation request still returned the same 403. [Official troubleshooting](https://firebase.google.com/docs/projects/use-firebase-with-existing-cloud-project)
+The previous activation 403 was resolved after the owner accepted Firebase terms: the next `projects:addfirebase` call succeeded. No replacement project was needed. The web app, Google provider and Firestore database have now been provisioned and verified. No journal data was written during setup.
+
+The remaining deployment prerequisite is billing. The owner has been asked to [link their intended billing account](https://console.cloud.google.com/billing/linkedaccount?project=gratitude-drbrrl). Do not infer a billing account from another project. A real mobile Google sign-in and deployed callable test remain outstanding.
 
 `.firebaserc` records the actual Cloud project. Emulator scripts explicitly target `demo-gratitude`, so the default alias cannot direct tests at live data.
 
 ## Complete live provisioning
 
-After resolving the activation error:
+The project, web app and database already exist; do not repeat their creation. Obtain the public web configuration when needed:
 
 ```sh
-nix develop
-npx firebase projects:addfirebase gratitude-drbrrl
-npx firebase apps:create WEB Gratitude --project gratitude-drbrrl
-npx firebase apps:list --project gratitude-drbrrl
+nix develop -c npx firebase apps:sdkconfig WEB '1:696882301155:web:3fdeda713681e3ed685dd6' --project gratitude-drbrrl
 ```
 
-If activation was completed in the console, skip `projects:addfirebase`. Obtain public web configuration with `firebase apps:sdkconfig WEB <app-id> --project gratitude-drbrrl`; use the names in `.env.example` for a local live build. Never copy administrative credentials into Vite configuration.
+Use the names in `.env.example` for a local live build. Never copy administrative credentials into Vite configuration. Keep the hosted application unconfigured until the callable backend is deployed. Functions targets the same Sydney region as Firestore and requires a supported billing plan. [Functions setup](https://firebase.google.com/docs/functions/get-started)
 
-Enable Google authentication and authorize `drbrrl.github.io` (plus localhost for local live testing). Create the default Firestore database in Sydney (`australia-southeast1`); the callable function targets the same region. Identify the owner's billing account before linking it; Functions deployment requires the supported billing plan. Test real Google sign-in on supported mobile browsers before release. [Functions setup](https://firebase.google.com/docs/functions/get-started)
+Google sign-in was provisioned with `firebase deploy --only auth` using a temporary auth configuration: display name `Gratitude`, the owning account as support email, and the Pages origin as an additional redirect URI. Firebase automatically adds its own auth handler URI; specifying it again caused a duplicate-redirect error, resolved by omitting that duplicate. The temporary file was removed. The owner’s email and OAuth client secret were not committed. Authorized domains were then read, extended and verified through the Identity Toolkit API.
 
 Install dependencies in both root and `functions/`, validate with `npm run test:firebase:all`, then deploy:
 
