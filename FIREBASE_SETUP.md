@@ -2,6 +2,10 @@
 
 The backend uses Firebase Authentication (Google), Cloud Firestore and Cloud Functions. Storage is reserved for the photo increment. The frontend remains on GitHub Pages.
 
+## Architecture review
+
+The owner has questioned the need for Cloud Functions. Billing is required by the current callable-function implementation, not inherently by authenticated Firestore journaling. The billing-link request is withdrawn while we reconsider direct client transactions protected by Security Rules and Firebase AI Logic for the later AI integration. This alternative has not been implemented; deployed rules still deny browser writes.
+
 ## Verified resources and current blocker
 
 Checked on 2026-09-24:
