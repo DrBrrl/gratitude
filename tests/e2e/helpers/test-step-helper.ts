@@ -11,17 +11,20 @@ export class TestStepHelper {
 
   constructor(private page: Page, private info: TestInfo) {}
 
-  async step(name: string, description: string, verifications: Verification[]) {
+  setPage(page: Page) { this.page = page; }
+
+  async step(name: string, description: string, verifications: Verification[], capturePage = this.page) {
     const id = `${String(this.steps.length).padStart(3, '0')}-${name.replace(/[^a-z0-9-]/gi, '-')}`;
     const filename = `${id}-${this.info.project.name}.png`;
     await test.step(description, async () => {
       for (const verification of verifications) {
         await test.step(verification.description, verification.check);
       }
-      await this.page.mouse.move(0, 0);
-      await expect(this.page).toHaveScreenshot(filename, {
+      await capturePage.mouse.move(0, 0);
+      await expect(capturePage).toHaveScreenshot(filename, {
         fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css',
-        maxDiffPixels: 0, threshold: 0
+        stylePath: join(import.meta.dirname, 'screenshot.css'),
+        maxDiffPixels: 0, threshold: 0, mask: [capturePage.locator('time')], maskColor: '#34322d'
       });
       this.steps.push({
         description,
@@ -29,6 +32,11 @@ export class TestStepHelper {
         checks: verifications.map((verification) => verification.description)
       });
     });
+  }
+
+  async action(name: string, description: string, action: () => Promise<unknown>, check: () => Promise<void>, checkDescription = 'The expected result of this action is visible') {
+    await action();
+    await this.step(name, description, [{ description: checkDescription, check }]);
   }
 
   generateDocs(title: string, description: string) {

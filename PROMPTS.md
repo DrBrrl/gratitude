@@ -151,3 +151,9 @@ ok so finish it
 ```text
 I want to run a flake from github, remind me the syntax
 ```
+
+## 2026-09-24 — Production features in small, demonstrated commits
+
+```text
+OK we rebased and merged Pr4 and are ready to see a new PR with a real production implementaiotn of as much of hte implementation plan as you can accomplish. Do it in a series fo small commits each of which demionstrates a working user feature with a corresponding e2e test. Make the e2e tests go step by step - follow every click or user action with a screenshot so that we can see what's going on.
+```
