@@ -19,8 +19,13 @@ test('complete Markdown and JSON exports preserve text and exclude drafts', asyn
     await expect(page.getByText('Export ready: 2 saved reflections.')).toBeVisible();
     const markdown = await markdownDownload; expect(markdown.suggestedFilename()).toBe('gratitude-journal.md');
     const md = await readFile((await markdown.path())!, 'utf8');
+    expect(md).toMatch(/^# Gratitude journal\n\n## \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\n\n\*\*Prompt\*\*: What is one small thing you appreciated today\?\n\n\*\*Reflection\*\*: /);
+    expect(md.match(/^## /gm)).toHaveLength(2);
+    expect(md.match(/^\*\*Prompt\*\*: /gm)).toHaveLength(2);
+    expect(md.match(/^\*\*Reflection\*\*: /gm)).toHaveLength(2);
+    expect(md).not.toMatch(/saved reflections|through event|Entry:|Colour:|^### /m);
     expect(md).toContain('A friend shared a funny story'); expect(md).toContain('\\*\\*tea\\*\\* &amp; &lt;sunshine&gt;'); expect(md).not.toContain('PRIVATE UNFINISHED DRAFT');
-  }, 'The downloaded Markdown includes both saved entries, escapes literal formatting, and excludes the unfinished draft');
+  }, 'The downloaded Markdown uses date headings and inline Prompt/Reflection labels, preserves both saved entries, and excludes system metadata and drafts');
   const jsonDownload = page.waitForEvent('download');
   await steps.action('json', 'Download the same journal as JSON', () => page.getByRole('button', { name: 'Download JSON' }).click(), async () => {
     await expect(page.getByText('Export ready: 2 saved reflections.')).toBeVisible();
