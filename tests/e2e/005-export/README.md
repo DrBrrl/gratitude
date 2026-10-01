@@ -156,7 +156,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The downloaded JSON preserves exact reflection text and prompts for both saved entries, through event 2
+- [x] JSON preserves UTC instants; Markdown headings show those same instants in the browser’s Australia/Hobart local time
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Disconnect before another export

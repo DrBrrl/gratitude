@@ -12,7 +12,8 @@
           pkgs = import nixpkgs { inherit system; };
           testJava = pkgs.writeShellScriptBin "java" ''
             # Only emulator JVMs use the fixture date; monotonic timers keep running.
-            export LD_PRELOAD="${pkgs.libfaketime}/lib/faketime/libfaketime.so.1"
+            export LD_PRELOAD="${pkgs.libfaketime}/lib/libfaketime.so.1"
+            test -r "$LD_PRELOAD" || { echo "Missing emulator clock library" >&2; exit 1; }
             export FAKETIME="@2026-10-01 04:31:07"
             export FAKETIME_DONT_FAKE_MONOTONIC=1
             export TZ=UTC
