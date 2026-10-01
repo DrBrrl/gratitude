@@ -211,3 +211,13 @@ This is service feasibility evidence, not an implemented AI feature. App Check e
 ## 2026-10-01 — Markdown is a readable journal
 
 The requested Markdown export contains only the journal title and, per entry, a date heading plus inline bold Prompt and Reflection labels. Removed entry counts, event cursors, entry IDs and colour metadata from Markdown. Dates retain the existing UTC basis and now use `YYYY-MM-DD HH:mm:ss` without milliseconds. JSON retains its structured fields. The download E2E checks the requested layout and absence of system metadata alongside existing literal-text and draft-exclusion checks.
+
+## 2026-10-01 — Verify publication, including calendar-dependent screenshots
+
+The Markdown change passed its focused export tests, but CI failed the unrelated full-entry screenshots on both viewports and skipped publication. Artifact diffs showed only the date mask's right edge: September and October labels have different widths, so masking an inline date did not make its geometry deterministic. Added a stable minimum-width date box in screenshot-only CSS and a functional assertion that the rendered date matches its recorded timestamp. Pixel tolerance remains zero. A queued build is not a deployed preview; verify successful publication and the served bundle before reporting availability.
+
+## 2026-10-01 — Correction: masking is prohibited
+
+The user explicitly rejected all screenshot masking. The earlier date-mask approach and proposed fixed-width mask were incorrect and are superseded. Removed masks and screenshot-only CSS entirely; added the no-masking, zero-pixel rule to the E2E guide and repository instructions. Determinism belongs in fixture inputs, not hidden UI. The emulator test wrapper uses a Nix-pinned JVM clock starting on the fixture date, with time advancing and monotonic timers left real, as described in [libfaketime's JVM guidance](https://github.com/wolfcw/libfaketime). Production time and event validation are unchanged. Visible dates now participate in full screenshot comparisons.
+
+Validation: reviewed the regenerated visible-date screenshots; the ordinary comparison run then passed all 10 browser tests with no masking and zero differing pixels. All 6 Firebase integration tests passed, and Svelte/TypeScript reported no errors or warnings.

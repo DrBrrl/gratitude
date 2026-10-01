@@ -2,7 +2,7 @@
 
 # Private journal, synchronization and recovery
 
-Every navigation, click and text-entry action has a screenshot, including the Google emulator popup and second device. Server dates are masked; all other pixels are compared.
+Every navigation, click and text-entry action has a screenshot, including the Google emulator popup and second device. The emulator starts on a fixed fixture date; every pixel, including dates, is compared without masking.
 
 Viewport: desktop-chromium.
 

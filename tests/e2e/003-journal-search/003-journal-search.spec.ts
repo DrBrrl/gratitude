@@ -13,7 +13,12 @@ test('rainbow cards, full entries, search and editing', async ({ page }, info) =
   expect(await cards.nth(0).evaluate((node) => node.getBoundingClientRect().height)).toBe(await cards.nth(1).evaluate((node) => node.getBoundingClientRect().height));
   expect(await cards.nth(0).getAttribute('style')).not.toBe(await cards.nth(1).getAttribute('style'));
   await steps.action('search', 'Search for an accent-insensitive phrase', () => page.getByLabel('Search reflections').fill('CAFE friend'), async () => { await expect(cards).toHaveCount(1); await expect(cards.locator('mark')).toHaveCount(2); }, 'All query words match the full text and are highlighted');
-  await steps.action('open-entry', 'Open the matching reflection', () => page.getByRole('button', { name: 'View entry →' }).click(), async () => { await expect(page.getByRole('button', { name: 'Edit reflection' })).toBeVisible(); });
+  await steps.action('open-entry', 'Open the matching reflection', () => page.getByRole('button', { name: 'View entry →' }).click(), async () => {
+    await expect(page.getByRole('button', { name: 'Edit reflection' })).toBeVisible();
+    const timestamp = await page.locator('article time').getAttribute('datetime');
+    expect(timestamp).toMatch(/^2026-10-01T/);
+    await expect(page.locator('article time')).toHaveText(new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Hobart' }).format(new Date(timestamp!)));
+  }, 'The full reflection opens and its date matches the recorded timestamp');
   await steps.action('back', 'Return to the retained search results', () => page.getByRole('button', { name: 'Back to journal' }).click(), async () => { await expect(page.getByLabel('Search reflections')).toHaveValue('CAFE friend'); await expect(cards).toHaveCount(1); });
   await steps.action('no-results', 'Search for a missing word', () => page.getByLabel('Search reflections').fill('volcano'), async () => { await expect(page.getByRole('heading', { name: 'No matching reflections' })).toBeVisible(); });
   await steps.action('clear', 'Clear the search', () => page.getByRole('button', { name: 'Clear search' }).first().click(), async () => { await expect(cards).toHaveCount(2); });
@@ -21,5 +26,5 @@ test('rainbow cards, full entries, search and editing', async ({ page }, info) =
   await steps.action('edit', 'Edit the saved reflection', () => page.getByRole('button', { name: 'Edit reflection' }).click(), async () => { await expect(page.getByLabel('Your reflection')).toHaveValue('The rain made the garden smell wonderful.'); });
   await steps.action('revise', 'Add a remembered detail', () => page.getByLabel('Your reflection').fill('The rain made the garden smell wonderful. The roses opened.'), async () => { await expect(page.getByLabel('Your reflection')).toHaveValue(/The roses opened\./); });
   await steps.action('save-edit', 'Save changes without adding a duplicate entry', () => page.getByRole('button', { name: 'Save changes' }).click(), async () => { await expect(cards).toHaveCount(2); await expect(cards.first()).toContainText('The roses opened.'); });
-  steps.generateDocs('Browse and search your rainbow journal', 'Every click and text-entry action is followed by a compared screenshot. Server-generated dates are masked; card text, layout, colours and controls are compared exactly.');
+  steps.generateDocs('Browse and search your rainbow journal', 'Every click and text-entry action is followed by a compared screenshot. The emulator starts on a fixed fixture date; dates, card text, layout, colours and controls are compared exactly without masking.');
 });

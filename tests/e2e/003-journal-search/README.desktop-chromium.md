@@ -2,7 +2,7 @@
 
 # Browse and search your rainbow journal
 
-Every click and text-entry action is followed by a compared screenshot. Server-generated dates are masked; card text, layout, colours and controls are compared exactly.
+Every click and text-entry action is followed by a compared screenshot. The emulator starts on a fixed fixture date; dates, card text, layout, colours and controls are compared exactly without masking.
 
 Viewport: desktop-chromium.
 
@@ -120,7 +120,7 @@ Viewport: desktop-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The full reflection opens and its date matches the recorded timestamp
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Return to the retained search results

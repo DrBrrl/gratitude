@@ -173,3 +173,15 @@ Can we get the md file export to use the following format:
 
 We don't want the system information in there
 ```
+
+## 2026-10-01 — Verify the Markdown export preview
+
+```text
+we don't see that on the preview?
+```
+
+## 2026-10-01 — No screenshot masking
+
+```text
+masking is not supposed to be allowed in any circumstance. 0 pixel tolerance is supposed to be therule. Is that not in the e2e guide?
+```
