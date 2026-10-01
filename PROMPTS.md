@@ -185,3 +185,9 @@ we don't see that on the preview?
 ```text
 masking is not supposed to be allowed in any circumstance. 0 pixel tolerance is supposed to be therule. Is that not in the e2e guide?
 ```
+
+## 2026-10-01 — Export local timestamps
+
+```text
+we're expecting the time to be the user's local time not gmt
+```
