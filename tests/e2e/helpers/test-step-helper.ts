@@ -22,6 +22,7 @@ export class TestStepHelper {
       }
       await capturePage.mouse.move(0, 0);
       await expect(capturePage).toHaveScreenshot(filename, {
+        timeout: 10_000, // Slow CI needs time for two stable full-page renders; pixel tolerance stays zero.
         fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css',
         maxDiffPixels: 0, threshold: 0
       });

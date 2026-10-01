@@ -97,7 +97,7 @@ The runner fixes the locale (`en-AU`), timezone (`Australia/Hobart`), dark colou
 
 As time-dependent behaviour is implemented, freeze the clock before opening the page. Seed randomized colours and identifiers and provide explicit storage fixtures. Stub AI responses and photo summaries at the application boundary; normal CI should not depend on live model output, credentials, cost, or network timing. Use fictional entries and photos, never private reflections.
 
-Wait for observable conditions with Playwright assertions; do not use fixed sleeps. Assertions and actions have a two-second budget, each test has 30 seconds, and server startup has 30 seconds. A timeout change requires an explanation of the behaviour that needs it.
+Wait for observable conditions with Playwright assertions; do not use fixed sleeps. Assertions and actions default to a two-second budget, each test defaults to 30 seconds, and server startup has 30 seconds. Full-page screenshot comparisons allow ten seconds to obtain two stable renders on constrained CI runners; their pixel tolerance remains zero. Authentication and reopening a journal with a pending outbox allow fifteen seconds for account restoration and server acknowledgement. Multi-step journal scenarios declare longer total budgets. A timeout change requires an explanation of the behaviour that needs it.
 
 ## Related checks
 
