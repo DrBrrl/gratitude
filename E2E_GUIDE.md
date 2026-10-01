@@ -2,6 +2,10 @@
 
 Gratitude's E2E tests combine functional checks, screenshot comparisons, and generated scenario documentation. This follows [food's E2E guide](https://github.com/anicolao/food/blob/578663f1204a9064de47dd63eda7a143c38288a6/E2E_GUIDE.md) and [Jaipur's TestStepHelper](https://github.com/anicolao/jaipur/blob/76cc8bcaa8d4f111c2ebc26b67162ca646b4576a/tests/e2e/helpers/test-step-helper.ts). Every documented step compares its screenshot with a committed baseline. Each generated README embeds the screenshot with its checks underneath.
 
+## Screenshot comparison rule
+
+**No masking is allowed, in any circumstance. Every pixel must match: `maxDiffPixels: 0` and `threshold: 0`.** Do not add masks, crop away content, hide or replace rendered content, or use screenshot-only styles to bypass differences. Fix nondeterminism in the test inputs and clocks. Review actual rendered dates and other dynamic content in the committed screenshots.
+
 ## Run the tests
 
 From the repository root:
@@ -115,7 +119,7 @@ The integration suite also checks owner isolation, rejected client mutations and
 For an intentional visual update, start fresh emulators and run:
 
 ```sh
-nix develop -c npx firebase emulators:exec --project demo-gratitude --only auth,firestore,storage 'VITE_FIREBASE_EMULATORS=true npm run build && E2E_FIREBASE=true npx playwright test --update-snapshots'
+nix develop -c bash scripts/firebase-test.sh 'VITE_FIREBASE_EMULATORS=true npm run build && E2E_FIREBASE=true npx playwright test --update-snapshots'
 ```
 
 Review regenerated PNGs and READMEs, then run the ordinary suite. The normal `test:e2e` build skips the Firebase scenario; CI runs it separately against emulators and checks that generated documentation remains committed. Real mobile OAuth and deployed IAM still require live verification after provisioning.
@@ -126,4 +130,6 @@ The journal feature series adds generated mobile and desktop walkthroughs for [s
 
 Every new user navigation, click, fill, selection and reload must be followed by `TestStepHelper.action` (or a `step` immediately after the action for popups/downloads). Include a meaningful state assertion before comparing the screenshot. Do not combine several UI actions into one undocumented jump. The shared sign-in helper captures the Auth emulator popup and each field separately. Fault injection and backend fixture setup are test setup, not user actions.
 
-Scenarios run serially to isolate the shared Auth emulator account chooser. Server-generated dates inside `time` elements are masked in screenshots; assert date semantics separately when relevant. The rest of each full-page image is compared at zero tolerance. Explicitly suppress the typing caret in screenshot styles. Generated READMEs put the screenshot above that action's checks.
+Scenarios run serially to isolate the shared Auth emulator account chooser. The test wrapper starts emulator JVM wall clocks at `2026-10-01 04:31:07 UTC` using the Nix-pinned libfaketime; time advances normally from that starting point and monotonic timers are untouched. This makes server-recorded dates repeatable while retaining real transaction timestamps and Security Rules checks. The production app, browser and normal interactive emulators do not use this clock override. Run baseline updates through the same wrapper as CI.
+
+All rendered content, including dates, is compared without masks or screenshot-only styles. The journal scenario additionally checks the date text against the recorded timestamp and verifies the fixture date was used. Generated READMEs put each screenshot above that action's checks.

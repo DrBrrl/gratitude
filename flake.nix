@@ -10,6 +10,14 @@
       devShells = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
+          testJava = pkgs.writeShellScriptBin "java" ''
+            # Only emulator JVMs use the fixture date; monotonic timers keep running.
+            export LD_PRELOAD="${pkgs.libfaketime}/lib/faketime/libfaketime.so.1"
+            export FAKETIME="@2026-10-01 04:31:07"
+            export FAKETIME_DONT_FAKE_MONOTONIC=1
+            export TZ=UTC
+            exec ${pkgs.jdk21_headless}/bin/java "$@"
+          '';
           shellFor = node: pkgs.mkShell {
             packages = [ node pkgs.jdk21_headless pkgs.chromium pkgs.python3 pkgs.gh pkgs.actionlint ];
             PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
@@ -27,6 +35,7 @@
               </fontconfig>
             '';
             PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
+            GRATITUDE_TEST_JAVA_BIN = "${testJava}/bin";
           };
         in {
           default = shellFor pkgs.nodejs_24;

@@ -23,8 +23,7 @@ export class TestStepHelper {
       await capturePage.mouse.move(0, 0);
       await expect(capturePage).toHaveScreenshot(filename, {
         fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css',
-        stylePath: join(import.meta.dirname, 'screenshot.css'),
-        maxDiffPixels: 0, threshold: 0, mask: [capturePage.locator('time')], maskColor: '#34322d'
+        maxDiffPixels: 0, threshold: 0
       });
       this.steps.push({
         description,
