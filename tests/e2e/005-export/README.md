@@ -147,7 +147,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The downloaded Markdown includes both saved entries, escapes literal formatting, and excludes the unfinished draft
+- [x] The downloaded Markdown uses date headings and inline Prompt/Reflection labels, preserves both saved entries, and excludes system metadata and drafts
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Download the same journal as JSON
