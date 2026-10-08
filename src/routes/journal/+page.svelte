@@ -4,7 +4,9 @@
   import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
   import { createFirebaseClient, googleSignIn, type FirebaseClient } from '$lib/firebase/client';
   import { JournalRepository, type JournalView, type JournalStore } from '$lib/firebase/repository';
-  import { emptyProjection, STARTER_ID, STARTER_PROMPT, type Entry, type Action } from '$lib/domain';
+  import { emptyProjection, STARTER_ID, STARTER_PROMPT, promptId, type AIChoices, type Entry, type Action } from '$lib/domain';
+
+  import { aiAvailable, personalContextAvailable, geminiGenerator } from '$lib/ai/gemini';
 
   const uiReview = import.meta.env.DEV && import.meta.env.VITE_UI_REVIEW === 'true';
   let reviewSession = 0;
@@ -72,6 +74,65 @@
   const todayColour = $derived(colours[daily.colour]);
   const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft?.payload.text.trim());
   let editorColour = $state(colours[0]);
+  let editorPromptId = $state(STARTER_ID);
+  const currentPromptId = $derived(daily.entry?.promptId ?? (hasTodayDraft && todayDraft ? promptId(todayDraft) : view.state.ai.days[today]) ?? STARTER_ID);
+  const currentPrompt = $derived(currentPromptId === STARTER_ID ? STARTER_PROMPT : view.state.ai.responses[currentPromptId]?.payload.text ?? STARTER_PROMPT);
+  const editorPrompt = $derived(editorPromptId === STARTER_ID ? STARTER_PROMPT : view.state.ai.responses[editorPromptId]?.payload.text ?? STARTER_PROMPT);
+  const currentResponse = $derived(view.state.ai.responses[currentPromptId]);
+  const currentRequest = $derived(currentResponse ? view.state.ai.requests[currentResponse.payload.requestId] : null);
+  let aiBusy = $state(false);
+  let generatingPrompt = $state(false);
+  let aiMessage = $state('');
+  let choices = $state<AIChoices>({ enabled: false, useJournal: false, useFeedback: false, guidance: '' });
+  let feedbackOpen = $state(false);
+  let feedbackText = $state('');
+  async function saveChoices() {
+    if (!repository) return;
+    aiBusy = true; aiMessage = '';
+    try {
+      await repository.commitAI({ eventId: crypto.randomUUID(), type: 'AIChoicesConfirmed', schemaVersion: 1,
+        payload: { previousEventId: view.state.ai.control.lastEventId, ...$state.snapshot(choices) } });
+      aiMessage = 'AI choices saved.';
+    } catch (cause) { aiMessage = cause instanceof Error ? cause.message : 'Could not save AI choices.'; }
+    finally { aiBusy = false; }
+  }
+  async function generatePrompt() {
+    const active = repository;
+    if (!active || !client) return;
+    generatingPrompt = true; aiMessage = '';
+    try { await active.requestPrompt(today, personalContextAvailable ? 'personal' : 'generic', geminiGenerator(client)); }
+    catch (cause) { if (repository === active) aiMessage = cause instanceof Error ? cause.message : 'Could not request a prompt.'; }
+    finally { if (repository === active) generatingPrompt = false; }
+  }
+  async function useStarter() {
+    if (!repository) return;
+    aiBusy = true; aiMessage = '';
+    try { await repository.commitAI({ eventId: crypto.randomUUID(), type: 'StarterPromptChosen', schemaVersion: 1,
+      payload: { previousEventId: view.state.ai.control.lastEventId, day: today, starterId: STARTER_ID } }); }
+    catch (cause) { aiMessage = cause instanceof Error ? cause.message : 'Could not choose the starter prompt.'; }
+    finally { aiBusy = false; }
+  }
+  async function syncPrompt() {
+    aiBusy = true; aiMessage = '';
+    try { await repository?.syncPromptResult(); }
+    catch (cause) { aiMessage = cause instanceof Error ? cause.message : 'Could not sync the prompt.'; }
+    finally { aiBusy = false; }
+  }
+  function openFeedback() {
+    feedbackText = view.state.ai.feedback.find(f => f.payload.promptId === currentPromptId)?.payload.text ?? '';
+    feedbackOpen = !feedbackOpen;
+  }
+  async function saveFeedback() {
+    if (!repository) return;
+    aiBusy = true; aiMessage = '';
+    try {
+      await repository.commitAI({ eventId: crypto.randomUUID(), type: 'PromptFeedbackSubmitted', schemaVersion: 1,
+        payload: { previousEventId: view.state.ai.control.lastEventId, promptId: currentPromptId, text: feedbackText } });
+      aiMessage = feedbackText.trim() ? 'Prompt feedback saved.' : 'Prompt feedback cleared.'; feedbackOpen = false;
+    } catch (cause) { aiMessage = cause instanceof Error ? cause.message : 'Could not save feedback.'; }
+    finally { aiBusy = false; }
+  }
+
   function keyForEntry(entry: Entry) { return entry.id === daily.entry?.id ? todayKey : `draft:entry:${entry.id}`; }
   async function loadDrafts(active: JournalStore) {
     const legacy = await active.readDraft();
@@ -130,7 +191,7 @@
   async function openComposer(key: string, entry: Entry | undefined) {
     const active = repository;
     if (!active) return;
-    busy = true; error = '';
+    busy = true; error = ''; aiMessage = '';
     try {
       let stored = await active.readDraft(key);
       // Pick up a migrated draft previously stored under the entry's identity.
@@ -145,6 +206,7 @@
       draft = stored;
       const original = stored ? view.state.entries.find(item => item.id === stored.payload.entryId) : entry;
       editing = original ? { ...original, revision: stored?.payload.expectedRevision ?? original.revision } : null;
+      editorPromptId = stored ? promptId(stored) : original?.promptId ?? currentPromptId;
       editorColour = original ? colours[original.colour] : todayColour;
       text = stored?.payload.text ?? original?.text ?? '';
       draftStatus = stored ? 'Draft saved on this device' : '';
@@ -155,9 +217,9 @@
     finally { busy = false; }
   }
   async function beginWriting() { await openComposer(todayKey, daily.entry); }
-  async function openSettings(next: typeof settingsPage) { settingsPage = next; exportStatus = ''; preparedFile = null; await tick(); window.scrollTo(0, 0); }
+  async function openSettings(next: typeof settingsPage) { settingsPage = next; exportStatus = ''; preparedFile = null; aiMessage = ''; if (next === 'ai') choices = { ...view.state.ai.choices }; await tick(); window.scrollTo(0, 0); }
 
-  async function navigate(next: typeof tab) { chooseInitialPage = false; tab = next; selectedId = null; writing = false; savedId = null; settingsPage = 'menu'; await tick(); window.scrollTo(0, 0); }
+  async function navigate(next: typeof tab) { chooseInitialPage = false; tab = next; selectedId = null; writing = false; savedId = null; settingsPage = 'menu'; aiMessage = ''; feedbackOpen = false; await tick(); window.scrollTo(0, 0); }
   async function openEntry(entry: Entry) { journalScroll = window.scrollY; selectedId = entry.id; await tick(); document.getElementById('entry-heading')?.focus(); window.scrollTo(0, 0); }
   async function closeEntry() { const id = selectedId; selectedId = null; await tick(); document.getElementById(`view-${id}`)?.focus({ preventScroll: true }); window.scrollTo(0, journalScroll); }
 
@@ -167,6 +229,7 @@
     const version = ++draftWrite;
     draft = { eventId: draft?.eventId ?? crypto.randomUUID(), type: 'ReflectionWritten', schemaVersion: 1,
       payload: { entryId: editing?.id ?? draft?.payload.entryId ?? crypto.randomUUID(), text, expectedRevision: editing?.revision ?? 0, starterId: STARTER_ID } };
+    if (editorPromptId !== STARTER_ID) draft = { eventId: draft.eventId, type: 'ReflectionWritten', schemaVersion: 2, payload: { entryId: draft.payload.entryId, text, expectedRevision: draft.payload.expectedRevision, promptId: editorPromptId } };
     if (editorDraftKey === todayKey) { todayDraft = draft; todayDraftDay = today; }
     draftStatus = 'Saving draft on this device…';
     try { await repository.writeDraft($state.snapshot(draft), editorDraftKey); if (version === draftWrite) draftStatus = 'Draft saved on this device'; }
@@ -216,6 +279,7 @@
           const current = ++session;
           repository?.stop(); repository = null;
           chooseInitialPage = true;
+          aiBusy = false; generatingPrompt = false; aiMessage = ''; feedbackOpen = false; feedbackText = ''; choices = { enabled: false, useJournal: false, useFeedback: false, guidance: '' };
           user = next; todayDraft = null; todayDraftDay = ''; editorDraftKey = ''; text = ''; editing = null; error = ''; draft = null; draftLoaded = false; draftRestored = false; draftStatus = ''; draftWrite++; exportStatus = ''; preparedFile = null; exporting = false; tab = 'today'; selectedId = null; query = ''; writing = false; savedId = null; settingsPage = 'menu';
           view = { state: emptyProjection(), pending: null, status: '', error: '', ready: false };
           initialized = true;
@@ -280,6 +344,7 @@
       rememberEditorOrigin();
       text = pending.payload.text;
       editing = view.state.entries.find((entry) => entry.id === pending.payload.entryId) ?? null;
+      editorPromptId = promptId(pending);
       editorColour = editing ? colours[editing.colour] : todayColour;
       editorDraftKey = editing ? keyForEntry(editing) : todayKey;
       draft = null; tab = 'today'; writing = true; await persistDraft();
@@ -301,7 +366,7 @@
         <button class="back" onclick={returnFromEditor} disabled={busy}><Icon name="back" />{editorOrigin.label}</button>
         <h1 class="page-heading reflection-heading">Your reflection</h1>
         <section class="tinted composer" style:--entry-colour={editorColour}>
-          <p class="writing-prompt">{editing?.prompt ?? STARTER_PROMPT}</p>
+          <p class="writing-prompt">{editing?.prompt ?? editorPrompt}</p>
           <ReflectionEditor value={text} oninput={value => void persistDraft(value)} disabled={busy || !draftRestored} />
         </section>
         <p class="hint draft-status" aria-live="polite">{draftStatus || 'Drafts stay on this device until you save.'}</p>
@@ -318,10 +383,18 @@
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
         <h1 class="today-heading">Reflection time</h1>
         {#if view.ready}
-          <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">Starter prompt</span><h2>{daily.entry?.prompt ?? STARTER_PROMPT}</h2></section>
+          <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID ? 'Starter prompt' : 'AI prompt'}</span><h2>{daily.entry?.prompt ?? currentPrompt}</h2></section>
           <button class="primary today-response" onclick={beginWriting} disabled={busy || !draftLoaded || todayDraftDay !== today}>{hasTodayDraft || daily.entry ? 'Continue your reflection' : 'Write a response'}</button>
+          {#if !daily.entry && !hasTodayDraft}
+            {#if view.state.ai.choices.enabled}
+              <button class="outline ai-generate" onclick={generatePrompt} disabled={aiBusy || generatingPrompt || !!view.aiResultPending || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : view.state.ai.control.requestId || view.state.ai.failure ? 'Try another request' : currentResponse ? 'Another prompt' : 'Find me a prompt'}</button>
+              {#if view.state.ai.control.requestId && !generatingPrompt && !view.aiResultPending}<p class="hint">A request is unfinished. It will not restart by itself. Try another request or use the starter.</p>{/if}
+              {#if currentResponse || view.state.ai.control.requestId || view.state.ai.failure}<button class="text-button today-secondary" onclick={useStarter} disabled={aiBusy}>Use starter prompt</button>{/if}
+            {:else}<button class="text-button today-secondary" onclick={async () => { await navigate('settings'); await openSettings('ai'); }}>Set up AI prompts</button>{/if}
+          {/if}
+          {#if view.aiResultPending}<section class="glass"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
           <button class="text-button today-secondary" onclick={() => navigate('journal')}>Browse your journal</button>
-          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<p class="glass explanation">A simple starting point for noticing something good. You can write as little or as much as you like. Personalized AI prompts will be available in a future update.</p>{/if}</div>
+          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<div class="glass explanation">{#if currentRequest}<p>This question was generated by Gemini.{currentRequest.payload.contextMode === 'generic' ? ' No journal text, preferences or feedback was shared.' : ` It used your saved preferences, ${currentRequest.payload.entryRefs.length} recent reflections and ${currentRequest.payload.feedbackIds.length} pieces of feedback.`}</p>{:else}<p>A simple starting point for noticing something good. You can write as little or as much as you like. This starter works without sending anything to AI.</p>{/if}<button class="underlined" onclick={openFeedback}>Give prompt feedback</button>{#if feedbackOpen}<label class="ai-label" for="prompt-feedback">What would make prompts better for you?</label><textarea id="prompt-feedback" maxlength="500" rows="3" bind:value={feedbackText}></textarea><p class="hint">A short note in your own words. Clear the text to remove it from future personalization.</p><button class="outline" onclick={saveFeedback} disabled={aiBusy}>Save feedback</button>{/if}</div>{/if}</div>
         {/if}
       {/if}
     {:else if tab === 'journal'}
@@ -361,12 +434,21 @@
         <p class="app-credit">Gratitude · GPLv3</p>
         {#if uiReview}<details class="review-tools glass"><summary>UI review</summary><p class="hint">Fictional journal on this browser only.</p><button class="outline" onclick={() => resetReview?.()}>Restore sample journal</button><button class="text-button" onclick={() => resetReview?.(true)}>Show empty journal</button></details>{/if}
       {:else if settingsPage === 'ai'}
-        <h1>AI settings</h1>
+        <h1 class="page-heading">AI settings</h1>
+        <p class="hint">Ask Gemini for a gentle gratitude question. Nothing is sent until you request a prompt.</p>
+        {#if !aiAvailable || uiReview}<p class="hint">Live AI is available only on a configured Firebase site.</p>{/if}
         <section class="glass preferences">
-          {#each ['Personalization', 'Use answers and feedback', 'Use journal entries', 'Summarize attached photos'] as label}<div class="preference"><span>{label}</span><button class="switch" role="switch" aria-checked="false" aria-label={label} disabled><span></span></button></div>{/each}
+          <div class="preference"><span>AI prompts</span><button class="switch" role="switch" aria-checked={choices.enabled} aria-label="AI prompts" onclick={() => choices.enabled = !choices.enabled} disabled={aiBusy || !aiAvailable || uiReview}><span></span></button></div>
+          <div class="preference"><span>Use prompt feedback</span><button class="switch" role="switch" aria-checked={choices.useFeedback} aria-label="Use prompt feedback" onclick={() => choices.useFeedback = !choices.useFeedback} disabled={aiBusy || !personalContextAvailable}><span></span></button></div>
+          <div class="preference"><span>Use journal entries</span><button class="switch" role="switch" aria-checked={choices.useJournal} aria-label="Use journal entries" onclick={() => choices.useJournal = !choices.useJournal} disabled={aiBusy || !personalContextAvailable}><span></span></button></div>
         </section>
-        <p class="hint">Personalized prompts and photo summaries are not available yet. Your reflections are not sent to an AI service.</p>
-        <section class="glass"><h2>What I remember</h2><p class="muted">Nothing yet. This journal currently uses a starter prompt.</p></section>
+        {#if personalContextAvailable}
+          <label class="ai-label" for="ai-guidance">What should prompts focus on or avoid? <span class="hint">Optional</span></label>
+          <textarea id="ai-guidance" bind:value={choices.guidance} maxlength="500" rows="3" placeholder="For example: everyday moments; fewer questions about work"></textarea>
+          <p class="hint">Your saved preferences are shared when requesting a prompt. The switches optionally include up to 5 recent reflections and 20 notes of feedback. Google processes this context to generate your prompt.</p>
+        {:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
+        <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
+        <section class="glass"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are not available yet.</p></section>
       {:else if settingsPage === 'export'}
         <h1>Export your journal</h1>
         <fieldset class="export-choices"><legend class="sr-only">Export format</legend>
@@ -379,12 +461,13 @@
         {#if preparedFile}<div class="ready glass" role="status"><span class="ready-icon"><Icon name="check" /></span>Export ready</div><button class="outline download" onclick={downloadPrepared}><Icon name="download" />Download {exportFormat === 'markdown' ? 'Markdown' : 'JSON'}</button>{:else if exportStatus}<p aria-live="polite">{exportStatus}</p>{/if}
         <p class="hint export-warning">This file contains your private reflections.</p>
       {:else if settingsPage === 'privacy'}
-        <h1>Privacy & data</h1><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device, and your writing is not shared with AI.</p><button class="outline" onclick={() => openSettings('export')}>Export your journal</button></section>
+        <h1>Privacy & data</h1><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device. AI sharing is controlled in AI settings and starts off disabled.</p><button class="outline" onclick={() => openSettings('export')}>Export your journal</button></section>
         <section class="glass"><h2>Journal recovery</h2><p class="muted">Rebuild this device’s view from your saved account history.</p><button class="outline" onclick={() => repository?.rebuild().catch(() => error = 'Could not rebuild. Please reload and try again.')} disabled={busy}>Rebuild local view</button></section>
       {:else}
         <h1>Your account</h1><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
       {/if}
     {/if}
+    {#if aiMessage}<p class="ai-message hint" role="status">{aiMessage}</p>{/if}
     {#if view.pending}<section class="glass pending"><h2>A reflection is waiting to sync</h2><p class="entry-text"><ReflectionText text={view.pending.payload.text} /></p><button class="primary" onclick={() => repository?.retry()} disabled={busy}>Retry sync</button><button class="text-button" onclick={recoverPending}>Return text to editor</button></section>{/if}
     {#if view.status !== 'Synced'}<p class="sync-status" role="status">{view.status}</p>{/if}
     <dialog bind:this={discardDialog} onclose={() => discardOpen = false} aria-labelledby="discard-title"><h2 id="discard-title">Discard this draft?</h2><p>Your saved reflections will remain in your journal.</p><button class="primary" onclick={() => discardOpen = false}>Keep writing</button><button class="outline" onclick={discardDraft}>Discard draft permanently</button></dialog>
@@ -478,6 +561,13 @@
   .preference:last-child { border: 0; }
   .switch { padding: 3px; width: 46px; min-height: 27px; flex-shrink: 0; border-radius: 20px; background: #6e7378; }
   .switch span { display: block; width: 21px; height: 21px; border-radius: 50%; background: white; }
+  .switch[aria-checked=true] { background: #d7b839; }
+  .switch[aria-checked=true] span { margin-left: auto; }
+  .ai-generate { margin: 14px 0; }
+  .ai-label { display: block; margin: 18px 0 10px; line-height: 1.5; }
+  textarea { width: 100%; resize: vertical; font: inherit; line-height: 1.5; color: inherit; background: #171c24b3; border: 1px solid #b9c1cb80; border-radius: 12px; padding: 12px; margin-bottom: 14px; }
+  textarea:focus-visible { outline: none; border-color: #d5d7dc; }
+  .explanation p:last-child { margin-bottom: 0; }
   .export-choices { border: 0; padding: 0; margin: 0; display: grid; gap: 14px; }
   .export-choice { display: flex; align-items: center; gap: 20px; padding: 22px 18px; min-height: 94px; cursor: pointer; }
   .export-choice.chosen { border-color: var(--yellow); box-shadow: inset 0 0 18px #ffe14c15, 0 0 8px #ffe14c25; }

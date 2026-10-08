@@ -2,7 +2,7 @@
 
 # Write paragraphs and review settings
 
-A single Enter creates the same half-line paragraph spacing used in the journal. Plain-text clipboard input remains undoable and saves without HTML. Settings exposes AI controls honestly as unavailable. Each user action has a screenshot comparison.
+A single Enter creates the same half-line paragraph spacing used in the journal. Plain-text clipboard input remains undoable and saves without HTML. Settings exposes AI controls with sharing disabled by default. Each user action has a screenshot comparison.
 
 Viewport: mobile-chromium.
 
@@ -247,7 +247,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] Planned AI controls are visibly disabled and no personalization is claimed
+- [x] AI controls start off and require explicit choices before sharing
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Return with the shared compact back control

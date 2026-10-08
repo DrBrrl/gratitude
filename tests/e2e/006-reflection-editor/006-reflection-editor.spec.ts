@@ -6,7 +6,7 @@ test('paragraph writing, plain-text paste, undo and settings navigation', async 
   test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(120_000);
   const steps = new TestStepHelper(page, info);
   await startJournal(page, info, steps, 'editor');
-  await steps.action('why', 'Read why this starter prompt is shown', () => page.getByRole('button', { name: 'Why this prompt?' }).click(), async () => { await expect(page.locator('.explanation')).toContainText('Personalized AI prompts will be available in a future update.'); });
+  await steps.action('why', 'Read why this starter prompt is shown', () => page.getByRole('button', { name: 'Why this prompt?' }).click(), async () => { await expect(page.locator('.explanation')).toContainText('This starter works without sending anything to AI.'); });
   await openEditor(page, steps, 'open-editor');
   await steps.action('first', 'Write the first paragraph', () => editor(page).pressSequentially('A quiet cup of tea.'), async () => { await expectEditor(page, 'A quiet cup of tea.'); });
   await steps.action('enter', 'Start a new paragraph with one Enter', () => editor(page).press('Enter'), async () => { await expectEditor(page, 'A quiet cup of tea.\n'); });
@@ -57,10 +57,10 @@ test('paragraph writing, plain-text paste, undo and settings navigation', async 
   await navigate(page, steps, 'settings', 'Settings');
   await steps.action('ai-settings', 'Open AI settings from the Settings menu', () => page.getByRole('button', { name: /^AI settings/ }).click(), async () => {
     await expect(page.getByRole('heading', { name: 'AI settings' })).toBeVisible();
-    await expect(page.getByRole('switch')).toHaveCount(4);
-    for (const control of await page.getByRole('switch').all()) { await expect(control).toBeDisabled(); await expect(control).toHaveAttribute('aria-checked', 'false'); }
-    await expect(page.getByText('Nothing yet. This journal currently uses a starter prompt.')).toBeVisible();
-  }, 'Planned AI controls are visibly disabled and no personalization is claimed');
+    await expect(page.getByRole('switch')).toHaveCount(3);
+    for (const control of await page.getByRole('switch').all()) { await expect(control).toBeEnabled(); await expect(control).toHaveAttribute('aria-checked', 'false'); }
+    await expect(page.getByText('AI prompts are off. Your journal uses a starter prompt.')).toBeVisible();
+  }, 'AI controls start off and require explicit choices before sharing');
   await steps.action('back-settings', 'Return with the shared compact back control', () => page.locator('button.back').click(), async () => { await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible(); });
-  steps.generateDocs('Write paragraphs and review settings', 'A single Enter creates the same half-line paragraph spacing used in the journal. Plain-text clipboard input remains undoable and saves without HTML. Settings exposes AI controls honestly as unavailable. Each user action has a screenshot comparison.');
+  steps.generateDocs('Write paragraphs and review settings', 'A single Enter creates the same half-line paragraph spacing used in the journal. Plain-text clipboard input remains undoable and saves without HTML. Settings exposes AI controls with sharing disabled by default. Each user action has a screenshot comparison.');
 });

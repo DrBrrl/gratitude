@@ -25,7 +25,7 @@ export function createFirebaseClient() {
     connectAuthEmulator(auth, 'http://127.0.0.1:19099', { disableWarnings: true });
     connectFirestoreEmulator(db, '127.0.0.1', 18080);
   }
-  return { auth, db, projectId: options.projectId as string };
+  return { app, emulators, auth, db, projectId: options.projectId as string };
 }
 export function googleSignIn(client: NonNullable<ReturnType<typeof createFirebaseClient>>) {
   const provider = new GoogleAuthProvider();

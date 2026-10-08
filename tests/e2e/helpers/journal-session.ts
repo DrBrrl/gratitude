@@ -13,6 +13,7 @@ export async function expectEditor(page: Page, text: string) { await expect.poll
 export async function expectSynced(page: Page) {
   await expect(page.getByRole('navigation', { name: 'Journal navigation' })).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.sync-status')).toHaveCount(0, { timeout: 15_000 });
+  await expect(page.getByRole('alert')).toHaveCount(0);
 }
 export async function navigate(page: Page, steps: TestStepHelper, id: string, destination: 'Today' | 'Journal' | 'Settings') {
   await steps.action(id, `Open ${destination}`, () => page.getByRole('navigation').getByRole('button', { name: destination, exact: true }).click(), async () => {
