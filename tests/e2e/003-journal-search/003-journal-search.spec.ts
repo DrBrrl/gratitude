@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
-import { editor, expectEditor, expectSynced, navigate, seedHistory, startJournal } from '../helpers/journal-session';
+import { editor, expectEditor, expectSynced, seedHistory, startJournal } from '../helpers/journal-session';
 
 const longReflection = 'The rain made the garden smell wonderful.\nThe roses opened.\nA neighbour stopped to share a story about the flowers she grew as a child, and we stayed outside talking until the clouds cleared and the afternoon sunshine warmed the garden again.';
 
@@ -47,9 +47,11 @@ test('rainbow cards, expansion, full entries, search and editing', async ({ page
   await steps.action('edit', 'Edit the saved reflection', () => page.getByRole('button', { name: 'Edit reflection' }).click(), async () => { await expectEditor(page, longReflection); await expect(page.locator('button.back')).toHaveText('Journal'); });
   await steps.action('revise', 'Add a remembered detail', () => editor(page).fill('The rain made the garden smell wonderful. The roses opened.'), async () => { await expectEditor(page, 'The rain made the garden smell wonderful. The roses opened.'); });
   await steps.action('save-edit', 'Save changes to the existing reflection', () => page.getByRole('button', { name: 'Save changes' }).click(), async () => { await expect(page.locator('.saved-card')).toContainText('The roses opened.'); await expectSynced(page); });
-  await navigate(page, steps, 'edited-journal', 'Journal');
-  await expect(cards).toHaveCount(2);
-  await expect(cards.first()).toContainText('The roses opened.');
-  await expect(cards.first().locator('time')).toHaveText('Wed 30 Sep 2026, 2:31 PM');
+  await steps.action('edited-journal', 'Finish editing and return to the journal', () => page.getByRole('button', { name: 'Done', exact: true }).click(), async () => {
+    await expect(page.getByRole('heading', { name: 'Your journal', exact: true })).toBeVisible();
+    await expect(cards).toHaveCount(2);
+    await expect(cards.first()).toContainText('The roses opened.');
+    await expect(cards.first().locator('time')).toHaveText('Wed 30 Sep 2026, 2:31 PM');
+  });
   steps.generateDocs('Browse and search your rainbow journal', 'Every click and text-entry action is followed by a compared screenshot. Historical raw-event fixtures exercise content-sized cards, three-line previews, expansion, local timestamps and full-entry editing.');
 });

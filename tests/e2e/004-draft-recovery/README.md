@@ -2,7 +2,7 @@
 
 # Protect unfinished writing
 
-Daily and historical editor drafts persist independently. Navigation returns to its origin, Today keeps its colour, saving continues one daily entry, and discarding an edit preserves both the saved reflection and other drafts. Every interaction is captured.
+Daily and historical editor drafts persist independently. Back returns to the editor’s origin; Done and returning sessions open Journal once today’s reflection is saved. Today keeps its colour and becomes the initial page again on a new local day. Discarding an edit preserves saved writing and other drafts. Every interaction is captured.
 
 Viewport: mobile-chromium.
 
@@ -204,9 +204,18 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Return to the same daily reflection
+## Finish today’s reflection and return to the journal
 
-![Return to the same daily reflection](./screenshots/022-done-mobile-chromium.png)
+![Finish today’s reflection and return to the journal](./screenshots/022-done-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Today
+
+![Open Today](./screenshots/023-revisit-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -215,7 +224,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/023-continue-saved-mobile-chromium.png)
+![Open the reflection editor](./screenshots/024-continue-saved-mobile-chromium.png)
 
 **Verifications:**
 
@@ -224,7 +233,7 @@ Viewport: mobile-chromium.
 
 ## Make an edit that will be discarded
 
-![Make an edit that will be discarded](./screenshots/024-another-mobile-chromium.png)
+![Make an edit that will be discarded](./screenshots/025-another-mobile-chromium.png)
 
 **Verifications:**
 
@@ -233,7 +242,7 @@ Viewport: mobile-chromium.
 
 ## Open discard confirmation
 
-![Open discard confirmation](./screenshots/025-discard-again-mobile-chromium.png)
+![Open discard confirmation](./screenshots/026-discard-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -242,7 +251,7 @@ Viewport: mobile-chromium.
 
 ## Discard the edit while keeping the saved reflection
 
-![Discard the edit while keeping the saved reflection](./screenshots/026-confirm-discard-mobile-chromium.png)
+![Discard the edit while keeping the saved reflection](./screenshots/027-confirm-discard-mobile-chromium.png)
 
 **Verifications:**
 
@@ -251,7 +260,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/027-past-again-mobile-chromium.png)
+![Open Journal](./screenshots/028-past-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -260,7 +269,7 @@ Viewport: mobile-chromium.
 
 ## Open yesterday’s reflection again
 
-![Open yesterday’s reflection again](./screenshots/028-past-open-again-mobile-chromium.png)
+![Open yesterday’s reflection again](./screenshots/029-past-open-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -269,25 +278,43 @@ Viewport: mobile-chromium.
 
 ## Recover yesterday’s independent draft
 
-![Recover yesterday’s independent draft](./screenshots/029-past-recovered-mobile-chromium.png)
+![Recover yesterday’s independent draft](./screenshots/030-past-recovered-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Return to Journal without losing the draft
+## Save yesterday’s edit after completing today’s reflection
 
-![Return to Journal without losing the draft](./screenshots/030-leave-past-mobile-chromium.png)
+![Save yesterday’s edit after completing today’s reflection](./screenshots/031-save-past-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Reload to verify today’s edit stays discarded
+## Finish the historical edit and return to the journal
 
-![Reload to verify today’s edit stays discarded](./screenshots/031-verify-discard-mobile-chromium.png)
+![Finish the historical edit and return to the journal](./screenshots/032-done-past-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Reload into the journal once today’s reflection is saved
+
+![Reload into the journal once today’s reflection is saved](./screenshots/033-verify-discard-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Today
+
+![Open Today](./screenshots/034-verify-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -296,7 +323,25 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/032-verify-saved-mobile-chromium.png)
+![Open the reflection editor](./screenshots/035-verify-saved-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to Today without losing the draft
+
+![Return to Today without losing the draft](./screenshots/036-leave-today-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Reopen Today at the start of a new local day
+
+![Reopen Today at the start of a new local day](./screenshots/037-new-day-mobile-chromium.png)
 
 **Verifications:**
 

@@ -51,6 +51,8 @@ The current interface follows the mobile mockups with a Today prompt, separate w
 
 Today uses the device’s local calendar date and its own draft. Editing another journal entry keeps a separate durable draft; it cannot change Today’s prompt, colour or continue-writing state. Once today’s reflection is saved, Today continues that same entry and retains its projected colour. Existing journals with multiple entries on the same day use the first one for Today; other entries remain independently editable.
 
+Signed-in sessions start on Today until a reflection has been saved for the local day, then start on Journal. A new local day starts on Today again. The saved-reflection confirmation shares the journal card typography and a centered page heading; Done opens Journal after both new reflections and edits. The bottom navigation uses a nearly opaque frosted surface so entries behind it stay subdued.
+
 The reviewed interface is covered by mobile and desktop E2E walkthroughs, including paragraph writing, card expansion, search, independent drafts, Settings and export. Each action compares a full-page screenshot with zero pixel tolerance and no masking. Use the normal app and emulator workflows to validate changes before publication; `dev:ui` remains available for quick visual iteration.
 
 ## Firebase development

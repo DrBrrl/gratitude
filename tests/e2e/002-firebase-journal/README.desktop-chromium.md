@@ -105,13 +105,13 @@ Viewport: desktop-chromium.
 - [x] The Google emulator account chooser opens
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Complete sign-in and open Today
+## Return to the journal after today’s saved reflection
 
-![Complete sign-in and open Today](./screenshots/011-signed-in-desktop-chromium.png)
+![Return to the journal after today’s saved reflection](./screenshots/011-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
-- [x] The private journal is synchronized and Today is ready
+- [x] The saved daily reflection makes Journal the initial page on this device
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Open Journal
