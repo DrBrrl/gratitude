@@ -545,3 +545,9 @@ Okay! I have three little changes. Change 1: I would like the menu bar on the bo
 ```text
 We just put a zip file of an export from an altenate program I've been using for gratitude. Let's make a plan for how to import the data from that system into our new system, on a new gratitude-import branch and worktree, for review.
 ```
+
+## 2026-10-08 — Publish import plan for PR review
+
+```text
+put this up as a pr for review
+```
