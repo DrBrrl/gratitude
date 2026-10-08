@@ -1,4 +1,4 @@
-import { parseAction, replay, type Action, type JournalEvent } from '../domain';
+import { parseAction, replay, type Action, type AIAction, type SourceAction, type JournalEvent } from '../domain';
 import type { JournalStore, JournalView } from '../firebase/repository';
 import fixture from './journal-events.json';
 
@@ -38,7 +38,7 @@ export class ReviewRepository implements JournalStore {
   }
   async writeDraft(draft: Action, key = 'draft') { this.persist(this.events, { ...this.drafts, [key]: structuredClone(draft) }); }
   async clearDraft(key = 'draft') { const drafts = { ...this.drafts }; delete drafts[key]; this.persist(this.events, drafts); }
-  async save(input: Action) {
+  async save(input: SourceAction) {
     if (this.stopped) throw new Error('Open the review session again.');
     const action = parseAction(input);
     const prior = this.events.find((event) => event.eventId === action.eventId);
@@ -50,6 +50,9 @@ export class ReviewRepository implements JournalStore {
     replay(events); // Real reducer enforces ordering and edit revisions.
     this.persist(events); this.emit();
   }
+  async commitAI(action: AIAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
+  async requestPrompt() { throw new Error('Use the Firebase preview to try Gemini. UI review stays entirely on this device.'); }
+  async syncPromptResult() {}
   async retry() { this.emit(); }
   async discardPending() { this.emit(); }
   async exportSnapshot() { return replay(this.events); }
