@@ -3,7 +3,9 @@ import { TestStepHelper } from '../helpers/test-step-helper';
 import { FIXTURE_TIME, editor, expectEditor, expectSynced, navigate, openEditor, startJournal, signIn, writeReflection } from '../helpers/journal-session';
 
 test('Google sign-in, private saving, a second device and cached recovery', async ({ page, browser }, info) => {
-  test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires local Firebase emulators'); test.setTimeout(120_000);
+  test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires local Firebase emulators');
+  // 32 full-page comparisons plus two sign-ins took 118 seconds on the CI runner.
+  test.setTimeout(180_000);
   const steps = new TestStepHelper(page, info);
   await startJournal(page, info, steps, 'foundation');
   await writeReflection(page, steps, 'I appreciated a quiet cup of tea by the window.', 'tea');
