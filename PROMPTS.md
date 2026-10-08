@@ -563,3 +563,9 @@ projects/122994614403
 ```text
 We've enabled paid tier - can you edit our config files and make using it the default?
 ```
+
+## 2026-10-08 — Plan alternate gratitude export import
+
+```text
+We just put a zip file of an export from an altenate program I've been using for gratitude. Let's make a plan for how to import the data from that system into our new system, on a new gratitude-import branch and worktree, for review.
+```
