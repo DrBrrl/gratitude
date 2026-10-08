@@ -539,3 +539,15 @@ Okay! I have three little changes. Change 1: I would like the menu bar on the bo
 ```text
 Okay! I have three little changes. Change 1: I would like the menu bar on the bottom to be more "foggy"/opaque like it is in the dex server (it's more transparent in the PR). Change 2: I would like the flow of the app to be: Today page is the first landing page, once one has input their reflection for the day however, the main page the app returns to after e.g. editing another entry should be the journal page. Change 3: The "Reflection saved" page is one i hadn't clicked through. I would like the same title font and size as on other pages (Centered is good for this page though), i would like the finalised prompt card to have the same format as the cards in the journal (i.e. text sizes, colours, and italics for the prompt), and of course when one kits "done" for it to return to the jounal page (so the "browse your journal" button underneath edit reflection is superfluous and should be removed)
 ```
+
+## 2026-10-08 — Plan alternate gratitude export import
+
+```text
+We just put a zip file of an export from an altenate program I've been using for gratitude. Let's make a plan for how to import the data from that system into our new system, on a new gratitude-import branch and worktree, for review.
+```
+
+## 2026-10-08 — Publish import plan for PR review
+
+```text
+put this up as a pr for review
+```

@@ -335,3 +335,13 @@ The same ordering fix applies to the shared glass panels and bottom navigation s
 The new computed-style assertion additionally found that `.glass` overrode the less-specific `nav` selector, leaving navigation at 18px. Using `nav.glass` gives the navigation its intended 24px blur; its desktop and reduced-transparency overrides use the same specificity.
 
 After reviewing the regenerated production screenshots, all twelve mobile/desktop scenarios passed again without updating baselines, including the new computed-blur assertions. Svelte and E2E TypeScript checks also passed. The walkthroughs record the blur verification beneath the sign-in screenshot.
+
+## 2026-10-08 — Alternate journal import investigation and planning review
+
+Confirmed by in-memory inspection of the supplied ZIP: 686 uniquely identified entries spanning 2024-11-28 to 2026-10-07, five matching JPEG attachments, one photo-only entry, three null prompts, 43 source colours and seven extra same-day entries. Numeric and offset-bearing string dates agree for all creation/update fields. No private reflection text or photos were copied into project records or fixtures. The original archive remains untracked in the original worktree.
+
+The current event contract and Security Rules require server-time creation, the fixed starter prompt and nonblank reflection text. Existing browsing/export reverse event insertion order. Therefore faithful historical import requires a separate imported event contract, independent historical timestamps, chronological presentation, metadata-preserving edits/exports, and cache invalidation. A direct reuse of normal save would lose dates/prompts and reject the photo-only entry.
+
+`IMPORT_PLAN.md` proposes a local dry run, authenticated explicit confirmation, stable source-ID/digest deduplication, per-record atomic resumable appends and staged acceptance gates. Attachment storage is not currently implemented; full photo support versus explicitly limited import remains a review decision. These are proposals, not implemented behavior.
+
+Planning-task retrospective: the prompt requested a plan on an isolated branch/worktree, not a production migration. Creating `gratitude-import` from the current reviewed UI preserved that baseline and left the private archive in place. Inspecting aggregate source structure before proposing a converter exposed the photo-only and timestamp constraints early. The review artifact documents these decisions and implementation gates; no import or application change has been performed.
