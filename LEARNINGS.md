@@ -229,3 +229,79 @@ The user clarified that Markdown timestamps must use their local time. Replaced 
 The stronger timezone assertion also exposed a clock-fixture setup error: the Nix library lives under `lib/libfaketime.so.1`, not `lib/faketime/libfaketime.so.1`. The loader had logged a warning and continued with real time; date-only checks passed because that day happened to match the fixture. Corrected the path and made a missing library fatal. The new hour check verifies the override actually takes effect instead of relying on the host calendar.
 
 CI evidence: the first local-time run was slow rather than hung; it was cancelled prematurely while still making progress. The mobile export timezone test passed. Separate failures showed a two-second outbox-restoration wait expiring while synchronization continued, and a screenshot capture running out of time before obtaining two stable frames. The helper now allows ten seconds for exact screenshot comparison and the outbox-reopen assertion allows fifteen seconds. No masks, baseline changes or pixel-tolerance changes accompany those wait adjustments.
+
+## 2026-10-01 — Local UI iteration: ink background
+
+Started `feat/ui-background` from merged main `dad6037`. The user requested rapid local visual review and explicitly deferred E2E runs and baseline/scenario regeneration until the UI is settled. Inspected the Today and rainbow-journal mockups: their background is visible charcoal ink-in-water plumes with restrained ochre diffusion, not the implemented faint radial gradients.
+
+Generated a dedicated 1024×1536 background with the built-in image generation tool and saved it as `src/lib/assets/backgrounds/charcoal-ochre-ink.png`. The exact generation prompt is recorded in `docs/ux/prompts/background-charcoal-ochre-ink.txt`. A shared fixed background layer now serves landing and journal routes; this increment changes only the background. The Vite dev server at `http://127.0.0.1:5173/` uses local Firebase emulators for fictional review accounts and hot reload. Checked the rendered mobile background manually; no E2E suite or baseline regeneration was run.
+
+## 2026-10-01 — Event fixtures for signed-in UI review
+
+Added explicit `dev:ui` mode, guarded by Vite development mode and `VITE_UI_REVIEW=true`. It opens as a fictional review user without initializing Firebase and replays the committed raw event fixture through the production domain reducer. Seven entries and an edit event exercise all rainbow colours, short/long prose and search. A development repository adapter implements the same UI-facing contract for save/edit, drafts, rebuild and export; it stores only events/drafts in a distinct localStorage namespace and replays derived state.
+
+Settings can restore the fixture or empty the review journal, and the sign-in screen can be reviewed by signing out. No cloud authentication bypass or writes were introduced. Existing screens are navigable; the fixture does not pretend planned onboarding/AI/photo screens already exist. E2E runs and baselines remain deferred by request. Svelte/TypeScript checking passed without warnings or errors.
+
+## 2026-10-01 — Bring the interface closer to the mobile mockups
+
+Compared the Today, writing, journal and Settings mockups with the implemented screens. The mismatch included navigation structure, not just colours: the editor was embedded on Today and Settings lacked its menu/subpages. The interface now separates prompt, writing and saved confirmation, uses larger vivid rainbow cards, adds consistent SVG navigation icons, and presents Settings subpages including the two-step export interaction. Colour indices still come from the projection; the palette is presentation only. The current reflection's colour remains visible before saving.
+
+AI settings exposes disabled controls and explicitly states the feature is unavailable. No generated prompts, photo attachments, AI feedback or onboarding functionality is implied by the styling work. The fixture remains a replay of raw events. Mobile visual captures of the running development server show the revised layouts; Svelte checking passed with no errors or warnings. E2E runs, walkthrough updates and baseline regeneration remain intentionally deferred until the visual iteration is approved; the existing scenarios need navigation updates as well as new screenshots.
+
+## 2026-10-01 — Reflection previews follow available space
+
+The compact journal cards now measure the space remaining for reflection text with ResizeObserver, showing complete lines rather than a fixed two-line preview. The measurement responds to card width, height, text wrapping and font layout. Overflow changes the entry link to “... see more”; entries that fit retain “View entry”. Both open the complete entry, and search still operates on the full reflection. This is application layout behavior, not screenshot masking. Type checking passed; baseline regeneration remains deferred during UI review.
+
+## 2026-10-01 — Correction: expansion and entry navigation are separate
+
+The user clarified that every card must retain “View entry”. Truncated reflections now reserve inline space for “… see more”, which expands the card in place. Browser text measurement fits the preview to available space on resize, including the link; the full reflection and search highlighting remain available on expansion. This supersedes the previous behavior that changed the navigation link's label. Svelte checking passed; E2E baseline work remains deferred.
+
+## 2026-10-01 — Editor return navigation preserves its origin
+
+Opening the editor now records its originating tab, selected entry or saved confirmation, and scroll position. The back heading names that destination and restores it while retaining the editor draft. Editing from a journal entry therefore returns to that entry instead of Today; starting from Today returns to Today. The heading shares the journal detail navigation typography. Type checking passed; E2E updates remain deferred for the visual iteration.
+
+## 2026-10-01 — Separate daily reflection state from existing-entry drafts
+
+Confirmed the Today card was reading the active editor's `editing`, `text` and colour values. Returning from an older entry therefore changed Today’s colour and falsely offered to continue that older entry. Draft persistence also used one shared slot, so merely switching editors could replace unrelated unfinished work.
+
+Today now derives its saved entry and colour independently from the projection using the device's local calendar date. Before the first save it uses the next historical rainbow index; after saving it retains that entry's colour and identity. If prior app behavior created multiple entries that day, the first is the daily reflection. Continuing Today updates that entry instead of creating another. No event schema or historical projection colours changed.
+
+Draft storage now has separate local-day and entry keys in both the Firebase IndexedDB repository and the review adapter. Saving/discarding clears only the active draft. The old single draft is migrated without changing its action; a legacy new-entry draft has no recorded date, so it is assigned to the current local day during migration. Existing-entry drafts retain their entry identity and expected revision. Date changes refresh Today independently; an already-open composer keeps its own colour and draft key.
+
+Validation: two focused unit tests cover local midnight boundaries and colour/identity through saving and edits. A fresh fictional review browser exercised switching between two drafts, reload recovery, stable Today colour, and continuing the same saved entry; all checks passed, with captures after actions. Svelte checking passed. The full E2E suite and baseline regeneration remain deferred during visual iteration.
+
+## 2026-10-08 — Journal cards fit shorter reflections
+
+The user replaced the equal-height card requirement with content-sized cards capped at the previous collapsed height (240px, or 260px on the narrowest screens). Reflection measurement now preserves the full text's natural height as its layout basis, allowing short cards to shrink without letting a truncated preview shrink its own available space. Expanded cards remove the height cap; “see less” restores it. Svelte checking passed. Browser verification was unavailable from this session; E2E runs remain deferred during UI iteration.
+
+## 2026-10-08 — Paragraph spacing is presentation
+
+A single explicit line break now separates displayed reflection paragraphs by half a line. The shared renderer covers previews, expanded/full entries, saved confirmation and pending reflections; automatic line wrapping adds no paragraph gap. Preview measurement includes the same paragraph spacing so expansion controls retain their reserved space. Stored text, the plain-text editor and exports are unchanged. Svelte checking passed; E2E runs remain deferred.
+
+## 2026-10-08 — Paragraph-aware writing and editing
+
+Replaced the textarea with a shared paragraph-aware editor for new and existing reflections. Explicit paragraphs receive half-line spacing while wrapped lines keep normal leading. Draft and event payloads remain plain text; pasting takes only clipboard text, and the 10,000-character limit remains enforced. The editor keeps browser-managed selection and undo during normal input rather than rebuilding its DOM on each draft update. It uses the browser editing commands for paragraph insertion and plain-text paste because these preserve undo history ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand)); these APIs are deprecated and need cross-browser review when E2E work resumes.
+
+Svelte checking passed. Browser interaction verification could not run because this session cannot launch Chromium; typing, paste, IME, undo and selection behavior still need browser review. The previous note that the editor lacks paragraph spacing is superseded.
+
+## 2026-10-08 — Three rendered lines replace a pixel height cap
+
+The latest card requirement supersedes the earlier 240/260px maximum: collapsed reflections show at most three rendered text lines across paragraphs. Paragraph margins do not consume the line budget, so a third line can begin a new paragraph. Browser measurement counts each paragraph's wrapped lines; the truncation helper reserves room for an ellipsis when interrupting a sentence, prefers whole words and preserves combined emoji. Expanded cards display the full stored text.
+
+Removed reserved reflection height and the fixed card cap. The footer uses the same eight-pixel gap after the visible reflection or expansion control, so shorter and truncated cards have consistent spacing above “View entry”. Prompt and reflection prose, including editor text, is justified. Stored text and export content are unchanged. Focused truncation unit checks and Svelte checking passed; browser layout verification and E2E regeneration remain outstanding during UI iteration.
+
+## 2026-10-08 — Validate the agreed interface before publication
+
+The approved UI requires new action-by-action scenarios because writing, saved confirmation and Settings are now separate screens. Historical raw-event fixtures exercise earlier entries without creating multiple entries on Today. Draft coverage checks independent Today/history drafts, stable colour, origin-aware back navigation, reload and discard. A dedicated paragraph-editing scenario covers Enter, plain-text paste, undo/redo and saved rendering.
+
+Browser validation found that Chromium copies the first paragraph's inline zero margin when Enter creates the next paragraph. Normalizing the margins of all editor blocks after input fixes the missing half-line gap while preserving browser selection and undo. This was not detectable through Svelte type checking alone.
+
+Rendered entry times now include minutes. The old advancing emulator clock made screenshots depend on test duration, so test JVM wall time is frozen at the fixture instant while monotonic timers still run. Browser Date uses the same instant, including the second signed-in device. The real emulator transaction path and Security Rules remain active; screenshots keep zero tolerance and no masking. Production clocks are unchanged.
+
+Further browser checks found that `insertText` can merge pasted text into the preceding typing undo transaction. Restarting the current selection before insertion gives paste its own undo boundary without importing clipboard HTML. Reading paragraph nodes instead of layout-derived `innerText` also preserves intentional empty paragraphs, whose placeholder breaks otherwise become extra newlines. The mobile and desktop editor scenarios now exercise typing, Enter, paste, undo/redo, saving and reopening blank paragraphs successfully.
+
+The first strict comparison run exposed 5–15 differing pixels at rounded mobile borders, with identical text, dates and layout. The browser test configuration now disables partial raster reuse and CPU-specific Skia optimizations (documented in [Chrome's tooling flags](https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md#rendering--gpu)). This standardizes how complete rendered regions are drawn instead of relying on prior partial repaints. It does not hide content, add screenshot styles, or relax pixel comparisons.
+
+Validation completed: Svelte/TypeScript and standalone E2E type checking; seven unit tests; five deployment tests; six Firebase integration/Security Rules tests; all twelve mobile/desktop scenario runs against 270 screenshots with zero differing pixels; and the configured Pages build's four landing/sign-in checks. The fixed-time assertion checks the fixture second (the Markdown export precision), since one emulator server timestamp returned `.001Z` instead of `.000Z`; rendered dates and screenshot comparisons remain exact. Generated walkthroughs are unchanged on comparison runs, and obsolete screenshots have been removed. A production build with `VITE_UI_REVIEW=true` still requires real sign-in and contains none of the development fixture adapter or sample-account markers.
+
+Chromium interaction coverage now replaces the earlier editor verification limitation. Other browser engines, native mobile keyboards and IME behavior still need device review. The agreed UI is ready for PR review; AI prompts, photos, onboarding and deletion remain future work.

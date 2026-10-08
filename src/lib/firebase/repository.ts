@@ -71,24 +71,25 @@ export class JournalRepository {
     this.emit();
     if (this.pending) void this.retry();
   }
-  async readDraft(): Promise<Action | null> {
-    const draft = await this.db.get('outbox', 'draft') as Action | undefined;
+  async readDraft(key = 'draft'): Promise<Action | null> {
+    await this.draftChain;
+    const draft = await this.db.get('outbox', key) as Action | undefined;
     if (!draft) return null;
-    if (this.pending?.eventId === draft.eventId) { await this.clearDraft(); return null; }
+    if (this.pending?.eventId === draft.eventId) { await this.clearDraft(key); return null; }
     try {
       const committed = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${draft.eventId}`));
-      if (committed.exists()) { await this.clearDraft(); return null; }
+      if (committed.exists()) { await this.clearDraft(key); return null; }
     } catch { /* Offline drafts remain recoverable; append deduplicates the stable action ID. */ }
     return draft;
   }
-  writeDraft(draft: Action) {
+  writeDraft(draft: Action, key = 'draft') {
     const copy = structuredClone(draft);
-    const write = this.draftChain.then(() => this.db.put('outbox', copy, 'draft')).then(() => {});
+    const write = this.draftChain.then(() => this.db.put('outbox', copy, key)).then(() => {});
     this.draftChain = write.catch(() => {});
     return write;
   }
-  clearDraft() {
-    const write = this.draftChain.then(() => this.db.delete('outbox', 'draft'));
+  clearDraft(key = 'draft') {
+    const write = this.draftChain.then(() => this.db.delete('outbox', key));
     this.draftChain = write.catch(() => {});
     return write;
   }
@@ -152,3 +153,6 @@ export class JournalRepository {
     void Promise.all([this.chain, this.draftChain]).finally(() => this.db?.close());
   }
 }
+
+/** UI-facing contract shared with the development event-fixture adapter. */
+export type JournalStore = Pick<JournalRepository, 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild'>;

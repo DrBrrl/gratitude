@@ -2,7 +2,7 @@
 
 # Browse and search your rainbow journal
 
-Every click and text-entry action is followed by a compared screenshot. The emulator starts on a fixed fixture date; dates, card text, layout, colours and controls are compared exactly without masking.
+Every click and text-entry action is followed by a compared screenshot. Historical raw-event fixtures exercise content-sized cards, three-line previews, expansion, local timestamps and full-entry editing.
 
 Viewport: mobile-chromium.
 
@@ -57,48 +57,39 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The private journal is synchronized
+- [x] The private journal is synchronized and Today is ready
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Write a reflection
+## Browse short and long rainbow reflections
 
-![Write a reflection](./screenshots/006-first-type-mobile-chromium.png)
+![Browse short and long rainbow reflections](./screenshots/006-journal-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] Short cards shrink, long reflections show three lines and a spaced ellipsis, and dates use local time
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Expand the longer reflection in place
+
+![Expand the longer reflection in place](./screenshots/007-expand-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Save the reflection to the journal
+## Collapse the reflection again
 
-![Save the reflection to the journal](./screenshots/007-first-save-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Return to Today
-
-![Return to Today](./screenshots/008-today-mobile-chromium.png)
+![Collapse the reflection again](./screenshots/008-collapse-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Write a reflection
+## Focus the search field
 
-![Write a reflection](./screenshots/009-second-type-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Save the reflection to the journal
-
-![Save the reflection to the journal](./screenshots/010-second-save-mobile-chromium.png)
+![Focus the search field](./screenshots/009-focus-search-mobile-chromium.png)
 
 **Verifications:**
 
@@ -107,7 +98,7 @@ Viewport: mobile-chromium.
 
 ## Search for an accent-insensitive phrase
 
-![Search for an accent-insensitive phrase](./screenshots/011-search-mobile-chromium.png)
+![Search for an accent-insensitive phrase](./screenshots/010-search-mobile-chromium.png)
 
 **Verifications:**
 
@@ -116,16 +107,16 @@ Viewport: mobile-chromium.
 
 ## Open the matching reflection
 
-![Open the matching reflection](./screenshots/012-open-entry-mobile-chromium.png)
+![Open the matching reflection](./screenshots/011-open-entry-mobile-chromium.png)
 
 **Verifications:**
 
-- [x] The full reflection opens and its date matches the recorded timestamp
+- [x] The full reflection includes its prompt and local date and time
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Return to the retained search results
 
-![Return to the retained search results](./screenshots/013-back-mobile-chromium.png)
+![Return to the retained search results](./screenshots/012-back-mobile-chromium.png)
 
 **Verifications:**
 
@@ -134,7 +125,7 @@ Viewport: mobile-chromium.
 
 ## Search for a missing word
 
-![Search for a missing word](./screenshots/014-no-results-mobile-chromium.png)
+![Search for a missing word](./screenshots/013-no-results-mobile-chromium.png)
 
 **Verifications:**
 
@@ -143,7 +134,7 @@ Viewport: mobile-chromium.
 
 ## Clear the search
 
-![Clear the search](./screenshots/015-clear-mobile-chromium.png)
+![Clear the search](./screenshots/014-clear-mobile-chromium.png)
 
 **Verifications:**
 
@@ -152,7 +143,7 @@ Viewport: mobile-chromium.
 
 ## Open the latest reflection
 
-![Open the latest reflection](./screenshots/016-open-edit-mobile-chromium.png)
+![Open the latest reflection](./screenshots/015-open-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -161,7 +152,7 @@ Viewport: mobile-chromium.
 
 ## Edit the saved reflection
 
-![Edit the saved reflection](./screenshots/017-edit-mobile-chromium.png)
+![Edit the saved reflection](./screenshots/016-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -170,16 +161,25 @@ Viewport: mobile-chromium.
 
 ## Add a remembered detail
 
-![Add a remembered detail](./screenshots/018-revise-mobile-chromium.png)
+![Add a remembered detail](./screenshots/017-revise-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Save changes without adding a duplicate entry
+## Save changes to the existing reflection
 
-![Save changes without adding a duplicate entry](./screenshots/019-save-edit-mobile-chromium.png)
+![Save changes to the existing reflection](./screenshots/018-save-edit-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Journal
+
+![Open Journal](./screenshots/019-edited-journal-mobile-chromium.png)
 
 **Verifications:**
 

@@ -2,7 +2,7 @@
 
 # Private journal, synchronization and recovery
 
-Every navigation, click and text-entry action has a screenshot, including the Google emulator popup and second device. The emulator starts on a fixed fixture date; every pixel, including dates, is compared without masking.
+Every navigation, click and text-entry action has a screenshot, including the Google emulator popup and second device. Fixed browser and emulator clocks keep all rendered dates visible and exactly comparable.
 
 Viewport: mobile-chromium.
 
@@ -57,21 +57,30 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The private journal is synchronized
+- [x] The private journal is synchronized and Today is ready
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Write a reflection
+## Open the reflection editor
 
-![Write a reflection](./screenshots/006-tea-type-mobile-chromium.png)
+![Open the reflection editor](./screenshots/006-tea-open-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Save the reflection to the journal
+## Write a reflection
 
-![Save the reflection to the journal](./screenshots/007-tea-save-mobile-chromium.png)
+![Write a reflection](./screenshots/007-tea-type-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Save the reflection
+
+![Save the reflection](./screenshots/008-tea-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -80,7 +89,7 @@ Viewport: mobile-chromium.
 
 ## Open Gratitude on another device
 
-![Open Gratitude on another device](./screenshots/008-second-device-mobile-chromium.png)
+![Open Gratitude on another device](./screenshots/009-second-device-mobile-chromium.png)
 
 **Verifications:**
 
@@ -89,7 +98,7 @@ Viewport: mobile-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/009-google-popup-mobile-chromium.png)
+![Choose Google sign-in](./screenshots/010-google-popup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -98,16 +107,16 @@ Viewport: mobile-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/010-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/011-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
-- [x] The private journal is synchronized
+- [x] The private journal is synchronized and Today is ready
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Read the synchronized journal on the second device
+## Open Journal
 
-![Read the synchronized journal on the second device](./screenshots/011-second-journal-mobile-chromium.png)
+![Open Journal](./screenshots/012-second-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -116,7 +125,7 @@ Viewport: mobile-chromium.
 
 ## Reload the first device
 
-![Reload the first device](./screenshots/012-reload-mobile-chromium.png)
+![Reload the first device](./screenshots/013-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -125,16 +134,16 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/013-settings-mobile-chromium.png)
+![Open Settings](./screenshots/014-settings-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Open the journal recovery controls
+## Open Privacy & data
 
-![Open the journal recovery controls](./screenshots/014-recovery-mobile-chromium.png)
+![Open Privacy & data](./screenshots/015-recovery-mobile-chromium.png)
 
 **Verifications:**
 
@@ -143,16 +152,16 @@ Viewport: mobile-chromium.
 
 ## Rebuild the local projection from saved events
 
-![Rebuild the local projection from saved events](./screenshots/015-rebuild-mobile-chromium.png)
+![Rebuild the local projection from saved events](./screenshots/016-rebuild-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Check the rebuilt journal
+## Open Journal
 
-![Check the rebuilt journal](./screenshots/016-journal-mobile-chromium.png)
+![Open Journal](./screenshots/017-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -161,7 +170,7 @@ Viewport: mobile-chromium.
 
 ## Reload after a damaged device cache
 
-![Reload after a damaged device cache](./screenshots/017-corrupt-reload-mobile-chromium.png)
+![Reload after a damaged device cache](./screenshots/018-corrupt-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -170,16 +179,25 @@ Viewport: mobile-chromium.
 
 ## Verify the original reflection is recovered
 
-![Verify the original reflection is recovered](./screenshots/018-recovered-journal-mobile-chromium.png)
+![Verify the original reflection is recovered](./screenshots/019-recovered-journal-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Return to Today before going offline
+## Open Today
 
-![Return to Today before going offline](./screenshots/019-today-mobile-chromium.png)
+![Open Today](./screenshots/020-today-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the reflection editor
+
+![Open the reflection editor](./screenshots/021-continue-mobile-chromium.png)
 
 **Verifications:**
 
@@ -188,25 +206,25 @@ Viewport: mobile-chromium.
 
 ## Disconnect this device
 
-![Disconnect this device](./screenshots/020-offline-mobile-chromium.png)
+![Disconnect this device](./screenshots/022-offline-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Write while offline
+## Continue today’s reflection while offline
 
-![Write while offline](./screenshots/021-offline-type-mobile-chromium.png)
+![Continue today’s reflection while offline](./screenshots/023-offline-type-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Save the offline reflection on this device
+## Save the offline changes on this device
 
-![Save the offline reflection on this device](./screenshots/022-offline-save-mobile-chromium.png)
+![Save the offline changes on this device](./screenshots/024-offline-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -215,7 +233,7 @@ Viewport: mobile-chromium.
 
 ## Close the application before reconnecting
 
-![Close the application before reconnecting](./screenshots/023-leave-mobile-chromium.png)
+![Close the application before reconnecting](./screenshots/025-leave-mobile-chromium.png)
 
 **Verifications:**
 
@@ -224,7 +242,7 @@ Viewport: mobile-chromium.
 
 ## Reconnect the device
 
-![Reconnect the device](./screenshots/024-online-mobile-chromium.png)
+![Reconnect the device](./screenshots/026-online-mobile-chromium.png)
 
 **Verifications:**
 
@@ -233,16 +251,25 @@ Viewport: mobile-chromium.
 
 ## Reopen Gratitude and retry the saved outbox
 
-![Reopen Gratitude and retry the saved outbox](./screenshots/025-return-mobile-chromium.png)
+![Reopen Gratitude and retry the saved outbox](./screenshots/027-return-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Check that both reflections are saved once
+## Check that the reflection was updated without duplication
 
-![Check that both reflections are saved once](./screenshots/026-confirm-save-mobile-chromium.png)
+![Check that the reflection was updated without duplication](./screenshots/028-confirm-save-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Settings
+
+![Open Settings](./screenshots/029-settings-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -251,7 +278,7 @@ Viewport: mobile-chromium.
 
 ## Open account settings
 
-![Open account settings](./screenshots/027-account-mobile-chromium.png)
+![Open account settings](./screenshots/030-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -260,7 +287,7 @@ Viewport: mobile-chromium.
 
 ## Sign out and hide the private journal
 
-![Sign out and hide the private journal](./screenshots/028-sign-out-mobile-chromium.png)
+![Sign out and hide the private journal](./screenshots/031-sign-out-mobile-chromium.png)
 
 **Verifications:**
 

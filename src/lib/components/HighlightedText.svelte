@@ -19,4 +19,4 @@
   });
 </script>
 {#each parts as part}{#if part.match}<mark>{part.text}</mark>{:else}{part.text}{/if}{/each}
-<style>mark { background: #f4d35e; color: #15130c; text-decoration: underline; border-radius: 2px; }</style>
+<style>mark { background: #f4d35e40; color: inherit; text-decoration: none; border-radius: 2px; }</style>

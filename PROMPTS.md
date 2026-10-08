@@ -186,8 +186,344 @@ we don't see that on the preview?
 masking is not supposed to be allowed in any circumstance. 0 pixel tolerance is supposed to be therule. Is that not in the e2e guide?
 ```
 
+## 2026-10-01 — Check local Nix installation
+
+```text
+do we have nix installed on this system?
+```
+
 ## 2026-10-01 — Export local timestamps
 
 ```text
 we're expecting the time to be the user's local time not gmt
+```
+
+## 2026-10-01 — Iterate locally on the mockup background
+
+```text
+we rebaed and merged and are ready to iterate on the UI. The problem is the UI that is implemented is not even close to the mock-ups, and we want to be much closer - yet not exactly the same as the mockups. To iterate quickly, let's run a dev server wehre jamie can review the UI and ask for changes without running the e2e tests, until it looks right, and then we can regenerate all the screenshots/scenarios. Examine the mockups and create the dev server; for now, just one change: get the background correct (i.e. match the mockup background by generating an appropriate image)
+```
+
+## 2026-10-01 — Replay fixtures for local UI review
+
+```text
+ok we can see the dev server. We'll have t provide some fake data and be "logged in" in order to bea ble to navigate the "app" to see all the different screens,. seems to me that creating a fixture of events that you replay in this mode is the easiest
+```
+
+## 2026-10-01 — Match the mockups closely
+
+```text
+let's make this look as much like the omck-ups as possible
+```
+
+## 2026-10-01 — Remove the colour label
+
+```text
+Can we remove the "today's colour"
+```
+
+## 2026-10-01 — Star and reflection heading
+
+```text
+Can we get a little yellow star on the end of "Gratitude" and make "a small moment" read "Reflection time" and have the colour of that be a light grey?
+```
+
+## 2026-10-01 — Four-point star alignment
+
+```text
+Four point star please and centered on the Gratitude line
+```
+
+## 2026-10-01 — Compact journal cards and local timestamps
+
+```text
+On the "Jounal" page, can we get the date + time of entry in a grey on the top of the card, and the card about 2/3 of the length it is currently
+```
+
+## 2026-10-01 — Journal card typography
+
+```text
+Can we get the "prompt" and "reflection" title texts in bold and swap the font sizes of the titles and the entry texts
+```
+
+## 2026-10-01 — Increase journal body text
+
+```text
+Let's bump up the prompt and reflection texts (not titles) up a size
+```
+
+## 2026-10-01 — Match entry link and date sizes
+
+```text
+Can "view entry" be the same size as the date text please
+```
+
+## 2026-10-01 — Responsive reflection previews
+
+```text
+Can we make it so that the reflection in the journal view cuts off based on the card size on the user's screen (might be different on phone and laptop, eg) with a "... see more"
+```
+
+## 2026-10-01 — Inline expansion separate from entry navigation
+
+```text
+I want "view entry" to be consistent on all cards. Where the entry would normally "overflow" the available card space, i would like the "... see more" at the end of the truncated entry, and for clicking on it to expand the card
+```
+
+## 2026-10-01 — Collapse expanded journal cards
+
+```text
+Can we add a "see less" funcitonality so that once you've expanded the card, you can retract it again?
+```
+
+## 2026-10-01 — Space before collapse link
+
+```text
+Can we get a space before see less please?
+```
+
+## 2026-10-01 — Full entry typography
+
+```text
+Once i've clicked into the entry, i would like the date to be in a slightly smaller and greyer font, the prompt/reflection title to text ratio to be similar to the cards in the journal view, the titles to be bold, and the "< Journal" navigation at the top to be in the same font and size as "Journal" in the journal view.
+```
+
+## 2026-10-01 — Subtle search focus
+
+```text
+When i click into the search bar, i get a big yellow box - no thank you
+```
+
+## 2026-10-01 — Stable search icon and softer highlights
+
+```text
+When i start typing, the magnifying glass gets smaller - let's not have that either please. Also when i type, the search term shows up with a opaque yellow highlight and underline - let's make that more transparent and remove the underline
+```
+
+## 2026-10-01 — Entry time and edit action size
+
+```text
+When i click into view entry, there is no time - can we add that please? Also "Edit reflection" should be the same relative size to the card text as "view entry" was
+```
+
+## 2026-10-01 — Subtle reflection editor focus
+
+```text
+When i click into edit reflection, the text box (when active) has the yellow box around it - no thank you again :)
+```
+
+## 2026-10-01 — Return from the editor to its origin
+
+```text
+The top of that screen goes back to "Today" - let's have it go back to where you came from (and indicate the destination in that top text - formatted the same way the "Journal" text is formatted on the "view entry" page)
+```
+
+## 2026-10-01 — Separate Today from existing-entry editing
+
+```text
+I've noticed that the "today" entry colour isn't stable for the date of today -- it looks like it is sharing state with the editor, and gets confsued about the colour and wehtehr or not the user is continuing an entry. these states need to be distinct
+```
+
+## 2026-10-01 — Filled active navigation icons
+
+```text
+The today icon gets coloured in when selected but the journal and setting icons do not. Can we make them all coloured in when on that page please?
+```
+
+## 2026-10-08 — Full weekday and date alignment
+
+```text
+And work it does, so let's go ahead and geep tweaking :) On the today page i would like the full day, not just "thu", and i would like the date to be vertically centered in relation to the "Gratitude" logo bit, if that makes sense!
+```
+
+## 2026-10-08 — Refine Today heading sizes
+
+```text
+Thannk you! Can we get both the "logo" gratitude and the date text a tiiiiiny bit bigger, and "reflection time" a little bit smaller?
+```
+
+## 2026-10-08 — Centre and soften the Today heading
+
+```text
+Better! A tad smaller for reflection time and the actual prompt please, with "reflection time" horizontally centered, in a non-serif font
+```
+
+## 2026-10-08 — Bold heading and content-sized prompt box
+
+```text
+Bold reflection time for me? Would like to see how it looks. And maybe a little closer to the top of the prompt box, please. Also, let's lose the blank space between "starter prompt" and the prompt in the prompt box - have it resize with the length of the prompt i reckon
+```
+
+## 2026-10-08 — Reflection heading letter spacing
+
+```text
+Let's get a bit more space between the letters of reflection time please
+```
+
+## 2026-10-08 — Content-sized journal cards
+
+```text
+Fab, now on to the journal page. I like the size of the entry cards as a maximum, but let's have minimum card size vary with the actual length of the entry
+```
+
+## 2026-10-08 — Expansion links on separate lines
+
+```text
+Wonderful. Let's change "... see more" to "(see more)", on a new-line from the end of the truncated entry, and have the same for "see less" - make it "(see less)" and have it on a new-line after the end of the expanded entry
+```
+
+## 2026-10-08 — Shared Journal and Settings heading
+
+```text
+Perf, thank you! Let's have the "Settings" title on the Settings page be the same font and size, the same object if you will, as the "Your Journal" title on the Journal page
+```
+
+## 2026-10-08 — Standardise back navigation styling
+
+```text
+Oh, way better! Thank you. Another thing i would like to standardise is the "back arrow" text. I previously asked for the "journal" back option on the entry page to be bigger - i would like to undo that and make it the same object and style as the "settings" back option that you get when you click into a setting
+```
+
+## 2026-10-08 — Journal card labels and footer timestamp
+
+```text
+Fab! Let's get the "Prompt" and "reflection" title texts in the journal view a little bit bigger please, and moce the date to the bottom right of the entry card , opposite view entry, with the format dd/mm/yyyy, h:mm AM/PM
+```
+
+## 2026-10-08 — Journal footer date format
+
+```text
+Hmmm, date format to ddd dd mmm yyyy, h:mm AM/PM please
+```
+
+## 2026-10-08 — Reduce journal card vertical padding
+
+```text
+Great, thank you! A tiny bit less padding on the top and bottom of the cards, to match the left side padding please!
+```
+
+## 2026-10-08 — Balance visible card edge spacing
+
+```text
+Hmmm, i think a touch more - i want the padding at the top and bottom to match the side padding please
+```
+
+## 2026-10-08 — Half-line paragraph spacing
+
+```text
+Let's get a half-line's worth of space between paragraphs so that i'm not tempted to go \n\n between paragraphs in my entries, if i use paragraphs :)
+```
+
+## 2026-10-08 — Paragraph spacing in the editor
+
+```text
+Beautiful, and can we get that same paragraph spacing when editing the reflection or writing a new reflection, please?
+```
+
+## 2026-10-08 — Tinted italic journal prompts
+
+```text
+Woo, that was a challenging one! Thanks for sticking with it. On the journal page, i would like the prompt to be in the same hue as the prompt and reflection titles on the card, but a little darker, and maybe italicised :)
+```
+
+## 2026-10-08 — Refine journal prompt size and colour
+
+```text
+Let's go a tiny bit darker please, and maybe one tiny notch bigger (Between current size and title size)
+```
+
+## 2026-10-08 — Try bold journal prompts
+
+```text
+can we see what it looks like bold?
+```
+
+## 2026-10-08 — Swap journal prompt and title colours
+
+```text
+Yeah nah, let's go non-bold, and swap the prompt text and Prompt and Reflection title colours
+```
+
+## 2026-10-08 — Slightly larger journal card titles
+
+```text
+Bump up the prompt and reflection titles by like half a size please :)
+```
+
+## 2026-10-08 — Space above the Reflection title
+
+```text
+Let's get an ever so slightly bigger gap between the end of the prompt text and the Reflection title please!
+```
+
+## 2026-10-08 — Interrupted card-height request (superseded below)
+
+```text
+Great! Now for max card height - i want to vary it so that: there is the same amount of space between the (see more) and the View entry as on other cards (there's currently a bit more than that - let's have the gap between (see more) and View entry be the r
+```
+
+## 2026-10-08 — Three-line previews, consistent footer spacing and justified text
+
+```text
+Great! Now for max card height - i want to vary it so that: 1) there is the same amount of space between the (see more) and the View entry as between the end of the gratutde text and View entry on the other cards, and let's have the maxiumum amount of visible text be three lines (even if the third line is the start of a new paragraph), and if the sentence is cut off in the middle, have an elipsis on the end of it please! :) Also i would love all text to be justified
+```
+
+## 2026-10-08 — Space before preview ellipsis
+
+```text
+A space between the end of the gratitude text and the ellipses please! :)
+```
+
+## 2026-10-08 — Interrupted Today padding request (clarified below)
+
+```text
+Great, now on the Today page, let's get a bit less padding around the edges
+```
+
+## 2026-10-08 — Reduce Today prompt box padding
+
+```text
+Great, now on the Today page, let's get a bit less padding around the edges of the little prompt box (not the whole page :D )
+```
+
+## 2026-10-08 — Smaller Today secondary links
+
+```text
+Thanks, let's get the "browse your journal" and "why this prompt" text a bit smaller, between the current size and the "starter prompt" button text size
+```
+
+## 2026-10-08 — Larger Today response action text
+
+```text
+"Write a response" text a little bigger please!
+```
+
+## 2026-10-08 — Prompt inside the reflection editor card
+
+```text
+Alrighty, not moving into the page that opens when we hit "write a response" (the "youor reflection" page) - i would like the box to contain the prompt (same style as it shows up on the today page, italic, colour matched to the text box, etc), and have the relative size of the response text to the prompt text be the same as in the journal page too. With the prompt inside the box, the box should extend from the bottom of the "your reflection" text to the "Drafts stay on this device until you save." text
+```
+
+## 2026-10-08 — Preserve editor border colour and remove response label
+
+```text
+Love that - the border changes to white when i go to type - let's keep it the colour of the box please. Also, let's remove the text "reponse" from inside the box entirely
+```
+
+## 2026-10-08 — Shared reflection page heading
+
+```text
+Great. Can we get the "your reflection" title matching the font/size of the "Your Journal" title please?
+```
+
+## 2026-10-08 — Match full-entry and journal-card typography
+
+```text
+Fab, on to the page we get from clicking "view entry" in the journal. I Would like the formatting of the titles and text to match the cards that are visible in the journal view please :)
+```
+
+## 2026-10-08 — Publish the reviewed interface to GitHub
+
+```text
+Fantastic! lock it in - can you go ahead and make the code on github match this?
 ```
