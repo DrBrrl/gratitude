@@ -136,3 +136,51 @@ test('schema excludes computed state and reducer refuses gaps/unknown versions',
   assert.throws(() => replay([{ ...action('x', 'y', 'text'), sequence: 2, recordedAt: '2026-09-24T00:00:00Z' }]));
   assert.throws(() => replay([{ ...action('x', 'y', 'text'), schemaVersion: 2, sequence: 1, recordedAt: '2026-09-24T00:00:00Z' }]));
 });
+
+test('AI transaction claim has one winner, response deduplicates and saved prompts stay immutable', async () => {
+  const a = await device('ai-claim@example.test', 'ai-claim-a');
+  const b = await device('ai-claim@example.test', 'ai-claim-b');
+  const choices = { eventId: 'choices', type: 'AIChoicesConfirmed', schemaVersion: 1, payload: { previousEventId: null, enabled: true, useJournal: false, useFeedback: false, guidance: '' } };
+  await a.append(choices);
+  const { makeRequest } = await import('../../src/lib/ai/context.ts');
+  const state = replay(await events(a));
+  const request = makeRequest(state, '2026-10-01', 'generic', 'request');
+  const duplicate = await Promise.all([a.append(request), b.append(request)]);
+  assert.equal(duplicate.filter(result => result.data.created).length, 1);
+  await assert.rejects(b.append({ ...request, eventId: 'competing-request' }), /changed on another device/);
+  const response = { eventId: 'request_response', type: 'PromptResponseReceived', schemaVersion: 1, payload: { requestId: 'request', text: ' What made you smile?\n', model: 'gemini-fixture-1', finishReason: 'STOP' } };
+  await Promise.all([a.append(response), b.append(response)]);
+  await a.append({ eventId: 'ai-entry', type: 'ReflectionWritten', schemaVersion: 2, payload: { entryId: 'ai-entry', text: 'A wave.', promptId: response.eventId, expectedRevision: 0 } });
+  assert.equal(replay(await events(b)).entries[0].prompt, response.payload.text);
+  await assert.rejects(a.append(action('swap-prompt', 'ai-entry', 'Swap it', 1)), /original prompt/);
+  assert.equal((await events(a)).length, 4);
+});
+
+test('AI Rules reject stale consent, fabricated response references, extra computed fields and detached controls', async () => {
+  const a = await device('ai-consent@example.test', 'ai-consent');
+  const { writeBatch, serverTimestamp } = await import('firebase/firestore');
+  const root = `users/${a.uid}/streams/v1`;
+  const choices = { eventId: 'choices', type: 'AIChoicesConfirmed', schemaVersion: 1, payload: { previousEventId: null, enabled: true, useJournal: false, useFeedback: false, guidance: '' } };
+  await a.append(choices);
+  const { makeRequest } = await import('../../src/lib/ai/context.ts');
+  const request = makeRequest(replay(await events(a)), '2026-10-01', 'generic', 'request');
+  await a.append(request);
+  const revoked = { ...choices, eventId: 'revoke', payload: { ...choices.payload, previousEventId: 'request', enabled: false } };
+  await a.append(revoked);
+  const response = { eventId: 'request_response', type: 'PromptResponseReceived', schemaVersion: 1, payload: { requestId: 'request', text: 'Late question?', model: 'gemini-fixture', finishReason: 'STOP' } };
+  await assert.rejects(a.append(response), /no longer current/);
+  // Bypass the append helper to exercise Rules, including forged operational metadata.
+  async function forge(event, control) {
+    const batch = writeBatch(a.db);
+    batch.set(doc(a.db, `${root}/events/${event.eventId}`), { ...event, sequence: 4, recordedAt: serverTimestamp() });
+    batch.set(doc(a.db, root), { sequence: 4, lastEventId: event.eventId });
+    batch.set(doc(a.db, `${root}/ai/control`), control);
+    await assertFails(batch.commit());
+  }
+  await forge(response, { lastEventId: response.eventId, choicesId: 'revoke', requestId: null });
+  const bad = { ...choices, eventId: 'computed', payload: { ...choices.payload, previousEventId: 'revoke', memory: 'derived profile' } };
+  await forge(bad, { lastEventId: bad.eventId, choicesId: bad.eventId, requestId: null });
+  const next = { ...choices, eventId: 'next', payload: { ...choices.payload, previousEventId: 'revoke' } };
+  await forge(next, { lastEventId: 'revoke', choicesId: 'revoke', requestId: 'request' });
+  await assertFails(setDoc(doc(a.db, `${root}/ai/control`), { lastEventId: 'revoke', choicesId: 'revoke', requestId: 'request' }));
+});

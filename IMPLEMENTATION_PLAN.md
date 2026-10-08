@@ -6,14 +6,14 @@ This plan implements [MVP_DESIGN.md](MVP_DESIGN.md) on the merged SvelteKit scaf
 
 PR #4 implements Google sign-in, direct Firestore transactions validated by Security Rules, immutable ordered events, retry/conflict handling, cross-device reads, cached pure replay and a durable pending-save outbox. Production and development Firebase projects are provisioned with Google authentication and Sydney Firestore. Pages builds select the appropriate public configuration. There are no Cloud Functions or billing prerequisite for this foundation. See [FIREBASE_SETUP.md](FIREBASE_SETUP.md). The optional manual rules deployment workflow still needs a federated identity; current rules deploy through the authenticated CLI.
 
-The next feature series adds Today/Journal/Settings navigation, equal-height rainbow cards, full-entry editing, normalized full-text search, device-local autosaved drafts with recovery/discard, and complete Markdown/JSON exports. Each feature has its own commit and action-by-action screenshot walkthrough on mobile and desktop:
+PRs #5–6 add Today/Journal/Settings navigation, content-sized rainbow cards, full-entry editing, normalized full-text search, device-local autosaved drafts with recovery/discard, and complete Markdown/JSON exports. Each feature has its own commit and action-by-action screenshot walkthrough on mobile and desktop:
 
 - `002-firebase-journal`: synchronization, replay recovery and pending saves (expanded foundation evidence).
 - `003-journal-search`: stable colours, search, full entries and editing.
 - `004-draft-recovery`: navigation/reload recovery, save and confirmed discard.
 - `005-export`: complete downloadable Markdown/JSON, literal text and offline errors.
 
-These are implemented slices of increments 3, 4 and 7, not completion of the full MVP. The current prompt remains the fixed starter. Onboarding, personalized AI, request/response events, skip/resume, feedback, photos, deletion and offline cold starts remain below. Device drafts are not yet synchronized across devices. Live AI Logic has been smoke-tested only in the development project; it is not called by the app.
+These are implemented slices of increments 3, 4 and 7. The AI integration adds starter/AI prompt choices, durable request/response events and feedback as described in increment 5. Live sites use generic instructions only; paid-service personalization is implemented and tested with fictional inputs but awaits a billing decision. Optional onboarding, skip/resume, photos, deletion, cross-device drafts and offline cold starts remain planned.
 
 ## Acceptance contract
 
@@ -74,6 +74,10 @@ Search full saved text, prompts and accepted/manual summaries using the UX's nor
 **Dependency:** increments 1–3.
 
 ## 5. Firebase AI Logic and durable response events
+
+**Implemented in the AI integration PR:** explicit AI choices/preferences, generic or consent-bound personal context, managed Gemini gateway requests, transactionally claimed request events, exact response/model/finish events, sanitized failures, feedback, starter fallback, response outbox and cross-tab revocation. Cached projection version 2 rebuilds older checkpoints. Scenarios `007-gemini-prompts` and `008-gemini-recovery` cover the user flow and interruption/recovery; Rules tests cover concurrent devices and forged writes. Live sites use generic-only context pending a paid-service decision. App Check and a 5 RPM/user quota are configured in both projects.
+
+No automatic prompt request occurs on hydration or day changes. The initiating browser is the sole executor; explicit retries create a new request and invalidate the old one. A request/response event pair provides context provenance without duplicating private journal text. Photo summaries, onboarding questionnaires, skip/resume and erasure remain separate increments.
 
 **Deliverable:** managed Gemini access, explicit live request handling, consent-bound context, bounded retries and exact response events. Configure App Check and quotas; assess supported models, no-cost limits and data-use terms. The existing private repository Gemini key stays unused and out of the frontend.
 

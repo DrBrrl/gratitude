@@ -23,26 +23,97 @@ service cloud.firestore {
         && !exists(eventPath(request.resource.data.lastEventId))
         && getAfter(eventPath(request.resource.data.lastEventId)).data.sequence == request.resource.data.sequence;
       allow delete: if false;
+      function aiPath() { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/ai/control; }
+      function aiBefore() { return exists(aiPath()) ? get(aiPath()).data : {'lastEventId': null, 'choicesId': null, 'requestId': null}; }
+      function validDay(day) { return day is string && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'); }
+      function text(value, max) { return value is string && value.size() <= max; }
+      function promptId(e) { return e.schemaVersion == 1 ? e.payload.starterId : e.payload.promptId; }
+      function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && get(eventPath(id)).data.type == 'PromptResponseReceived'); }
+      function validReflection(e) {
+        let p = e.payload;
+        return e.type == 'ReflectionWritten'
+          && ((e.schemaVersion == 1 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'starterId']) && p.starterId == 'small-moment-v1')
+            || (e.schemaVersion == 2 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId']) && knownPrompt(p.promptId)))
+          && validId(p.entryId) && text(p.text, 10000) && p.text.size() > 0
+          && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+          && p.expectedRevision is int && p.expectedRevision == nextRevision(p.entryId)
+          && (!exists(pointerPath(p.entryId)) || promptId(e) == promptId(get(eventPath(get(pointerPath(p.entryId)).data.lastEventId)).data))
+          && getAfter(pointerPath(p.entryId)).data.lastEventId == e.eventId;
+      }
+      function validRef(ref) { return ref is map && ref.keys().hasOnly(['entryId', 'revision']) && validId(ref.entryId) && ref.revision is int && ref.revision > 0; }
+      function validRefs(refs) {
+        return (refs.size() < 1 || validRef(refs[0])) && (refs.size() < 2 || validRef(refs[1]))
+          && (refs.size() < 3 || validRef(refs[2])) && (refs.size() < 4 || validRef(refs[3])) && (refs.size() < 5 || validRef(refs[4]));
+      }
+      function validFeedbackIds(ids) { return (ids.size() < 1 || validId(ids[0]))
+          && (ids.size() < 2 || validId(ids[1]))
+          && (ids.size() < 3 || validId(ids[2]))
+          && (ids.size() < 4 || validId(ids[3]))
+          && (ids.size() < 5 || validId(ids[4]))
+          && (ids.size() < 6 || validId(ids[5]))
+          && (ids.size() < 7 || validId(ids[6]))
+          && (ids.size() < 8 || validId(ids[7]))
+          && (ids.size() < 9 || validId(ids[8]))
+          && (ids.size() < 10 || validId(ids[9]))
+          && (ids.size() < 11 || validId(ids[10]))
+          && (ids.size() < 12 || validId(ids[11]))
+          && (ids.size() < 13 || validId(ids[12]))
+          && (ids.size() < 14 || validId(ids[13]))
+          && (ids.size() < 15 || validId(ids[14]))
+          && (ids.size() < 16 || validId(ids[15]))
+          && (ids.size() < 17 || validId(ids[16]))
+          && (ids.size() < 18 || validId(ids[17]))
+          && (ids.size() < 19 || validId(ids[18]))
+          && (ids.size() < 20 || validId(ids[19])); }
+      function validRequest(p, before) {
+        let choices = get(eventPath(before.choicesId)).data.payload;
+        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'])
+          && p.choicesId == before.choicesId && choices.enabled == true && validDay(p.day)
+          && p.templateVersion == 'gratitude-v1' && p.contextMode in ['generic', 'personal']
+          && p.entryRefs is list && p.entryRefs.size() <= 5 && validRefs(p.entryRefs) && p.feedbackIds is list && p.feedbackIds.size() <= 20
+          && p.feedbackIds.toSet().size() == p.feedbackIds.size() && validFeedbackIds(p.feedbackIds)
+          && (p.contextMode != 'generic' || (p.entryRefs.size() == 0 && p.feedbackIds.size() == 0))
+          && (choices.useJournal || p.entryRefs.size() == 0) && (choices.useFeedback || p.feedbackIds.size() == 0);
+      }
+      function validAI(e) {
+        let p = e.payload;
+        let before = aiBefore();
+        let after = getAfter(aiPath()).data;
+        let result = e.type in ['PromptResponseReceived', 'AIRequestFailed'];
+        return e.schemaVersion == 1 && after.lastEventId == e.eventId
+          && after.choicesId == (e.type == 'AIChoicesConfirmed' ? e.eventId : before.choicesId)
+          && after.requestId == (e.type == 'PromptRequested' ? e.eventId : e.type == 'PromptFeedbackSubmitted' ? before.requestId : null)
+          && (result ? validId(p.requestId) && p.requestId == before.requestId : p.previousEventId == before.lastEventId)
+          && (
+            (e.type == 'AIChoicesConfirmed' && p.keys().hasOnly(['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance'])
+              && p.enabled is bool && p.useJournal is bool && p.useFeedback is bool && text(p.guidance, 500))
+            || (e.type == 'PromptRequested' && validRequest(p, before))
+            || (e.type == 'PromptResponseReceived' && p.keys().hasOnly(['requestId', 'text', 'model', 'finishReason'])
+              && e.eventId == p.requestId + '_response' && text(p.text, 600) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+              && text(p.model, 100) && p.model.size() > 0 && p.finishReason == 'STOP')
+            || (e.type == 'AIRequestFailed' && p.keys().hasOnly(['requestId', 'reason'])
+              && e.eventId == p.requestId + '_failure' && p.reason in ['unavailable', 'blocked', 'invalid-response'])
+            || (e.type == 'PromptFeedbackSubmitted' && p.keys().hasOnly(['previousEventId', 'promptId', 'text']) && knownPrompt(p.promptId) && text(p.text, 500))
+            || (e.type == 'StarterPromptChosen' && p.keys().hasOnly(['previousEventId', 'day', 'starterId']) && validDay(p.day) && p.starterId == 'small-moment-v1')
+          );
+      }
       match /events/{eventId} {
         allow read: if owns(uid);
         allow create: if owns(uid) && generation == 'v1' && validId(eventId)
           && request.resource.data.keys().hasOnly(['eventId', 'type', 'schemaVersion', 'payload', 'sequence', 'recordedAt'])
-          && request.resource.data.eventId == eventId
-          && request.resource.data.type == 'ReflectionWritten' && request.resource.data.schemaVersion == 1
-          && request.resource.data.recordedAt == request.time
+          && request.resource.data.eventId == eventId && request.resource.data.recordedAt == request.time
           && request.resource.data.sequence == nextSequence()
-          && request.resource.data.payload.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'starterId'])
-          && validId(request.resource.data.payload.entryId)
-          && request.resource.data.payload.text is string
-          && request.resource.data.payload.text.size() > 0 && request.resource.data.payload.text.size() <= 10000
-          && request.resource.data.payload.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
-          && request.resource.data.payload.starterId == 'small-moment-v1'
-          && request.resource.data.payload.expectedRevision is int
-          && request.resource.data.payload.expectedRevision == nextRevision(request.resource.data.payload.entryId)
-          && getAfter(root()).data.sequence == request.resource.data.sequence
-          && getAfter(root()).data.lastEventId == eventId
-          && getAfter(pointerPath(request.resource.data.payload.entryId)).data.lastEventId == eventId;
+          && getAfter(root()).data.sequence == request.resource.data.sequence && getAfter(root()).data.lastEventId == eventId
+          && (request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : validAI(request.resource.data));
         allow update, delete: if false;
+      }
+      match /ai/{id} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && generation == 'v1' && id == 'control'
+          && request.resource.data.keys().hasOnly(['lastEventId', 'choicesId', 'requestId'])
+          && validId(request.resource.data.lastEventId) && !exists(eventPath(request.resource.data.lastEventId))
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.type != 'ReflectionWritten';
+        allow delete: if false;
       }
       match /entries/{entryId} {
         allow read: if owns(uid);
@@ -50,6 +121,7 @@ service cloud.firestore {
           && request.resource.data.keys().hasOnly(['lastEventId'])
           && validId(request.resource.data.lastEventId)
           && !exists(eventPath(request.resource.data.lastEventId))
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ReflectionWritten'
           && getAfter(eventPath(request.resource.data.lastEventId)).data.payload.entryId == entryId;
         allow delete: if false;
       }
