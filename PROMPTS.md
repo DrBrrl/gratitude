@@ -527,3 +527,15 @@ Fab, on to the page we get from clicking "view entry" in the journal. I Would li
 ```text
 Fantastic! lock it in - can you go ahead and make the code on github match this?
 ```
+
+## 2026-10-08 — Foggier bottom navigation (interrupted request)
+
+```text
+Okay! I have three little changes. Change 1: I would like the menu bar on the bottom to be more "foggy"/opaque like it is in the dex server (it's more tranasparent in the PR)
+```
+
+## 2026-10-08 — Navigation opacity, daily landing flow and saved-reflection styling
+
+```text
+Okay! I have three little changes. Change 1: I would like the menu bar on the bottom to be more "foggy"/opaque like it is in the dex server (it's more transparent in the PR). Change 2: I would like the flow of the app to be: Today page is the first landing page, once one has input their reflection for the day however, the main page the app returns to after e.g. editing another entry should be the journal page. Change 3: The "Reflection saved" page is one i hadn't clicked through. I would like the same title font and size as on other pages (Centered is good for this page though), i would like the finalised prompt card to have the same format as the cards in the journal (i.e. text sizes, colours, and italics for the prompt), and of course when one kits "done" for it to return to the jounal page (so the "browse your journal" button underneath edit reflection is superfluous and should be removed)
+```

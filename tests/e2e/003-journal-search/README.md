@@ -177,9 +177,9 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Open Journal
+## Finish editing and return to the journal
 
-![Open Journal](./screenshots/019-edited-journal-mobile-chromium.png)
+![Finish editing and return to the journal](./screenshots/019-edited-journal-mobile-chromium.png)
 
 **Verifications:**
 

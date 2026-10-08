@@ -313,3 +313,15 @@ The first PR workflow's build passed. I canceled its Firebase job assuming it ha
 CI now gives each viewport its own emulator job while retaining serial scenarios within each job, avoiding shared account-picker races. Both jobs gate publication and keep separate report artifacts. The 32-step foundation's overall timeout is 180 seconds based on the measured near-limit passing run. Per-action waits, screenshot waits, rendered content and zero-pixel comparisons are unchanged. Future slow runs should be judged against these measured CI durations rather than local speed.
 
 The first matrix attempt exposed a wrapper dependency on npm's implicit `node_modules/.bin` PATH. Calling the documented shell wrapper directly on a clean CI runner could not find `firebase`. The wrapper now explicitly prepends the repository's installed tools after the deterministic Java shim, so direct and npm invocation use the same locked dependencies.
+
+## 2026-10-08 — Daily landing page and saved confirmation follow-up
+
+PR #6's build, both Firebase viewport jobs and Pages publication passed after the wrapper fix. Four checks against the deployed preview also passed. The subsequent user review requested a foggier navigation bar, Journal as the destination after saving, and saved-confirmation typography matching the journal cards.
+
+The bottom bar's old gradient had alpha values between 55% and 85%. It now uses 92–96% opacity with a 24px backdrop blur, reducing the influence of content behind it. The saved confirmation uses the shared page heading and card styles, preserving full reflection text. Done opens Journal; the duplicate browse action is removed.
+
+The initial signed-in page is chosen from the synchronized event projection and the device's local date: Today before a daily reflection exists, Journal after it exists. This choice happens once per session; later synchronization cannot redirect an active editor or explicit tab selection. Waiting for synchronization avoids treating an incomplete Firestore cache as proof that today's entry does not exist. A new local day uses Today again. Back from an unfinished edit still returns to its origin and retains its draft.
+
+The existing E2E stories now check arrival on a second device, Done after both a new reflection and a historical edit, reload after saving, the saved card's formatting, and a local-day rollover while the UTC date remains unchanged. Each interaction keeps its own full screenshot with zero tolerance and no masking.
+
+Validation: Svelte and E2E TypeScript checks passed. All six Firebase integration checks and all twelve mobile/desktop browser scenarios passed against the refreshed baselines without update mode. The generated walkthroughs reference 280 screenshots; twenty obsolete files from reordered draft steps were removed. The first baseline run caught an incorrect comma in the test's expected localized date, corrected to Chromium's actual `Friday 2 October` formatting. The day-selection behavior passed on both viewports.

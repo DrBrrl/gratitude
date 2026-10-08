@@ -31,7 +31,11 @@ test('daily and historical drafts stay separate through navigation, reload and d
   await steps.action('ask-discard', 'Ask to discard today’s draft', () => page.getByRole('button', { name: 'Discard draft', exact: true }).click(), async () => { await expect(page.getByRole('dialog')).toBeVisible(); });
   await steps.action('keep', 'Keep writing instead', () => page.getByRole('button', { name: 'Keep writing' }).click(), async () => { await expectEditor(page, 'The neighbour brought fresh lemons.'); await expect(page.getByRole('dialog')).not.toBeVisible(); });
   await steps.action('save', 'Save the recovered draft', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => { await expect(page.locator('.saved-card')).toContainText('The neighbour brought fresh lemons.'); await expectSynced(page); });
-  await steps.action('done', 'Return to the same daily reflection', () => page.getByRole('button', { name: 'Done', exact: true }).click(), async () => { await expect(page.locator('.daily-prompt')).toHaveAttribute('style', todayColour!); });
+  await steps.action('done', 'Finish today’s reflection and return to the journal', () => page.getByRole('button', { name: 'Done', exact: true }).click(), async () => {
+    await expect(page.getByRole('heading', { name: 'Your journal', exact: true })).toBeVisible();
+    await expect(page.locator('article.card').first()).toHaveAttribute('style', todayColour!);
+  });
+  await navigate(page, steps, 'revisit-today', 'Today');
   await openEditor(page, steps, 'continue-saved');
   await expectEditor(page, 'The neighbour brought fresh lemons.');
   await steps.action('another', 'Make an edit that will be discarded', () => editor(page).fill('This is a draft I will discard.'), async () => { await expect(page.getByText('Draft saved on this device', { exact: true })).toBeVisible(); });
@@ -40,9 +44,30 @@ test('daily and historical drafts stay separate through navigation, reload and d
   await navigate(page, steps, 'past-again', 'Journal');
   await steps.action('past-open-again', 'Open yesterday’s reflection again', () => page.locator('article.card').filter({ hasText: 'Yesterday' }).getByRole('button', { name: 'View entry', exact: true }).click(), async () => { await expect(page.locator('.detail')).toContainText('Yesterday I appreciated the garden.'); });
   await steps.action('past-recovered', 'Recover yesterday’s independent draft', () => page.getByRole('button', { name: 'Edit reflection' }).click(), async () => { await expectEditor(page, 'Yesterday I appreciated the garden and the roses.'); });
-  await backFromEditor(page, steps, 'leave-past', 'Journal');
-  await steps.action('verify-discard', 'Reload to verify today’s edit stays discarded', () => page.reload(), () => expectSynced(page));
+  await steps.action('save-past', 'Save yesterday’s edit after completing today’s reflection', () => page.getByRole('button', { name: 'Save changes', exact: true }).click(), async () => {
+    await expectSynced(page);
+    await expect(page.locator('.saved-card')).toContainText('Yesterday I appreciated the garden and the roses.');
+  });
+  await steps.action('done-past', 'Finish the historical edit and return to the journal', () => page.getByRole('button', { name: 'Done', exact: true }).click(), async () => {
+    await expect(page.getByRole('heading', { name: 'Your journal', exact: true })).toBeVisible();
+    await expect(page.locator('article.card')).toHaveCount(2);
+  });
+  await steps.action('verify-discard', 'Reload into the journal once today’s reflection is saved', () => page.reload(), async () => {
+    await expectSynced(page);
+    await expect(page.getByRole('heading', { name: 'Your journal', exact: true })).toBeVisible();
+  });
+  await navigate(page, steps, 'verify-today', 'Today');
   await openEditor(page, steps, 'verify-saved');
   await expectEditor(page, 'The neighbour brought fresh lemons.');
-  steps.generateDocs('Protect unfinished writing', 'Daily and historical editor drafts persist independently. Navigation returns to its origin, Today keeps its colour, saving continues one daily entry, and discarding an edit preserves both the saved reflection and other drafts. Every interaction is captured.');
+  await backFromEditor(page, steps, 'leave-today');
+  // A new local day is a clock fixture, not a change to saved event timestamps.
+  // It is already 2 October in Hobart while the UTC date is still 1 October.
+  await page.clock.setFixedTime(new Date('2026-10-01T14:31:07.000Z'));
+  await steps.action('new-day', 'Reopen Today at the start of a new local day', () => page.reload(), async () => {
+    await expectSynced(page);
+    await expect(page.getByRole('heading', { name: 'Reflection time', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Write a response', exact: true })).toBeEnabled();
+    await expect(page.locator('.today-date')).toHaveText('Friday 2 October');
+  });
+  steps.generateDocs('Protect unfinished writing', 'Daily and historical editor drafts persist independently. Back returns to the editor’s origin; Done and returning sessions open Journal once today’s reflection is saved. Today keeps its colour and becomes the initial page again on a new local day. Discarding an edit preserves saved writing and other drafts. Every interaction is captured.');
 });

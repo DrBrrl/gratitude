@@ -15,7 +15,8 @@
       const { ReviewRepository, reviewUser } = await import('$lib/dev/review-repository');
       if (session !== reviewSession) return;
       repository?.stop();
-      const opened = new ReviewRepository((value) => { if (session === reviewSession) view = value; });
+      chooseInitialPage = true;
+      const opened = new ReviewRepository((value) => { if (session === reviewSession) receiveView(value); });
       repository = opened; user = reviewUser; configured = true; initialized = true;
       writing = false; savedId = null; settingsPage = 'menu';
       draftLoaded = false; draftRestored = false;
@@ -47,6 +48,16 @@
   $effect(() => { if (discardOpen) discardDialog?.showModal(); else discardDialog?.close(); });
   let draftWrite = 0;
   let tab = $state<'today' | 'journal' | 'settings'>('today');
+  let chooseInitialPage = true;
+  function receiveView(value: JournalView) {
+    view = value;
+    // Choose the landing page once from the loaded projection. Later syncs must
+    // not interrupt writing or an explicitly selected tab.
+    if (chooseInitialPage && value.ready && value.status === 'Synced') {
+      chooseInitialPage = false;
+      tab = todayReflection(value.state.entries, today).entry ? 'journal' : 'today';
+    }
+  }
   let query = $state('');
   let selectedId = $state<string | null>(null);
   let journalScroll = 0;
@@ -128,6 +139,7 @@
         if (stored) { await active.writeDraft(stored, key); await active.clearDraft(`draft:entry:${entry.id}`); }
       }
       if (repository !== active) return;
+      chooseInitialPage = false;
       rememberEditorOrigin();
       editorDraftKey = key;
       draft = stored;
@@ -145,7 +157,7 @@
   async function beginWriting() { await openComposer(todayKey, daily.entry); }
   async function openSettings(next: typeof settingsPage) { settingsPage = next; exportStatus = ''; preparedFile = null; await tick(); window.scrollTo(0, 0); }
 
-  async function navigate(next: typeof tab) { tab = next; selectedId = null; writing = false; savedId = null; settingsPage = 'menu'; await tick(); window.scrollTo(0, 0); }
+  async function navigate(next: typeof tab) { chooseInitialPage = false; tab = next; selectedId = null; writing = false; savedId = null; settingsPage = 'menu'; await tick(); window.scrollTo(0, 0); }
   async function openEntry(entry: Entry) { journalScroll = window.scrollY; selectedId = entry.id; await tick(); document.getElementById('entry-heading')?.focus(); window.scrollTo(0, 0); }
   async function closeEntry() { const id = selectedId; selectedId = null; await tick(); document.getElementById(`view-${id}`)?.focus({ preventScroll: true }); window.scrollTo(0, journalScroll); }
 
@@ -203,12 +215,13 @@
         stopAuth = onAuthStateChanged(client.auth, (next) => {
           const current = ++session;
           repository?.stop(); repository = null;
+          chooseInitialPage = true;
           user = next; todayDraft = null; todayDraftDay = ''; editorDraftKey = ''; text = ''; editing = null; error = ''; draft = null; draftLoaded = false; draftRestored = false; draftStatus = ''; draftWrite++; exportStatus = ''; preparedFile = null; exporting = false; tab = 'today'; selectedId = null; query = ''; writing = false; savedId = null; settingsPage = 'menu';
           view = { state: emptyProjection(), pending: null, status: '', error: '', ready: false };
           initialized = true;
           if (next && client) {
             repository = new JournalRepository(client, next.uid, (value) => {
-              if (session === current) view = value;
+              if (session === current) receiveView(value);
             });
             const opened = repository;
             void opened.start().then(() => { if (session === current) return loadDrafts(opened); }).catch(() => { if (session === current) error = 'Local storage is unavailable. Your journal could not be opened.'; });
@@ -295,9 +308,12 @@
         <button class="primary" onclick={save} disabled={busy || !text.trim() || !!view.pending}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Save reflection'}</button>
         {#if text}<button class="text-button muted" onclick={() => discardOpen = true}>Discard draft</button>{/if}
       {:else if savedEntry}
-        <div class="saved-heading"><h1>Reflection saved</h1><time datetime={savedEntry.recordedAt}>{shortDate(savedEntry.recordedAt)}</time></div>
-        <article class="tinted saved-card" style:--entry-colour={colours[savedEntry.colour]}><p>{savedEntry.prompt}</p><p class="entry-text"><ReflectionText text={savedEntry.text} /></p></article>
-        <div class="saved-actions"><button class="primary" onclick={() => savedId = null}>Done</button><button class="outline" onclick={() => edit(savedEntry)}>Edit reflection</button><button class="text-button" onclick={() => navigate('journal')}>Browse your journal</button></div>
+        <div class="saved-heading"><h1 class="page-heading">Reflection saved</h1><time datetime={savedEntry.recordedAt}>{shortDate(savedEntry.recordedAt)}</time></div>
+        <article class="tinted card saved-card" style:--entry-colour={colours[savedEntry.colour]}>
+          <h2>Prompt</h2><p class="entry-prompt">{savedEntry.prompt}</p>
+          <h2>Reflection</h2><p class="entry-text"><ReflectionText text={savedEntry.text} /></p>
+        </article>
+        <div class="saved-actions"><button class="primary" onclick={() => navigate('journal')}>Done</button><button class="outline" onclick={() => edit(savedEntry)}>Edit reflection</button></div>
       {:else}
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
         <h1 class="today-heading">Reflection time</h1>
@@ -417,9 +433,7 @@
   .draft-status { margin: 16px 0; }
   .saved-heading { text-align: center; margin: 38px 0 26px; }
   .saved-heading h1 { margin-bottom: 16px; }
-  .saved-heading time { font-size: 1.1rem; }
-  .saved-card { padding: 24px; font-size: 1.08rem; }
-  .saved-card p:last-child { margin-bottom: 0; }
+  .saved-heading time { font-size: .85rem; color: #b7bdc6; }
   .saved-actions { display: grid; gap: 16px; margin-top: 32px; }
   .page-heading { font: 600 2.3rem/1.2 Arial, Helvetica, sans-serif; letter-spacing: -.035em; margin: 8px 0 24px; }
   .search { min-height: 54px; border-radius: 32px; display: flex; gap: 12px; align-items: center; padding: 0 16px; margin-bottom: 22px; }
@@ -479,7 +493,7 @@
   .account-email { overflow-wrap: anywhere; margin: 20px 0 12px; }
   .muted { color: #bdc4ce; }
   .sync-status { margin: 24px 0 0; font-size: .85rem; color: #d2cfbb; }
-  nav { position: fixed; z-index: 10; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 480px); display: flex; justify-content: space-around; border-radius: 24px 24px 0 0 !important; padding: 12px 8px max(12px, env(safe-area-inset-bottom)); background: linear-gradient(120deg, #34383b9c, #161a1cd9, #4743428c) !important; }
+  nav { position: fixed; z-index: 10; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 480px); display: flex; justify-content: space-around; border-radius: 24px 24px 0 0 !important; padding: 12px 8px max(12px, env(safe-area-inset-bottom)); background: linear-gradient(120deg, #34383bf2, #161a1cf5, #474342eb) !important; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
   nav button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 30%; min-height: 59px; padding: 4px; font-size: .85rem; color: #cbd0de; }
   nav button[aria-current] { color: var(--yellow); }
   nav button[aria-current]::after { content: ''; position: absolute; bottom: -7px; height: 3px; width: 28px; background: var(--yellow); border-radius: 4px; }

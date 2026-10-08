@@ -33,8 +33,13 @@ test('paragraph writing, plain-text paste, undo and settings navigation', async 
   await steps.action('save', 'Save the paragraph-spaced reflection', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => {
     await expectSynced(page);
     await expect(page.locator('.saved-card .paragraph')).toHaveText(['A quiet cup of tea.', 'A kind message.', 'A warm smile.']);
+    await expect(page.locator('.saved-card h2')).toHaveText(['Prompt', 'Reflection']);
+    await expect(page.locator('.saved-card .entry-prompt')).toHaveCSS('font-style', 'italic');
+    await expect(page.getByRole('button', { name: 'Browse your journal', exact: true })).toHaveCount(0);
+  }, 'The saved card has matching Prompt and Reflection headings, an italic prompt, spaced paragraphs and no redundant browse button');
+  await steps.action('journal', 'Finish saving and open the journal', () => page.getByRole('button', { name: 'Done', exact: true }).click(), async () => {
+    await expect(page.getByRole('heading', { name: 'Your journal', exact: true })).toBeVisible();
   });
-  await navigate(page, steps, 'journal', 'Journal');
   await expect(page.locator('article.card .paragraph')).toHaveText(['A quiet cup of tea.', 'A kind message.', 'A warm smile.']);
   await expect(page.getByRole('button', { name: '(see more)', exact: true })).toHaveCount(0);
   await steps.action('entry', 'Read the same paragraph layout in the full entry', () => page.getByRole('button', { name: 'View entry', exact: true }).click(), async () => { await expect(page.locator('.detail .paragraph')).toHaveText(['A quiet cup of tea.', 'A kind message.', 'A warm smile.']); });

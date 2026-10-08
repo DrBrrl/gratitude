@@ -15,7 +15,7 @@ test('Google sign-in, private saving, a second device and cached recovery', asyn
     const second = await secondContext.newPage(); steps.setPage(second);
     await second.clock.setFixedTime(new Date(FIXTURE_TIME));
     await steps.action('second-device', 'Open Gratitude on another device', () => second.goto('./journal/'), async () => { await expect(second.getByRole('button', { name: 'Continue with Google' })).toBeVisible(); });
-    await signIn(second, info, steps, 'foundation', true);
+    await signIn(second, info, steps, 'foundation', true, 'Journal');
     await navigate(second, steps, 'second-journal', 'Journal');
     await expect(second.locator('article')).toHaveCount(1);
     await expect(second.locator('article')).toContainText('I appreciated a quiet cup of tea by the window.');

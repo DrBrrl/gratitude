@@ -138,12 +138,12 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The saved card has matching Prompt and Reflection headings, an italic prompt, spaced paragraphs and no redundant browse button
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Open Journal
+## Finish saving and open the journal
 
-![Open Journal](./screenshots/015-journal-mobile-chromium.png)
+![Finish saving and open the journal](./screenshots/015-journal-mobile-chromium.png)
 
 **Verifications:**
 
