@@ -115,6 +115,10 @@ Repeated opens for the same observed local date resolve to one canonical day. It
 
 ## Gemini execution and credentials
 
+**Current implementation:** the browser uses the Firebase AI Logic managed HTTP gateway with Firebase Auth and App Check SDK tokens. Firebase JS 12.19's Gemini response mapper omits `modelVersion`; reading the gateway response directly preserves the actual provider-reported version. The repository Gemini key remains unused. The live generic mode sends no journal/feedback/preferences content; consent-bound personal context is enabled only for fictional emulator tests or an explicitly configured paid project.
+
+`AIChoicesConfirmed`, `PromptRequested`, `PromptResponseReceived`, `AIRequestFailed`, `StarterPromptChosen` and `PromptFeedbackSubmitted` are now supported source events. A stream-local `ai/control` pointer is reconstructable operational metadata and provides transactional request ownership and consent invalidation. Empty feedback replaces that prompt's current note for future context; immutable older events remain history. `ReflectionWritten` version 2 references a recorded response; version 1 starter reflections still replay. All requests originate from explicit clicks, including retries after interruption. Received responses have a separate device outbox and never trigger fresh inference when synced.
+
 Use Firebase AI Logic for managed Gemini access from the client in a later increment. The repository's existing `GEMINI_API_KEY` remains unused and private; it must never be copied to Vite configuration or the browser. Evaluate the supported Gemini Developer API no-cost tier, quotas, App Check and data-use terms before enabling real journaling inputs. This integration does not require a custom Cloud Function. [Firebase AI Logic pricing](https://firebase.google.com/docs/ai-logic/pricing)
 
 Live processing is separate from replay:

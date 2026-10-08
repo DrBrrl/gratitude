@@ -64,6 +64,12 @@ jobs:
       fail-fast: false
       matrix:
         project: [mobile-chromium, desktop-chromium]
+        suite: [journal, ai]
+        include:
+          - suite: journal
+            scenarios: tests/e2e/00[1-6]
+          - suite: ai
+            scenarios: tests/e2e/00[7-8]
     env:
       BASE_PATH: /gratitude/pr-preview/firebase-check
     steps:
@@ -72,7 +78,10 @@ jobs:
           persist-credentials: false
       - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
       - run: nix develop -c npm ci
-      - run: nix develop -c bash scripts/firebase-test.sh 'node --test tests/firebase/*.test.mjs && npm run test:e2e:firebase -- --project=${{ matrix.project }}'
+      - run: nix develop -c bash scripts/firebase-test.sh 'node --test tests/firebase/*.test.mjs && npm run test:e2e:firebase -- --project=${{ matrix.project }} "${{ matrix.scenarios }}"'
+      - name: Verify generic AI configuration
+        if: matrix.suite == 'ai'
+        run: nix develop -c bash scripts/firebase-test.sh 'VITE_FIREBASE_EMULATORS=true VITE_AI_DATA_MODE=generic npm run build && E2E_FIREBASE=true E2E_AI_GENERIC=true npx playwright test tests/e2e/009-generic-ai --project=${{ matrix.project }}'
       - name: Check generated Firebase walkthroughs
         run: |
           git diff --exit-code -- tests/e2e
@@ -80,7 +89,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
-          name: firebase-e2e-report-${{ matrix.project }}
+          name: firebase-e2e-report-${{ matrix.project }}-${{ matrix.suite }}
           path: |
             playwright-report/
             test-results/

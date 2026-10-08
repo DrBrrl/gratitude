@@ -2,5 +2,7 @@
   "projectId": "gratitude-drbrrl-dev",
   "apiKey": "AIzaSyCph8g1UsSp6HMDhGSAMvpnYTsBt2Qo_uU",
   "authDomain": "gratitude-drbrrl-dev.firebaseapp.com",
-  "appId": "1:959183629113:web:33d4c1d0ab65759fe796e8"
+  "appId": "1:959183629113:web:33d4c1d0ab65759fe796e8",
+  "appCheckSiteKey": "6Le40OQtAAAAAGbjSoI88w43bKAe0W4Ok30YYc0h",
+  "aiDataMode": "generic"
 }
