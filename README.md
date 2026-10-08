@@ -70,6 +70,8 @@ Saved user actions are appended in a browser transaction. Security Rules enforce
 
 ## Project records
 
+- [IMPORT_PLAN.md](IMPORT_PLAN.md): proposed alternate-journal ZIP import, data mapping, resumable migration and acceptance gates; importer not yet implemented.
+
 - [VISION.md](VISION.md): the project’s intended end state.
 - [MVP_DESIGN.md](MVP_DESIGN.md): proposed Firebase/Gemini architecture, source events, and replayable cached projections.
 - [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md): reviewable implementation increments and acceptance gates.
