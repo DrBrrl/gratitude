@@ -44,16 +44,21 @@ test('interrupted inference, provider failure, response outbox and consent revoc
   await steps.action('sync-result', 'Sync the received output without new inference', () => page.getByRole('button', { name: 'Sync received prompt' }).click(), async () => {
     await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT); await expect(page.getByRole('button', { name: 'Sync received prompt' })).toHaveCount(0); expect(calls).toBe(3);
   });
-  await page.unroute(AI_ENDPOINT); held = undefined;
-  await page.route(AI_ENDPOINT, async route => { calls++; held = route; });
-  await steps.action('late-request', 'Begin another prompt request', () => page.getByRole('button', { name: 'Another prompt' }).click(), async () => {
-    await expect.poll(() => calls).toBe(4); await expect(page.getByRole('button', { name: 'Finding a prompt…' })).toBeDisabled();
-  });
+  // Prepare the other tab first so its navigation screenshots do not consume the
+  // real provider's 30-second timeout on a slow CI runner. Consent stays enabled
+  // until Save; the pending request is still revoked while inference is in flight.
   const other = await context.newPage(); await other.clock.setFixedTime(new Date(FIXTURE_TIME)); steps.setPage(other);
   await steps.action('other-tab', 'Open the same account in another tab', () => other.goto('./journal/'), async () => {
-    await expectSynced(other); await expect(other.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT); expect(calls).toBe(4);
+    await expectSynced(other); await expect(other.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT); expect(calls).toBe(3);
   });
-  await aiSettings(other, steps, 'revoke'); await toggleAI(other, steps, 'disable', false); await saveChoices(other, steps, 'save-revocation');
+  await aiSettings(other, steps, 'revoke'); await toggleAI(other, steps, 'disable', false);
+  await page.unroute(AI_ENDPOINT); held = undefined;
+  await page.route(AI_ENDPOINT, async route => { calls++; held = route; });
+  steps.setPage(page);
+  await steps.action('late-request', 'Begin another prompt request before the changed choices are saved', () => page.getByRole('button', { name: 'Another prompt' }).click(), async () => {
+    await expect.poll(() => calls).toBe(4); await expect(page.getByRole('button', { name: 'Finding a prompt…' })).toBeDisabled();
+  });
+  steps.setPage(other); await saveChoices(other, steps, 'save-revocation');
   await expect(page.getByRole('button', { name: 'Set up AI prompts' })).toBeVisible();
   await respond(held!, SECOND_PROMPT);
   steps.setPage(page);

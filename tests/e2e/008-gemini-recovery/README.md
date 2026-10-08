@@ -169,18 +169,9 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Begin another prompt request
-
-![Begin another prompt request](./screenshots/018-late-request-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
 ## Open the same account in another tab
 
-![Open the same account in another tab](./screenshots/019-other-tab-mobile-chromium.png)
+![Open the same account in another tab](./screenshots/018-other-tab-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/020-revoke-settings-mobile-chromium.png)
+![Open Settings](./screenshots/019-revoke-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/021-revoke-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/020-revoke-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +198,16 @@ Viewport: mobile-chromium.
 
 ## Turn AI prompts off
 
-![Turn AI prompts off](./screenshots/022-disable-mobile-chromium.png)
+![Turn AI prompts off](./screenshots/021-disable-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Begin another prompt request before the changed choices are saved
+
+![Begin another prompt request before the changed choices are saved](./screenshots/022-late-request-mobile-chromium.png)
 
 **Verifications:**
 
