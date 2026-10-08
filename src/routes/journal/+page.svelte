@@ -409,7 +409,7 @@
   .today-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 42px; }
   .today-date { text-align: right; display: grid; gap: 10px; font-size: .9rem; line-height: 1.3; }
   .today-heading { margin: 0 0 14px; font: 700 2.15rem/1.15 Arial, Helvetica, sans-serif; letter-spacing: .015em; text-align: center; color: #c6c8ce; }
-  .glass { background: linear-gradient(130deg, #55585b52, #191d1fc9 60%, #55514b57); border: 1px solid #c2c7ca65; border-radius: 16px; box-shadow: inset 0 1px 0 #ffffff15, 0 8px 24px #00000020; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+  .glass { background: linear-gradient(130deg, #55585b52, #191d1fc9 60%, #55514b57); border: 1px solid #c2c7ca65; border-radius: 16px; box-shadow: inset 0 1px 0 #ffffff15, 0 8px 24px #00000020; -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
   section.glass { padding: 22px; margin: 24px 0; }
   .tinted { border: 1px solid color-mix(in srgb, var(--entry-colour) 86%, white); border-radius: 17px; background: linear-gradient(125deg, color-mix(in srgb, var(--entry-colour) 28%, #0e1016) 0%, color-mix(in srgb, var(--entry-colour) 14%, #090d14) 65%, color-mix(in srgb, var(--entry-colour) 24%, #0c1017) 100%); box-shadow: inset 0 0 24px color-mix(in srgb, var(--entry-colour) 22%, transparent), inset 0 1px 0 #ffffff25, 0 0 12px color-mix(in srgb, var(--entry-colour) 12%, transparent); }
   .daily-prompt { padding: 20px; margin: 0 0 22px; display: flex; flex-direction: column; gap: 12px; }
@@ -493,7 +493,7 @@
   .account-email { overflow-wrap: anywhere; margin: 20px 0 12px; }
   .muted { color: #bdc4ce; }
   .sync-status { margin: 24px 0 0; font-size: .85rem; color: #d2cfbb; }
-  nav { position: fixed; z-index: 10; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 480px); display: flex; justify-content: space-around; border-radius: 24px 24px 0 0 !important; padding: 12px 8px max(12px, env(safe-area-inset-bottom)); background: linear-gradient(120deg, #34383bf2, #161a1cf5, #474342eb) !important; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+  nav.glass { position: fixed; z-index: 10; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 480px); display: flex; justify-content: space-around; border-radius: 24px 24px 0 0 !important; padding: 12px 8px max(12px, env(safe-area-inset-bottom)); background: linear-gradient(120deg, #34383bf2, #161a1cf5, #474342eb) !important; -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); }
   nav button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 30%; min-height: 59px; padding: 4px; font-size: .85rem; color: #cbd0de; }
   nav button[aria-current] { color: var(--yellow); }
   nav button[aria-current]::after { content: ''; position: absolute; bottom: -7px; height: 3px; width: 28px; background: var(--yellow); border-radius: 4px; }
@@ -507,7 +507,7 @@
   [role=alert] { color: #ffd4cc; background: #471f21e8; padding: 18px; border: 1px solid #e88c8c70; border-radius: 14px; margin-top: 24px; }
   :focus-visible { outline: 2px solid var(--yellow); outline-offset: 4px; }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-  @media (min-width: 540px) { main { margin: 20px auto; min-height: calc(100svh - 40px); padding: 38px 26px 120px; border: 1px solid #c5c8c250; border-radius: 28px; box-shadow: 0 20px 80px #0008, inset 0 1px 0 #ffffff12; } nav { bottom: 20px; width: 480px; border-radius: 24px !important; } }
+  @media (min-width: 540px) { main { margin: 20px auto; min-height: calc(100svh - 40px); padding: 38px 26px 120px; border: 1px solid #c5c8c250; border-radius: 28px; box-shadow: 0 20px 80px #0008, inset 0 1px 0 #ffffff12; } nav.glass { bottom: 20px; width: 480px; border-radius: 24px !important; } }
   @media (max-width: 350px) { main { padding-inline: 16px; } .today-header { gap: 8px; } .brand { font-size: 1.65rem; } .today-date { font-size: .8rem; } h1 { font-size: 2.1rem; } .today-heading { font-size: 1.8rem; } .settings-row { gap: 10px; padding: 16px 12px; } .row-icon { width: 40px; height: 40px; } .export-choice { gap: 12px; } }
-  @media (prefers-reduced-transparency: reduce) { .glass, nav, dialog { background: #1c2024 !important; backdrop-filter: none; } }
+  @media (prefers-reduced-transparency: reduce) { .glass, nav.glass, dialog { background: #1c2024 !important; backdrop-filter: none; } }
 </style>

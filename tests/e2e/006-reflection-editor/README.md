@@ -12,7 +12,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] Sign-in is available and the production build preserves the frosted glass blur
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose Google sign-in
@@ -58,6 +58,7 @@ Viewport: mobile-chromium.
 **Verifications:**
 
 - [x] The private journal is synchronized and Today is ready
+- [x] The bottom navigation retains its 24px backdrop blur in the production build
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Read why this starter prompt is shown
