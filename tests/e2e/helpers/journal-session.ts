@@ -29,7 +29,10 @@ export async function startJournal(page: Page, info: TestInfo, steps: TestStepHe
   await page.clock.setFixedTime(new Date(FIXTURE_TIME));
   await page.request.delete('http://127.0.0.1:19099/emulator/v1/projects/demo-gratitude/accounts');
   await page.context().route(/https:\/\/(unpkg\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//, (route) => route.abort());
-  await steps.action('open', 'Open Gratitude', () => page.goto('./journal/'), async () => { await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeVisible(); });
+  await steps.action('open', 'Open Gratitude', () => page.goto('./journal/'), async () => {
+    await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeVisible();
+    await expect(page.locator('section.glass')).toHaveCSS('backdrop-filter', 'blur(18px)');
+  }, 'Sign-in is available and the production build preserves the frosted glass blur');
   await signIn(page, info, steps, name);
 }
 export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, name: string, existing = false, landing: 'Today' | 'Journal' = 'Today') {
@@ -54,6 +57,8 @@ export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, 
     await expectSynced(page);
     await expect(page.getByRole('heading', { name: destination, exact: true })).toBeVisible();
     if (landing === 'Today') await expect(page.getByRole('button', { name: /^(Write a response|Continue your reflection)$/ })).toBeEnabled();
+  } }, { description: 'The bottom navigation retains its 24px backdrop blur in the production build', check: async () => {
+    await expect(page.getByRole('navigation', { name: 'Journal navigation' })).toHaveCSS('backdrop-filter', 'blur(24px)');
   } }]);
 }
 export async function writeReflection(page: Page, steps: TestStepHelper, text: string, id: string) {

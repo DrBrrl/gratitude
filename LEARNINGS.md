@@ -325,3 +325,13 @@ The initial signed-in page is chosen from the synchronized event projection and 
 The existing E2E stories now check arrival on a second device, Done after both a new reflection and a historical edit, reload after saving, the saved card's formatting, and a local-day rollover while the UTC date remains unchanged. Each interaction keeps its own full screenshot with zero tolerance and no masking.
 
 Validation: Svelte and E2E TypeScript checks passed. All six Firebase integration checks and all twelve mobile/desktop browser scenarios passed against the refreshed baselines without update mode. The generated walkthroughs reference 280 screenshots; twenty obsolete files from reordered draft steps were removed. The first baseline run caught an incorrect comma in the test's expected localized date, corrected to Chromium's actual `Friday 2 October` formatting. The day-selection behavior passed on both viewports.
+
+## 2026-10-08 — Production CSS must preserve the standard blur declaration
+
+The follow-up CI passed and published, but a direct check of the live preview's CSS found the actual dev/preview discrepancy: the compiled `.glass` and `nav` rules kept only `-webkit-backdrop-filter`, which Chromium did not expose as a supported blur. The source had placed that prefixed fallback after the standard property. Reversing the order (prefixed fallback first, standard property last) preserves both declarations in the production bundle. The existing dialog already had a standard blur in its compiled CSS.
+
+The same ordering fix applies to the shared glass panels and bottom navigation so their production appearance matches development. E2E now asserts the computed 18px glass blur before sign-in and the 24px navigation blur afterwards, in addition to screenshot comparisons. The live-configured build check also verifies glass blur. This checks rendered browser support, not merely whether a CSS source file contains the property.
+
+The new computed-style assertion additionally found that `.glass` overrode the less-specific `nav` selector, leaving navigation at 18px. Using `nav.glass` gives the navigation its intended 24px blur; its desktop and reduced-transparency overrides use the same specificity.
+
+After reviewing the regenerated production screenshots, all twelve mobile/desktop scenarios passed again without updating baselines, including the new computed-blur assertions. Svelte and E2E TypeScript checks also passed. The walkthroughs record the blur verification beneath the sign-in screenshot.
