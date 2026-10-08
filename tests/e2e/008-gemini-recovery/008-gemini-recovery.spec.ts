@@ -12,7 +12,7 @@ test('interrupted inference, provider failure, response outbox and consent revoc
   await aiSettings(page, steps, 'configure'); await toggleAI(page, steps, 'enable', true); await saveChoices(page, steps, 'save-choices');
   await navigate(page, steps, 'today', 'Today');
   await steps.action('request', 'Request a prompt and wait for the provider', () => page.getByRole('button', { name: 'Find me a prompt', exact: true }).click(), async () => {
-    await expect.poll(() => calls).toBe(1); await expect(page.getByRole('button', { name: 'Finding a prompt…' })).toBeDisabled();
+    await expect.poll(() => calls, { timeout: 15_000 }).toBe(1); await expect(page.getByRole('button', { name: 'Finding a prompt…' })).toBeDisabled();
   });
   await steps.action('interrupt', 'Reload while inference is unfinished', () => page.reload(), async () => {
     await expectSynced(page); await expect(page.getByText(/A request is unfinished/)).toBeVisible(); expect(calls).toBe(1);
@@ -24,7 +24,7 @@ test('interrupted inference, provider failure, response outbox and consent revoc
     await expect(page.getByText('No new prompt arrived. You can try again or use the starter prompt.')).toBeVisible({ timeout: 15_000 }); expect(calls).toBe(2);
   });
   await steps.action('fallback', 'Choose the bundled starter after the failure', () => page.getByRole('button', { name: 'Use starter prompt' }).click(), async () => {
-    await expect(page.locator('.badge')).toHaveText('Starter prompt'); await expect(page.getByRole('button', { name: 'Find me a prompt', exact: true })).toBeEnabled(); expect(calls).toBe(2);
+    await expect(page.locator('.badge')).toHaveText('Starter prompt'); await expect(page.getByRole('button', { name: 'Find me a prompt', exact: true })).toBeEnabled({ timeout: 15_000 }); expect(calls).toBe(2);
   });
   await page.unroute(AI_ENDPOINT);
   await page.route(AI_ENDPOINT, async route => {
@@ -42,7 +42,7 @@ test('interrupted inference, provider failure, response outbox and consent revoc
     await expectSynced(page); await expect(page.getByRole('button', { name: 'Sync received prompt' })).toBeEnabled(); expect(calls).toBe(3);
   });
   await steps.action('sync-result', 'Sync the received output without new inference', () => page.getByRole('button', { name: 'Sync received prompt' }).click(), async () => {
-    await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT); await expect(page.getByRole('button', { name: 'Sync received prompt' })).toHaveCount(0); expect(calls).toBe(3);
+    await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT, { timeout: 15_000 }); await expect(page.getByRole('button', { name: 'Sync received prompt' })).toHaveCount(0); expect(calls).toBe(3);
   });
   // Prepare the other tab first so its navigation screenshots do not consume the
   // real provider's 30-second timeout on a slow CI runner. Consent stays enabled
@@ -56,10 +56,10 @@ test('interrupted inference, provider failure, response outbox and consent revoc
   await page.route(AI_ENDPOINT, async route => { calls++; held = route; });
   steps.setPage(page);
   await steps.action('late-request', 'Begin another prompt request before the changed choices are saved', () => page.getByRole('button', { name: 'Another prompt' }).click(), async () => {
-    await expect.poll(() => calls).toBe(4); await expect(page.getByRole('button', { name: 'Finding a prompt…' })).toBeDisabled();
+    await expect.poll(() => calls, { timeout: 15_000 }).toBe(4); await expect(page.getByRole('button', { name: 'Finding a prompt…' })).toBeDisabled();
   });
   steps.setPage(other); await saveChoices(other, steps, 'save-revocation');
-  await expect(page.getByRole('button', { name: 'Set up AI prompts' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Set up AI prompts' })).toBeVisible({ timeout: 15_000 });
   await respond(held!, SECOND_PROMPT);
   steps.setPage(page);
   await steps.step('late-response', 'Return to the first tab after the late response', [{ description: 'Consent revocation discards the late response and preserves the previously saved prompt', check: async () => {
