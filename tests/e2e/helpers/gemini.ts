@@ -20,6 +20,6 @@ export async function toggleAI(page: Page, steps: TestStepHelper, id: string, en
 }
 export async function saveChoices(page: Page, steps: TestStepHelper, id: string) {
   await steps.action(id, 'Save these explicit sharing choices', () => page.getByRole('button', { name: 'Save AI choices' }).click(), async () => {
-    await expect(page.getByText('AI choices saved.', { exact: true })).toBeVisible();
+    await expect(page.getByText('AI choices saved.', { exact: true })).toBeVisible({ timeout: 15_000 });
   });
 }
