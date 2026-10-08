@@ -4,7 +4,9 @@ import { editor, expectEditor, expectSynced, navigate, openEditor, startJournal 
 import { AI_ENDPOINT, FIRST_PROMPT, SECOND_PROMPT, respond, aiSettings, saveChoices, toggleAI } from '../helpers/gemini';
 
 test('consent, personalized prompts, freeform feedback and immutable journal history', async ({ page }, info) => {
-  test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(180_000);
+  // 35 full-page comparisons took 2.9 minutes in CI; allow the complete walkthrough
+  // to finish while retaining the per-action and screenshot deadlines.
+  test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(300_000);
   const steps = new TestStepHelper(page, info);
   const requests: string[] = [];
   await page.route(AI_ENDPOINT, async route => {
@@ -40,7 +42,7 @@ test('consent, personalized prompts, freeform feedback and immutable journal his
     await expect(page.getByLabel('What would make prompts better for you?')).toHaveValue('More questions about sounds, please.');
   });
   await steps.action('save-feedback', 'Save feedback without calling the provider', () => page.getByRole('button', { name: 'Save feedback' }).click(), async () => {
-    await expect(page.getByText('Prompt feedback saved.', { exact: true })).toBeVisible(); expect(requests).toHaveLength(1);
+    await expect(page.getByText('Prompt feedback saved.', { exact: true })).toBeVisible({ timeout: 15_000 }); expect(requests).toHaveLength(1);
   });
   await steps.action('close-why', 'Close the prompt explanation', () => page.getByRole('button', { name: 'Why this prompt?' }).click(), async () => { await expect(page.locator('.explanation')).toHaveCount(0); });
   await openEditor(page, steps, 'write');
@@ -48,7 +50,7 @@ test('consent, personalized prompts, freeform feedback and immutable journal his
     await expectEditor(page, 'Someone held the door while I carried my tea.'); await expect(page.locator('.writing-prompt')).toHaveText(FIRST_PROMPT);
   });
   await steps.action('save', 'Save the reflection with its original AI prompt', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => {
-    await expect(page.locator('.saved-card .entry-prompt')).toHaveText(FIRST_PROMPT); await expectSynced(page);
+    await expect(page.locator('.saved-card .entry-prompt')).toHaveText(FIRST_PROMPT, { timeout: 15_000 }); await expectSynced(page);
   });
   await steps.action('done', 'Return to the journal', () => page.getByRole('button', { name: 'Done', exact: true }).click(), async () => { await expect(page.locator('article.card .entry-prompt')).toHaveText(FIRST_PROMPT); });
   await steps.action('reload', 'Reload the cached journal without requesting AI', () => page.reload(), async () => {
