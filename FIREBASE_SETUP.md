@@ -24,7 +24,7 @@ The Pages build runs `scripts/configure_firebase_build.py` to select preview con
 
 The private repository `GEMINI_API_KEY` is unused. It is never supplied to Pages or embedded in frontend configuration. Firebase AI Logic is provisioned in both projects for `gemini-3.6-flash`. Live sites currently use `aiDataMode: "generic"`: no journal text, guidance or feedback reaches Gemini. Exact visible responses and actual provider model versions become events; replay never runs inference.
 
-For local live testing, copy the four values from the chosen public configuration into `.env.local` using `.env.example` as a template. Prefer emulators for automated tests. Real Google account completion and supported mobile-browser sign-in should be checked by the owner; automated emulator tests cover sign-in, save/edit, cross-device reads, isolation and recovery.
+For local live testing, copy the values from the chosen public configuration into `.env.local` using `.env.example` as a template. Live AI also needs the local App Check setup described below. Prefer emulators for automated tests. Real Google account completion and supported mobile-browser sign-in should be checked by the owner; automated emulator tests cover sign-in, save/edit, cross-device reads, isolation and recovery.
 
 ## Rules deployment
 
