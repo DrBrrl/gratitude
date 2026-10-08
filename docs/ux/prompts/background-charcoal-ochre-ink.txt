@@ -1,0 +1,10 @@
+Generated with the built-in image_gen tool on 2026-10-01.
+Asset: src/lib/assets/backgrounds/charcoal-ochre-ink.png
+Visual references inspected: 02-today-and-choice-yellow-ink.png and 04-rainbow-journal-search-yellow-ink.png.
+
+Use case: stylized-concept
+Asset type: production background image for a mobile-first dark gratitude journal SPA.
+Primary request: Create a portrait 2:3 background of fine, photorealistic ink diffusing in water, matching a near-black charcoal and subdued ochre aesthetic. Full bleed artwork only.
+Scene: a near-black (#0C0D10) canvas, with volumetric charcoal and smoky warm-grey ink plumes curling downward from the upper right and billowing upward from the bottom and lower left. Intricate soft organic cauliflower-like fluid billows and delicate wisps, as in macro photography of black ink in water. Occasional small muted yellow-ochre currents embedded within the grey plumes, never bright gold. Keep the upper and central middle area mostly dark and quiet, with textured plumes visible around the edges and lower half. This will sit behind translucent dark glass journal cards and ivory text.
+Lighting: very low key, soft side lighting revealing the dimensional edges of the ink; near-black shadows, dark charcoal midtones, restrained warm-grey highlights. Rich visible detail without bright or distracting areas.
+Constraints: no text, no lettering, no icons, no interface, no frames, no phone, no objects, no borders, no gradients masquerading as plumes. No northern lights, neon, violet, blue light, stars, glitter, metallic effects, fire or horizon. Static seamless-feeling atmospheric background, not a UI mockup.

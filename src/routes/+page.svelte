@@ -33,10 +33,6 @@
     display: grid;
     place-items: center;
     padding: max(64px, env(safe-area-inset-top)) 24px max(32px, env(safe-area-inset-bottom));
-    background:
-      radial-gradient(ellipse at 6% 15%, #47433a40, transparent 48%),
-      radial-gradient(ellipse at 100% 76%, #80703924, transparent 42%),
-      #0c0d10;
   }
   main { width: min(100%, 540px); }
   .eyebrow { color: #f4d35e; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; }

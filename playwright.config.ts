@@ -37,7 +37,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     launchOptions: {
       executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
-      args: ['--disable-gpu', '--font-render-hinting=none', '--disable-font-subpixel-positioning', '--disable-lcd-text']
+      args: ['--disable-gpu', '--disable-partial-raster', '--disable-skia-runtime-opts',
+        '--font-render-hinting=none', '--disable-font-subpixel-positioning', '--disable-lcd-text']
     }
   },
   projects: [

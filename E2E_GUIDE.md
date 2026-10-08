@@ -93,7 +93,7 @@ Commit the reviewed baselines, generated documents, and test changes together. D
 
 ## Determinism and waits
 
-The runner fixes the locale (`en-AU`), timezone (`Australia/Hobart`), dark colour scheme, reduced motion, and device scale factor. Screenshot comparisons disable animations and hide the caret. Chromium disables GPU rendering, font hinting, LCD text, and font subpixel positioning. The browser and fonts come from the same Nix lock locally and in CI.
+The runner fixes the locale (`en-AU`), timezone (`Australia/Hobart`), dark colour scheme, reduced motion, and device scale factor. Screenshot comparisons disable animations and hide the caret. Chromium disables GPU rendering, partial raster reuse, CPU-specific Skia optimizations, font hinting, LCD text, and font subpixel positioning. Full rasterization avoids rounded-border differences caused by repaint history; the application content and styling remain intact. The browser and fonts come from the same Nix lock locally and in CI.
 
 As time-dependent behaviour is implemented, freeze the clock before opening the page. Seed randomized colours and identifiers and provide explicit storage fixtures. Stub AI responses and photo summaries at the application boundary; normal CI should not depend on live model output, credentials, cost, or network timing. Use fictional entries and photos, never private reflections.
 
@@ -101,7 +101,7 @@ Wait for observable conditions with Playwright assertions; do not use fixed slee
 
 ## Related checks
 
-`npm run check` checks Svelte and TypeScript. `npm run test:deployment` verifies production replacement, preview isolation, closed-preview cleanup, and rejection of unsafe build inputs. These support the E2E checks; see [DEPLOYMENT.md](DEPLOYMENT.md) for publication behaviour.
+`npm run check` checks Svelte and TypeScript. `npm run test:unit` checks local-day identity/colour and preview truncation boundaries. `npm run test:deployment` verifies production replacement, preview isolation, closed-preview cleanup, and rejection of unsafe build inputs. These support the E2E checks; see [DEPLOYMENT.md](DEPLOYMENT.md) for publication behaviour.
 
 ## Firebase foundation scenario
 
@@ -119,17 +119,17 @@ The integration suite also checks owner isolation, rejected client mutations and
 For an intentional visual update, start fresh emulators and run:
 
 ```sh
-nix develop -c bash scripts/firebase-test.sh 'VITE_FIREBASE_EMULATORS=true npm run build && E2E_FIREBASE=true npx playwright test --update-snapshots'
+nix develop -c bash scripts/firebase-test.sh 'VITE_FIREBASE_EMULATORS=true npm run build && E2E_FIREBASE=true npx playwright test --update-snapshots=all'
 ```
 
 Review regenerated PNGs and READMEs, then run the ordinary suite. The normal `test:e2e` build skips the Firebase scenario; CI runs it separately against emulators and checks that generated documentation remains committed. Real mobile OAuth and deployed IAM still require live verification after provisioning.
 
 ## Action-by-action feature walkthroughs
 
-The journal feature series adds generated mobile and desktop walkthroughs for [search and editing](tests/e2e/003-journal-search/README.md), [draft recovery](tests/e2e/004-draft-recovery/README.md), and [Markdown/JSON export](tests/e2e/005-export/README.md). The export scenario checks the actual downloaded file contents, including full-journal scope and literal text. These run with `npm run test:firebase:all`; the normal configured build runs landing/configuration checks and skips emulator-only scenarios.
+The journal feature series adds generated mobile and desktop walkthroughs for [search and editing](tests/e2e/003-journal-search/README.md), [draft recovery](tests/e2e/004-draft-recovery/README.md), [Markdown/JSON export](tests/e2e/005-export/README.md), and [paragraph writing and settings](tests/e2e/006-reflection-editor/README.md). They cover content-sized cards, three rendered preview lines, expansion/collapse, local dates, independent daily/historical drafts, plain-text paste and undo/redo. The export scenario checks actual downloaded files, including full-journal scope and literal text. These run with `npm run test:firebase:all`; the normal configured build runs landing/configuration checks and skips emulator-only scenarios.
 
 Every new user navigation, click, fill, selection and reload must be followed by `TestStepHelper.action` (or a `step` immediately after the action for popups/downloads). Include a meaningful state assertion before comparing the screenshot. Do not combine several UI actions into one undocumented jump. The shared sign-in helper captures the Auth emulator popup and each field separately. Fault injection and backend fixture setup are test setup, not user actions.
 
-Scenarios run serially to isolate the shared Auth emulator account chooser. The test wrapper starts emulator JVM wall clocks at `2026-10-01 04:31:07 UTC` using the Nix-pinned libfaketime; time advances normally from that starting point and monotonic timers are untouched. This makes server-recorded dates repeatable while retaining real transaction timestamps and Security Rules checks. The production app, browser and normal interactive emulators do not use this clock override. Run baseline updates through the same wrapper as CI.
+Scenarios run serially to isolate the shared Auth emulator account chooser. The test wrapper freezes emulator JVM wall clocks at `2026-10-01 04:31:07 UTC` using the Nix-pinned libfaketime; monotonic timers keep running. An advancing wall clock made displayed minutes depend on suite duration. Server timestamps and Security Rules still run through the real emulator transaction path. Browser `Date` is fixed to the same instant before journal navigation, including the second device, while browser timers continue normally. Historical fixtures seed raw events with explicit instants through the test SDK; projections are always built by replay. The production app and normal interactive emulators do not use clock overrides. Run baseline updates through the same wrapper as CI.
 
 All rendered content, including dates, is compared without masks or screenshot-only styles. The journal scenario additionally checks the date text against the recorded timestamp and verifies the fixture date was used. Generated READMEs put each screenshot above that action's checks.

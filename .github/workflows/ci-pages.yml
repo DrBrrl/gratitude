@@ -30,6 +30,7 @@ jobs:
       - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
       - run: nix develop -c npm ci
       - run: nix develop -c npm run check
+      - run: nix develop -c npm run test:unit
       - run: nix develop -c npm run test:deployment
       - name: Configure public Firebase app
         env:

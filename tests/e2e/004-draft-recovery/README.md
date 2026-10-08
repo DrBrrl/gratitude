@@ -2,7 +2,7 @@
 
 # Protect unfinished writing
 
-Draft actions are persisted to this device independently of the confirmed cloud journal. Every interaction is captured. Saving uses a stable action ID to recover safely across interrupted acknowledgements.
+Daily and historical editor drafts persist independently. Navigation returns to its origin, Today keeps its colour, saving continues one daily entry, and discarding an edit preserves both the saved reflection and other drafts. Every interaction is captured.
 
 Viewport: mobile-chromium.
 
@@ -57,48 +57,129 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The private journal is synchronized
+- [x] The private journal is synchronized and Today is ready
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Begin an unfinished reflection
+## Open Journal
 
-![Begin an unfinished reflection](./screenshots/006-type-mobile-chromium.png)
+![Open Journal](./screenshots/006-history-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Visit the journal without saving an entry
+## Open Today
 
-![Visit the journal without saving an entry](./screenshots/007-journal-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Return to the unfinished draft
-
-![Return to the unfinished draft](./screenshots/008-today-mobile-chromium.png)
+![Open Today](./screenshots/007-today-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Reload the application
+## Open the reflection editor
 
-![Reload the application](./screenshots/009-reload-mobile-chromium.png)
+![Open the reflection editor](./screenshots/008-open-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Ask to discard the draft
+## Begin today’s unfinished reflection
 
-![Ask to discard the draft](./screenshots/010-ask-discard-mobile-chromium.png)
+![Begin today’s unfinished reflection](./screenshots/009-type-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to Today without losing the draft
+
+![Return to Today without losing the draft](./screenshots/010-back-today-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Journal
+
+![Open Journal](./screenshots/011-journal-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open yesterday’s saved entry
+
+![Open yesterday’s saved entry](./screenshots/012-past-entry-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Edit yesterday’s reflection
+
+![Edit yesterday’s reflection](./screenshots/013-past-editor-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep a separate draft for yesterday
+
+![Keep a separate draft for yesterday](./screenshots/014-past-draft-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to Journal without losing the draft
+
+![Return to Journal without losing the draft](./screenshots/015-back-entry-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to today’s independent prompt and colour
+
+![Return to today’s independent prompt and colour](./screenshots/016-stable-today-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Reload with both drafts on this device
+
+![Reload with both drafts on this device](./screenshots/017-reload-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the reflection editor
+
+![Open the reflection editor](./screenshots/018-recover-today-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Ask to discard today’s draft
+
+![Ask to discard today’s draft](./screenshots/019-ask-discard-mobile-chromium.png)
 
 **Verifications:**
 
@@ -107,34 +188,43 @@ Viewport: mobile-chromium.
 
 ## Keep writing instead
 
-![Keep writing instead](./screenshots/011-keep-mobile-chromium.png)
+![Keep writing instead](./screenshots/020-keep-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Save the recovered draft as one reflection
+## Save the recovered draft
 
-![Save the recovered draft as one reflection](./screenshots/012-save-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Reload after saving
-
-![Reload after saving](./screenshots/013-empty-after-reload-mobile-chromium.png)
+![Save the recovered draft](./screenshots/021-save-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Start another draft
+## Return to the same daily reflection
 
-![Start another draft](./screenshots/014-another-mobile-chromium.png)
+![Return to the same daily reflection](./screenshots/022-done-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the reflection editor
+
+![Open the reflection editor](./screenshots/023-continue-saved-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Make an edit that will be discarded
+
+![Make an edit that will be discarded](./screenshots/024-another-mobile-chromium.png)
 
 **Verifications:**
 
@@ -143,25 +233,70 @@ Viewport: mobile-chromium.
 
 ## Open discard confirmation
 
-![Open discard confirmation](./screenshots/015-discard-again-mobile-chromium.png)
+![Open discard confirmation](./screenshots/025-discard-again-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Confirm permanent draft removal
+## Discard the edit while keeping the saved reflection
 
-![Confirm permanent draft removal](./screenshots/016-confirm-discard-mobile-chromium.png)
+![Discard the edit while keeping the saved reflection](./screenshots/026-confirm-discard-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Reload to verify the draft stays discarded
+## Open Journal
 
-![Reload to verify the draft stays discarded](./screenshots/017-verify-discard-mobile-chromium.png)
+![Open Journal](./screenshots/027-past-again-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open yesterday’s reflection again
+
+![Open yesterday’s reflection again](./screenshots/028-past-open-again-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Recover yesterday’s independent draft
+
+![Recover yesterday’s independent draft](./screenshots/029-past-recovered-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to Journal without losing the draft
+
+![Return to Journal without losing the draft](./screenshots/030-leave-past-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Reload to verify today’s edit stays discarded
+
+![Reload to verify today’s edit stays discarded](./screenshots/031-verify-discard-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the reflection editor
+
+![Open the reflection editor](./screenshots/032-verify-saved-mobile-chromium.png)
 
 **Verifications:**
 

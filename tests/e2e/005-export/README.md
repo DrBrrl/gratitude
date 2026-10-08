@@ -57,48 +57,12 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The private journal is synchronized
+- [x] The private journal is synchronized and Today is ready
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Write a reflection
+## Open Journal
 
-![Write a reflection](./screenshots/006-first-type-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Save the reflection to the journal
-
-![Save the reflection to the journal](./screenshots/007-first-save-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open Today for another reflection
-
-![Open Today for another reflection](./screenshots/008-today-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Write a reflection
-
-![Write a reflection](./screenshots/009-second-type-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Save the reflection to the journal
-
-![Save the reflection to the journal](./screenshots/010-second-save-mobile-chromium.png)
+![Open Journal](./screenshots/006-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -107,16 +71,25 @@ Viewport: mobile-chromium.
 
 ## Filter the visible journal to one entry
 
-![Filter the visible journal to one entry](./screenshots/011-filter-mobile-chromium.png)
+![Filter the visible journal to one entry](./screenshots/007-filter-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Return to Today
+## Open Today
 
-![Return to Today](./screenshots/012-draft-tab-mobile-chromium.png)
+![Open Today](./screenshots/008-draft-tab-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the reflection editor
+
+![Open the reflection editor](./screenshots/009-open-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -125,7 +98,25 @@ Viewport: mobile-chromium.
 
 ## Leave an unfinished draft
 
-![Leave an unfinished draft](./screenshots/013-draft-mobile-chromium.png)
+![Leave an unfinished draft](./screenshots/010-draft-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to Today without losing the draft
+
+![Return to Today without losing the draft](./screenshots/011-leave-draft-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Settings
+
+![Open Settings](./screenshots/012-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -134,7 +125,16 @@ Viewport: mobile-chromium.
 
 ## Open export settings
 
-![Open export settings](./screenshots/014-settings-mobile-chromium.png)
+![Open export settings](./screenshots/013-export-settings-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Prepare a Markdown journal
+
+![Prepare a Markdown journal](./screenshots/014-prepare-markdown-mobile-chromium.png)
 
 **Verifications:**
 
@@ -147,21 +147,39 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The downloaded Markdown uses date headings and inline Prompt/Reflection labels, preserves both saved entries, and excludes system metadata and drafts
+- [x] Markdown contains both saved entries in the requested format, without system metadata or unfinished drafts
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Select JSON export
+
+![Select JSON export](./screenshots/016-select-json-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Prepare a JSON archive
+
+![Prepare a JSON archive](./screenshots/017-prepare-json-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Download the same journal as JSON
 
-![Download the same journal as JSON](./screenshots/016-json-mobile-chromium.png)
+![Download the same journal as JSON](./screenshots/018-json-mobile-chromium.png)
 
 **Verifications:**
 
-- [x] JSON preserves UTC instants; Markdown headings show those same instants in the browser’s Australia/Hobart local time
+- [x] JSON keeps UTC instants; Markdown headings use Australia/Hobart local time
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Disconnect before another export
 
-![Disconnect before another export](./screenshots/017-offline-mobile-chromium.png)
+![Disconnect before another export](./screenshots/019-offline-mobile-chromium.png)
 
 **Verifications:**
 
@@ -170,7 +188,7 @@ Viewport: mobile-chromium.
 
 ## Request a complete export while offline
 
-![Request a complete export while offline](./screenshots/018-offline-export-mobile-chromium.png)
+![Request a complete export while offline](./screenshots/020-offline-export-mobile-chromium.png)
 
 **Verifications:**
 
