@@ -547,7 +547,7 @@
         <h1>Your account</h1><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
       {/if}
     {/if}
-    {#if view.photoResultsPending?.length}<section class="glass"><p>An image summary arrived and is saved on this device.</p><button class="outline" onclick={async () => { try { for (const id of view.photoResultsPending ?? []) await repository?.syncPhotoResult(id); } catch { error = 'Could not sync image summaries. Reconnect and try again.'; } }}>Sync received summaries</button></section>{/if}
+    {#if view.photoResultsPending?.length}<section class="glass photo-recovery"><p>An image summary arrived and is saved on this device.</p><button class="outline" onclick={async () => { try { for (const id of view.photoResultsPending ?? []) await repository?.syncPhotoResult(id); } catch { error = 'Could not sync image summaries. Reconnect and try again.'; } }}>Sync received summaries</button></section>{/if}
     {#if view.photoCleanupPending}<section class="glass"><p>Photo cleanup needs a connection to finish.</p><button class="outline" onclick={() => repository?.retryPhotoCleanup().catch(() => error = 'File deletion failed. Reconnect and retry.')}>Retry photo cleanup</button></section>{/if}
     {#if aiMessage}<p class="ai-message hint" role="status">{aiMessage}</p>{/if}
     {#if view.pending}<section class="glass pending"><h2>A reflection is waiting to sync</h2><p class="entry-text"><ReflectionText text={view.pending.payload.text} /></p><button class="primary" onclick={() => repository?.retry()} disabled={busy}>Retry sync</button><button class="text-button" onclick={recoverPending}>Return text to editor</button></section>{/if}
@@ -585,6 +585,7 @@
   .today-heading { margin: 0 0 14px; font: 700 2.15rem/1.15 Arial, Helvetica, sans-serif; letter-spacing: .015em; text-align: center; color: #c6c8ce; }
   .glass { background: linear-gradient(130deg, #55585b52, #191d1fc9 60%, #55514b57); border: 1px solid #c2c7ca65; border-radius: 16px; box-shadow: inset 0 1px 0 #ffffff15, 0 8px 24px #00000020; -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
   section.glass { padding: 22px; margin: 24px 0; }
+  .photo-recovery p { line-height: 1.5; }
   .tinted { border: 1px solid color-mix(in srgb, var(--entry-colour) 86%, white); border-radius: 17px; background: linear-gradient(125deg, color-mix(in srgb, var(--entry-colour) 28%, #0e1016) 0%, color-mix(in srgb, var(--entry-colour) 14%, #090d14) 65%, color-mix(in srgb, var(--entry-colour) 24%, #0c1017) 100%); box-shadow: inset 0 0 24px color-mix(in srgb, var(--entry-colour) 22%, transparent), inset 0 1px 0 #ffffff25, 0 0 12px color-mix(in srgb, var(--entry-colour) 12%, transparent); }
   .daily-prompt { padding: 20px; margin: 0 0 22px; display: flex; flex-direction: column; gap: 12px; }
   .badge { align-self: flex-start; color: var(--yellow); background: #7962229c; box-shadow: inset 0 1px 0 #e4c87025; border-radius: 30px; padding: 8px 13px; font-size: .85rem; }
