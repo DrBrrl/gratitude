@@ -10,7 +10,7 @@ service cloud.firestore {
       function root() { return /databases/$(database)/documents/users/$(uid)/streams/$(generation); }
       function eventPath(id) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/events/$(id); }
       function pointerPath(id) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/entries/$(id); }
-      function nextSequence() { return exists(root()) ? get(root()).data.sequence + 1 : 1; }
+      function nextSequence() { let head = get(root()); return head == null ? 1 : head.data.sequence + 1; }
       function nextRevision(entryId) {
         return exists(pointerPath(entryId))
           ? get(eventPath(get(pointerPath(entryId)).data.lastEventId)).data.payload.expectedRevision + 1 : 0;
@@ -31,9 +31,9 @@ service cloud.firestore {
       function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && get(eventPath(id)).data.type == 'PromptResponseReceived'); }
       function unchangedEntryDate(e) {
         let previous = exists(pointerPath(e.payload.entryId)) ? get(eventPath(get(pointerPath(e.payload.entryId)).data.lastEventId)).data : e;
-        return e.schemaVersion == 3
-          ? previous.schemaVersion == 3 && e.payload.entryAt == previous.payload.entryAt
-          : previous.schemaVersion != 3;
+        return e.schemaVersion in [3, 4]
+          ? e.payload.entryAt == previous.payload.get('entryAt', null)
+          : previous.payload.get('entryAt', null) == null;
       }
       function validReflection(e) {
         let p = e.payload;
@@ -41,10 +41,13 @@ service cloud.firestore {
           && ((e.schemaVersion == 1 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'starterId']) && p.starterId == 'small-moment-v1')
             || (e.schemaVersion == 2 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId']) && knownPrompt(p.promptId))
             || (e.schemaVersion == 3 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt'])
-              && knownPrompt(p.promptId) && p.entryAt is timestamp && p.entryAt <= request.time))
+              && knownPrompt(p.promptId) && p.entryAt is timestamp && p.entryAt <= request.time)
+            || (e.schemaVersion == 4 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot'])
+              && knownPrompt(p.promptId) && (p.entryAt == null || p.entryAt is timestamp && p.entryAt <= request.time)
+              && (p.photoSlot == null || p.photoSlot is int && p.photoSlot >= 0 && p.photoSlot < 4)))
           && unchangedEntryDate(e)
-          && validId(p.entryId) && text(p.text, 10000) && p.text.size() > 0
-          && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+          && validId(p.entryId) && text(p.text, 10000)
+          && (p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*') || e.schemaVersion == 4 && p.photoSlot is int && activePhoto(p.entryId, p.photoSlot))
           && p.expectedRevision is int && p.expectedRevision == nextRevision(p.entryId)
           && (!exists(pointerPath(p.entryId)) || promptId(e) == promptId(get(eventPath(get(pointerPath(p.entryId)).data.lastEventId)).data))
           && getAfter(pointerPath(p.entryId)).data.lastEventId == e.eventId;
@@ -106,6 +109,28 @@ service cloud.firestore {
             || (e.type == 'StarterPromptChosen' && p.keys().hasOnly(['previousEventId', 'day', 'starterId']) && validDay(p.day) && p.starterId == 'small-moment-v1')
           );
       }
+
+      function photoPath(entryId, slot) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/photos/$(entryId + '_' + string(slot)); }
+      function photoBefore(entryId, slot) { let pointer = get(photoPath(entryId, slot)); return pointer == null ? null : get(eventPath(pointer.data.lastEventId)).data; }
+      function activePhoto(entryId, slot) { let event = photoBefore(entryId, slot); return event != null && event.type != 'PhotoRemoved'; }
+      function otherPhoto(entryId, slot) { return (slot != 0 && activePhoto(entryId, 0)) || (slot != 1 && activePhoto(entryId, 1)) || (slot != 2 && activePhoto(entryId, 2)) || (slot != 3 && activePhoto(entryId, 3)); }
+      function validPhoto(e) {
+        let p = e.payload;
+        let old = photoBefore(p.entryId, p.slot);
+        let extras = e.type == 'PhotoSummaryEdited' ? ['text'] : e.type == 'PhotoSummaryResponseReceived' ? ['text', 'model', 'finishReason'] : e.type == 'PhotoSummaryFailed' ? ['reason'] : [];
+        return e.schemaVersion == 1 && validId(p.entryId) && validId(p.photoId) && p.slot is int && p.slot >= 0 && p.slot < 4
+          && p.keys().hasOnly(['entryId', 'slot', 'photoId', 'previousEventId'].concat(extras))
+          && p.previousEventId == (old == null ? null : old.eventId)
+          && getAfter(photoPath(p.entryId, p.slot)).data.lastEventId == e.eventId
+          && (e.type == 'PhotoAttached' ? old == null || old.type == 'PhotoRemoved'
+            : old != null && old.type != 'PhotoRemoved' && p.photoId == old.payload.photoId)
+          && (e.type == 'PhotoAttached' || e.type == 'PhotoSummaryRequested'
+            || (e.type == 'PhotoRemoved' && (!exists(pointerPath(p.entryId)) || get(eventPath(get(pointerPath(p.entryId)).data.lastEventId)).data.payload.text.matches('[\\s\\S]*[^\\s][\\s\\S]*') || otherPhoto(p.entryId, p.slot)))
+            || (e.type == 'PhotoSummaryEdited' && text(p.text, 1000))
+            || (e.type == 'PhotoSummaryResponseReceived' && old.type == 'PhotoSummaryRequested' && e.eventId == p.previousEventId + '_response'
+              && text(p.text, 1000) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*') && text(p.model, 100) && p.model.size() > 0 && p.finishReason == 'STOP')
+            || (e.type == 'PhotoSummaryFailed' && old.type == 'PhotoSummaryRequested' && e.eventId == p.previousEventId + '_failure' && p.reason in ['unavailable', 'blocked', 'invalid-response']));
+      }
       match /events/{eventId} {
         allow read: if owns(uid);
         allow create: if owns(uid) && generation == 'v1' && validId(eventId)
@@ -113,7 +138,7 @@ service cloud.firestore {
           && request.resource.data.eventId == eventId && request.resource.data.recordedAt == request.time
           && request.resource.data.sequence == nextSequence()
           && getAfter(root()).data.sequence == request.resource.data.sequence && getAfter(root()).data.lastEventId == eventId
-          && (request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : validAI(request.resource.data));
+          && (request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
         allow update, delete: if false;
       }
       match /ai/{id} {
@@ -121,7 +146,16 @@ service cloud.firestore {
         allow create, update: if owns(uid) && generation == 'v1' && id == 'control'
           && request.resource.data.keys().hasOnly(['lastEventId', 'choicesId', 'requestId'])
           && validId(request.resource.data.lastEventId) && !exists(eventPath(request.resource.data.lastEventId))
-          && getAfter(eventPath(request.resource.data.lastEventId)).data.type != 'ReflectionWritten';
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.type in ['AIChoicesConfirmed', 'PromptRequested', 'PromptResponseReceived', 'AIRequestFailed', 'PromptFeedbackSubmitted', 'StarterPromptChosen'];
+        allow delete: if false;
+      }
+      match /photos/{photoKey} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && generation == 'v1'
+          && request.resource.data.keys().hasOnly(['lastEventId']) && validId(request.resource.data.lastEventId)
+          && !exists(eventPath(request.resource.data.lastEventId))
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.type.matches('Photo.*')
+          && photoKey == getAfter(eventPath(request.resource.data.lastEventId)).data.payload.entryId + '_' + string(getAfter(eventPath(request.resource.data.lastEventId)).data.payload.slot);
         allow delete: if false;
       }
       match /entries/{entryId} {

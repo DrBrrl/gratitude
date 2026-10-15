@@ -1,6 +1,6 @@
 # Firebase setup record
 
-The journal uses Firebase Authentication and direct Firestore browser transactions protected by Security Rules. There is no Cloud Functions dependency or billing-link prerequisite for this foundation. AI prompts use the managed Firebase AI Logic gateway; photo features remain future work.
+The journal uses Firebase Authentication and direct Firestore browser transactions protected by Security Rules. There is no Cloud Functions dependency or billing-link prerequisite for this foundation. AI prompts use the managed Firebase AI Logic gateway; private photo attachments use Cloud Storage and the same managed gateway for recorded image summaries.
 
 ## Provisioned resources
 
@@ -66,7 +66,7 @@ The dated-entry increment adds `ReflectionWritten` schema 3. Its user-selected `
 
 The optional main-only **Deploy Firebase** workflow now deploys only Firestore rules/indexes after emulator tests. It requires `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_DEPLOY_SERVICE_ACCOUNT`, which are not yet provisioned; this does not block the application. Current deployments use the authenticated CLI. There are no Functions runtime resources, Node 22 dependency tree or Secret Manager bindings to maintain.
 
-Storage access remains denied; no photo bucket is needed by the foundation. Storage provisioning, retention and photo costs belong to their feature increment. GitHub Pages previews share an origin with production: separate Firebase projects and namespaced local caches are not isolation against hostile scripts on that origin.
+The photo increment provisions separate private Sydney Storage buckets for preview and production; see the setup record below. GitHub Pages previews share an origin with production: separate Firebase projects and namespaced local caches are not isolation against hostile scripts on that origin.
 
 ## AI deployment and privacy
 
@@ -81,3 +81,13 @@ Firebase JS 12.19 maps Gemini responses without `modelVersion`. The application 
 ### Verification for the AI increment
 
 The updated Firestore rules/indexes were deployed to both projects on 2026-10-08 after emulator verification. App Check enforcement, domain registration, Auth requirement and reduced quotas were read back. Administrative-token generation attempts are rejected by the auth-enforced gateway; they are not evidence of a successful signed-in user request. Temporary test identities/debug tokens were removed. A live browser generation check with Google sign-in remains for PR review; the earlier pre-enforcement fictional smoke test is historical evidence only. CI does not use live accounts or inference.
+
+## Photo storage and summaries
+
+Run `nix develop -c node scripts/configure_storage.mjs preview` (and `production`) with the administrative Firebase login. It enables the Storage APIs, provisions the default `{projectId}.firebasestorage.app` bucket in `australia-southeast1` if absent, configures GET CORS for Pages/local development, and checks for public IAM grants. Existing billing linkage is used; this script does not link billing or add public access. [Firebase default bucket API](https://firebase.google.com/docs/reference/rest/storage/rest/v1alpha/projects.defaultBucket/create), [authenticated browser file downloads](https://firebase.google.com/docs/storage/web/download-files#download_data_directly_from_the_sdk).
+
+The app derives the default bucket name from its configured project ID. No secret or extra user API key is needed. `storage.rules` restricts object access to the same Google-authenticated owner under `users/{uid}/v1/{photoId}`, permits creation only when the object does not exist, accepts JPEG up to 10 MB, and denies overwrites. The browser strips metadata by re-encoding before upload; Rules enforce type/size/ownership, not semantic image contents. The gateway’s existing Auth, App Check and request quota also apply to photo summaries. [Gemini inline image input](https://firebase.google.com/docs/ai-logic/analyze-images?api=dev).
+
+Storage and updated Firestore Rules must be deployed with `nix develop -c npx firebase deploy --only firestore,storage --project <projectId>` before the frontend writes photo events. Older clients cannot understand those new events and must refresh to this app version. PR #9’s backfill preview remains unchanged; photo testing should use the attachment PR’s preview. Preview accounts share the preview backend across PRs.
+
+On 2026-10-15 both `{projectId}.firebasestorage.app` buckets were provisioned and read back in `AUSTRALIA-SOUTHEAST1`, with no public bucket IAM grants. The compatible Firestore Rules/indexes and private Storage Rules were successfully deployed to both projects before frontend publication. Emulator coverage validates private reads, denied unauthenticated/cross-user access, immutable upload retries, MIME/size limits and photo event consistency. Live Google-signed-in Gemini image processing remains a review check; automated provider responses are fictional.
