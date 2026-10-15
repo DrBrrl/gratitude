@@ -373,3 +373,19 @@ After the owner reported enabling the paid tier and requested the configuration 
 Paid deployment mode makes personalization available; it does not opt users into AI prompts, journal sharing or feedback sharing. Existing consent events still control those choices. Generic mode remains supported for deliberately configured fallback environments, and its walkthrough now describes that role rather than calling it the live default. Production receives this configuration through the normal main deployment after merge; the PR preview receives it through the preview workflow. Billing linkage is verified, but a real Google-signed-in Gemini request remains a separate live review check.
 
 Validation: Svelte checks passed with zero errors/warnings, all ten unit tests passed, and configuration export was checked for both deployment targets. The explicit paid-mode prompt walkthrough and optional generic-mode walkthrough each passed on mobile and desktop against the existing full-page baselines with zero differing pixels. Generated generic-mode README descriptions were updated by the test; no PNG baseline changed.
+
+## 2026-10-08 — Alternate journal import investigation and planning review
+
+Confirmed by in-memory inspection of the supplied ZIP: 686 uniquely identified entries spanning 2024-11-28 to 2026-10-07, five matching JPEG attachments, one photo-only entry, three null prompts, 43 source colours and seven extra same-day entries. Numeric and offset-bearing string dates agree for all creation/update fields. No private reflection text or photos were copied into project records or fixtures. The original archive remains untracked in the original worktree.
+
+The current event contract and Security Rules require server-time creation, the fixed starter prompt and nonblank reflection text. Existing browsing/export reverse event insertion order. Therefore faithful historical import requires a separate imported event contract, independent historical timestamps, chronological presentation, metadata-preserving edits/exports, and cache invalidation. A direct reuse of normal save would lose dates/prompts and reject the photo-only entry.
+
+`IMPORT_PLAN.md` proposes a local dry run, authenticated explicit confirmation, stable source-ID/digest deduplication, per-record atomic resumable appends and staged acceptance gates. Attachment storage is not currently implemented; full photo support versus explicitly limited import remains a review decision. These are proposals, not implemented behavior.
+
+Planning-task retrospective: the prompt requested a plan on an isolated branch/worktree, not a production migration. Creating `gratitude-import` from the current reviewed UI preserved that baseline and left the private archive in place. Inspecting aggregate source structure before proposing a converter exposed the photo-only and timestamp constraints early. The review artifact documents these decisions and implementation gates; no import or application change has been performed.
+
+## 2026-10-15 — Import planning prerequisites revised
+
+The user requested PR #7 target main directly and specified that photo support will precede this design. The import plan now treats the completed photo capability as a prerequisite, reuses its contracts, and requires all five photos plus the photo-only entry to survive migration and export. The earlier limited-mode proposal is superseded; this assumption does not claim photo support is implemented today. Recheck baseline event constraints after it lands.
+
+Follow-up retrospective: explicit prerequisite sequencing removes the attachment-policy decision from this import review and avoids designing a second photo subsystem. Documentation validation uses diff checks; application behavior is unchanged.
