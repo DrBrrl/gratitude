@@ -70,6 +70,8 @@ Saved user actions are appended in a browser transaction. Security Rules enforce
 
 ## AI prompts
 
+**Already have a Gemini API key?** This integration uses Firebase-managed authorization and needs no supplied Gemini key. See [where keys belong and how to enable paid personalization](FIREBASE_SETUP.md#where-to-put-a-gemini-api-key).
+
 Open **Settings → AI settings**, enable AI prompts and save your choices. On Today, choose **Find me a prompt**. You can request another before writing, use the starter, and leave a short note under **Why this prompt? → Give prompt feedback**. A draft and a saved reflection retain the question they started with.
 
 Gemini results are immutable events: their exact visible text, reported model version and completion reason are stored against the initiating request. Reopening, syncing and rebuilding never call Gemini. An interrupted request needs an explicit retry; a received response waiting to sync is stored on this device and can be retried without inference. Changing sharing choices cancels pending requests across tabs/devices. Calls have a 30-second timeout and no automatic inference retries.

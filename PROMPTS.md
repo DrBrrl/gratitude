@@ -545,3 +545,15 @@ Okay! I have three little changes. Change 1: I would like the menu bar on the bo
 ```text
 We just merged pr6 and are up to the AI integration on the implementation plan. Start that on a new branch and put up a PR please!
 ```
+
+## 2026-10-15 — Where to configure the API key
+
+```text
+we have an API key for you vbut I don't see dierctions on where to put it
+```
+
+## 2026-10-15 — API key's Google Cloud project (clarification reply)
+
+```text
+projects/122994614403
+```
