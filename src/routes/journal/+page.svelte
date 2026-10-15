@@ -4,7 +4,7 @@
   import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
   import { createFirebaseClient, googleSignIn, type FirebaseClient } from '$lib/firebase/client';
   import { JournalRepository, type JournalView, type JournalStore } from '$lib/firebase/repository';
-  import { emptyProjection, STARTER_ID, STARTER_PROMPT, promptId, type AIChoices, type Entry, type Action } from '$lib/domain';
+  import { entryPhotos, emptyProjection, STARTER_ID, STARTER_PROMPT, promptId, type AIChoices, type Entry, type Action } from '$lib/domain';
 
   import { aiAvailable, personalContextAvailable, geminiGenerator } from '$lib/ai/gemini';
 
@@ -31,12 +31,13 @@
       if (session === reviewSession) await loadDrafts(opened);
     } catch { initialized = true; error = 'Could not open the local UI review fixture.'; }
   }
-  let client: FirebaseClient | null = null;
-  let repository: JournalStore | null = null;
+  let client = $state.raw<FirebaseClient | null>(null);
+  let repository = $state.raw<JournalStore | null>(null);
   let user = $state<Pick<User, 'uid' | 'email'> | null>(null);
   let configured = $state(false);
   let initialized = $state(false);
   let busy = $state(false);
+  let photoBusy = $state(false);
   let error = $state('');
   let text = $state('');
   let editing = $state<Entry | null>(null);
@@ -64,7 +65,7 @@
   let selectedId = $state<string | null>(null);
   let journalScroll = 0;
   const selected = $derived(view.state.entries.find((entry) => entry.id === selectedId));
-  const results = $derived(searchEntries(view.state.entries, query));
+  const results = $derived(searchEntries(view.state.entries, query, Object.values(view.state.photos)));
   let currentInstant = $state(new Date());
   const today = $derived(localDay(currentInstant));
   let todayDraft = $state<Action | null>(null);
@@ -83,7 +84,7 @@
   const entryDateError = $derived(choosingDate ? !chosenEntryAt(editorDateTime) ? 'Choose a valid entry date and time.'
     : new Date(editorEntryAt) > currentInstant ? 'Choose a date and time that is now or earlier.' : '' : '');
   const daily = $derived(todayReflection(view.state.entries, today));
-  const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft?.payload.text.trim());
+  const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft && (!!todayDraft.payload.text.trim() || entryPhotos(view.state, todayDraft.payload.entryId).length > 0));
   const todayDraftEntry = $derived(hasTodayDraft ? view.state.entries.find(entry => entry.id === todayDraft?.payload.entryId) : undefined);
   const todayColour = $derived(colours[hasTodayDraft ? todayDraftEntry?.colour ?? view.state.entries.length % colours.length : daily.colour]);
   let editorColour = $state(colours[0]);
@@ -176,16 +177,19 @@
     window.addEventListener('focus', updateDay);
     return () => { clearInterval(timer); window.removeEventListener('focus', updateDay); };
   });
-  import { exportJournal } from '$lib/export';
+  import { exportArchive } from '$lib/export';
+  import { readPhoto } from '$lib/photos';
   let exportStatus = $state('');
   let exporting = $state(false);
-  let preparedFile = $state<ReturnType<typeof exportJournal> | null>(null);
+  let preparedFile = $state<Awaited<ReturnType<typeof exportArchive>> | null>(null);
   import { colours, searchEntries, localDay, localDateTime, entryTimestamp, todayReflection } from '$lib/journal';
   import HighlightedText from '$lib/components/HighlightedText.svelte';
   import ReflectionText from '$lib/components/ReflectionText.svelte';
   import ReflectionEditor from '$lib/components/ReflectionEditor.svelte';
   import ReflectionPreview from '$lib/components/ReflectionPreview.svelte';
   let expandedEntries = $state<Set<string>>(new Set());
+  import PhotoPanel from '$lib/components/PhotoPanel.svelte';
+  import PhotoImage from '$lib/components/PhotoImage.svelte';
   import Icon from '$lib/components/Icon.svelte';
   let writing = $state(false);
   let settingsPage = $state<'menu' | 'ai' | 'export' | 'privacy' | 'account'>('menu');
@@ -225,8 +229,8 @@
       editorPromptId = stored ? promptId(stored) : original?.promptId ?? currentPromptId;
       editorColour = original ? colours[original.colour] : key === newEntryKey ? colours[view.state.entries.length % colours.length] : todayColour;
       currentInstant = new Date();
-      editorDateTime = localDateTime(stored?.schemaVersion === 3 ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
-      editorEntryAt = stored?.schemaVersion === 3 ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant.toISOString();
+      editorDateTime = localDateTime((stored?.schemaVersion === 3 || stored?.schemaVersion === 4) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
+      editorEntryAt = (stored?.schemaVersion === 3 || stored?.schemaVersion === 4) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant.toISOString();
       text = stored?.payload.text ?? original?.text ?? '';
       draftStatus = stored ? 'Draft saved on this device' : '';
       draftWrite++; tab = 'today'; writing = true; savedId = null; selectedId = null;
@@ -246,12 +250,17 @@
   async function openEntry(entry: Entry) { journalScroll = window.scrollY; selectedId = entry.id; await tick(); document.getElementById('entry-heading')?.focus(); window.scrollTo(0, 0); }
   async function closeEntry() { const id = selectedId; selectedId = null; await tick(); document.getElementById(`view-${id}`)?.focus({ preventScroll: true }); window.scrollTo(0, journalScroll); }
 
+  async function ensurePhotoEntry() {
+    if (!draft) await persistDraft();
+    if (!draft || !draftStatus.startsWith('Draft saved')) throw new Error('Save the draft on this device before attaching a photo.');
+    return draft.payload.entryId;
+  }
   async function persistDraft(value = text) {
     text = value;
     if (!repository || !draftRestored || !editorDraftKey) return;
     const version = ++draftWrite;
     draft = { eventId: draft?.eventId ?? crypto.randomUUID(), type: 'ReflectionWritten', schemaVersion: 1,
-      payload: { entryId: editing?.id ?? draft?.payload.entryId ?? crypto.randomUUID(), text, expectedRevision: editing?.revision ?? 0, starterId: STARTER_ID } };
+      payload: { entryId: editing?.id ?? draft?.payload.entryId ?? crypto.randomUUID(), text, expectedRevision: editing?.revision ?? draft?.payload.expectedRevision ?? 0, starterId: STARTER_ID } };
     if (editorPromptId !== STARTER_ID) draft = { eventId: draft.eventId, type: 'ReflectionWritten', schemaVersion: 2, payload: { entryId: draft.payload.entryId, text, expectedRevision: draft.payload.expectedRevision, promptId: editorPromptId } };
     if (choosingDate || editing?.entryAt) draft = { eventId: draft.eventId, type: 'ReflectionWritten', schemaVersion: 3,
       payload: { entryId: draft.payload.entryId, text, expectedRevision: draft.payload.expectedRevision, promptId: editorPromptId,
@@ -268,7 +277,12 @@
     try {
       const state = await active.exportSnapshot();
       if (repository !== active) return;
-      const file = exportJournal(state, format);
+      const exportingClient = client, owner = user?.uid;
+      const file = await exportArchive(state, format, photoId => {
+        if (!exportingClient || !owner) throw new Error('Sign in to include your photos.');
+        return readPhoto(exportingClient, owner, photoId);
+      });
+      if (repository !== active) return;
       preparedFile = file;
       exportStatus = `Export ready: ${state.entries.length} saved ${state.entries.length === 1 ? 'reflection' : 'reflections'}.`;
     } catch (cause) { if (repository === active) exportStatus = cause instanceof Error ? cause.message : 'Export failed. Please try again.'; }
@@ -276,19 +290,31 @@
   }
   function downloadPrepared() {
     if (!preparedFile) return;
-    const url = URL.createObjectURL(new Blob([preparedFile.content], { type: `${preparedFile.type};charset=utf-8` }));
+    const url = URL.createObjectURL(new Blob([preparedFile.content], { type: typeof preparedFile.content === 'string' ? `${preparedFile.type};charset=utf-8` : preparedFile.type }));
     const link = document.createElement('a'); link.href = url; link.download = preparedFile.name; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   async function discardDraft() {
+    const active = repository;
+    if (!active || busy) return;
     const wasEditing = !!editing;
+    busy = true;
     try {
-      await repository?.clearDraft(editorDraftKey);
+      if (!editing && draft) {
+        for (const photo of entryPhotos(view.state, draft.payload.entryId)) {
+          await active.removePhoto({ eventId: crypto.randomUUID(), type: 'PhotoRemoved', schemaVersion: 1,
+            payload: { entryId: photo.entryId, slot: photo.slot, photoId: photo.photoId, previousEventId: photo.lastEventId } });
+        }
+        await active.cancelStagedPhoto(draft.payload.entryId);
+      }
+      await active.clearDraft(editorDraftKey);
+      if (repository !== active) return;
       if (editorDraftKey === todayKey) todayDraft = null;
       draftWrite++; draft = null; text = ''; editing = null; discardOpen = false; draftStatus = '';
       if (wasEditing) await returnFromEditor();
     }
-    catch { error = 'Could not discard the draft. Your text is still here.'; }
+    catch { if (repository === active) error = 'Could not discard the draft. Your text is still here.'; }
+    finally { if (repository === active) busy = false; }
   }
 
   onMount(() => {
@@ -354,6 +380,13 @@
     try {
       if (!draft) await persistDraft();
       const savedEntryId = draft!.payload.entryId;
+      if (!text.trim() || draft!.schemaVersion === 4) {
+        const photo = entryPhotos(view.state, savedEntryId)[0];
+        draft = { eventId: draft!.eventId, type: 'ReflectionWritten', schemaVersion: 4, payload: {
+          entryId: savedEntryId, text, expectedRevision: draft!.payload.expectedRevision, promptId: editorPromptId,
+          entryAt: editing ? editing.entryAt ?? null : editorEntryAt, photoSlot: photo?.slot ?? null } };
+        await savingRepository.writeDraft($state.snapshot(draft), savingKey);
+      }
       await savingRepository.save($state.snapshot(draft!));
       if (repository !== savingRepository) return;
       await savingRepository.clearDraft(savingKey);
@@ -375,11 +408,11 @@
       text = pending.payload.text;
       editing = view.state.entries.find((entry) => entry.id === pending.payload.entryId) ?? null;
       editorPromptId = promptId(pending);
-      editorColour = editing ? colours[editing.colour] : pending.schemaVersion === 3 ? colours[view.state.entries.length % colours.length] : todayColour;
-      editorDraftKey = editing ? keyForEntry(editing) : pending.schemaVersion === 3 ? newEntryKey : todayKey;
-      editorDateTime = localDateTime(pending.schemaVersion === 3 ? pending.payload.entryAt : currentInstant);
-      editorEntryAt = pending.schemaVersion === 3 ? pending.payload.entryAt : chosenEntryAt(editorDateTime)!;
-      draft = null; tab = 'today'; writing = true; await persistDraft();
+      editorColour = editing ? colours[editing.colour] : (pending.schemaVersion === 3 || pending.schemaVersion === 4) && !!pending.payload.entryAt ? colours[view.state.entries.length % colours.length] : todayColour;
+      editorDraftKey = editing ? keyForEntry(editing) : (pending.schemaVersion === 3 || pending.schemaVersion === 4) && !!pending.payload.entryAt ? newEntryKey : todayKey;
+      editorDateTime = localDateTime((pending.schemaVersion === 3 || pending.schemaVersion === 4) && !!pending.payload.entryAt ? pending.payload.entryAt : currentInstant);
+      editorEntryAt = (pending.schemaVersion === 3 || pending.schemaVersion === 4) && !!pending.payload.entryAt ? pending.payload.entryAt : chosenEntryAt(editorDateTime)!;
+      draft = { ...pending, eventId: crypto.randomUUID() }; tab = 'today'; writing = true; await persistDraft();
     } catch (cause) { error = cause instanceof Error ? cause.message : 'Please try again.'; }
   }
 </script>
@@ -407,15 +440,17 @@
           <p class="writing-prompt">{editing?.prompt ?? editorPrompt}</p>
           <ReflectionEditor value={text} oninput={value => void persistDraft(value)} disabled={busy || !draftRestored} />
         </section>
+        {#if client && repository}<PhotoPanel {client} {repository} {view} uid={user.uid} entryId={draft?.payload.entryId ?? editing?.id ?? null} ensureEntry={ensurePhotoEntry} colour={editorColour} disabled={busy || !draftRestored} draft={!editing} onbusy={value => photoBusy = value} />{/if}
         <p class="hint draft-status" aria-live="polite">{draftStatus || 'Drafts stay on this device until you save.'}</p>
-        <button class="primary" onclick={save} disabled={busy || !text.trim() || !!view.pending || !!entryDateError}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Save reflection'}</button>
-        {#if text}<button class="text-button muted" onclick={() => discardOpen = true}>Discard draft</button>{/if}
+        <button class="primary" onclick={save} disabled={busy || photoBusy || !text.trim() && !entryPhotos(view.state, draft?.payload.entryId ?? editing?.id ?? '').length || !!view.pending || !!entryDateError}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Save reflection'}</button>
+        {#if text || draft}<button class="text-button muted" disabled={photoBusy} onclick={() => discardOpen = true}>Discard draft</button>{/if}
       {:else if savedEntry}
         <div class="saved-heading"><h1 class="page-heading">Reflection saved</h1><time datetime={entryTimestamp(savedEntry)}>{shortDate(entryTimestamp(savedEntry))}</time></div>
         <article class="tinted card saved-card" style:--entry-colour={colours[savedEntry.colour]}>
           <h2>Prompt</h2><p class="entry-prompt">{savedEntry.prompt}</p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={savedEntry.text} /></p>
         </article>
+        {#if client && repository}<PhotoPanel {client} {repository} {view} uid={user.uid} entryId={savedEntry.id} colour={colours[savedEntry.colour]} />{/if}
         <div class="saved-actions"><button class="primary" onclick={() => navigate('journal')}>Done</button><button class="outline" onclick={() => edit(savedEntry)}>Edit reflection</button></div>
       {:else}
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
@@ -444,6 +479,7 @@
           <time datetime={entryTimestamp(selected)}>{entryDateTime(entryTimestamp(selected))}</time>
           <h2>Prompt</h2><p class="entry-prompt"><HighlightedText text={selected.prompt} {query} /></p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={selected.text} {query} /></p>
+          {#if client && repository}<PhotoPanel {client} {repository} {view} uid={user.uid} entryId={selected.id} {query} />{/if}
           <button class="entry-action" onclick={() => edit(selected)} disabled={!!view.pending || busy}><Icon name="edit" />Edit reflection</button>
         </article>
       {:else}
@@ -457,7 +493,11 @@
           {#each results as entry (entry.id)}
             <article class="tinted card" class:expanded={expandedEntries.has(entry.id)} style:--entry-colour={colours[entry.colour]}>
               <h2>Prompt</h2><p class="entry-prompt prompt-preview"><HighlightedText text={entry.prompt} {query} /></p>
-              <h2>Reflection</h2><ReflectionPreview text={entry.text} {query} entryId={entry.id} entryAt={entryTimestamp(entry)} expanded={expandedEntries.has(entry.id)} onexpand={() => expandedEntries = new Set([...expandedEntries, entry.id])} oncollapse={() => expandedEntries = new Set([...expandedEntries].filter(id => id !== entry.id))} onopen={() => openEntry(entry)} />
+              {#if client && entryPhotos(view.state, entry.id).length}
+                <div class="card-photos">{#each entryPhotos(view.state, entry.id) as photo (photo.photoId)}<div class="card-thumbnail"><PhotoImage {client} uid={user.uid} photoId={photo.photoId} summary={photo.summary} /></div>{/each}</div>
+                {#if query && entry.text.trim()}<p class="photo-search"><HighlightedText text={entryPhotos(view.state, entry.id).map(photo => photo.summary).filter(Boolean).join(' · ')} {query} /></p>{/if}
+              {/if}
+              <h2>Reflection</h2><ReflectionPreview text={entry.text || entryPhotos(view.state, entry.id).map(photo => photo.summary).filter(Boolean).join(' · ') || 'Photo reflection'} {query} entryId={entry.id} entryAt={entryTimestamp(entry)} expanded={expandedEntries.has(entry.id)} onexpand={() => expandedEntries = new Set([...expandedEntries, entry.id])} oncollapse={() => expandedEntries = new Set([...expandedEntries].filter(id => id !== entry.id))} onopen={() => openEntry(entry)} />
             </article>
           {/each}
         </div>
@@ -475,7 +515,7 @@
         {#if uiReview}<details class="review-tools glass"><summary>UI review</summary><p class="hint">Fictional journal on this browser only.</p><button class="outline" onclick={() => resetReview?.()}>Restore sample journal</button><button class="text-button" onclick={() => resetReview?.(true)}>Show empty journal</button></details>{/if}
       {:else if settingsPage === 'ai'}
         <h1 class="page-heading">AI settings</h1>
-        <p class="hint">Ask Gemini for a gentle gratitude question. Nothing is sent until you request a prompt.</p>
+        <p class="hint">Ask Gemini for a gentle gratitude question. Prompt context is sent only when you request one.</p>
         {#if !aiAvailable || uiReview}<p class="hint">Live AI is available only on a configured Firebase site.</p>{/if}
         <section class="glass preferences">
           <div class="preference"><span>AI prompts</span><button class="switch" role="switch" aria-checked={choices.enabled} aria-label="AI prompts" onclick={() => choices.enabled = !choices.enabled} disabled={aiBusy || !aiAvailable || uiReview}><span></span></button></div>
@@ -488,7 +528,7 @@
           <p class="hint">Your saved preferences are shared when requesting a prompt. The switches optionally include up to 5 recent reflections and 20 notes of feedback. Google processes this context to generate your prompt.</p>
         {:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
-        <section class="glass"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are not available yet.</p></section>
+        <section class="glass"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose Gemini processing for each photo.</p></section>
       {:else if settingsPage === 'export'}
         <h1>Export your journal</h1>
         <fieldset class="export-choices"><legend class="sr-only">Export format</legend>
@@ -498,19 +538,21 @@
         </fieldset>
         <p class="hint export-note">All saved reflections. Unfinished drafts are excluded.</p>
         <button class="primary" onclick={() => prepareExport(exportFormat)} disabled={exporting || !!view.pending}>{exporting ? 'Preparing…' : 'Prepare export'}</button>
-        {#if preparedFile}<div class="ready glass" role="status"><span class="ready-icon"><Icon name="check" /></span>Export ready</div><button class="outline download" onclick={downloadPrepared}><Icon name="download" />Download {exportFormat === 'markdown' ? 'Markdown' : 'JSON'}</button>{:else if exportStatus}<p aria-live="polite">{exportStatus}</p>{/if}
+        {#if preparedFile}<div class="ready glass" role="status"><span class="ready-icon"><Icon name="check" /></span>Export ready</div><button class="outline download" onclick={downloadPrepared}><Icon name="download" />Download {exportFormat === 'markdown' ? 'Markdown' : 'JSON'}{preparedFile.type === 'application/zip' ? ' ZIP' : ''}</button>{:else if exportStatus}<p aria-live="polite">{exportStatus}</p>{/if}
         <p class="hint export-warning">This file contains your private reflections.</p>
       {:else if settingsPage === 'privacy'}
-        <h1>Privacy & data</h1><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device. AI sharing is controlled in AI settings and starts off disabled.</p><button class="outline" onclick={() => openSettings('export')}>Export your journal</button></section>
+        <h1>Privacy & data</h1><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device. Daily AI prompt sharing starts off disabled in AI settings. Photo summaries are a separate choice for each photo.</p><button class="outline" onclick={() => openSettings('export')}>Export your journal</button></section>
         <section class="glass"><h2>Journal recovery</h2><p class="muted">Rebuild this device’s view from your saved account history.</p><button class="outline" onclick={() => repository?.rebuild().catch(() => error = 'Could not rebuild. Please reload and try again.')} disabled={busy}>Rebuild local view</button></section>
       {:else}
         <h1>Your account</h1><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
       {/if}
     {/if}
+    {#if view.photoResultsPending?.length}<section class="glass"><p>An image summary arrived and is saved on this device.</p><button class="outline" onclick={async () => { try { for (const id of view.photoResultsPending ?? []) await repository?.syncPhotoResult(id); } catch { error = 'Could not sync image summaries. Reconnect and try again.'; } }}>Sync received summaries</button></section>{/if}
+    {#if view.photoCleanupPending}<section class="glass"><p>Photo cleanup needs a connection to finish.</p><button class="outline" onclick={() => repository?.retryPhotoCleanup().catch(() => error = 'File deletion failed. Reconnect and retry.')}>Retry photo cleanup</button></section>{/if}
     {#if aiMessage}<p class="ai-message hint" role="status">{aiMessage}</p>{/if}
     {#if view.pending}<section class="glass pending"><h2>A reflection is waiting to sync</h2><p class="entry-text"><ReflectionText text={view.pending.payload.text} /></p><button class="primary" onclick={() => repository?.retry()} disabled={busy}>Retry sync</button><button class="text-button" onclick={recoverPending}>Return text to editor</button></section>{/if}
     {#if view.status !== 'Synced'}<p class="sync-status" role="status">{view.status}</p>{/if}
-    <dialog bind:this={discardDialog} onclose={() => discardOpen = false} aria-labelledby="discard-title"><h2 id="discard-title">Discard this draft?</h2><p>Your saved reflections will remain in your journal.</p><button class="primary" onclick={() => discardOpen = false}>Keep writing</button><button class="outline" onclick={discardDraft}>Discard draft permanently</button></dialog>
+    <dialog bind:this={discardDialog} oncancel={event => { if (busy) event.preventDefault(); }} onclose={() => discardOpen = false} aria-labelledby="discard-title"><h2 id="discard-title">Discard this draft?</h2><p>Your saved reflections will remain in your journal.</p><button class="primary" onclick={() => discardOpen = false} disabled={busy}>Keep writing</button><button class="outline" onclick={discardDraft} disabled={busy}>Discard draft permanently</button></dialog>
     {#if !writing}<nav class="glass" aria-label="Journal navigation">{#each [{ id: 'today', label: 'Today' }, { id: 'journal', label: 'Journal' }, { id: 'settings', label: 'Settings' }] as item}<button aria-current={tab === item.id ? 'page' : undefined} onclick={() => navigate(item.id as typeof tab)}><Icon name={item.id} size={28} filled={tab === item.id} /><span>{item.label}</span></button>{/each}</nav>{/if}
   {/if}
   {#if error || view.error}<p role="alert">{error || view.error}</p>{/if}
@@ -521,6 +563,9 @@
   :global(*) { box-sizing: border-box; }
   main { --yellow: #ffdf48; max-width: 480px; min-height: 100svh; margin: 0 auto; padding: 40px 20px 120px; background: #080b0d3d; text-align: justify; }
   main.composing { padding-bottom: 32px; }
+  .card-photos { display: flex; gap: 8px; margin: 8px 0 12px; }
+  .card-thumbnail { width: 72px; }
+  .photo-search { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: .8rem; color: #bfc5ce; margin: 0 0 10px; }
   .new-entry { margin-bottom: 20px; }
   .additional-response { margin-top: 14px; }
   .entry-date-label { display: block; font-size: .875rem; color: #bfc5ce; margin-bottom: 8px; }

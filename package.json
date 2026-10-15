@@ -39,6 +39,7 @@
     "node": ">=24 <25"
   },
   "dependencies": {
+    "fflate": "^0.8.2",
     "firebase": "^12.19.0",
     "idb": "^8.0.3"
   }

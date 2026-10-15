@@ -21,11 +21,20 @@ export class TestStepHelper {
         await test.step(verification.description, verification.check);
       }
       await capturePage.mouse.move(0, 0);
-      await expect(capturePage).toHaveScreenshot(filename, {
-        timeout: 10_000, // Slow CI needs time for two stable full-page renders; pixel tolerance stays zero.
-        fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css',
-        maxDiffPixels: 0, threshold: 0
-      });
+      // Full-page capture has a deterministic document origin. Chromium mobile
+      // can otherwise shift its scroll offset between beyond-viewport captures.
+      // Capture all content, then restore the action's actual scroll position.
+      const scroll = await capturePage.evaluate(() => ({ x: scrollX, y: scrollY }));
+      await capturePage.evaluate(() => window.scrollTo({ left: 0, top: 0, behavior: 'instant' }));
+      try {
+        await expect(capturePage).toHaveScreenshot(filename, {
+          timeout: 10_000, // Slow CI needs time for two stable full-page renders; pixel tolerance stays zero.
+          fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css',
+          maxDiffPixels: 0, threshold: 0
+        });
+      } finally {
+        await capturePage.evaluate(({ x, y }) => window.scrollTo({ left: x, top: y, behavior: 'instant' }), scroll);
+      }
       this.steps.push({
         description,
         image: `./screenshots/${filename}`,

@@ -4,7 +4,7 @@ Gratitude's E2E tests combine functional checks, screenshot comparisons, and gen
 
 ## Screenshot comparison rule
 
-**No masking is allowed, in any circumstance. Every pixel must match: `maxDiffPixels: 0` and `threshold: 0`.** Do not add masks, crop away content, hide or replace rendered content, or use screenshot-only styles to bypass differences. Fix nondeterminism in the test inputs and clocks. Review actual rendered dates and other dynamic content in the committed screenshots.
+**No masking is allowed, in any circumstance. Every pixel must match: `maxDiffPixels: 0` and `threshold: 0`.** Do not add masks, crop away content, hide or replace rendered content, or use screenshot-only styles to bypass differences. Fix nondeterminism in the test inputs and clocks. Review actual rendered dates and other dynamic content in the committed screenshots. The helper records the current scroll position, captures the complete page from document origin (0, 0), then restores that position. This stabilizes Chromium mobile beyond-viewport capture without hiding, cropping or replacing any content. Action checks run before capture at the user’s actual scroll position.
 
 ## Run the tests
 
@@ -151,3 +151,7 @@ CI splits the original journal scenarios and new AI scenarios into separate view
 ## Backfilled and additional reflections
 
 [`010-backfill-entries`](tests/e2e/010-backfill-entries/README.md) follows a past-date draft through reload, save and edit, rejects future dates, adds two reflections for the same day, rebuilds the journal from events and checks the downloaded Markdown dates. The journal CI jobs run it alongside scenarios 001–006. All actions retain full-page zero-tolerance comparisons, with the checks beneath their images. Unit and Rules tests additionally cover timestamp encoding, concurrent devices, legacy events, immutable dates, chronological tie breaks and JSON archive version 2.
+
+## Photo attachment walkthrough
+
+`011-photo-attachments` tests both viewports against Auth, Firestore and Storage emulators with fictional Gemini responses. It follows selection and AI disclosure, oversized/unsupported rejection, reload recovery, photo-only save, AI/manual summary search, correction during an in-flight request, failure/retry, four-photo limits, removal confirmation, complete replay and real photo ZIP download contents. Each action has a full-page zero-pixel screenshot and generated checks below its image. The fixture is a deterministic synthetic yellow mug/window illustration with a fictional metadata marker; the intercepted request verifies that normalization strips the marker. It contains no private journal data. `012-photo-recovery` additionally verifies offline attachment, cancellation, received-summary outbox recovery and photo preservation during text edits/discard. CI runs these scenarios in its own `photos` suite, alongside the journal and AI suites, to keep individual jobs within their time budgets.
