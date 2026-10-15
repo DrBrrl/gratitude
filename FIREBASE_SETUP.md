@@ -4,7 +4,7 @@ The journal uses Firebase Authentication and direct Firestore browser transactio
 
 ## Provisioned resources
 
-Core resources verified on 2026-09-24; AI configuration updated on 2026-10-08:
+Core resources verified on 2026-09-24; AI provisioned on 2026-10-08; billing and paid-mode configuration verified on 2026-10-15:
 
 | Resource | Production | PR previews |
 | --- | --- | --- |
@@ -16,13 +16,13 @@ Core resources verified on 2026-09-24; AI configuration updated on 2026-10-08:
 | Firestore | `(default)`, Native/Standard, Sydney `australia-southeast1` | Same |
 | Rules/indexes | Repository configuration deployed | Repository configuration deployed |
 
-Both projects authorize their own `firebaseapp.com` and `web.app` domains, `drbrrl.github.io`, and `localhost`. The owner accepted Firebase terms, resolving the original activation 403. No billing account was linked by this work. Preview journals live in the development project and are separate from production; use test reflections there. PRs share that development project.
+Both projects authorize their own `firebaseapp.com` and `web.app` domains, `drbrrl.github.io`, and `localhost`. The owner accepted Firebase terms, resolving the original activation 403. The owner enabled billing; read-only Cloud Billing checks confirmed `billingEnabled: true` on both projects on 2026-10-15. Preview journals live in the development project and are separate from production; use test reflections there. PRs share that development project.
 
 ## Frontend configuration and deployment
 
 The Pages build runs `scripts/configure_firebase_build.py` to select preview configuration for PRs and production configuration for main. It supplies the Firebase app settings, public App Check site key and AI data mode used by the client. The emulator CI job uses only `demo-gratitude` and never publishes its build. The Firebase API keys in these files are public web configuration, not privileged credentials. Auth and Security Rules enforce data access.
 
-The private repository `GEMINI_API_KEY` is unused. It is never supplied to Pages or embedded in frontend configuration. Firebase AI Logic is provisioned in both projects for `gemini-3.6-flash`. Live sites currently use `aiDataMode: "generic"`: no journal text, guidance or feedback reaches Gemini. Exact visible responses and actual provider model versions become events; replay never runs inference.
+The private repository `GEMINI_API_KEY` is unused. It is never supplied to Pages or embedded in frontend configuration. Firebase AI Logic is provisioned in both projects for `gemini-3.6-flash`. Both deployment configurations now use `aiDataMode: "paid"`, making consent-bound personalization available after deployment. Exact visible responses and actual provider model versions become events; replay never runs inference.
 
 For local live testing, copy the values from the chosen public configuration into `.env.local` using `.env.example` as a template. Live AI also needs the local App Check setup described below. Prefer emulators for automated tests. Real Google account completion and supported mobile-browser sign-in should be checked by the owner; automated emulator tests cover sign-in, save/edit, cross-device reads, isolation and recovery.
 
@@ -36,9 +36,11 @@ For local live testing, copy the values from the chosen public configuration int
 | Public Firebase web API key | Already in `config/firebase-preview.json` and `config/firebase-production.json`; local development uses `VITE_FIREBASE_API_KEY` in ignored `.env.local`. This is a different credential. |
 | Public App Check site key | Already in those configuration files; local live AI also needs the App Check development setup below. |
 
-To try generic AI prompts in PR #8, sign in to [the preview](https://drbrrl.github.io/gratitude/pr-preview/pr-8/), open **Settings → AI settings**, enable AI prompts and save your choices, then use **Today → Find me a prompt**. No key entry is required.
+To try AI prompts in PR #8, sign in to [the preview](https://drbrrl.github.io/gratitude/pr-preview/pr-8/), open **Settings → AI settings**, enable AI prompts and save your choices, then use **Today → Find me a prompt**. No key entry is required.
 
-### Enable paid personalization
+### Paid personalization configuration
+
+Paid mode is now the default in both deployment configs and `.env.example`. The owner enabled billing, and both Firebase projects reported `billingEnabled: true` on 2026-10-15. The steps below describe the setup for another environment or a future reconfiguration; no billing changes are performed by the frontend configuration.
 
 A Gemini key belongs to a Google Cloud project. Paid access in another project does not enable it in Gratitude's projects. The current app uses `gratitude-drbrrl-dev` for previews and `gratitude-drbrrl` for production. [Google's project/key explanation](https://ai.google.dev/gemini-api/docs/api-key)
 
@@ -70,7 +72,7 @@ Run `nix develop -c node scripts/configure_ai.mjs preview` (or `production`) usi
 
 Public App Check keys allow `drbrrl.github.io` only. They do not authorize journal access. For local live AI, use a private, temporary App Check debug token following [Firebase's instructions](https://firebase.google.com/docs/ai-logic/app-check); never commit or deploy that token. Normal development and CI use emulators and intercepted fictional model responses. Neither setup nor the app accesses the private repository Gemini secret, deploys Functions or links a billing account.
 
-Gemini’s [unpaid-service terms](https://ai.google.dev/gemini-api/terms) prohibit personal/confidential input and allow product-improvement use and human review. Therefore live generation sends a fixed generic instruction only. Personalization remains gated until the relevant project has active billing and its config is deliberately changed to `aiDataMode: "paid"`. User sharing remains off by default even in paid mode. The gateway’s [5 RPM/user quota](https://firebase.google.com/docs/ai-logic/quotas) is additional to model/project quotas; it is not a daily spending cap. No billing account is linked by this setup.
+Both deployment configs select paid mode following the verified billing activation. User sharing remains off by default; saved choices determine which journal entries, feedback and preferences may inform a request. The optional `aiDataMode: "generic"` configuration sends a fixed instruction only and excludes those sources. Use that mode for unbilled environments because Gemini’s [unpaid-service terms](https://ai.google.dev/gemini-api/terms) prohibit personal/confidential input and allow product-improvement use and human review. The gateway’s [5 RPM/user quota](https://firebase.google.com/docs/ai-logic/quotas) is additional to model/project quotas; it is not a daily spending cap. No billing account is linked by this setup.
 
 Firebase JS 12.19 maps Gemini responses without `modelVersion`. The application calls the same managed gateway over HTTP and uses Firebase SDKs for Auth/App Check so events can store the provider-reported model version. The Gemini Developer API route is `/v1beta/projects/PROJECT/models/MODEL:generateContent`; it is different from the location/publisher route for Vertex. Provider failures are recorded as sanitized categories, not raw error bodies. The adapter consumes visible text only, excluding thought parts.
 

@@ -2,7 +2,7 @@
 
 # Generic AI without journal sharing
 
-This build uses the same generic data mode as the live sites, with Firebase emulators and a fictional provider response. Personal sharing controls are disabled; the outgoing model request contains no journal content.
+This build verifies the optional generic data mode using Firebase emulators and a fictional provider response. Personal sharing controls are disabled; the outgoing model request contains no journal content.
 
 Viewport: mobile-chromium.
 

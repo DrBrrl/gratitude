@@ -3,7 +3,7 @@ import { TestStepHelper } from '../helpers/test-step-helper';
 import { navigate, seedHistory, startJournal } from '../helpers/journal-session';
 import { AI_ENDPOINT, FIRST_PROMPT, respond, aiSettings, toggleAI, saveChoices } from '../helpers/gemini';
 
-test('generic live configuration never shares personal journal context', async ({ page }, info) => {
+test('generic configuration never shares personal journal context', async ({ page }, info) => {
   test.skip(process.env.E2E_AI_GENERIC !== 'true', 'Requires a generic-mode emulator build'); test.setTimeout(120_000);
   const steps = new TestStepHelper(page, info);
   const requests: string[] = [];
@@ -26,5 +26,5 @@ test('generic live configuration never shares personal journal context', async (
   await steps.action('why', 'Read the generic prompt disclosure', () => page.getByRole('button', { name: 'Why this prompt?' }).click(), async () => {
     await expect(page.locator('.explanation')).toContainText('No journal text, preferences or feedback was shared.');
   });
-  steps.generateDocs('Generic AI without journal sharing', 'This build uses the same generic data mode as the live sites, with Firebase emulators and a fictional provider response. Personal sharing controls are disabled; the outgoing model request contains no journal content.');
+  steps.generateDocs('Generic AI without journal sharing', 'This build verifies the optional generic data mode using Firebase emulators and a fictional provider response. Personal sharing controls are disabled; the outgoing model request contains no journal content.');
 });

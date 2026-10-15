@@ -16,7 +16,7 @@ The repository contains a Svelte 5 / SvelteKit application with a responsive dar
 - Receive prompts that become more relevant over time, with control over personalization.
 - Revisit past reflections in a private journal.
 
-The journal offers a bundled starter prompt and optional Gemini prompts. Live sites currently use generic instructions only; personal context stays out of Gemini on its unpaid service. See [VISION.md](VISION.md) for the project’s intended end state.
+The journal offers a bundled starter prompt and optional Gemini prompts. Preview and production builds use paid Gemini, with personalization controlled by each user’s saved sharing choices. See [VISION.md](VISION.md) for the project’s intended end state.
 
 ## Development
 
@@ -47,7 +47,7 @@ Run `nix develop -c npm run dev:ui -- --port 5173 --strictPort` and open [the lo
 
 Seven sample reflections cover all rainbow colours, short and long text, search, and an edited entry. Changes and drafts remain in a separate browser-local review store across reloads. Settings → UI review provides **Restore sample journal** and **Show empty journal**. Signing out lets you inspect the sign-in screen; its button reopens the review session. This mode exposes the currently implemented screens; live Gemini requires the Firebase preview; onboarding and photo screens still need implementation.
 
-The current interface follows the mobile mockups with a Today prompt, separate writing and saved-reflection screens, content-sized rainbow journal cards, and a Settings menu. Collapsed cards show up to three rendered reflection lines across paragraphs, with an ellipsis for interrupted sentences and separate expansion controls. Export opens a Markdown/JSON chooser with preparation and download steps. AI settings controls optional prompts, sharing choices and preferences. The live generic mode disables sharing of journal entries and feedback. Photo summaries remain planned.
+The current interface follows the mobile mockups with a Today prompt, separate writing and saved-reflection screens, content-sized rainbow journal cards, and a Settings menu. Collapsed cards show up to three rendered reflection lines across paragraphs, with an ellipsis for interrupted sentences and separate expansion controls. Export opens a Markdown/JSON chooser with preparation and download steps. AI settings controls optional prompts, sharing choices and preferences. Paid mode makes journal and feedback sharing available; both remain off until the user opts in. Photo summaries remain planned.
 
 Today uses the device’s local calendar date and its own draft. Editing another journal entry keeps a separate durable draft; it cannot change Today’s prompt, colour or continue-writing state. Once today’s reflection is saved, Today continues that same entry and retains its projected colour. Existing journals with multiple entries on the same day use the first one for Today; other entries remain independently editable.
 
@@ -76,7 +76,7 @@ Open **Settings → AI settings**, enable AI prompts and save your choices. On T
 
 Gemini results are immutable events: their exact visible text, reported model version and completion reason are stored against the initiating request. Reopening, syncing and rebuilding never call Gemini. An interrupted request needs an explicit retry; a received response waiting to sync is stored on this device and can be retried without inference. Changing sharing choices cancels pending requests across tabs/devices. Calls have a 30-second timeout and no automatic inference retries.
 
-Both live projects use generic instructions only, with App Check, Google sign-in and a 5-request/minute/user gateway quota. No journal text, preferences or feedback is sent in this mode. Gemini’s [unpaid-service terms](https://ai.google.dev/gemini-api/terms) prohibit submitting personal or confidential information. Personalization is implemented and exercised with fictional fixtures, but enabling it on a live site requires a billing-linked project and `aiDataMode: "paid"` in that site's public configuration. It then uses only approved sources: optional preferences (500 characters), up to 5 saved reflections (1,000 characters each) and 20 current feedback notes (250 characters each). Drafts, account identity and photos are never included in model context. Authentication still identifies the account to the Firebase gateway.
+Both deployment configurations select `aiDataMode: "paid"`, and billing was verified enabled for both Firebase projects on 2026-10-15. App Check, Google sign-in and a 5-request/minute/user gateway quota protect requests. AI prompts and sharing remain opt-in. Personalization uses only approved sources: optional preferences (500 characters), up to 5 saved reflections (1,000 characters each) and 20 current feedback notes (250 characters each). Drafts, account identity and photos are never included in model context. Authentication still identifies the account to the Firebase gateway.
 
 [Firebase setup](FIREBASE_SETUP.md) records deployment and live verification. The private repository Gemini key is unused and never enters the frontend. This integration needs no Cloud Functions.
 
