@@ -1,7 +1,15 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Photo upload/finalization is a later increment. Deny access until implemented.
+    function owns(uid) { return request.auth != null && request.auth.uid == uid && request.auth.token.firebase.sign_in_provider == 'google.com'; }
+    match /users/{uid}/v1/{photoId} {
+      allow read, delete: if owns(uid);
+      // Normalized JPEGs only. Immutable objects: replacement gets a fresh ID.
+      allow create: if resource == null && owns(uid) && photoId.matches('^[a-zA-Z0-9_-]{1,80}$')
+        && request.resource.size > 0 && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType == 'image/jpeg';
+      allow update: if false;
+    }
     match /{path=**} { allow read, write: if false; }
   }
 }

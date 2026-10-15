@@ -1,6 +1,6 @@
 # Gratitude MVP design
 
-This proposal defines the first usable Gratitude application, following [UX_DESIGN.md](UX_DESIGN.md). The backend is Firebase, users authenticate with Google, and Gemini supplies daily prompts and photo summaries. [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) sequences the work. The current branch implements the first Firebase foundation described below.
+This proposal defines the first usable Gratitude application, following [UX_DESIGN.md](UX_DESIGN.md). The backend is Firebase, users authenticate with Google, and Gemini supplies daily prompts and photo summaries. [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) sequences the work. The implemented increments include the Firebase foundation, journal browsing/drafts/export, dated and multiple entries, Gemini prompts, and private photo attachments with editable summaries.
 
 ## Implemented foundation in PR #4
 
@@ -8,7 +8,7 @@ The `/journal/` route implements Google sign-in, save/edit against a fixed versi
 
 This slice uses `ReflectionWritten` with entry ID, original text, expected revision and starter ID. Sequence and server timestamp are infrastructure metadata; prompt text, entry revision and rainbow position are derived. The stream head and per-entry last-event pointer are transactionally maintained append indexes, reconstructable from the event stream. Rules derive the expected revision from the prior immutable event; no entry snapshots are stored in these indexes. Missing/damaged cloud indexes require controlled repair, while local projection caches can be discarded by the user. The complete MVP event vocabulary below remains planned; preserve or explicitly migrate this first schema when extending it.
 
-No AI requests or AI events are implemented yet. There is no daily-entry reservation, autosaved draft, service worker, persistent local event cache, photo pipeline, search, export or erasure flow. Offline recovery currently means preserving a failed explicit save for retry; cold offline startup is not supported. Storage rules deny all access until the photo increment. The initial journal is a functional foundation, not the complete approved UX.
+Later increments implement autosaved device drafts, search, consistent-head exports, recorded Gemini prompts and photo summaries. Source events now include photo attachment, summary request/response/failure, user description edits and removal; see the photo contract below. Full offline cold starts, onboarding and historical erasure remain planned.
 
 ## Event-sourcing contract
 
@@ -30,11 +30,11 @@ Today, Journal, and Settings remain the three tabs; AI settings is the first Set
 | Firebase Authentication | Google sign-in; stable Firebase UID for journal ownership |
 | Cloud Firestore | Authoritative per-user event stream and atomic append indexes, protected by Security Rules |
 | Cloud Storage for Firebase | Private, metadata-stripped photo assets referenced by events |
-| Firebase AI Logic (planned) | Managed Gemini access from the client; responses recorded as events |
+| Firebase AI Logic | Managed Gemini access from the client; responses recorded as events |
 | IndexedDB | Confirmed-event cache, versioned local projection checkpoints, pending user-action outbox and photo staging |
 | Service worker | Base-path-scoped application assets for previously loaded offline use |
 
-Production uses `gratitude-drbrrl`; PR previews use `gratitude-drbrrl-dev`. Both have Google authentication and Sydney Firestore. CI explicitly selects their public SDK configuration; no Gemini secret enters the build. No Cloud Functions are required for the journal foundation. Firebase AI Logic, photo storage and their quotas/billing conditions must be assessed when those features are implemented.
+Production uses `gratitude-drbrrl`; PR previews use `gratitude-drbrrl-dev`. Both have Google authentication and Sydney Firestore. CI explicitly selects their public SDK configuration; no Gemini secret enters the build. No Cloud Functions are required for the journal foundation. Both projects use billing-linked paid Gemini and separate private Storage buckets, with App Check, Google sign-in and per-user gateway quotas. Storage and inference incur usage costs under the linked billing account.
 
 IndexedDB is namespaced by project, UID, stream generation and deployment base path. Namespacing and separate backend projects are not a browser security boundary between scripts on the shared GitHub Pages origin; use preview accounts/test data and consider separate origins before production release.
 
@@ -49,7 +49,7 @@ flowchart TD
   User[Signed-in user] --> Client[SvelteKit client and local outbox]
   Client --> Transaction[Firestore transaction and Security Rules]
   Transaction --> Stream[Private immutable event stream]
-  Client -->|Live requests only, planned| AI[Firebase AI Logic / Gemini]
+  Client -->|Live requests only| AI[Firebase AI Logic / Gemini]
   AI -->|Exact response recorded by client| Transaction
   Stream --> Projector[Pure versioned projector]
   Cache[Disposable local checkpoint] --> Projector
@@ -77,7 +77,7 @@ The active generation is repository metadata, changed during whole-journal delet
 
 Firestore rules permit a Google-authenticated user to read only their own stream. A browser transaction creates one event and advances the head and entry pointer atomically. Rules independently validate the exact action schema, ownership, next sequence, expected revision, server timestamp and all cross-document links using `getAfter`. Event updates/deletes and unrelated collection writes are denied. The client cannot bypass these checks by modifying JavaScript. [Atomic transactions and Rules](https://firebase.google.com/docs/firestore/manage-data/transactions)
 
-Storage is currently denied entirely. The photo increment needs owner-scoped rules and explicit upload/cleanup design. Firebase AI Logic will need App Check and quota controls; it is not enabled in this foundation. Future AI responses written by the client are user-owned records, not server-attested evidence of a provider response. Replay requires the recorded text, not an attestation. The current rules reject all unimplemented event types, including AI results.
+Storage uses owner-only Google-authenticated reads, create-only normalized JPEG uploads (maximum 10 MB), and owner deletions. The browser fetches authenticated bytes; permanent bearer download URLs are not created. Firestore stores no image bytes. The Firebase AI gateway uses Auth, App Check and per-user quotas. Client-written model results are user-owned records, not provider-attested evidence. Rules accept only implemented event types and validate the head, entry, AI-control or photo-slot pointer atomically.
 
 ## Events and computed state
 
@@ -92,9 +92,9 @@ A committed record carries `eventId`, `schemaVersion`, `rulesVersion`, `source` 
 | `DaySkipped`, `DayResumed`, `ReflectionWriteOpened`, `ReflectionEditOpened` | User-selected day/entry/prompt references | Navigation-independent daily state and editable draft |
 | `DraftTextChanged`, `ReflectionSaveRequested` | Literal user-entered text and target revision, or save reference | Saved entry, dirty state, word counts |
 | `PromptFeedbackSubmitted`, `PromptFeedbackRemoved` | Prompt reference and literal feedback, or feedback reference | Remembered feedback and future context eligibility |
-| `PhotoAttached`, `PhotoRemoved`, `PhotoSummaryRetryRequested` | User-selected private asset reference and summary choice, or target/request reference | Attachment relationships and pending summary status |
+| `PhotoAttached`, `PhotoRemoved`, `PhotoSummaryRequested` | User-selected private asset reference and summary choice, or target/request reference | Attachment relationships and pending summary status |
 | `PhotoSummaryResponseReceived` | Exact Gemini summary text and response metadata, photo version and request ID | Image description suggestion and summary status |
-| `PhotoDescriptionEdited`, `PhotoDescriptionCleared` | Explicit user edit/clear against a description revision | Manual description overriding AI suggestions |
+| `PhotoSummaryEdited` | Explicit user edit/clear against a description revision | Manual description overriding AI suggestions |
 | `ReflectionDeletionRequested`, `JournalDeletionRequested` | Explicit target/whole-journal confirmation | Tombstones and required erasure work |
 
 AI result events retain the consumed response exactly, including safe response metadata needed to interpret it. Store bounded text/JSON responses in Firestore; never put image bytes, credentials, hidden model reasoning, or entire projected entries there. Context provenance records the actual outbound request boundary: template version, input source/revision references and enabled sources. Avoid duplicating private source text in provenance. Operational exception stacks and secrets never enter user events.
@@ -129,7 +129,7 @@ Live processing is separate from replay:
 4. Only committed response events supply the durable prompt or summary. Persist an already-received result locally for retry rather than issuing inference again merely because the event write failed.
 5. An interrupted browser cannot execute background work after it closes. Show unfinished requests with explicit resume/retry; replay and subscriptions must never dispatch inference. Provider calls may repeat across crash boundaries, so do not promise exactly-once billing.
 
-AI event schemas and Security Rules remain future work. The browser can author records only in its own account; managed model access does not make client-written response records provider-attested. Historical text remains reproducible because replay reads events, never calls a model. Late summaries cannot override manual descriptions. Removed targets and revoked sharing invalidate pending work.
+Prompt and photo AI event schemas and Rules are implemented; vocabulary for other proposed stories remains planned. The browser can author records only in its own account; managed model access does not make client-written response records provider-attested. Historical text remains reproducible because replay reads events, never calls a model. Late summaries cannot override manual descriptions. Removed targets and revoked sharing invalidate pending work.
 
 ## Cached projections and complete replay
 
@@ -147,7 +147,7 @@ Event timestamps and server sequence are fixed observations, not reads of the cu
 
 ## Photos, export, deletion and offline use
 
-Photos use the UX's limits (JPEG/PNG/WebP, four per entry, 10 MB each), stripped metadata and normalized orientation. Stage locally before uploading to the authenticated private Storage path. Storage and Firestore cannot share one transaction: finalize an attachment event only after verifying its immutable object exists and belongs to the UID. Keep failed uploads staged for retry and clean abandoned uploads. A device-only photo is labeled pending until cloud finalization. Saving a photo-only reflection does not wait for Gemini summarization.
+Photos accept JPEG/PNG/WebP, four per entry, 10 MB each. The browser normalizes orientation and strips metadata into a JPEG of at most 2048 pixels on its longest side. Selection is staged locally; confirmation uploads and attaches to the authenticated account immediately, with a disclosed distinction from local draft text. Storage and Firestore cannot share a transaction: the attachment event follows acknowledged upload/metadata verification. Staged identity and cleanup intents support retry/cancellation after interruptions. A photo-only reflection can be saved without waiting for Gemini.
 
 Search is a disposable local index over full saved prompts, responses and accepted/manual summaries. Exports use a consistent fully synchronized head and include the UX's Markdown/JSON/ZIP content, independent of search. Offer synchronization before an export labeled “All saved reflections”; do not silently substitute a partial cache. Computed colours and counts are appropriate in exports, which are read models rather than source events.
 
@@ -159,6 +159,25 @@ Previously loaded offline users can read cached entries, search the available jo
 
 ## Provisioning and implementation status
 
-The Firebase project, Google provider, Firestore database, planned private Storage bucket, rules and optional deployment identity are tracked in [FIREBASE_SETUP.md](FIREBASE_SETUP.md). The setup record distinguishes verified resources from pending configuration. Google login authorized provisioning; billing is not required by this journal foundation. The setup inventory distinguishes provisioned resources from verified application behavior.
+The Firebase project, Google provider, Firestore database, private Storage buckets, rules and optional deployment identity are tracked in [FIREBASE_SETUP.md](FIREBASE_SETUP.md). The setup record distinguishes verified resources from pending configuration. Google login authorized provisioning; billing is not required by this journal foundation. The setup inventory distinguishes provisioned resources from verified application behavior.
 
 The implementation plan now starts with Firebase/authentication and recorded external-response events. There is no deterministic-model feasibility gate, no local-only MVP scope, and no proposed separate authoritative AI artifact archive.
+
+## Implemented photo event contract
+
+Projection version **4** rebuilds older checkpoints once and then caches incremental replay as before. `photos[entryId_slot]` derives each of four attachment slots, the current summary/origin/status and last accepted event. Event payloads contain user inputs and external AI results; no derived colours, counters, summary statuses or entry snapshots are persisted. Each photo action advances the stream head and `photos/{entryId}_{slot}` pointer in one transaction. Its `previousEventId` serializes changes across devices without advancing the reflection text revision.
+
+- `PhotoAttached`: entry ID, slot 0–3, fresh immutable asset ID and prior slot-event reference (null for an unused slot).
+- `PhotoSummaryRequested`: same photo target and current event reference, committing explicit consent before dispatch.
+- `PhotoSummaryResponseReceived`: exact text (up to 1000 characters), actual model version and STOP completion reason, with the request as predecessor and stable `{requestId}_response` identity.
+- `PhotoSummaryFailed`: bounded observed failure category and `{requestId}_failure` identity. Retry is a new explicit request, never a replay side effect.
+- `PhotoSummaryEdited`: literal user summary, including empty text to clear it. A correction invalidates older request results.
+- `PhotoRemoved`: target and current predecessor; removes the attachment from the current projection/search/export. Historical summary text is retained until a future erasure flow.
+
+Schema **4** of `ReflectionWritten` permits empty text only with a currently active `photoSlot` reference, retaining `promptId`, `entryAt` and the expected text revision. `entryAt: null` preserves legacy save-time semantics on a photo-only edit; explicit dates remain immutable across schemas 3/4. A photo-only saved entry must keep at least one attachment until text is added. Schemas 1–3 stay readable and keep their original meaning. JSON archive version 2 adds optional `photos` metadata to entries; photo archives include the actual normalized files in a ZIP.
+
+A selected file is normalized and durably staged in the UID/project/base-path IndexedDB outbox before upload. Retrying uses the same action/asset identity and acknowledges a prior immutable object instead of overwriting it. Attachment commits only after a successful upload acknowledgement or authenticated metadata verification. Since cross-service atomicity is unavailable, uploads can precede their attachment event; a retained selection resumes that operation, and cancellation checks the server event before cleaning an uncommitted object. Confirming attachment syncs it immediately, even for an unsaved reflection; draft text stays local. This is disclosed in the UI. Discarding an unsaved draft removes its attachments; a text-edit discard preserves saved attachments.
+
+Photo removal records a local cleanup intent before committing its event. Cleanup verifies the immutable removal event on the server before deleting the object; retries and reload recovery are idempotent. Failed cleanup is visible and recoverable. The cleanup intent remains device-local; another device cannot finish an originating device’s interrupted intent until that device returns. Full server-wide orphan sweeping and historical erasure are not implemented.
+
+Photo generation uses the existing authenticated Firebase AI Logic gateway with inline normalized JPEG data and a visible-content instruction, without daily-prompt context. The user can attach without AI; choosing summarization explicitly authorizes only that photo. Received responses are durably staged before cloud append. A predecessor change from editing, removal or replacement rejects late results. Reload never restarts generation. Gemini availability, summary completion and reflection saving are independent.
