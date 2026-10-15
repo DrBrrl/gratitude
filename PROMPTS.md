@@ -575,3 +575,9 @@ We just put a zip file of an export from an altenate program I've been using for
 ```text
 put this up as a pr for review
 ```
+
+## 2026-10-15 — Target main and assume prior photo support
+
+```text
+Retarget this PR dirctly against main and assume that support to add photos will be added before we do this design
+```

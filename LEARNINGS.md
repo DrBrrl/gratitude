@@ -383,3 +383,9 @@ The current event contract and Security Rules require server-time creation, the 
 `IMPORT_PLAN.md` proposes a local dry run, authenticated explicit confirmation, stable source-ID/digest deduplication, per-record atomic resumable appends and staged acceptance gates. Attachment storage is not currently implemented; full photo support versus explicitly limited import remains a review decision. These are proposals, not implemented behavior.
 
 Planning-task retrospective: the prompt requested a plan on an isolated branch/worktree, not a production migration. Creating `gratitude-import` from the current reviewed UI preserved that baseline and left the private archive in place. Inspecting aggregate source structure before proposing a converter exposed the photo-only and timestamp constraints early. The review artifact documents these decisions and implementation gates; no import or application change has been performed.
+
+## 2026-10-15 — Import planning prerequisites revised
+
+The user requested PR #7 target main directly and specified that photo support will precede this design. The import plan now treats the completed photo capability as a prerequisite, reuses its contracts, and requires all five photos plus the photo-only entry to survive migration and export. The earlier limited-mode proposal is superseded; this assumption does not claim photo support is implemented today. Recheck baseline event constraints after it lands.
+
+Follow-up retrospective: explicit prerequisite sequencing removes the attachment-policy decision from this import review and avoids designing a second photo subsystem. Documentation validation uses diff checks; application behavior is unchanged.
