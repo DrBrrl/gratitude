@@ -1,13 +1,14 @@
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 2;
+export const PROJECTION_VERSION = 3;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v1';
 type Envelope<T extends string, P, V extends number = 1> = { eventId: string; type: T; schemaVersion: V; payload: P };
 type ReflectionPayload = { entryId: string; text: string; expectedRevision: number };
 export type Action = Envelope<'ReflectionWritten', ReflectionPayload & { starterId: typeof STARTER_ID }>
-  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string }, 2>;
+  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string }, 2>
+  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; entryAt: string }, 3>;
 export type AIChoices = { enabled: boolean; useJournal: boolean; useFeedback: boolean; guidance: string };
 type Previous = { previousEventId: string | null };
 export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & AIChoices>;
@@ -20,9 +21,9 @@ export type StarterAction = Envelope<'StarterPromptChosen', Previous & { day: st
 export type AIAction = ChoicesAction | RequestAction | ResponseAction | FailureAction | FeedbackAction | StarterAction;
 export type SourceAction = Action | AIAction;
 export type JournalEvent = SourceAction & { sequence: number; recordedAt: string };
-export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string };
+export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 2; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 3; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
@@ -39,6 +40,10 @@ function keys(object: Record<string, unknown>, expected: string[]) {
   return Object.keys(object).length === expected.length && expected.every(key => Object.hasOwn(object, key));
 }
 export function promptId(action: Action) { return action.schemaVersion === 1 ? action.payload.starterId : action.payload.promptId; }
+export function validEntryTime(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$/.test(value)
+    && value.slice(0, 4) !== '0000' && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
+}
 export function parseAction(input: unknown): SourceAction {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Invalid action');
   const v = input as Record<string, unknown>;
@@ -47,7 +52,8 @@ export function parseAction(input: unknown): SourceAction {
   let valid = false;
   if (v.type === 'ReflectionWritten') {
     valid = (v.schemaVersion === 1 && keys(p, ['entryId', 'text', 'expectedRevision', 'starterId']) && p.starterId === STARTER_ID
-      || v.schemaVersion === 2 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId']) && id(p.promptId))
+      || v.schemaVersion === 2 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId']) && id(p.promptId)
+      || v.schemaVersion === 3 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt']) && id(p.promptId) && validEntryTime(p.entryAt))
       && id(p.entryId) && string(p.text, 10_000) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
   } else if (v.schemaVersion === 1) {
     const previous = p.previousEventId === null || id(p.previousEventId);
@@ -93,10 +99,14 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
     if ((existing?.revision ?? 0) !== action.payload.expectedRevision) throw new Error('Conflicting reflection revision');
     const chosen = promptId(action);
     if (existing && chosen !== (existing.promptId ?? STARTER_ID)) throw new Error('A saved reflection keeps its original prompt.');
+    if (existing && (action.schemaVersion === 3
+      ? existing.entryAt !== action.payload.entryAt : existing.entryAt !== undefined)) throw new Error('A saved reflection keeps its original entry date.');
+    if (action.schemaVersion === 3 && action.payload.entryAt > new Date(event.recordedAt).toISOString()) throw new Error('An entry cannot be dated in the future.');
     const prompt = chosen === STARTER_ID ? STARTER_PROMPT : state.ai.responses[chosen]?.payload.text;
     if (!prompt) throw new Error('Missing prompt response');
     const entry: Entry = { id: action.payload.entryId, text: action.payload.text, prompt, promptId: chosen,
-      revision: action.payload.expectedRevision + 1, colour: existing?.colour ?? state.entries.length % 7, recordedAt: existing?.recordedAt ?? event.recordedAt };
+      revision: action.payload.expectedRevision + 1, colour: existing?.colour ?? state.entries.length % 7, recordedAt: existing?.recordedAt ?? event.recordedAt,
+      ...(action.schemaVersion === 3 ? { entryAt: action.payload.entryAt } : {}) };
     return { ...next, entries: existing ? state.entries.map(old => old.id === entry.id ? entry : old) : [...state.entries, entry] };
   }
   const ai = { ...state.ai, control: nextControl(state.ai.control, action) };

@@ -147,3 +147,7 @@ The tests intercept the exact Firebase AI Logic Gemini Developer API HTTP endpoi
 CI splits the original journal scenarios and new AI scenarios into separate viewport/suite jobs, with isolated emulators and serial workers in each. All four jobs must pass before publication. This keeps the expanded coverage within the existing job budgets without relaxing screenshot comparisons.
 
 [`009-generic-ai`](tests/e2e/009-generic-ai/README.md) builds with `VITE_AI_DATA_MODE=generic` and runs with `E2E_AI_GENERIC=true`. It verifies the optional generic privacy configuration: unavailable personal sharing controls and a fixed generic instruction even when the account has saved reflections. The AI CI jobs run this second build after the personal-context fixtures; both configurations must pass.
+
+## Backfilled and additional reflections
+
+[`010-backfill-entries`](tests/e2e/010-backfill-entries/README.md) follows a past-date draft through reload, save and edit, rejects future dates, adds two reflections for the same day, rebuilds the journal from events and checks the downloaded Markdown dates. The journal CI jobs run it alongside scenarios 001–006. All actions retain full-page zero-tolerance comparisons, with the checks beneath their images. Unit and Rules tests additionally cover timestamp encoding, concurrent devices, legacy events, immutable dates, chronological tie breaks and JSON archive version 2.
