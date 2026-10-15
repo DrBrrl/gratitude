@@ -38,8 +38,10 @@ test('complete Markdown and JSON exports preserve text and exclude drafts', asyn
   await steps.action('json', 'Download the same journal as JSON', () => page.getByRole('button', { name: 'Download JSON' }).click(), async () => {
     const jsonFile = await jsonDownload; expect(jsonFile.suggestedFilename()).toBe('gratitude-journal.json');
     const json = JSON.parse(await readFile((await jsonFile.path())!, 'utf8'));
+    expect(json.version).toBe(2);
     expect(json.entries).toHaveLength(2); expect(json.entries[1].text).toBe('A quiet morning with **tea** & <sunshine>.'); expect(json.entries[0].prompt).toBe('What is one small thing you appreciated today?'); expect(json.throughSequence).toBe(2);
     expect(json.entries.map((entry: { createdAt: string }) => entry.createdAt)).toEqual(['2026-09-30T04:31:07.000Z', '2026-09-29T04:31:07.000Z']);
+    expect(json.entries.map((entry: { entryAt: string }) => entry.entryAt)).toEqual(['2026-09-30T04:31:07.000Z', '2026-09-29T04:31:07.000Z']);
     expect(markdownContent.match(/^## .+$/gm)).toEqual(['## 2026-09-30 14:31:07', '## 2026-09-29 14:31:07']);
   }, 'JSON keeps UTC instants; Markdown headings use Australia/Hobart local time');
   await steps.action('offline', 'Disconnect before another export', () => page.context().setOffline(true), async () => { expect(await page.evaluate(() => navigator.onLine)).toBe(false); });

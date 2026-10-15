@@ -3,8 +3,8 @@
   import Icon from './Icon.svelte';
   import { reflectionPreview } from '$lib/reflection-preview';
 
-  let { text, query, entryId, recordedAt, expanded, onexpand, oncollapse, onopen }: {
-    text: string; query: string; entryId: string; recordedAt: string; expanded: boolean;
+  let { text, query, entryId, entryAt, expanded, onexpand, oncollapse, onopen }: {
+    text: string; query: string; entryId: string; entryAt: string; expanded: boolean;
     onexpand: () => void; oncollapse: () => void; onopen: () => void;
   } = $props();
   let space = $state<HTMLDivElement>();
@@ -12,7 +12,7 @@
   let preview = $state('');
   let overflowing = $state(false);
   const dateLabel = $derived.by(() => {
-    const date = new Date(recordedAt);
+    const date = new Date(entryAt);
     const pad = (value: number) => String(value).padStart(2, '0');
     const weekday = new Intl.DateTimeFormat('en-AU', { weekday: 'short' }).format(date);
     const month = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
@@ -66,7 +66,7 @@
   {#if expanded || overflowing}<button class="more" aria-expanded={expanded} onclick={expanded ? oncollapse : onexpand}>{expanded ? '(see less)' : '(see more)'}</button>{/if}
   <div class="card-footer">
     <button class="view-entry" id={`view-${entryId}`} onclick={onopen}>View entry<Icon name="next" size={20} /></button>
-    <time datetime={recordedAt}>{dateLabel}</time>
+    <time datetime={entryAt}>{dateLabel}</time>
   </div>
 </div>
 
