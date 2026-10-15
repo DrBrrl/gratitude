@@ -65,17 +65,30 @@
   let journalScroll = 0;
   const selected = $derived(view.state.entries.find((entry) => entry.id === selectedId));
   const results = $derived(searchEntries(view.state.entries, query));
-  let today = $state(localDay(new Date()));
+  let currentInstant = $state(new Date());
+  const today = $derived(localDay(currentInstant));
   let todayDraft = $state<Action | null>(null);
   let todayDraftDay = $state('');
   let editorDraftKey = $state('');
   const todayKey = $derived(`draft:today:${today}`);
+  const newEntryKey = 'draft:new';
+  let editorDateTime = $state('');
+  let editorEntryAt = $state('');
+  const choosingDate = $derived(editorDraftKey === newEntryKey && !editing);
+  function chosenEntryAt(value: string) {
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime()) || localDateTime(date) !== (value.length === 16 ? `${value}:00` : value) || date.getFullYear() < 1) return null;
+    return date.toISOString();
+  }
+  const entryDateError = $derived(choosingDate ? !chosenEntryAt(editorDateTime) ? 'Choose a valid entry date and time.'
+    : new Date(editorEntryAt) > currentInstant ? 'Choose a date and time that is now or earlier.' : '' : '');
   const daily = $derived(todayReflection(view.state.entries, today));
-  const todayColour = $derived(colours[daily.colour]);
   const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft?.payload.text.trim());
+  const todayDraftEntry = $derived(hasTodayDraft ? view.state.entries.find(entry => entry.id === todayDraft?.payload.entryId) : undefined);
+  const todayColour = $derived(colours[hasTodayDraft ? todayDraftEntry?.colour ?? view.state.entries.length % colours.length : daily.colour]);
   let editorColour = $state(colours[0]);
   let editorPromptId = $state(STARTER_ID);
-  const currentPromptId = $derived(daily.entry?.promptId ?? (hasTodayDraft && todayDraft ? promptId(todayDraft) : view.state.ai.days[today]) ?? STARTER_ID);
+  const currentPromptId = $derived((hasTodayDraft && todayDraft ? promptId(todayDraft) : daily.entry?.promptId ?? view.state.ai.days[today]) ?? STARTER_ID);
   const currentPrompt = $derived(currentPromptId === STARTER_ID ? STARTER_PROMPT : view.state.ai.responses[currentPromptId]?.payload.text ?? STARTER_PROMPT);
   const editorPrompt = $derived(editorPromptId === STARTER_ID ? STARTER_PROMPT : view.state.ai.responses[editorPromptId]?.payload.text ?? STARTER_PROMPT);
   const currentResponse = $derived(view.state.ai.responses[currentPromptId]);
@@ -133,7 +146,10 @@
     finally { aiBusy = false; }
   }
 
-  function keyForEntry(entry: Entry) { return entry.id === daily.entry?.id ? todayKey : `draft:entry:${entry.id}`; }
+  function keyForEntry(entry: Entry) {
+    const occupied = todayDraftDay === today && todayDraft && todayDraft.payload.entryId !== entry.id;
+    return entry.id === daily.entry?.id && !occupied ? todayKey : `draft:entry:${entry.id}`;
+  }
   async function loadDrafts(active: JournalStore) {
     const legacy = await active.readDraft();
     if (legacy) {
@@ -155,7 +171,7 @@
     return () => { cancelled = true; };
   });
   onMount(() => {
-    const updateDay = () => { today = localDay(new Date()); };
+    const updateDay = () => { currentInstant = new Date(); };
     const timer = window.setInterval(updateDay, 30_000);
     window.addEventListener('focus', updateDay);
     return () => { clearInterval(timer); window.removeEventListener('focus', updateDay); };
@@ -164,7 +180,7 @@
   let exportStatus = $state('');
   let exporting = $state(false);
   let preparedFile = $state<ReturnType<typeof exportJournal> | null>(null);
-  import { colours, searchEntries, localDay, todayReflection } from '$lib/journal';
+  import { colours, searchEntries, localDay, localDateTime, entryTimestamp, todayReflection } from '$lib/journal';
   import HighlightedText from '$lib/components/HighlightedText.svelte';
   import ReflectionText from '$lib/components/ReflectionText.svelte';
   import ReflectionEditor from '$lib/components/ReflectionEditor.svelte';
@@ -207,7 +223,10 @@
       const original = stored ? view.state.entries.find(item => item.id === stored.payload.entryId) : entry;
       editing = original ? { ...original, revision: stored?.payload.expectedRevision ?? original.revision } : null;
       editorPromptId = stored ? promptId(stored) : original?.promptId ?? currentPromptId;
-      editorColour = original ? colours[original.colour] : todayColour;
+      editorColour = original ? colours[original.colour] : key === newEntryKey ? colours[view.state.entries.length % colours.length] : todayColour;
+      currentInstant = new Date();
+      editorDateTime = localDateTime(stored?.schemaVersion === 3 ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
+      editorEntryAt = stored?.schemaVersion === 3 ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant.toISOString();
       text = stored?.payload.text ?? original?.text ?? '';
       draftStatus = stored ? 'Draft saved on this device' : '';
       draftWrite++; tab = 'today'; writing = true; savedId = null; selectedId = null;
@@ -216,7 +235,11 @@
     } catch { error = 'Could not open this reflection. Your drafts are still saved.'; }
     finally { busy = false; }
   }
-  async function beginWriting() { await openComposer(todayKey, daily.entry); }
+  async function beginWriting() {
+    const key = daily.entry && (!hasTodayDraft || todayDraft?.payload.entryId === daily.entry.id) ? keyForEntry(daily.entry) : todayKey;
+    await openComposer(key, daily.entry);
+  }
+  async function newEntry() { await openComposer(newEntryKey, undefined); }
   async function openSettings(next: typeof settingsPage) { settingsPage = next; exportStatus = ''; preparedFile = null; aiMessage = ''; if (next === 'ai') choices = { ...view.state.ai.choices }; await tick(); window.scrollTo(0, 0); }
 
   async function navigate(next: typeof tab) { chooseInitialPage = false; tab = next; selectedId = null; writing = false; savedId = null; settingsPage = 'menu'; aiMessage = ''; feedbackOpen = false; await tick(); window.scrollTo(0, 0); }
@@ -230,6 +253,9 @@
     draft = { eventId: draft?.eventId ?? crypto.randomUUID(), type: 'ReflectionWritten', schemaVersion: 1,
       payload: { entryId: editing?.id ?? draft?.payload.entryId ?? crypto.randomUUID(), text, expectedRevision: editing?.revision ?? 0, starterId: STARTER_ID } };
     if (editorPromptId !== STARTER_ID) draft = { eventId: draft.eventId, type: 'ReflectionWritten', schemaVersion: 2, payload: { entryId: draft.payload.entryId, text, expectedRevision: draft.payload.expectedRevision, promptId: editorPromptId } };
+    if (choosingDate || editing?.entryAt) draft = { eventId: draft.eventId, type: 'ReflectionWritten', schemaVersion: 3,
+      payload: { entryId: draft.payload.entryId, text, expectedRevision: draft.payload.expectedRevision, promptId: editorPromptId,
+        entryAt: editing?.entryAt ?? editorEntryAt } };
     if (editorDraftKey === todayKey) { todayDraft = draft; todayDraftDay = today; }
     draftStatus = 'Saving draft on this device…';
     try { await repository.writeDraft($state.snapshot(draft), editorDraftKey); if (version === draftWrite) draftStatus = 'Draft saved on this device'; }
@@ -318,6 +344,10 @@
   }
   async function save() {
     if (!repository) return;
+    currentInstant = new Date();
+    if (choosingDate && (!chosenEntryAt(editorDateTime) || new Date(editorEntryAt) > currentInstant)) {
+      error = 'Choose a valid entry date and time that is now or earlier.'; return;
+    }
     const savingRepository = repository;
     const savingKey = editorDraftKey;
     busy = true; error = '';
@@ -345,8 +375,10 @@
       text = pending.payload.text;
       editing = view.state.entries.find((entry) => entry.id === pending.payload.entryId) ?? null;
       editorPromptId = promptId(pending);
-      editorColour = editing ? colours[editing.colour] : todayColour;
-      editorDraftKey = editing ? keyForEntry(editing) : todayKey;
+      editorColour = editing ? colours[editing.colour] : pending.schemaVersion === 3 ? colours[view.state.entries.length % colours.length] : todayColour;
+      editorDraftKey = editing ? keyForEntry(editing) : pending.schemaVersion === 3 ? newEntryKey : todayKey;
+      editorDateTime = localDateTime(pending.schemaVersion === 3 ? pending.payload.entryAt : currentInstant);
+      editorEntryAt = pending.schemaVersion === 3 ? pending.payload.entryAt : chosenEntryAt(editorDateTime)!;
       draft = null; tab = 'today'; writing = true; await persistDraft();
     } catch (cause) { error = cause instanceof Error ? cause.message : 'Please try again.'; }
   }
@@ -365,15 +397,21 @@
       {#if writing}
         <button class="back" onclick={returnFromEditor} disabled={busy}><Icon name="back" />{editorOrigin.label}</button>
         <h1 class="page-heading reflection-heading">Your reflection</h1>
+        {#if choosingDate}
+          <label class="entry-date-label" for="entry-date">Entry date and time</label>
+          <input class="entry-date-input glass" id="entry-date" type="datetime-local" step="1" min="0001-01-01T00:00" max={localDateTime(currentInstant)} value={editorDateTime}
+            oninput={event => { editorDateTime = event.currentTarget.value; const chosen = chosenEntryAt(editorDateTime); if (chosen) editorEntryAt = chosen; void persistDraft(); }} disabled={busy} aria-describedby={entryDateError ? 'entry-date-error' : undefined} aria-invalid={!!entryDateError} />
+          {#if entryDateError}<p id="entry-date-error" class="hint date-error">{entryDateError}</p>{/if}
+        {/if}
         <section class="tinted composer" style:--entry-colour={editorColour}>
           <p class="writing-prompt">{editing?.prompt ?? editorPrompt}</p>
           <ReflectionEditor value={text} oninput={value => void persistDraft(value)} disabled={busy || !draftRestored} />
         </section>
         <p class="hint draft-status" aria-live="polite">{draftStatus || 'Drafts stay on this device until you save.'}</p>
-        <button class="primary" onclick={save} disabled={busy || !text.trim() || !!view.pending}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Save reflection'}</button>
+        <button class="primary" onclick={save} disabled={busy || !text.trim() || !!view.pending || !!entryDateError}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Save reflection'}</button>
         {#if text}<button class="text-button muted" onclick={() => discardOpen = true}>Discard draft</button>{/if}
       {:else if savedEntry}
-        <div class="saved-heading"><h1 class="page-heading">Reflection saved</h1><time datetime={savedEntry.recordedAt}>{shortDate(savedEntry.recordedAt)}</time></div>
+        <div class="saved-heading"><h1 class="page-heading">Reflection saved</h1><time datetime={entryTimestamp(savedEntry)}>{shortDate(entryTimestamp(savedEntry))}</time></div>
         <article class="tinted card saved-card" style:--entry-colour={colours[savedEntry.colour]}>
           <h2>Prompt</h2><p class="entry-prompt">{savedEntry.prompt}</p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={savedEntry.text} /></p>
@@ -383,8 +421,9 @@
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
         <h1 class="today-heading">Reflection time</h1>
         {#if view.ready}
-          <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID ? 'Starter prompt' : 'AI prompt'}</span><h2>{daily.entry?.prompt ?? currentPrompt}</h2></section>
+          <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID ? 'Starter prompt' : 'AI prompt'}</span><h2>{hasTodayDraft ? todayDraftEntry?.prompt ?? currentPrompt : daily.entry?.prompt ?? currentPrompt}</h2></section>
           <button class="primary today-response" onclick={beginWriting} disabled={busy || !draftLoaded || todayDraftDay !== today}>{hasTodayDraft || daily.entry ? 'Continue your reflection' : 'Write a response'}</button>
+          {#if daily.entry}<button class="outline additional-response" onclick={newEntry} disabled={busy || !draftLoaded || !!view.pending}>Write another reflection</button>{/if}
           {#if !daily.entry && !hasTodayDraft}
             {#if view.state.ai.choices.enabled}
               <button class="outline ai-generate" onclick={generatePrompt} disabled={aiBusy || generatingPrompt || !!view.aiResultPending || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : view.state.ai.control.requestId || view.state.ai.failure ? 'Try another request' : currentResponse ? 'Another prompt' : 'Find me a prompt'}</button>
@@ -402,13 +441,14 @@
         <button class="back" onclick={closeEntry}><Icon name="back" />Journal</button>
         <h1 class="sr-only" id="entry-heading" tabindex="-1">Your reflection</h1>
         <article class="tinted detail" style:--entry-colour={colours[selected.colour]}>
-          <time datetime={selected.recordedAt}>{entryDateTime(selected.recordedAt)}</time>
+          <time datetime={entryTimestamp(selected)}>{entryDateTime(entryTimestamp(selected))}</time>
           <h2>Prompt</h2><p class="entry-prompt"><HighlightedText text={selected.prompt} {query} /></p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={selected.text} {query} /></p>
           <button class="entry-action" onclick={() => edit(selected)} disabled={!!view.pending || busy}><Icon name="edit" />Edit reflection</button>
         </article>
       {:else}
         <h1 class="page-heading">Your journal</h1>
+        <button class="outline new-entry" onclick={newEntry} disabled={busy || !view.ready || !draftLoaded || !!view.pending}>New entry</button>
         <div class="search glass"><Icon name="search" /><input id="search" type="search" aria-label="Search reflections" bind:value={query} placeholder="Search reflections" />{#if query}<button class="icon-button" aria-label="Clear search" onclick={() => query = ''}><Icon name="close" /></button>{/if}</div>
         {#if query || view.status !== 'Synced'}<p class="result-count" aria-live="polite">{results.length} {results.length === 1 ? 'reflection' : 'reflections'}{view.status !== 'Synced' ? ' on this device' : ''}</p>{/if}
         {#if view.ready && view.state.entries.length === 0}<section class="glass empty"><Icon name="journal" size={44} /><h2>Your story starts small.</h2><p>A moment, a kindness, a little light.<br />Your reflections will find a home here.</p><button class="primary" onclick={() => navigate('today')}>Write your first reflection</button></section>
@@ -417,7 +457,7 @@
           {#each results as entry (entry.id)}
             <article class="tinted card" class:expanded={expandedEntries.has(entry.id)} style:--entry-colour={colours[entry.colour]}>
               <h2>Prompt</h2><p class="entry-prompt prompt-preview"><HighlightedText text={entry.prompt} {query} /></p>
-              <h2>Reflection</h2><ReflectionPreview text={entry.text} {query} entryId={entry.id} recordedAt={entry.recordedAt} expanded={expandedEntries.has(entry.id)} onexpand={() => expandedEntries = new Set([...expandedEntries, entry.id])} oncollapse={() => expandedEntries = new Set([...expandedEntries].filter(id => id !== entry.id))} onopen={() => openEntry(entry)} />
+              <h2>Reflection</h2><ReflectionPreview text={entry.text} {query} entryId={entry.id} entryAt={entryTimestamp(entry)} expanded={expandedEntries.has(entry.id)} onexpand={() => expandedEntries = new Set([...expandedEntries, entry.id])} oncollapse={() => expandedEntries = new Set([...expandedEntries].filter(id => id !== entry.id))} onopen={() => openEntry(entry)} />
             </article>
           {/each}
         </div>
@@ -481,6 +521,12 @@
   :global(*) { box-sizing: border-box; }
   main { --yellow: #ffdf48; max-width: 480px; min-height: 100svh; margin: 0 auto; padding: 40px 20px 120px; background: #080b0d3d; text-align: justify; }
   main.composing { padding-bottom: 32px; }
+  .new-entry { margin-bottom: 20px; }
+  .additional-response { margin-top: 14px; }
+  .entry-date-label { display: block; font-size: .875rem; color: #bfc5ce; margin-bottom: 8px; }
+  .entry-date-input { display: block; width: 100%; min-width: 0; color: #e1e3e8; font: inherit; padding: 12px; margin-bottom: 16px; }
+  .entry-date-input:focus { outline: none; border-color: #8b9099; }
+  .date-error { color: #f6b3bf; }
   h1 { font: 600 2.4rem/1.15 Georgia, 'Times New Roman', serif; letter-spacing: -.035em; margin: 24px 0; }
   h2 { font: 400 1.5rem/1.35 Georgia, 'Times New Roman', serif; margin: 0 0 16px; }
   p { line-height: 1.55; margin: 0 0 20px; }

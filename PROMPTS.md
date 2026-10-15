@@ -563,3 +563,9 @@ projects/122994614403
 ```text
 We've enabled paid tier - can you edit our config files and make using it the default?
 ```
+
+## 2026-10-15 — Backfill and multiple daily reflections
+
+```text
+We've rebased and merged! We'd like to add the ability to backfill entries on previous dates and to write more than one entry a day.
+```

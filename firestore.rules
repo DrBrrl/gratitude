@@ -29,11 +29,20 @@ service cloud.firestore {
       function text(value, max) { return value is string && value.size() <= max; }
       function promptId(e) { return e.schemaVersion == 1 ? e.payload.starterId : e.payload.promptId; }
       function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && get(eventPath(id)).data.type == 'PromptResponseReceived'); }
+      function unchangedEntryDate(e) {
+        let previous = exists(pointerPath(e.payload.entryId)) ? get(eventPath(get(pointerPath(e.payload.entryId)).data.lastEventId)).data : e;
+        return e.schemaVersion == 3
+          ? previous.schemaVersion == 3 && e.payload.entryAt == previous.payload.entryAt
+          : previous.schemaVersion != 3;
+      }
       function validReflection(e) {
         let p = e.payload;
         return e.type == 'ReflectionWritten'
           && ((e.schemaVersion == 1 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'starterId']) && p.starterId == 'small-moment-v1')
-            || (e.schemaVersion == 2 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId']) && knownPrompt(p.promptId)))
+            || (e.schemaVersion == 2 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId']) && knownPrompt(p.promptId))
+            || (e.schemaVersion == 3 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt'])
+              && knownPrompt(p.promptId) && p.entryAt is timestamp && p.entryAt <= request.time))
+          && unchangedEntryDate(e)
           && validId(p.entryId) && text(p.text, 10000) && p.text.size() > 0
           && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
           && p.expectedRevision is int && p.expectedRevision == nextRevision(p.entryId)

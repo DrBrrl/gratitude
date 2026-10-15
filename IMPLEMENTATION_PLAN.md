@@ -15,6 +15,8 @@ PRs #5–6 add Today/Journal/Settings navigation, content-sized rainbow cards, f
 
 These are implemented slices of increments 3, 4 and 7. The AI integration adds starter/AI prompt choices, durable request/response events and feedback as described in increment 5. Preview and production configurations now select paid-service personalization after billing verification; sharing remains opt-in and is tested with fictional inputs. Optional onboarding, skip/resume, photos, deletion, cross-device drafts and offline cold starts remain planned.
 
+The dated-entry increment adds **Journal → New entry** and **Today → Write another reflection**, an independent autosaved draft, past local date/time selection, same-day multiple entries and chronological history/export. Scenario `010-backfill-entries` covers date validation, draft recovery, separate entries, editing, replay and Markdown export on mobile and desktop. `ReflectionWritten` version 3 carries the chosen time; projection version 3 rebuilds older checkpoints.
+
 ## Acceptance contract
 
 The MVP supports the mobile stories in [UX_DESIGN.md](UX_DESIGN.md), adds Google sign-in, and restores the same user's journal across devices. User actions and received AI responses are the durable event source. Local derived state is never serialized into events as an entry/projection snapshot. Cached recovery and full replay produce identical logical state, and **replay issues zero Gemini calls**.

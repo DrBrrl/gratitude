@@ -154,6 +154,8 @@ test('AI transaction claim has one winner, response deduplicates and saved promp
   assert.equal(replay(await events(b)).entries[0].prompt, response.payload.text);
   await assert.rejects(a.append(action('swap-prompt', 'ai-entry', 'Swap it', 1)), /original prompt/);
   assert.equal((await events(a)).length, 4);
+  await a.append({ eventId: 'ai-backfill', type: 'ReflectionWritten', schemaVersion: 3, payload: { entryId: 'ai-backfill', text: 'Another moment.', promptId: response.eventId, expectedRevision: 0, entryAt: '2026-09-29T00:00:00.000Z' } });
+  assert.equal(replay(await events(b)).entries[1].prompt, response.payload.text);
 });
 
 test('AI Rules reject stale consent, fabricated response references, extra computed fields and detached controls', async () => {
@@ -183,4 +185,46 @@ test('AI Rules reject stale consent, fabricated response references, extra compu
   const next = { ...choices, eventId: 'next', payload: { ...choices.payload, previousEventId: 'revoke' } };
   await forge(next, { lastEventId: 'revoke', choicesId: 'revoke', requestId: 'request' });
   await assertFails(setDoc(doc(a.db, `${root}/ai/control`), { lastEventId: 'revoke', choicesId: 'revoke', requestId: 'request' }));
+});
+
+test('dated reflections append across devices, deduplicate, retain their date and reconstruct from events', async () => {
+  const a = await device('dated@example.test', 'dated-a');
+  const b = await device('dated@example.test', 'dated-b');
+  const dated = (id, entryAt, revision = 0) => ({ eventId: `${id}-${revision}`, type: 'ReflectionWritten', schemaVersion: 3,
+    payload: { entryId: id, expectedRevision: revision, promptId: STARTER_ID, text: id, entryAt } });
+  const first = dated('past', '2026-09-28T23:15:00.000Z');
+  await Promise.all([a.append(first), b.append(first)]);
+  await a.append(dated('second', '2026-09-28T23:15:00.000Z'));
+  await b.append(dated('past', first.payload.entryAt, 1));
+  const log = await events(a);
+  assert.equal(log.length, 3);
+  const full = replay(log);
+  assert.equal(full.entries.length, 2);
+  assert.equal(full.entries[0].entryAt, first.payload.entryAt);
+  assert.notEqual(full.entries[0].recordedAt, first.payload.entryAt);
+  assert.equal(full.entries[0].revision, 2);
+  for (let split = 0; split <= log.length; split++) assert.deepEqual(replay(log.slice(split), replay(log.slice(0, split))), full);
+  await assert.rejects(a.append(dated('past', '2026-09-29T00:00:00.000Z', 2)), /original entry date/);
+  await assert.rejects(a.append(action('downgrade', 'past', 'Changed', 2)), /original entry date/);
+});
+
+test('Rules reject future, malformed and changed dates even when the append helper is bypassed', async () => {
+  const { writeBatch, serverTimestamp, Timestamp } = await import('firebase/firestore');
+  const a = await device('dated-rules@example.test', 'dated-rules');
+  const root = `users/${a.uid}/streams/v1`;
+  const valid = { eventId: 'dated', type: 'ReflectionWritten', schemaVersion: 3,
+    payload: { entryId: 'dated', expectedRevision: 0, promptId: STARTER_ID, text: 'Remembered moment', entryAt: '2026-09-28T23:15:00.000Z' } };
+  async function forge(payload, schemaVersion = 3, sequence = 1) {
+    const batch = writeBatch(a.db);
+    batch.set(doc(a.db, `${root}/events/forged`), { ...valid, eventId: 'forged', schemaVersion, payload, sequence, recordedAt: serverTimestamp() });
+    batch.set(doc(a.db, root), { sequence, lastEventId: 'forged' });
+    batch.set(doc(a.db, `${root}/entries/dated`), { lastEventId: 'forged' });
+    await assertFails(batch.commit());
+  }
+  await forge(valid.payload); // A wire date must be a Timestamp, not an unchecked string.
+  await forge({ ...valid.payload, entryAt: Timestamp.fromDate(new Date('2026-10-02T00:00:00Z')) });
+  await forge({ ...valid.payload, entryAt: Timestamp.fromDate(new Date(valid.payload.entryAt)), colour: 2 });
+  await a.append(valid);
+  await forge({ ...valid.payload, expectedRevision: 1, entryAt: Timestamp.fromDate(new Date('2026-09-29T00:00:00Z')) }, 3, 2);
+  await forge({ entryId: 'dated', expectedRevision: 1, text: 'Downgrade', starterId: STARTER_ID }, 1, 2);
 });
