@@ -557,3 +557,9 @@ we have an API key for you vbut I don't see dierctions on where to put it
 ```text
 projects/122994614403
 ```
+
+## 2026-10-15 — Default to the enabled paid tier
+
+```text
+We've enabled paid tier - can you edit our config files and make using it the default?
+```

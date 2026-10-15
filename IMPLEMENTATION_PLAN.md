@@ -13,7 +13,7 @@ PRs #5–6 add Today/Journal/Settings navigation, content-sized rainbow cards, f
 - `004-draft-recovery`: navigation/reload recovery, save and confirmed discard.
 - `005-export`: complete downloadable Markdown/JSON, literal text and offline errors.
 
-These are implemented slices of increments 3, 4 and 7. The AI integration adds starter/AI prompt choices, durable request/response events and feedback as described in increment 5. Live sites use generic instructions only; paid-service personalization is implemented and tested with fictional inputs but awaits a billing decision. Optional onboarding, skip/resume, photos, deletion, cross-device drafts and offline cold starts remain planned.
+These are implemented slices of increments 3, 4 and 7. The AI integration adds starter/AI prompt choices, durable request/response events and feedback as described in increment 5. Preview and production configurations now select paid-service personalization after billing verification; sharing remains opt-in and is tested with fictional inputs. Optional onboarding, skip/resume, photos, deletion, cross-device drafts and offline cold starts remain planned.
 
 ## Acceptance contract
 
@@ -75,7 +75,7 @@ Search full saved text, prompts and accepted/manual summaries using the UX's nor
 
 ## 5. Firebase AI Logic and durable response events
 
-**Implemented in the AI integration PR:** explicit AI choices/preferences, generic or consent-bound personal context, managed Gemini gateway requests, transactionally claimed request events, exact response/model/finish events, sanitized failures, feedback, starter fallback, response outbox and cross-tab revocation. Cached projection version 2 rebuilds older checkpoints. Scenarios `007-gemini-prompts` and `008-gemini-recovery` cover the user flow and interruption/recovery; Rules tests cover concurrent devices and forged writes. Live sites use generic-only context pending a paid-service decision. App Check and a 5 RPM/user quota are configured in both projects.
+**Implemented in the AI integration PR:** explicit AI choices/preferences, generic or consent-bound personal context, managed Gemini gateway requests, transactionally claimed request events, exact response/model/finish events, sanitized failures, feedback, starter fallback, response outbox and cross-tab revocation. Cached projection version 2 rebuilds older checkpoints. Scenarios `007-gemini-prompts` and `008-gemini-recovery` cover the user flow and interruption/recovery; Rules tests cover concurrent devices and forged writes. Both deployment configurations select paid mode after billing verification; each user controls which sources are shared. App Check and a 5 RPM/user quota are configured in both projects.
 
 No automatic prompt request occurs on hydration or day changes. The initiating browser is the sole executor; explicit retries create a new request and invalidate the old one. A request/response event pair provides context provenance without duplicating private journal text. Photo summaries, onboarding questionnaires, skip/resume and erasure remain separate increments.
 
