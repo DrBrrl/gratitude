@@ -569,3 +569,21 @@ We've enabled paid tier - can you edit our config files and make using it the de
 ```text
 We've rebased and merged! We'd like to add the ability to backfill entries on previous dates and to write more than one entry a day.
 ```
+
+## 2026-10-15 — Image attachments and searchable editable AI summaries
+
+```text
+we're going to test this now but while we're doing that, please add an image attachment feature. AI should be used to write a summary of what is in the image that can be searched later. let's also show the summary to the user and let them edit it.
+```
+
+## 2026-10-15 — Locate preview Firestore journal events
+
+```text
+We're confused when we look at user wTEai77zJOM82bY6jUzzHmCLxbJ3 in firestore for the preview project - there are entries and ai, but no events so we can't see any of the entries we've been testing with
+```
+
+## 2026-10-15 — Events collection absent in console view
+
+```text
+https://console.firebase.google.com/u/0/project/gratitude-drbrrl-dev/firestore/databases/-default-/data/~2Fusers~2FwTEai77zJOM82bY6jUzzHmCLxbJ3~2Fstreams~2Fv1 We are at this URL and we do not see an events collection!
+```
