@@ -6,7 +6,7 @@ export const personalContextAvailable = import.meta.env.VITE_AI_DATA_MODE === 'p
 export const aiAvailable = import.meta.env.VITE_FIREBASE_EMULATORS === 'true' || !!import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY;
 const appChecks = new WeakMap<FirebaseClient['app'], AppCheck>();
 
-/** Firebase AI Logic's managed gateway keeps the Gemini key on Google's backend.
+/** Firebase AI Logic's managed gateway handles Gemini authorization for us.
  * Use its wire response: Firebase JS 12.19 drops modelVersion during SDK mapping.
  * Auth/App Check still use the supported Firebase SDKs. No global fetch patching.
  */

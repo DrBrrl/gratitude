@@ -26,6 +26,29 @@ The private repository `GEMINI_API_KEY` is unused. It is never supplied to Pages
 
 For local live testing, copy the values from the chosen public configuration into `.env.local` using `.env.example` as a template. Live AI also needs the local App Check setup described below. Prefer emulators for automated tests. Real Google account completion and supported mobile-browser sign-in should be checked by the owner; automated emulator tests cover sign-in, save/edit, cross-device reads, isolation and recovery.
 
+## Where to put a Gemini API key
+
+**The current application does not accept or need a supplied Gemini/Google AI Studio key.** Firebase AI Logic manages Gemini authorization using a Google-managed service account. The existing GitHub `GEMINI_API_KEY` secret is unused; adding or replacing that secret will not change the app. [Firebase's key guidance](https://firebase.google.com/docs/ai-logic/faq-and-troubleshooting)
+
+| Configuration | Where it belongs |
+| --- | --- |
+| Gemini / Google AI Studio API key | No input in this integration. Do not paste it into chat, the app, Git-tracked files or a `VITE_*` variable. |
+| Public Firebase web API key | Already in `config/firebase-preview.json` and `config/firebase-production.json`; local development uses `VITE_FIREBASE_API_KEY` in ignored `.env.local`. This is a different credential. |
+| Public App Check site key | Already in those configuration files; local live AI also needs the App Check development setup below. |
+
+To try generic AI prompts in PR #8, sign in to [the preview](https://drbrrl.github.io/gratitude/pr-preview/pr-8/), open **Settings → AI settings**, enable AI prompts and save your choices, then use **Today → Find me a prompt**. No key entry is required.
+
+### Enable paid personalization
+
+A Gemini key belongs to a Google Cloud project. Paid access in another project does not enable it in Gratitude's projects. The current app uses `gratitude-drbrrl-dev` for previews and `gratitude-drbrrl` for production. [Google's project/key explanation](https://ai.google.dev/gemini-api/docs/api-key)
+
+1. Choose the intended environment and open its billing settings: [preview project](https://console.cloud.google.com/billing/linkedaccount?project=gratitude-drbrrl-dev) or [production project](https://console.cloud.google.com/billing/linkedaccount?project=gratitude-drbrrl). Link the intended billing account. This enables pay-as-you-go usage for that project.
+2. Import that same project into [Google AI Studio's Projects page](https://aistudio.google.com/projects) and complete any required paid-tier activation or prepayment. Verify paid access before enabling personal context. [Firebase billing requirements](https://firebase.google.com/docs/ai-logic/pricing)
+3. Set `aiDataMode` to `"paid"` in the matching `config/firebase-preview.json` or `config/firebase-production.json`, commit the configuration and redeploy through the normal Pages workflow. This flag does not itself enable billing. Each environment is configured separately.
+4. In **Settings → AI settings**, choose which sources to share and save those choices. Sharing stays off until the user opts in.
+
+Using a supplied key from another project directly would require a separate protected server integration; the current Pages app has no such credential store or endpoint. Supplying a key does not migrate existing accounts or journal data to that project.
+
 ## Rules deployment
 
 ```sh
