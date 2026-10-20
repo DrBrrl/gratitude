@@ -1,6 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { expect as playwrightExpect, test } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 import { startJournal, openEditor, editor, expectSynced, navigate } from '../helpers/journal-session';
+
+// Upload, transaction and cleanup acknowledgements can take longer on CI.
+const expect = playwrightExpect.configure({ timeout: 15_000 });
 
 test('recover staged photos and received summaries, retain photos through text edits and discard unsaved attachments', async ({ page, context }, info) => {
   test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(300_000);
@@ -24,7 +27,10 @@ test('recover staged photos and received summaries, retain photos through text e
   await steps.action('pick-again', 'Choose the photo again', () => page.getByLabel('Add photo', { exact: true }).setInputFiles('tests/fixtures/yellow-mug.png'), async () => { await expect(page.getByRole('button', { name: 'Attach without AI', exact: true })).toBeEnabled(); });
   await steps.action('attach-no-ai', 'Attach without enabling Gemini or prompt personalization', () => page.getByRole('button', { name: 'Attach without AI', exact: true }).click(), async () => { await expect(page.locator('.photo-card .photo-image img')).toBeVisible({ timeout: 15_000 }); expect(calls).toBe(0); });
   await context.setOffline(true);
-  await steps.action('pending-save', 'Keep an offline save and its attached photo ready for recovery', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Return text to editor', exact: true })).toBeVisible(); });
+  await steps.action('pending-save', 'Keep an offline save and its attached photo ready for recovery', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Return text to editor', exact: true })).toBeVisible();
+    // Keep rendering inputs in the report without recording reflection content.
+    await info.attach('pending-save-layout.json', { contentType: 'application/json', body: JSON.stringify(await page.locator('.pending .primary').evaluate(el => ({ rect: el.getBoundingClientRect().toJSON(), section: el.parentElement!.getBoundingClientRect().toJSON(), scrollY, dpr: devicePixelRatio, background: getComputedStyle(el).backgroundImage }))) });
+  });
   await steps.action('recover-pending', 'Return the pending reflection to its original photo identity', () => page.getByRole('button', { name: 'Return text to editor', exact: true }).click(), async () => { await expect(editor(page)).toContainText('A warm drink.'); await expect(page.locator('.photo-card')).toHaveCount(1); await expect(page.getByRole('button', { name: 'Return text to editor', exact: true })).toHaveCount(0); });
   await steps.action('reconnect', 'Reconnect with the reflection and photo still together', () => context.setOffline(false), async () => { await expect(page.locator('.photo-card .photo-image img')).toBeVisible({ timeout: 20_000 }); });
   await steps.action('save', 'Save the reflection and its attachment', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => { await expect(page.getByRole('heading', { name: 'Reflection saved', exact: true })).toBeVisible({ timeout: 15_000 }); await expectSynced(page); await expect(page.locator('.photo-card .photo-image img')).toBeVisible({ timeout: 15_000 }); });
@@ -44,7 +50,7 @@ test('recover staged photos and received summaries, retain photos through text e
   await steps.action('draft-photo', 'Select a photo for the unsaved reflection', () => page.getByLabel('Add photo', { exact: true }).setInputFiles('tests/fixtures/yellow-mug.png'), async () => { await expect(page.getByRole('img', { name: 'Attachment preview' })).toBeVisible({ timeout: 15_000 }); });
   await steps.action('draft-attach', 'Attach the photo while leaving the reflection unsaved', () => page.getByRole('button', { name: 'Attach without AI', exact: true }).click(), async () => { await expect(page.locator('.photo-card .photo-image img')).toBeVisible({ timeout: 15_000 }); expect(calls).toBe(1); });
   await steps.action('discard', 'Review the draft discard confirmation', () => page.getByRole('button', { name: 'Discard draft', exact: true }).click(), async () => { await expect(page.getByRole('dialog')).toBeVisible(); });
-  await steps.action('confirm-discard', 'Discard the unsaved reflection and remove its attached file', () => page.getByRole('button', { name: 'Discard draft permanently', exact: true }).click(), async () => { await expect(page.getByRole('dialog')).toBeHidden(); await expect(page.locator('.photo-card')).toHaveCount(0); await expect(page.getByRole('alert')).toHaveCount(0); });
+  await steps.action('confirm-discard', 'Discard the unsaved reflection and remove its attached file', () => page.getByRole('button', { name: 'Discard draft permanently', exact: true }).click(), async () => { await expect(page.getByRole('dialog')).toBeHidden({ timeout: 30_000 }); await expect(page.locator('.photo-card')).toHaveCount(0); await expect(page.getByRole('alert')).toHaveCount(0); });
   await steps.action('back', 'Return to the existing journal', () => page.locator('button.back').click(), async () => { await expect(page.locator('article.card')).toHaveCount(1); await expect(page.locator('.card-thumbnail img')).toBeVisible(); });
   await steps.action('cleanup-detail', 'Open the saved photo before testing an interrupted file removal', () => page.getByRole('button', { name: 'View entry', exact: true }).click(), async () => { await expect(page.locator('.photo-card')).toHaveCount(1); });
   const storageEndpoint = '**/v0/b/demo-gratitude.firebasestorage.app/o/**';

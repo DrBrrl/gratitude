@@ -93,7 +93,7 @@ Commit the reviewed baselines, generated documents, and test changes together. D
 
 ## Determinism and waits
 
-The runner fixes the locale (`en-AU`), timezone (`Australia/Hobart`), dark colour scheme, reduced motion, and device scale factor. Screenshot comparisons disable animations and hide the caret. Chromium disables GPU rendering, partial raster reuse, CPU-specific Skia optimizations, font hinting, LCD text, and font subpixel positioning. Full rasterization avoids rounded-border differences caused by repaint history; the application content and styling remain intact. The browser and fonts come from the same Nix lock locally and in CI.
+The runner fixes the locale (`en-AU`), timezone (`Australia/Hobart`), dark colour scheme, reduced motion, and device scale factor. Screenshot comparisons disable animations and hide the caret. Chromium disables GPU rendering, partial raster reuse, CPU-specific Skia optimizations, font hinting, LCD text, and font subpixel positioning. It also runs all compositor stages before drawing and disables threaded scrolling, following [Chrome’s tooling guidance](https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md#rendering--gpu), so scroll and paint work complete in a consistent order. Full rasterization avoids rounded-border differences caused by repaint history; the application content and styling remain intact. The browser and fonts come from the same Nix lock locally and in CI.
 
 As time-dependent behaviour is implemented, freeze the clock before opening the page. Seed randomized colours and identifiers and provide explicit storage fixtures. Stub AI responses and photo summaries at the application boundary; normal CI should not depend on live model output, credentials, cost, or network timing. Use fictional entries and photos, never private reflections.
 
@@ -144,7 +144,7 @@ All rendered content, including dates, is compared without masks or screenshot-o
 
 The tests intercept the exact Firebase AI Logic Gemini Developer API HTTP endpoint. They assert provider-call counts and submitted fictional context; they never make live inference requests. The application has no production response stub. Rules tests exercise duplicate/concurrent device claims, stale consent, changed prompt identity and forged atomic writes. Shared synchronization assertions also reject visible journal error alerts, so screenshot review cannot quietly accept a failed recovery.
 
-CI splits the original journal scenarios and new AI scenarios into separate viewport/suite jobs, with isolated emulators and serial workers in each. All four jobs must pass before publication. This keeps the expanded coverage within the existing job budgets without relaxing screenshot comparisons.
+CI splits journal, AI and photo scenarios into six viewport/suite jobs, with isolated emulators and serial workers in each. All six jobs and the build must pass before publication. This keeps the expanded coverage within the existing job budgets without relaxing screenshot comparisons.
 
 [`009-generic-ai`](tests/e2e/009-generic-ai/README.md) builds with `VITE_AI_DATA_MODE=generic` and runs with `E2E_AI_GENERIC=true`. It verifies the optional generic privacy configuration: unavailable personal sharing controls and a fixed generic instruction even when the account has saved reflections. The AI CI jobs run this second build after the personal-context fixtures; both configurations must pass.
 

@@ -548,7 +548,7 @@
       {/if}
     {/if}
     {#if view.photoResultsPending?.length}<section class="glass photo-recovery"><p>An image summary arrived and is saved on this device.</p><button class="outline" onclick={async () => { try { for (const id of view.photoResultsPending ?? []) await repository?.syncPhotoResult(id); } catch { error = 'Could not sync image summaries. Reconnect and try again.'; } }}>Sync received summaries</button></section>{/if}
-    {#if view.photoCleanupPending}<section class="glass"><p>Photo cleanup needs a connection to finish.</p><button class="outline" onclick={() => repository?.retryPhotoCleanup().catch(() => error = 'File deletion failed. Reconnect and retry.')}>Retry photo cleanup</button></section>{/if}
+    {#if view.photoCleanupPending}<section class="glass photo-recovery"><p>Photo cleanup needs a connection to finish.</p><button class="outline" onclick={() => repository?.retryPhotoCleanup().catch(() => error = 'File deletion failed. Reconnect and retry.')}>Retry photo cleanup</button></section>{/if}
     {#if aiMessage}<p class="ai-message hint" role="status">{aiMessage}</p>{/if}
     {#if view.pending}<section class="glass pending"><h2>A reflection is waiting to sync</h2><p class="entry-text"><ReflectionText text={view.pending.payload.text} /></p><button class="primary" onclick={() => repository?.retry()} disabled={busy}>Retry sync</button><button class="text-button" onclick={recoverPending}>Return text to editor</button></section>{/if}
     {#if view.status !== 'Synced'}<p class="sync-status" role="status">{view.status}</p>{/if}

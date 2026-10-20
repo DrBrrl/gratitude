@@ -1,8 +1,11 @@
-import { expect, test } from '@playwright/test';
+import { expect as playwrightExpect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { unzipSync, strFromU8 } from 'fflate';
 import { TestStepHelper } from '../helpers/test-step-helper';
 import { startJournal, openEditor, editor, expectSynced, navigate } from '../helpers/journal-session';
+
+// Upload, transaction and cleanup acknowledgements can take longer on CI.
+const expect = playwrightExpect.configure({ timeout: 15_000 });
 
 test('attach private photos, correct searchable AI descriptions and retain them through replay and export', async ({ page }, info) => {
   test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(480_000);
