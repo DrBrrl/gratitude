@@ -38,6 +38,7 @@ export default defineConfig({
     launchOptions: {
       executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
       args: ['--disable-gpu', '--disable-partial-raster', '--disable-skia-runtime-opts',
+        '--run-all-compositor-stages-before-draw', '--disable-threaded-scrolling',
         '--font-render-hinting=none', '--disable-font-subpixel-positioning', '--disable-lcd-text']
     }
   },

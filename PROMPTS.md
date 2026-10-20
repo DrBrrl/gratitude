@@ -587,3 +587,9 @@ We're confused when we look at user wTEai77zJOM82bY6jUzzHmCLxbJ3 in firestore fo
 ```text
 https://console.firebase.google.com/u/0/project/gratitude-drbrrl-dev/firestore/databases/-default-/data/~2Fusers~2FwTEai77zJOM82bY6jUzzHmCLxbJ3~2Fstreams~2Fv1 We are at this URL and we do not see an events collection!
 ```
+
+## 2026-10-20 — Resume photo attachment work
+
+```text
+Are you able to continue this process?
+```
