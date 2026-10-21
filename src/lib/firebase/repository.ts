@@ -52,7 +52,7 @@ export class JournalRepository {
     if (checkpoint) {
       try {
         const s = checkpoint.state;
-        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.photos ||
+        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.photos || !s.prompts ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
           const anchor = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${s.lastEventId}`));
@@ -182,11 +182,11 @@ export class JournalRepository {
     if (this.stopped) throw new Error('This journal session has closed.');
     return result;
   }
-  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt) {
+  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string) {
     if (this.generating) return;
     if (this.aiResult) throw new Error('Sync the received prompt before requesting another.');
     const snapshot = this.state;
-    const request = makeRequest(snapshot, day, mode, crypto.randomUUID());
+    const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId);
     this.generating = true;
     try {
       const committed = await this.commitAI(request);

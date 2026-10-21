@@ -2,7 +2,7 @@ import { doc, getDocFromServer, runTransaction, serverTimestamp, Timestamp, type
 import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, type SourceAction, type JournalEvent, isPhotoAction, photoKey } from '../domain.ts';
 
 export function decodeEvent(data: DocumentData): JournalEvent {
-  const payload = data.type === 'ReflectionWritten' && (data.schemaVersion === 3 || data.schemaVersion === 4) && data.payload.entryAt
+  const payload = data.type === 'ReflectionWritten' && (data.schemaVersion === 3 || data.schemaVersion === 4 || data.schemaVersion === 5) && data.payload.entryAt
     ? { ...data.payload, entryAt: typeof data.payload.entryAt === 'string' ? data.payload.entryAt : data.payload.entryAt.toDate().toISOString() } : data.payload;
   return { ...data, payload, recordedAt: typeof data.recordedAt === 'string' ? data.recordedAt : data.recordedAt.toDate().toISOString() } as JournalEvent;
 }
@@ -33,9 +33,9 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
           if (!previous.exists()) throw new Error('Incomplete reflection history.');
           revision = previous.get('payload.expectedRevision') + 1;
           const original = previous.get('payload.promptId') ?? STARTER_ID;
-          if (promptId(action) !== original) throw new Error('A saved reflection keeps its original prompt.');
+          if (action.schemaVersion !== 5 && promptId(action) !== original) throw new Error('A saved reflection keeps its original prompt.');
           const previousAt = previous.get('payload.entryAt') as Timestamp | undefined;
-          if (action.schemaVersion === 3 || action.schemaVersion === 4 ? (previousAt?.toDate().toISOString() ?? null) !== action.payload.entryAt : !!previousAt) throw new Error('A saved reflection keeps its original entry date.');
+          if (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 ? (previousAt?.toDate().toISOString() ?? null) !== action.payload.entryAt : !!previousAt) throw new Error('A saved reflection keeps its original entry date.');
         }
         if (revision !== action.payload.expectedRevision) throw new Error('This reflection changed on another device. Your text has been kept; reload the reflection before editing again.');
         metadata = { lastEventId: action.eventId };
@@ -58,7 +58,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
         }
       }
       const sequence = (head.get('sequence') ?? 0) + 1;
-      const payload = action.type === 'ReflectionWritten' && (action.schemaVersion === 3 || action.schemaVersion === 4) && action.payload.entryAt
+      const payload = action.type === 'ReflectionWritten' && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5) && action.payload.entryAt
         ? { ...action.payload, entryAt: Timestamp.fromDate(new Date(action.payload.entryAt)) } : action.payload;
       tx.set(event, { ...action, payload, sequence, recordedAt: serverTimestamp() });
       tx.set(stream, { sequence, lastEventId: action.eventId });
@@ -67,12 +67,12 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
     }); } catch (error) {
       // Racing identical commits can fail Rules before the SDK retries its precondition.
       // Only a server-confirmed, identical immutable event counts as acknowledgement.
-      if ((error as { code?: string }).code === 'permission-denied') {
-        const prior = await getDocFromServer(event);
-        if (prior.exists()) return resultFromPrior(prior.data());
-        // Another device can advance the head before Rules evaluates our commit.
-        if (attempt < 2) continue;
-      }
+      // A transaction can observe a newer control after reading an absent event.
+      // Check for an identical concurrent commit before interpreting any stale-state error.
+      let prior;
+      try { prior = await getDocFromServer(event); } catch { /* Preserve the original failure if the server is unavailable. */ }
+      if (prior?.exists()) return resultFromPrior(prior.data());
+      if ((error as { code?: string }).code === 'permission-denied' && attempt < 2) continue;
       throw error;
     }
   }

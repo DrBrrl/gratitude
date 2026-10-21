@@ -611,3 +611,9 @@ I noticed this in PR #10: "This PR is stacked on #9 so its backfill preview stay
 ```text
 Question for you - in the preview, i can't seem to get an AI prompt generated - is that expected? All the AI switches are toggled on... In the main application, i can get an AI prompt, though.
 ```
+
+## 2026-10-21 — Generate and edit prompts in the reflection editor
+
+```text
+Right, okay! When i try to write another reflection, it takes me straight to the Your reflection page with the default prompt and no way to generate an AI prompt. I would like, in the "write a reflection/reflection editing page" for there to be an option to generate an AI prompt, as well as double clicking on the prompt itself to allow me to edit the prompt text manually.
+```

@@ -28,10 +28,10 @@ service cloud.firestore {
       function validDay(day) { return day is string && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'); }
       function text(value, max) { return value is string && value.size() <= max; }
       function promptId(e) { return e.schemaVersion == 1 ? e.payload.starterId : e.payload.promptId; }
-      function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && get(eventPath(id)).data.type == 'PromptResponseReceived'); }
+      function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && (get(eventPath(id)).data.type == 'PromptResponseReceived' || get(eventPath(id)).data.type == 'ReflectionWritten' && get(eventPath(id)).data.schemaVersion == 5 && get(eventPath(id)).data.payload.promptText is string && get(eventPath(id)).data.payload.promptId == id)); }
       function unchangedEntryDate(e) {
         let previous = exists(pointerPath(e.payload.entryId)) ? get(eventPath(get(pointerPath(e.payload.entryId)).data.lastEventId)).data : e;
-        return e.schemaVersion in [3, 4]
+        return e.schemaVersion in [3, 4, 5]
           ? e.payload.entryAt == previous.payload.get('entryAt', null)
           : previous.payload.get('entryAt', null) == null;
       }
@@ -42,14 +42,18 @@ service cloud.firestore {
             || (e.schemaVersion == 2 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId']) && knownPrompt(p.promptId))
             || (e.schemaVersion == 3 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt'])
               && knownPrompt(p.promptId) && p.entryAt is timestamp && p.entryAt <= request.time)
+            || (e.schemaVersion == 5 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot'])
+              && ((p.promptText == null && knownPrompt(p.promptId)) || (p.promptId == e.eventId && text(p.promptText, 600) && p.promptText.matches('[\\s\\S]*[^\\s][\\s\\S]*')))
+              && (p.entryAt == null || p.entryAt is timestamp && p.entryAt <= request.time)
+              && (p.photoSlot == null || p.photoSlot is int && p.photoSlot >= 0 && p.photoSlot < 4))
             || (e.schemaVersion == 4 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot'])
               && knownPrompt(p.promptId) && (p.entryAt == null || p.entryAt is timestamp && p.entryAt <= request.time)
               && (p.photoSlot == null || p.photoSlot is int && p.photoSlot >= 0 && p.photoSlot < 4)))
           && unchangedEntryDate(e)
           && validId(p.entryId) && text(p.text, 10000)
-          && (p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*') || e.schemaVersion == 4 && p.photoSlot is int && activePhoto(p.entryId, p.photoSlot))
+          && (p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*') || e.schemaVersion in [4, 5] && p.photoSlot is int && activePhoto(p.entryId, p.photoSlot))
           && p.expectedRevision is int && p.expectedRevision == nextRevision(p.entryId)
-          && (!exists(pointerPath(p.entryId)) || promptId(e) == promptId(get(eventPath(get(pointerPath(p.entryId)).data.lastEventId)).data))
+          && (e.schemaVersion == 5 || !exists(pointerPath(p.entryId)) || promptId(e) == promptId(get(eventPath(get(pointerPath(p.entryId)).data.lastEventId)).data))
           && getAfter(pointerPath(p.entryId)).data.lastEventId == e.eventId;
       }
       function validRef(ref) { return ref is map && ref.keys().hasOnly(['entryId', 'revision']) && validId(ref.entryId) && ref.revision is int && ref.revision > 0; }
@@ -77,9 +81,9 @@ service cloud.firestore {
           && (ids.size() < 18 || validId(ids[17]))
           && (ids.size() < 19 || validId(ids[18]))
           && (ids.size() < 20 || validId(ids[19])); }
-      function validRequest(p, before) {
+      function validRequest(p, before, schema) {
         let choices = get(eventPath(before.choicesId)).data.payload;
-        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'])
+        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'].concat(schema == 2 ? ['entryId', 'entryRevision'] : [])) && (schema != 2 || validId(p.entryId) && p.entryRevision is int && p.entryRevision == nextRevision(p.entryId))
           && p.choicesId == before.choicesId && choices.enabled == true && validDay(p.day)
           && p.templateVersion == 'gratitude-v1' && p.contextMode in ['generic', 'personal']
           && p.entryRefs is list && p.entryRefs.size() <= 5 && validRefs(p.entryRefs) && p.feedbackIds is list && p.feedbackIds.size() <= 20
@@ -92,14 +96,14 @@ service cloud.firestore {
         let before = aiBefore();
         let after = getAfter(aiPath()).data;
         let result = e.type in ['PromptResponseReceived', 'AIRequestFailed'];
-        return e.schemaVersion == 1 && after.lastEventId == e.eventId
+        return (e.schemaVersion == 1 || e.type == 'PromptRequested' && e.schemaVersion == 2) && after.lastEventId == e.eventId
           && after.choicesId == (e.type == 'AIChoicesConfirmed' ? e.eventId : before.choicesId)
           && after.requestId == (e.type == 'PromptRequested' ? e.eventId : e.type == 'PromptFeedbackSubmitted' ? before.requestId : null)
           && (result ? validId(p.requestId) && p.requestId == before.requestId : p.previousEventId == before.lastEventId)
           && (
             (e.type == 'AIChoicesConfirmed' && p.keys().hasOnly(['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance'])
               && p.enabled is bool && p.useJournal is bool && p.useFeedback is bool && text(p.guidance, 500))
-            || (e.type == 'PromptRequested' && validRequest(p, before))
+            || (e.type == 'PromptRequested' && validRequest(p, before, e.schemaVersion))
             || (e.type == 'PromptResponseReceived' && p.keys().hasOnly(['requestId', 'text', 'model', 'finishReason'])
               && e.eventId == p.requestId + '_response' && text(p.text, 600) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
               && text(p.model, 100) && p.model.size() > 0 && p.finishReason == 'STOP')
