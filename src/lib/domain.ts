@@ -1,6 +1,6 @@
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 4;
+export const PROJECTION_VERSION = 5;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v1';
@@ -9,12 +9,14 @@ type ReflectionPayload = { entryId: string; text: string; expectedRevision: numb
 export type Action = Envelope<'ReflectionWritten', ReflectionPayload & { starterId: typeof STARTER_ID }>
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string }, 2>
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; entryAt: string }, 3>
-  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; entryAt: string | null; photoSlot: number | null }, 4>;
+  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; entryAt: string | null; photoSlot: number | null }, 4>
+  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 5>;
 export type AIChoices = { enabled: boolean; useJournal: boolean; useFeedback: boolean; guidance: string };
 type Previous = { previousEventId: string | null };
 export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & AIChoices>;
-export type RequestAction = Envelope<'PromptRequested', Previous & { choicesId: string; day: string; templateVersion: typeof TEMPLATE_VERSION;
-  contextMode: 'generic' | 'personal'; entryRefs: { entryId: string; revision: number }[]; feedbackIds: string[] }>;
+type RequestPayload = Previous & { choicesId: string; day: string; templateVersion: typeof TEMPLATE_VERSION;
+  contextMode: 'generic' | 'personal'; entryRefs: { entryId: string; revision: number }[]; feedbackIds: string[] };
+export type RequestAction = Envelope<'PromptRequested', RequestPayload> | Envelope<'PromptRequested', RequestPayload & { entryId: string; entryRevision: number }, 2>;
 export type ResponseAction = Envelope<'PromptResponseReceived', { requestId: string; text: string; model: string; finishReason: 'STOP' }>;
 export type FailureAction = Envelope<'AIRequestFailed', { requestId: string; reason: 'unavailable' | 'blocked' | 'invalid-response' }>;
 export type FeedbackAction = Envelope<'PromptFeedbackSubmitted', Previous & { promptId: string; text: string }>;
@@ -35,11 +37,11 @@ export function isPhotoAction(action: SourceAction): action is PhotoAction { ret
 export type JournalEvent = SourceAction & { sequence: number; recordedAt: string };
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 4; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 5; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
-export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
+export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
   control: emptyControl(), choices: { enabled: false, useJournal: false, useFeedback: false, guidance: '' },
   requests: {}, responses: {}, days: {}, feedback: [], failure: null
 } }; }
@@ -66,9 +68,10 @@ export function parseAction(input: unknown): SourceAction {
     valid = (v.schemaVersion === 1 && keys(p, ['entryId', 'text', 'expectedRevision', 'starterId']) && p.starterId === STARTER_ID
       || v.schemaVersion === 2 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId']) && id(p.promptId)
       || v.schemaVersion === 3 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt']) && id(p.promptId) && validEntryTime(p.entryAt)
+      || v.schemaVersion === 5 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.promptText === null || p.promptId === v.eventId && string(p.promptText, 600)) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4)
       || v.schemaVersion === 4 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4))
-      && id(p.entryId) && string(p.text, 10_000, v.schemaVersion === 4) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
-  } else if (v.schemaVersion === 1) {
+      && id(p.entryId) && string(p.text, 10_000, (v.schemaVersion === 4 || v.schemaVersion === 5)) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
+  } else if (v.schemaVersion === 1 || v.schemaVersion === 2 && v.type === 'PromptRequested') {
     const previous = p.previousEventId === null || id(p.previousEventId);
     const day = typeof p.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.day) && !isNaN(Date.parse(p.day));
     switch (v.type) {
@@ -82,7 +85,7 @@ export function parseAction(input: unknown): SourceAction {
       }
       case 'AIChoicesConfirmed': valid = keys(p, ['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance']) && previous
         && typeof p.enabled === 'boolean' && typeof p.useJournal === 'boolean' && typeof p.useFeedback === 'boolean' && string(p.guidance, 500, true); break;
-      case 'PromptRequested': valid = keys(p, ['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds']) && previous
+      case 'PromptRequested': valid = keys(p, ['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(v.schemaVersion === 2 ? ['entryId', 'entryRevision'] : [])]) && (v.schemaVersion !== 2 || id(p.entryId) && Number.isSafeInteger(p.entryRevision) && Number(p.entryRevision) >= 0) && previous
         && id(p.choicesId) && day && p.templateVersion === TEMPLATE_VERSION && ['generic', 'personal'].includes(String(p.contextMode))
         && Array.isArray(p.entryRefs) && p.entryRefs.length <= 5 && p.entryRefs.every(ref => ref && keys(ref, ['entryId', 'revision']) && id(ref.entryId) && Number.isSafeInteger(ref.revision) && ref.revision > 0)
         && Array.isArray(p.feedbackIds) && p.feedbackIds.length <= 20 && p.feedbackIds.every(id) && new Set(p.feedbackIds).size === p.feedbackIds.length
@@ -119,18 +122,19 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
   if (action.type === 'ReflectionWritten') {
     const existing = state.entries.find(entry => entry.id === action.payload.entryId);
     if ((existing?.revision ?? 0) !== action.payload.expectedRevision) throw new Error('Conflicting reflection revision');
-    if (!action.payload.text.trim() && !(action.schemaVersion === 4 && entryPhotos(state, action.payload.entryId).some(photo => photo.slot === action.payload.photoSlot))) throw new Error('Write a reflection or attach a photo.');
+    if (!action.payload.text.trim() && !((action.schemaVersion === 4 || action.schemaVersion === 5) && entryPhotos(state, action.payload.entryId).some(photo => photo.slot === action.payload.photoSlot))) throw new Error('Write a reflection or attach a photo.');
     const chosen = promptId(action);
-    if (existing && chosen !== (existing.promptId ?? STARTER_ID)) throw new Error('A saved reflection keeps its original prompt.');
-    const chosenAt = action.schemaVersion === 3 || action.schemaVersion === 4 ? action.payload.entryAt ?? undefined : undefined;
+    if (existing && action.schemaVersion !== 5 && chosen !== (existing.promptId ?? STARTER_ID)) throw new Error('A saved reflection keeps its original prompt.');
+    const chosenAt = action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 ? action.payload.entryAt ?? undefined : undefined;
     if (existing && existing.entryAt !== chosenAt) throw new Error('A saved reflection keeps its original entry date.');
     if (chosenAt && chosenAt > new Date(event.recordedAt).toISOString()) throw new Error('An entry cannot be dated in the future.');
-    const prompt = chosen === STARTER_ID ? STARTER_PROMPT : state.ai.responses[chosen]?.payload.text;
+    const manual = action.schemaVersion === 5 ? action.payload.promptText : null;
+    const prompt = manual ?? resolvePrompt(state, chosen);
     if (!prompt) throw new Error('Missing prompt response');
     const entry: Entry = { id: action.payload.entryId, text: action.payload.text, prompt, promptId: chosen,
       revision: action.payload.expectedRevision + 1, colour: existing?.colour ?? state.entries.length % 7, recordedAt: existing?.recordedAt ?? event.recordedAt,
       ...(chosenAt ? { entryAt: chosenAt } : {}) };
-    return { ...next, entries: existing ? state.entries.map(old => old.id === entry.id ? entry : old) : [...state.entries, entry] };
+    return { ...next, prompts: manual === null ? state.prompts : { ...state.prompts, [action.eventId]: manual }, entries: existing ? state.entries.map(old => old.id === entry.id ? entry : old) : [...state.entries, entry] };
   }
   const ai = { ...state.ai, control: nextControl(state.ai.control, action) };
   switch (action.type) {
@@ -140,6 +144,7 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
     }
     case 'PromptRequested': {
       const p = action.payload;
+      if (action.schemaVersion === 2 && (state.entries.find(entry => entry.id === action.payload.entryId)?.revision ?? 0) !== action.payload.entryRevision) throw new Error('This reflection changed before the prompt request.');
       if (!ai.choices.enabled || p.choicesId !== ai.control.choicesId) throw new Error('AI consent is no longer current.');
       if (p.contextMode === 'generic' && (p.entryRefs.length || p.feedbackIds.length)
         || p.entryRefs.length && !ai.choices.useJournal || p.feedbackIds.length && !ai.choices.useFeedback) throw new Error('Unapproved AI context');
@@ -151,12 +156,12 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
       const request = ai.requests[action.payload.requestId];
       if (!request || request.payload.choicesId !== ai.control.choicesId || !ai.choices.enabled) throw new Error('AI consent is no longer current.');
       ai.responses = { ...ai.responses, [action.eventId]: action };
-      ai.days = { ...ai.days, [request.payload.day]: action.eventId }; ai.failure = null; break;
+      if (request.schemaVersion === 1) ai.days = { ...ai.days, [request.payload.day]: action.eventId }; ai.failure = null; break;
     }
     case 'AIRequestFailed': ai.failure = action; break;
     case 'StarterPromptChosen': ai.days = { ...ai.days, [action.payload.day]: STARTER_ID }; ai.failure = null; break;
     case 'PromptFeedbackSubmitted':
-      if (action.payload.promptId !== STARTER_ID && !ai.responses[action.payload.promptId]) throw new Error('Missing feedback prompt');
+      if (!resolvePrompt(state, action.payload.promptId)) throw new Error('Missing feedback prompt');
       ai.feedback = [...ai.feedback.filter(f => f.payload.promptId !== action.payload.promptId), action]; break;
   }
   return { ...next, ai };
@@ -189,3 +194,6 @@ function applyPhoto(state: Projection, action: PhotoAction): Projection {
   if (action.type === 'PhotoRemoved' && state.entries.some(entry => entry.id === p.entryId && !entry.text.trim()) && entryPhotos(state, p.entryId).length === 1) throw new Error('Write a reflection before removing the last photo.');
   return { ...state, photos: { ...state.photos, [key]: photo } };
 }
+
+/** Resolve an immutable AI response or a user-written prompt from source history. */
+export function resolvePrompt(state: Projection, id: string): string | undefined { return id === STARTER_ID ? STARTER_PROMPT : state.prompts[id] ?? state.ai.responses[id]?.payload.text; }

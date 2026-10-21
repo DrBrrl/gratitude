@@ -150,3 +150,9 @@ The editor, saved confirmation and full entry show **Add photo**. JPEG/PNG/WebP 
 Saved photos show their current summary, its AI/user origin, **Edit summary** or **Write summary**, and **Remove photo** with inline confirmation. **Save summary** commits a correction; clearing the field clears the searchable description. AI generation can fail or remain interrupted without blocking reflection saving; retry is explicit. A photo-only reflection is valid, with at least one attachment retained. Cards show compact thumbnails and search reveals matching summaries. Full entries highlight current descriptions and use them as accessible image descriptions. New descriptions do not overwrite user corrections made while Gemini was responding.
 
 Photo exports are ZIP archives containing the existing Markdown/JSON file, current summaries and normalized attachment files. No-photo exports retain the user-approved Markdown format with no system-information section. UI-review fixtures do not upload or invoke Gemini; use the Firebase preview or emulators for these controls.
+
+## Reflection editor prompt controls
+
+Your reflection keeps the prompt inside the tinted response box. Double-clicking it opens an inline, colour-matched text field; an Edit prompt button provides the same interaction for touch and keyboard users. Save prompt confirms a nonblank question up to 600 characters in this local draft; Cancel leaves it unchanged. The reflection save commits question and response together.
+
+Generate AI prompt is available here when AI choices are enabled, including when writing another entry or editing a saved one. A generated option appears separately with Use this prompt and Keep current prompt. A result never silently replaces a manually edited question. Today retains its own question, and the existing reflection text, date and colour remain intact.

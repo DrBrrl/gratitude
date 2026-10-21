@@ -64,10 +64,12 @@ jobs:
       fail-fast: false
       matrix:
         project: [mobile-chromium, desktop-chromium]
-        suite: [journal, ai, photos]
+        suite: [journal, ai, photos, editor]
         include:
           - suite: journal
             scenarios: tests/e2e/(00[1-6]|010-)
+          - suite: editor
+            scenarios: tests/e2e/013-editor-prompts
           - suite: photos
             scenarios: tests/e2e/01[12]-photo
           - suite: ai

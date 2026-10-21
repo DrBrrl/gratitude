@@ -144,7 +144,7 @@ All rendered content, including dates, is compared without masks or screenshot-o
 
 The tests intercept the exact Firebase AI Logic Gemini Developer API HTTP endpoint. They assert provider-call counts and submitted fictional context; they never make live inference requests. The application has no production response stub. Rules tests exercise duplicate/concurrent device claims, stale consent, changed prompt identity and forged atomic writes. Shared synchronization assertions also reject visible journal error alerts, so screenshot review cannot quietly accept a failed recovery.
 
-CI splits journal, AI and photo scenarios into six viewport/suite jobs, with isolated emulators and serial workers in each. All six jobs and the build must pass before publication. This keeps the expanded coverage within the existing job budgets without relaxing screenshot comparisons.
+CI splits journal, AI, photo and editor-prompt scenarios into eight viewport/suite jobs, with isolated emulators and serial workers in each. All eight jobs and the build must pass before publication. This keeps the expanded coverage within the existing job budgets without relaxing screenshot comparisons.
 
 [`009-generic-ai`](tests/e2e/009-generic-ai/README.md) builds with `VITE_AI_DATA_MODE=generic` and runs with `E2E_AI_GENERIC=true`. It verifies the optional generic privacy configuration: unavailable personal sharing controls and a fixed generic instruction even when the account has saved reflections. The AI CI jobs run this second build after the personal-context fixtures; both configurations must pass.
 
@@ -155,3 +155,7 @@ CI splits journal, AI and photo scenarios into six viewport/suite jobs, with iso
 ## Photo attachment walkthrough
 
 `011-photo-attachments` tests both viewports against Auth, Firestore and Storage emulators with fictional Gemini responses. It follows selection and AI disclosure, oversized/unsupported rejection, reload recovery, photo-only save, AI/manual summary search, correction during an in-flight request, failure/retry, four-photo limits, removal confirmation, complete replay and real photo ZIP download contents. Each action has a full-page zero-pixel screenshot and generated checks below its image. The fixture is a deterministic synthetic yellow mug/window illustration with a fictional metadata marker; the intercepted request verifies that normalization strips the marker. It contains no private journal data. `012-photo-recovery` additionally verifies offline attachment, cancellation, received-summary outbox recovery and photo preservation during text edits/discard. CI runs these scenarios in its own `photos` suite, alongside the journal and AI suites, to keep individual jobs within their time budgets.
+
+### Editor prompts
+
+Scenario `013-editor-prompts` exercises generating and selecting a question for an additional entry, double-click and button-based manual editing, cancellation/blank rejection, saving/searching a changed question, durable drafts and received-output recovery, late AI output retaining manual input, replay without inference and Today isolation. It runs in its own `editor` viewport/suite jobs. Every user action has a full-page, unmasked screenshot comparison at zero tolerance and generated checks below the image.

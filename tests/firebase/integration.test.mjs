@@ -303,3 +303,36 @@ test('photo-only removal keeps a sparse remaining slot within Rules lookup limit
   assert.equal(state.photos.entry_0.removed, true);
   assert.equal(state.photos.entry_3.removed, false);
 });
+
+test('editor prompts save manual source text and AI references across devices without changing Today', async () => {
+  const a = await device('editor-prompts@example.test', 'editor-prompts-a');
+  const b = await device('editor-prompts@example.test', 'editor-prompts-b');
+  const written = (eventId, promptId, promptText, expectedRevision) => ({ eventId, type: 'ReflectionWritten', schemaVersion: 5,
+    payload: { entryId: 'entry', text: 'A small moment.', expectedRevision, promptId, promptText, entryAt: null, photoSlot: null } });
+  await a.append(written('original', STARTER_ID, null, 0));
+  await a.append(written('manual', 'manual', 'What colour brightened my afternoon?', 1));
+  await b.append(written('text-edit', 'manual', null, 2));
+  let state = replay(await events(b));
+  assert.equal(state.entries[0].prompt, 'What colour brightened my afternoon?');
+  assert.equal(state.entries[0].colour, 0);
+  await assert.rejects(a.append(written('missing-reference', 'unknown', null, 3)));
+  const { writeBatch, serverTimestamp } = await import('firebase/firestore');
+  const root = `users/${a.uid}/streams/v1`;
+  const forged = writeBatch(a.db);
+  forged.set(doc(a.db, `${root}/events/forged`), { ...written('forged', 'forged', 'x'.repeat(601), 3), sequence: 4, recordedAt: serverTimestamp() });
+  forged.set(doc(a.db, root), { sequence: 4, lastEventId: 'forged' });
+  forged.set(doc(a.db, `${root}/entries/entry`), { lastEventId: 'forged' });
+  await assertFails(forged.commit());
+  await a.append({ eventId: 'choices', type: 'AIChoicesConfirmed', schemaVersion: 1, payload: { previousEventId: null, enabled: true, useJournal: false, useFeedback: false, guidance: '' } });
+  const { makeRequest } = await import('../../src/lib/ai/context.ts');
+  const request = makeRequest(replay(await events(a)), '2026-10-01', 'generic', 'editor-request', 'entry');
+  await a.append(request);
+  const response = { eventId: 'editor-request_response', type: 'PromptResponseReceived', schemaVersion: 1, payload: { requestId: request.eventId, text: 'What everyday sound did you enjoy?', model: 'fictional-model', finishReason: 'STOP' } };
+  await Promise.all([a.append(response), b.append(response)]);
+  await a.append(written('ai-edit', response.eventId, null, 3));
+  state = replay(await events(b));
+  assert.equal(state.entries[0].prompt, response.payload.text);
+  assert.deepEqual(state.ai.days, {});
+  assert.equal(state.prompts.manual, 'What colour brightened my afternoon?');
+  assert.equal(state.entries[0].revision, 4);
+});

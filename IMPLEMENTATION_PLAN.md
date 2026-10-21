@@ -132,3 +132,7 @@ Each PR states the resulting behaviour, event/schema changes, authorization boun
 ## Photo increment delivered for review
 
 Private normalized attachments, photo-only save, per-photo Gemini consent, response events, editable/searchable summaries, four-photo limits, upload selection recovery, confirmed removal/cleanup retry, and complete Markdown/JSON photo ZIP exports are implemented. Source-event and cache compatibility is documented in MVP_DESIGN.md. The 011/012 walkthroughs cover mobile and desktop actions with zero-difference screenshots and fictional provider responses; unit and Firebase tests cover full/cached replay, late-result rejection and owner access. Preview and production buckets are provisioned separately in Sydney. Server-wide orphan sweeping, whole-journal erasure and cold offline startup remain separate increments.
+
+## Reflection editor prompts
+
+Implemented: generate/review/select an AI option inside new, additional, backfilled and saved-entry composers; double-click or use the accessible Edit prompt button to write a manual question; retain confirmed choices in local drafts and commit prompt/body changes together. Dates/colours are unchanged by edits. Generated options do not replace manual text or change Today. Source schemas and cache migration are described in MVP_DESIGN.md. Scenario 013 covers mobile/desktop gestures, cancellation/empty input, draft reload, manual search, late/received-offline output recovery, exact replay and Today isolation.
