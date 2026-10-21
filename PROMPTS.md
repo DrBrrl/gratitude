@@ -593,3 +593,15 @@ https://console.firebase.google.com/u/0/project/gratitude-drbrrl-dev/firestore/d
 ```text
 Are you able to continue this process?
 ```
+
+## 2026-10-21 — Interrupted PR base observation
+
+```text
+I noticed this in PR #10: "This PR is stacked on #9 so its backfill preview stays unchanged during review. Merge #9 first, then retarget this PR to main."
+```
+
+## 2026-10-21 — Retarget photo PR after merging backfill
+
+```text
+I noticed this in PR #10: "This PR is stacked on #9 so its backfill preview stays unchanged during review. Merge #9 first, then retarget this PR to main." I have merged pr #9, can we retarget pr #10 to main please? :)
+```
