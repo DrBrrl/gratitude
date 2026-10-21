@@ -605,3 +605,9 @@ I noticed this in PR #10: "This PR is stacked on #9 so its backfill preview stay
 ```text
 I noticed this in PR #10: "This PR is stacked on #9 so its backfill preview stays unchanged during review. Merge #9 first, then retarget this PR to main." I have merged pr #9, can we retarget pr #10 to main please? :)
 ```
+
+## 2026-10-21 — Preview AI prompt generation differs from production
+
+```text
+Question for you - in the preview, i can't seem to get an AI prompt generated - is that expected? All the AI switches are toggled on... In the main application, i can get an AI prompt, though.
+```

@@ -439,3 +439,9 @@ The notice-lifecycle fix passed all four normal recovery comparisons (two per vi
 ## 2026-10-21 — Photo PR now follows merged main
 
 PR #9 merged as 62df92d with a tree identical to its former branch head 567c034. GitHub had already retargeted PR #10 to main, but its description retained the earlier stacking instructions. Rebase only the photo commits onto the merged main commit, preserving the application/test tree and removing the duplicate backfill commit from the PR history. Update the description to reflect its current base. No application behavior changes are needed.
+
+## 2026-10-21 — Preview prompt generation investigation
+
+Read-only administrative checks confirmed that preview and production both have billing enabled, Gemini's service enabled, Auth-required AI gateways, enforced App Check, matching one-hour App Check sessions and reCAPTCHA keys allowing drbrrl.github.io. Their daily-prompt adapters use the same model and generation configuration. These checks do not prove a successful signed-in model request; no private journal contents or user prompts were read.
+
+The Today template intentionally offers generation only when there is neither a saved entry for today nor a local Today draft. Additional-entry composition currently reuses the current question and has no separate generation control. Since preview and production have separate journal state, their available controls can differ despite identical AI switches. The user's exact visible state/error is still needed to distinguish this UI restriction from an actual failed request. No configuration was changed on the basis of this unconfirmed diagnosis.
