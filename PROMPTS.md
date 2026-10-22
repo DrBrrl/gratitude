@@ -635,3 +635,9 @@ Are you still at capacity? :)
 ```text
 Are you still at capacity? :) if not, let's keep going.
 ```
+
+## 2026-10-23 — Outline and tighten journal action buttons
+
+```text
+That appears to be functioning as intended! As a small style preference, can we format the "Edit prompt" and "Generate AI prompt" buttons so that they look a little more like buttons? Similar to the format of the "Add photo" button - and you can fit them both on the same line, extending from one side of the card to the other, with a little bit less padding between them and the prompt above. I have a similar request for the "AI image summary" buttons: "Edit summary" and "Remove photo". And for the "View entry" and "Edit reflection" buttons - can we get a border around these left-aligned buttons? Slightly less padding too.
+```

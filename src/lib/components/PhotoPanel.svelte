@@ -116,8 +116,9 @@
         {:else if photo.status === 'failed'}<p class="hint" role="status">Couldn’t summarize this photo. You can retry or write a summary.</p>
         {:else if !photo.summary}<p class="hint">No image summary yet.</p>{/if}
         <div class="actions"><button onclick={() => { editing = photo.photoId; summary = photo.summary; }} disabled={busy || disabled}>{photo.summary ? 'Edit summary' : 'Write summary'}</button>
+          <button onclick={() => removing = photo.photoId} disabled={busy || disabled}>Remove photo</button>
           {#if !photo.summary || photo.status !== 'idle'}<button onclick={() => request(photo.entryId, photo.slot)} disabled={busy || !aiAvailable || !personalContextAvailable || view.photoResultsPending?.includes(photo.lastEventId) || view.photoGenerating?.includes(photoKey(photo.entryId, photo.slot))}>{photo.status === 'idle' ? 'Summarize photo' : 'Retry summary'}</button>{/if}
-          <button onclick={() => removing = photo.photoId} disabled={busy || disabled}>Remove photo</button></div>
+        </div>
         {#if !photo.summary && photo.status === 'idle'}<p class="hint">Summarize photo sends only this photo to Gemini.</p>{/if}
       {/if}
       {#if removing === photo.photoId}<div class="remove-confirm"><p>Remove this photo and its summary?</p>{#if lastRequiredPhoto}<p class="hint">Add reflection text before removing its last photo.</p>{/if}<div class="actions"><button onclick={() => remove(photo)} disabled={busy || lastRequiredPhoto}>Confirm removal</button><button onclick={() => removing = null} disabled={busy}>Keep photo</button></div></div>{/if}
@@ -150,7 +151,9 @@
   .summary { margin: 0 0 8px; white-space: pre-wrap; line-height: 1.5; font-size: .9rem; }
   .hint, .limits { font-size: .8rem; color: #bfc5ce; line-height: 1.5; margin: 8px 0; }
   .limits { text-align: center; }
-  .actions { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .actions button { min-height: 36px; padding: 6px 8px; border: 1px solid #bda74688; border-radius: 12px; line-height: 1.25; }
+  .actions button:last-child:nth-child(odd) { grid-column: 1 / -1; }
   button, a { color: var(--yellow, #ffdf48); font: inherit; font-size: .85rem; }
   button { min-height: 44px; border: 0; background: none; padding: 4px 0; cursor: pointer; }
   button:disabled { opacity: .5; cursor: default; }
