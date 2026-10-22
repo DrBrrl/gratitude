@@ -95,7 +95,14 @@ test('attach private photos, correct searchable AI descriptions and retain them 
   await steps.action('privacy', 'Open recovery controls', () => page.getByRole('button', { name: /^Privacy & data/ }).click(), async () => { await expect(page.getByRole('button', { name: 'Rebuild local view', exact: true })).toBeVisible(); });
   await steps.action('rebuild', 'Reconstruct all photos and descriptions without calling Gemini', () => page.getByRole('button', { name: 'Rebuild local view', exact: true }).click(), async () => { await expectSynced(page); expect(requests).toBe(3); });
   await navigate(page, steps, 'rebuilt-journal', 'Journal');
-  await steps.action('rebuilt-detail', 'Read photos and manual text after complete replay', () => page.getByRole('button', { name: 'View entry', exact: true }).click(), async () => { await expect(page.locator('.photo-card')).toHaveCount(3); await expect(page.locator('.photo-card').nth(1).locator('.summary')).toHaveText('A little reminder of home.'); expect(requests).toBe(3); });
+  await steps.action('rebuilt-detail', 'Read photos and manual text after complete replay', () => page.getByRole('button', { name: 'View entry', exact: true }).click(), async () => {
+    await expect(page.locator('.photo-card')).toHaveCount(3);
+    const images = page.locator('.photo-card .photo-image img');
+    await expect(images).toHaveCount(3);
+    await expect.poll(() => images.evaluateAll(nodes => nodes.every(node => node instanceof HTMLImageElement && node.complete && node.naturalWidth > 0))).toBe(true);
+    await images.evaluateAll(nodes => Promise.all(nodes.map(node => (node as HTMLImageElement).decode())));
+    await expect(page.locator('.photo-card').nth(1).locator('.summary')).toHaveText('A little reminder of home.'); expect(requests).toBe(3);
+  }, 'All three photos are loaded and decoded, manual descriptions survive replay and Gemini is not called again');
   await navigate(page, steps, 'export-settings', 'Settings');
   await steps.action('export', 'Open journal export', () => page.getByRole('button', { name: /^Export journal/ }).click(), async () => { await expect(page.getByRole('button', { name: 'Prepare export', exact: true })).toBeVisible(); });
   await steps.action('prepare', 'Include saved photo bytes and descriptions in Markdown ZIP', () => page.getByRole('button', { name: 'Prepare export', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Download Markdown ZIP', exact: true })).toBeVisible({ timeout: 15_000 }); });

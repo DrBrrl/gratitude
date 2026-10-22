@@ -418,7 +418,7 @@ Viewport: desktop-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] All three photos are loaded and decoded, manual descriptions survive replay and Gemini is not called again
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Open Settings
