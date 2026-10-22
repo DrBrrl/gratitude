@@ -150,7 +150,7 @@ CI splits journal, AI, photo and editor-prompt scenarios into eight viewport/sui
 
 ## Backfilled and additional reflections
 
-[`010-backfill-entries`](tests/e2e/010-backfill-entries/README.md) follows a past-date draft through reload, save and edit, rejects future dates, adds two reflections for the same day, rebuilds the journal from events and checks the downloaded Markdown dates. The journal CI jobs run it alongside scenarios 001–006. All actions retain full-page zero-tolerance comparisons, with the checks beneath their images. Unit and Rules tests additionally cover timestamp encoding, concurrent devices, legacy events, immutable dates, chronological tie breaks and JSON archive version 2.
+[`010-backfill-entries`](tests/e2e/010-backfill-entries/README.md) follows a past-date draft through reload, save and edit, rejects future dates, adds two reflections for the same day, rebuilds the journal from events and checks the downloaded Markdown dates. The journal CI jobs run it alongside scenarios 001–006. All actions retain full-page zero-tolerance comparisons, with the checks beneath their images. Unit and Rules tests additionally cover timestamp encoding, concurrent devices, legacy events, legacy immutable dates, explicit schema 6 date edits, chronological tie breaks and JSON archive version 2.
 
 ## Photo attachment walkthrough
 
@@ -159,3 +159,8 @@ CI splits journal, AI, photo and editor-prompt scenarios into eight viewport/sui
 ### Editor prompts
 
 Scenario `013-editor-prompts` exercises generating and selecting a question for an additional entry, double-click and button-based manual editing, cancellation/blank rejection, saving/searching a changed question, durable drafts and received-output recovery, late AI output retaining manual input, replay without inference and Today isolation. It runs in its own `editor` viewport/suite jobs. Every user action has a full-page, unmasked screenshot comparison at zero tolerance and generated checks below the image.
+
+
+### Dates in every editor
+
+Scenario `014-reflection-dates` runs alongside 013 in the editor suite. It starts a backfill directly from Today, reloads its draft, recovers an offline pending save, edits the saved date into Today, reloads before committing, and checks completion, colour, replay and actual Markdown download contents. Empty and future dates are rejected in the editor. Each action has a full-page, unmasked zero-pixel comparison with checks underneath.

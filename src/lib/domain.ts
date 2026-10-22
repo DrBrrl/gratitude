@@ -10,7 +10,8 @@ export type Action = Envelope<'ReflectionWritten', ReflectionPayload & { starter
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string }, 2>
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; entryAt: string }, 3>
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; entryAt: string | null; photoSlot: number | null }, 4>
-  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 5>;
+  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 5>
+  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 6>;
 export type AIChoices = { enabled: boolean; useJournal: boolean; useFeedback: boolean; guidance: string };
 type Previous = { previousEventId: string | null };
 export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & AIChoices>;
@@ -68,9 +69,9 @@ export function parseAction(input: unknown): SourceAction {
     valid = (v.schemaVersion === 1 && keys(p, ['entryId', 'text', 'expectedRevision', 'starterId']) && p.starterId === STARTER_ID
       || v.schemaVersion === 2 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId']) && id(p.promptId)
       || v.schemaVersion === 3 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt']) && id(p.promptId) && validEntryTime(p.entryAt)
-      || v.schemaVersion === 5 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.promptText === null || p.promptId === v.eventId && string(p.promptText, 600)) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4)
+      || (v.schemaVersion === 5 || v.schemaVersion === 6) && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.promptText === null || p.promptId === v.eventId && string(p.promptText, 600)) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4)
       || v.schemaVersion === 4 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4))
-      && id(p.entryId) && string(p.text, 10_000, (v.schemaVersion === 4 || v.schemaVersion === 5)) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
+      && id(p.entryId) && string(p.text, 10_000, (v.schemaVersion === 4 || v.schemaVersion === 5 || v.schemaVersion === 6)) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
   } else if (v.schemaVersion === 1 || v.schemaVersion === 2 && v.type === 'PromptRequested') {
     const previous = p.previousEventId === null || id(p.previousEventId);
     const day = typeof p.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.day) && !isNaN(Date.parse(p.day));
@@ -122,13 +123,13 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
   if (action.type === 'ReflectionWritten') {
     const existing = state.entries.find(entry => entry.id === action.payload.entryId);
     if ((existing?.revision ?? 0) !== action.payload.expectedRevision) throw new Error('Conflicting reflection revision');
-    if (!action.payload.text.trim() && !((action.schemaVersion === 4 || action.schemaVersion === 5) && entryPhotos(state, action.payload.entryId).some(photo => photo.slot === action.payload.photoSlot))) throw new Error('Write a reflection or attach a photo.');
+    if (!action.payload.text.trim() && !((action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6) && entryPhotos(state, action.payload.entryId).some(photo => photo.slot === action.payload.photoSlot))) throw new Error('Write a reflection or attach a photo.');
     const chosen = promptId(action);
-    if (existing && action.schemaVersion !== 5 && chosen !== (existing.promptId ?? STARTER_ID)) throw new Error('A saved reflection keeps its original prompt.');
-    const chosenAt = action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 ? action.payload.entryAt ?? undefined : undefined;
-    if (existing && existing.entryAt !== chosenAt) throw new Error('A saved reflection keeps its original entry date.');
+    if (existing && action.schemaVersion !== 5 && action.schemaVersion !== 6 && chosen !== (existing.promptId ?? STARTER_ID)) throw new Error('A saved reflection keeps its original prompt.');
+    const chosenAt = action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6 ? action.payload.entryAt ?? undefined : undefined;
+    if (existing && action.schemaVersion !== 6 && existing.entryAt !== chosenAt) throw new Error('A saved reflection keeps its original entry date.');
     if (chosenAt && chosenAt > new Date(event.recordedAt).toISOString()) throw new Error('An entry cannot be dated in the future.');
-    const manual = action.schemaVersion === 5 ? action.payload.promptText : null;
+    const manual = action.schemaVersion === 5 || action.schemaVersion === 6 ? action.payload.promptText : null;
     const prompt = manual ?? resolvePrompt(state, chosen);
     if (!prompt) throw new Error('Missing prompt response');
     const entry: Entry = { id: action.payload.entryId, text: action.payload.text, prompt, promptId: chosen,

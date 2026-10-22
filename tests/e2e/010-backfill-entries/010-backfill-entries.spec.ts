@@ -97,7 +97,7 @@ test('backfill a local date, preserve its draft and save multiple independent en
   });
   await steps.action('edit-past', 'Edit the backfilled text while retaining its date and prompt', () => page.getByRole('button', { name: 'Edit reflection', exact: true }).click(), async () => {
     await expectEditor(page, 'Remembering the neighbour who brought in my bins.');
-    await expect(page.getByLabel('Entry date and time')).toHaveCount(0);
+    await expect(page.getByLabel('Entry date and time')).toHaveValue('2026-09-29T09:15');
   });
   await steps.action('edit-text', 'Add detail to the remembered moment', () => editor(page).fill('Remembering the neighbour who brought in my bins and waved.'), async () => { await expectEditor(page, 'Remembering the neighbour who brought in my bins and waved.'); });
   await steps.action('save-edit', 'Save the edit without changing the historical date', () => page.getByRole('button', { name: 'Save changes', exact: true }).click(), async () => {

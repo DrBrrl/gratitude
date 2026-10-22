@@ -617,3 +617,9 @@ Question for you - in the preview, i can't seem to get an AI prompt generated - 
 ```text
 Right, okay! When i try to write another reflection, it takes me straight to the Your reflection page with the default prompt and no way to generate an AI prompt. I would like, in the "write a reflection/reflection editing page" for there to be an option to generate an AI prompt, as well as double clicking on the prompt itself to allow me to edit the prompt text manually.
 ```
+
+## 2026-10-22 — Change reflection dates in every editor
+
+```text
+When i click "write a reflection" on the main page, i would like for there to be the option to change the datetime of the reflection. I would like the same thing to be possible when i edit a reflection.
+```
