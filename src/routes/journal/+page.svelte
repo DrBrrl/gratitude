@@ -75,22 +75,23 @@
   const newEntryKey = 'draft:new';
   let editorDateTime = $state('');
   let editorEntryAt = $state('');
-  const choosingDate = $derived(editorDraftKey === newEntryKey && !editing);
+  let editorDateChanged = $state(false);
   function chosenEntryAt(value: string) {
     const date = new Date(value);
     if (!Number.isFinite(date.getTime()) || localDateTime(date) !== (value.length === 16 ? `${value}:00` : value) || date.getFullYear() < 1) return null;
     return date.toISOString();
   }
-  const entryDateError = $derived(choosingDate ? !chosenEntryAt(editorDateTime) ? 'Choose a valid entry date and time.'
-    : new Date(editorEntryAt) > currentInstant ? 'Choose a date and time that is now or earlier.' : '' : '');
+  // Validate the visible second; an untouched server timestamp may retain milliseconds.
+  const entryDateError = $derived(!chosenEntryAt(editorDateTime) ? 'Choose a valid entry date and time.'
+    : new Date(chosenEntryAt(editorDateTime)!) > currentInstant ? 'Choose a date and time that is now or earlier.' : '');
   const daily = $derived(todayReflection(view.state.entries, today));
-  const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft && (!!todayDraft.payload.text.trim() || entryPhotos(view.state, todayDraft.payload.entryId).length > 0 || todayDraft.schemaVersion === 5 && (todayDraft.payload.promptText !== null || todayDraft.payload.promptId !== (daily.entry?.promptId ?? view.state.ai.days[today] ?? STARTER_ID))));
+  const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft && (!!todayDraft.payload.text.trim() || entryPhotos(view.state, todayDraft.payload.entryId).length > 0 || todayDraft.schemaVersion === 6 && todayDraft.payload.entryAt !== null || (todayDraft.schemaVersion === 5 || todayDraft.schemaVersion === 6) && (todayDraft.payload.promptText !== null || todayDraft.payload.promptId !== (daily.entry?.promptId ?? view.state.ai.days[today] ?? STARTER_ID))));
   const todayDraftEntry = $derived(hasTodayDraft ? view.state.entries.find(entry => entry.id === todayDraft?.payload.entryId) : undefined);
   const todayColour = $derived(colours[hasTodayDraft ? todayDraftEntry?.colour ?? view.state.entries.length % colours.length : daily.colour]);
   let editorColour = $state(colours[0]);
   let editorPromptId = $state(STARTER_ID);
   const currentPromptId = $derived((hasTodayDraft && todayDraft ? promptId(todayDraft) : daily.entry?.promptId ?? view.state.ai.days[today]) ?? STARTER_ID);
-  const currentPrompt = $derived(hasTodayDraft && todayDraft ? (todayDraft.schemaVersion === 5 ? todayDraft.payload.promptText : null) ?? resolvePrompt(view.state, promptId(todayDraft)) ?? todayDraftEntry?.prompt ?? STARTER_PROMPT : daily.entry?.prompt ?? resolvePrompt(view.state, currentPromptId) ?? STARTER_PROMPT);
+  const currentPrompt = $derived(hasTodayDraft && todayDraft ? ((todayDraft.schemaVersion === 5 || todayDraft.schemaVersion === 6) ? todayDraft.payload.promptText : null) ?? resolvePrompt(view.state, promptId(todayDraft)) ?? todayDraftEntry?.prompt ?? STARTER_PROMPT : daily.entry?.prompt ?? resolvePrompt(view.state, currentPromptId) ?? STARTER_PROMPT);
   let editorManualPrompt = $state<string | null>(null);
   let editingPrompt = $state(false);
   let promptBuffer = $state('');
@@ -260,12 +261,13 @@
       const original = stored ? view.state.entries.find(item => item.id === stored.payload.entryId) : entry;
       editing = original ? { ...original, revision: stored?.payload.expectedRevision ?? original.revision } : null;
       editorPromptId = stored ? promptId(stored) : original?.promptId ?? (resolvePrompt(view.state, currentPromptId) ? currentPromptId : STARTER_ID);
-      editorManualPrompt = stored?.schemaVersion === 5 ? stored.payload.promptText : null;
+      editorManualPrompt = (stored?.schemaVersion === 5 || stored?.schemaVersion === 6) ? stored.payload.promptText : null;
       editingPrompt = false; dismissedPrompt = '';
       editorColour = original ? colours[original.colour] : key === newEntryKey ? colours[view.state.entries.length % colours.length] : todayColour;
       currentInstant = new Date();
-      editorDateTime = localDateTime((stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
-      editorEntryAt = (stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant.toISOString();
+      editorDateTime = localDateTime((stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || stored?.schemaVersion === 6) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
+      editorDateChanged = !!stored && 'entryAt' in stored.payload && stored.payload.entryAt !== null;
+      editorEntryAt = (stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || stored?.schemaVersion === 6) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant.toISOString();
       text = stored?.payload.text ?? original?.text ?? '';
       draftStatus = stored ? 'Draft saved on this device' : '';
       draftWrite++; tab = 'today'; writing = true; savedId = null; selectedId = null;
@@ -296,11 +298,11 @@
     const version = ++draftWrite;
     const eventId = draft?.eventId ?? crypto.randomUUID();
     if (editorManualPrompt !== null) editorPromptId = eventId;
-    draft = { eventId, type: 'ReflectionWritten', schemaVersion: 5, payload: {
+    draft = { eventId, type: 'ReflectionWritten', schemaVersion: 6, payload: {
       entryId: editing?.id ?? draft?.payload.entryId ?? crypto.randomUUID(), text,
       expectedRevision: editing?.revision ?? draft?.payload.expectedRevision ?? 0,
       promptId: editorPromptId, promptText: editorManualPrompt,
-      entryAt: editing ? editing.entryAt ?? null : choosingDate ? editorEntryAt : null,
+      entryAt: editorDateChanged || editorDraftKey === newEntryKey ? editorEntryAt : editing?.entryAt ?? null,
       photoSlot: entryPhotos(view.state, editing?.id ?? draft?.payload.entryId ?? '')[0]?.slot ?? null
     } };
     if (editorDraftKey === todayKey) { todayDraft = draft; todayDraftDay = today; }
@@ -409,7 +411,7 @@
   async function save() {
     if (!repository) return;
     currentInstant = new Date();
-    if (choosingDate && (!chosenEntryAt(editorDateTime) || new Date(editorEntryAt) > currentInstant)) {
+    if (!chosenEntryAt(editorDateTime) || new Date(chosenEntryAt(editorDateTime)!) > currentInstant) {
       error = 'Choose a valid entry date and time that is now or earlier.'; return;
     }
     const savingRepository = repository;
@@ -439,11 +441,12 @@
       text = pending.payload.text;
       editing = view.state.entries.find((entry) => entry.id === pending.payload.entryId) ?? null;
       editorPromptId = promptId(pending);
-      editorManualPrompt = pending.schemaVersion === 5 ? pending.payload.promptText : null; editingPrompt = false;
-      editorColour = editing ? colours[editing.colour] : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5) && !!pending.payload.entryAt ? colours[view.state.entries.length % colours.length] : todayColour;
-      editorDraftKey = editing ? keyForEntry(editing) : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5) && !!pending.payload.entryAt ? newEntryKey : todayKey;
-      editorDateTime = localDateTime((pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5) && !!pending.payload.entryAt ? pending.payload.entryAt : currentInstant);
-      editorEntryAt = (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5) && !!pending.payload.entryAt ? pending.payload.entryAt : chosenEntryAt(editorDateTime)!;
+      editorManualPrompt = (pending.schemaVersion === 5 || pending.schemaVersion === 6) ? pending.payload.promptText : null; editingPrompt = false;
+      editorColour = editing ? colours[editing.colour] : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? colours[view.state.entries.length % colours.length] : todayColour;
+      editorDraftKey = editing ? keyForEntry(editing) : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? newEntryKey : todayKey;
+      editorDateTime = localDateTime((pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? pending.payload.entryAt : currentInstant);
+      editorEntryAt = (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? pending.payload.entryAt : chosenEntryAt(editorDateTime)!;
+      editorDateChanged = 'entryAt' in pending.payload && pending.payload.entryAt !== null;
       draft = { ...pending, eventId: crypto.randomUUID() }; tab = 'today'; writing = true; await persistDraft();
     } catch (cause) { error = cause instanceof Error ? cause.message : 'Please try again.'; }
   }
@@ -462,12 +465,10 @@
       {#if writing}
         <button class="back" onclick={returnFromEditor} disabled={busy}><Icon name="back" />{editorOrigin.label}</button>
         <h1 class="page-heading reflection-heading">Your reflection</h1>
-        {#if choosingDate}
-          <label class="entry-date-label" for="entry-date">Entry date and time</label>
-          <input class="entry-date-input glass" id="entry-date" type="datetime-local" step="1" min="0001-01-01T00:00" max={localDateTime(currentInstant)} value={editorDateTime}
-            oninput={event => { editorDateTime = event.currentTarget.value; const chosen = chosenEntryAt(editorDateTime); if (chosen) editorEntryAt = chosen; void persistDraft(); }} disabled={busy} aria-describedby={entryDateError ? 'entry-date-error' : undefined} aria-invalid={!!entryDateError} />
-          {#if entryDateError}<p id="entry-date-error" class="hint date-error">{entryDateError}</p>{/if}
-        {/if}
+        <label class="entry-date-label" for="entry-date">Entry date and time</label>
+        <input class="entry-date-input glass" id="entry-date" type="datetime-local" step="1" min="0001-01-01T00:00" max={localDateTime(currentInstant)} value={editorDateTime}
+          oninput={event => { editorDateTime = event.currentTarget.value; const chosen = chosenEntryAt(editorDateTime); if (chosen) editorEntryAt = chosen; editorDateChanged = true; void persistDraft(); }} disabled={busy} aria-describedby={entryDateError ? 'entry-date-error' : undefined} aria-invalid={!!entryDateError} />
+        {#if entryDateError}<p id="entry-date-error" class="hint date-error">{entryDateError}</p>{/if}
         <section class="tinted composer" style:--entry-colour={editorColour}>
           {#if editingPrompt}
             <label class="prompt-edit-label" for="prompt-text">Prompt</label>

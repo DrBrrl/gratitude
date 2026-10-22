@@ -136,3 +136,8 @@ Private normalized attachments, photo-only save, per-photo Gemini consent, respo
 ## Reflection editor prompts
 
 Implemented: generate/review/select an AI option inside new, additional, backfilled and saved-entry composers; double-click or use the accessible Edit prompt button to write a manual question; retain confirmed choices in local drafts and commit prompt/body changes together. Dates/colours are unchanged by edits. Generated options do not replace manual text or change Today. Source schemas and cache migration are described in MVP_DESIGN.md. Scenario 013 covers mobile/desktop gestures, cancellation/empty input, draft reload, manual search, late/received-offline output recovery, exact replay and Today isolation.
+
+
+## Date editing in all composers
+
+Implemented for review: a local date/time control for Today’s first response and saved-entry editing, in addition to independent entries. Schema 6 records explicit date changes with revision checks, preserving historical source events, colour and server creation time. Scenario 014 covers both editor paths, invalid/future rejection, draft recovery, Today selection, replay and Markdown export; source/Rules checks cover cross-device conflicts and legacy compatibility.

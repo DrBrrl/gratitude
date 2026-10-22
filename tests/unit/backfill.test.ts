@@ -30,7 +30,7 @@ test('backfills sort by chosen local time, multiple entries share a day, and rep
   assert.equal(archive.entries[2].createdAt, saved);
 });
 
-test('legacy event dates remain intact and new entries cannot change their date on edit or replay into the future', () => {
+test('legacy source schemas retain date immutability and reject future dates', () => {
   const old: Action = { eventId: 'old', type: 'ReflectionWritten', schemaVersion: 1, payload: { entryId: 'old', text: 'Old', expectedRevision: 0, starterId: STARTER_ID } };
   assert.equal(replay(log([old])).entries[0].recordedAt, saved);
   const sameSecond = replay([{ ...old, sequence: 1, recordedAt: '2026-10-01T04:31:07.900Z' }, { ...dated('next', saved), sequence: 2, recordedAt: '2026-10-01T04:31:07.999Z' }]);
@@ -39,4 +39,22 @@ test('legacy event dates remain intact and new entries cannot change their date 
   assert.throws(() => replay(log([dated('future', '2026-10-02T00:00:00.000Z')])), /future/);
   assert.throws(() => replay(log([dated('entry', saved), dated('entry', '2026-09-30T00:00:00.000Z', 1)])), /original entry date/);
   assert.throws(() => replay(log([dated('entry', saved), { ...old, payload: { ...old.payload, entryId: 'entry', expectedRevision: 1 } } as Action])), /original entry date/);
+});
+
+test('schema 6 date edits update ordering and Today while preserving identity, creation time, colour and replay', () => {
+  const first = dated('entry', '2026-09-28T23:15:00.000Z');
+  const other = dated('other', '2026-09-29T23:15:00.000Z');
+  const changed: Action = { type: 'ReflectionWritten', schemaVersion: 6, eventId: 'date-edit', payload: { entryId: 'entry', expectedRevision: 1, text: 'entry', promptId: STARTER_ID, promptText: null, entryAt: '2026-09-30T23:15:00.000Z', photoSlot: null } };
+  const events = log([first, other, changed]); const state = replay(events);
+  assert.equal(todayReflection(state.entries, '2026-10-01').entry?.id, 'entry');
+  assert.deepEqual(searchEntries(state.entries, '').map(entry => entry.id), ['entry', 'other']);
+  assert.equal(state.entries[0].recordedAt, saved); assert.equal(state.entries[0].colour, 0); assert.equal(state.entries[0].revision, 2);
+  for (let split = 0; split <= events.length; split++) assert.deepEqual(replay(events.slice(split), replay(events.slice(0, split))), state);
+  const movedBack = replay([...events, { ...changed, eventId: 'move-back', sequence: 4, recordedAt: saved, payload: { ...changed.payload, expectedRevision: 2, entryAt: '2026-09-28T23:15:00.000Z' } } as JournalEvent]);
+  assert.equal(todayReflection(movedBack.entries, '2026-10-01').entry, undefined);
+  assert.deepEqual(searchEntries(movedBack.entries, '').map(entry => entry.id), ['other', 'entry']);
+  const archive = JSON.parse(exportJournal(state, 'json').content);
+  assert.equal(archive.entries[0].entryAt, changed.payload.entryAt); assert.equal(archive.entries[0].createdAt, saved);
+  assert.throws(() => replay(log([first, { ...changed, payload: { ...changed.payload, expectedRevision: 0 } }])), /revision/);
+  assert.throws(() => replay(log([first, { ...changed, payload: { ...changed.payload, entryAt: '2026-10-02T00:00:00.000Z' } }])), /future/);
 });

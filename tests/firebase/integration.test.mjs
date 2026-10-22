@@ -336,3 +336,26 @@ test('editor prompts save manual source text and AI references across devices wi
   assert.equal(state.prompts.manual, 'What colour brightened my afternoon?');
   assert.equal(state.entries[0].revision, 4);
 });
+
+test('explicit schema 6 date edits synchronize across devices with revision checks and strict Rules', async () => {
+  const { writeBatch, serverTimestamp, Timestamp } = await import('firebase/firestore');
+  const a = await device('edit-dates@example.test', 'edit-dates-a');
+  const b = await device('edit-dates@example.test', 'edit-dates-b');
+  const first = action('date-original', 'entry', 'A quiet moment.');
+  await a.append(first);
+  const changed = { eventId: 'date-changed', type: 'ReflectionWritten', schemaVersion: 6, payload: { entryId: 'entry', text: 'A quiet moment.', expectedRevision: 1, promptId: STARTER_ID, promptText: null, entryAt: '2026-09-28T23:15:00.000Z', photoSlot: null } };
+  await Promise.all([a.append(changed), b.append(changed)]);
+  await assert.rejects(b.append({ ...changed, eventId: 'stale-date', payload: { ...changed.payload, entryAt: '2026-09-29T23:15:00.000Z' } }), /another device/);
+  const root = `users/${a.uid}/streams/v1`;
+  for (const entryAt of [Timestamp.fromDate(new Date('2026-10-02T00:00:00Z')), '2026-09-29T00:00:00.000Z']) {
+    const batch = writeBatch(a.db);
+    batch.set(doc(a.db, `${root}/events/forged-date`), { ...changed, eventId: 'forged-date', payload: { ...changed.payload, expectedRevision: 2, entryAt }, sequence: 3, recordedAt: serverTimestamp() });
+    batch.set(doc(a.db, root), { sequence: 3, lastEventId: 'forged-date' });
+    batch.set(doc(a.db, `${root}/entries/entry`), { lastEventId: 'forged-date' });
+    await assertFails(batch.commit());
+  }
+  const log = await events(b); const full = replay(log);
+  assert.equal(log.length, 2); assert.equal(full.entries[0].entryAt, changed.payload.entryAt);
+  assert.equal(full.entries[0].recordedAt, log[0].recordedAt); assert.equal(full.entries[0].colour, 0);
+  for (let split = 0; split <= log.length; split++) assert.deepEqual(replay(log.slice(split), replay(log.slice(0, split))), full);
+});

@@ -156,3 +156,8 @@ Photo exports are ZIP archives containing the existing Markdown/JSON file, curre
 Your reflection keeps the prompt inside the tinted response box. Double-clicking it opens an inline, colour-matched text field; an Edit prompt button provides the same interaction for touch and keyboard users. Save prompt confirms a nonblank question up to 600 characters in this local draft; Cancel leaves it unchanged. The reflection save commits question and response together.
 
 Generate AI prompt is available here when AI choices are enabled, including when writing another entry or editing a saved one. A generated option appears separately with Use this prompt and Keep current prompt. A result never silently replaces a manually edited question. Today retains its own question, and the existing reflection text, date and colour remain intact.
+
+
+## Dates in every reflection editor
+
+Entry date and time appears beneath Your reflection when starting from Today, adding an entry, or editing a saved reflection. It uses the device's local timezone. Date edits remain local drafts until the reflection is saved; the saved entry keeps its text, prompt, photos and colour. Future and empty dates prevent saving. Saving a date change updates the journal date/order and whether the entry belongs to Today.

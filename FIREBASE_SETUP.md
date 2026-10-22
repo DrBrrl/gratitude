@@ -95,3 +95,7 @@ On 2026-10-15 both `{projectId}.firebasestorage.app` buckets were provisioned an
 ## Reflection prompt editing update (2026-10-21)
 
 Firestore Rules/indexes deployed successfully to preview and production for ReflectionWritten schema 5 (manual source text or an existing prompt reference) and entry-scoped PromptRequested schema 2. Older event schemas remain accepted. No model, billing, key, App Check or Storage configuration changed. Projection version 5 rebuilds prior checkpoints from the same event stream; use the updated app for accounts containing these new events. Daily AI selection and editor options are separate. AI response retries acknowledge only an identical server-confirmed event, including a concurrent stale-control observation.
+
+## Editable reflection dates (2026-10-22)
+
+Firestore Rules/indexes were deployed successfully to both preview and production for ReflectionWritten schema 6. It permits explicit entry-date replacement with expected-revision checks while preserving legacy schemas and original server save timestamps. The updated app is required to read schema 6 events; existing compatible clients can still read older streams. No Auth, App Check, AI, billing or Storage configuration changed.
