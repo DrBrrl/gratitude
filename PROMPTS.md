@@ -623,3 +623,15 @@ Right, okay! When i try to write another reflection, it takes me straight to the
 ```text
 When i click "write a reflection" on the main page, i would like for there to be the option to change the datetime of the reflection. I would like the same thing to be possible when i edit a reflection.
 ```
+
+## 2026-10-22 — Session capacity check
+
+```text
+Are you still at capacity? :)
+```
+
+## 2026-10-22 — Continue the date update
+
+```text
+Are you still at capacity? :) if not, let's keep going.
+```
