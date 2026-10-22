@@ -161,3 +161,7 @@ Generate AI prompt is available here when AI choices are enabled, including when
 ## Dates in every reflection editor
 
 Entry date and time appears beneath Your reflection when starting from Today, adding an entry, or editing a saved reflection. It uses the device's local timezone. Date edits remain local drafts until the reflection is saved; the saved entry keeps its text, prompt, photos and colour. Future and empty dates prevent saving. Saving a date change updates the journal date/order and whether the entry belongs to Today.
+
+## Compact outlined actions
+
+Edit prompt and Generate AI prompt share an equal-width, full-card row with an 8px gap and a smaller gap beneath the prompt. Summary editing and photo removal use the same subdued gold outline and rounded corners as Add photo; optional summarization appears on a separate full-width row. Related confirm/cancel actions share this compact treatment. View entry and the full-entry Edit reflection action retain their left alignment with small bordered outlines and tighter padding.
