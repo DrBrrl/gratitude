@@ -164,4 +164,8 @@ Entry date and time appears beneath Your reflection when starting from Today, ad
 
 ## Compact outlined actions
 
-Edit prompt and Generate AI prompt share an equal-width, full-card row with an 8px gap and a smaller gap beneath the prompt. Summary editing and photo removal use the same subdued gold outline and rounded corners as Add photo; optional summarization appears on a separate full-width row. Related confirm/cancel actions share this compact treatment. View entry and the full-entry Edit reflection action retain their left alignment with small bordered outlines and tighter padding.
+Edit prompt and Generate AI prompt share an equal-width, full-card row with a 12px gap, compact vertical padding and an 8px gap beneath the prompt. Summary editing and photo removal use the same subdued gold outline and rounded corners as Add photo; optional summarization appears on a separate full-width row. Related confirm/cancel actions share this compact treatment. View entry and the full-entry Edit reflection action retain their left alignment with small bordered outlines and tighter padding.
+
+## Card-coloured controls and welcome copy
+
+Prompt actions, View entry and the full-entry Edit reflection action inherit their coloured card’s border hue and soft inner/outer glow. Add photo and Find me a prompt use a mostly transparent light-grey fill. The landing page welcomes visitors with “Let us find joy in the small things” and “A space to practice being thankful every day”. The introduction uses the available content width and wraps naturally on narrow screens; the pace/streak tagline is removed.
