@@ -162,7 +162,7 @@
   .selected-photo { width: 100%; max-height: 220px; object-fit: contain; border-radius: 10px; }
   .selection p { line-height: 1.5; font-size: .85rem; }
   .attach, .add-photo { display: block; width: 100%; padding: 12px; margin-top: 14px; border: 1px solid #bda74688; border-radius: 12px; text-align: center; }
-  .add-photo { position: relative; color: var(--yellow, #ffdf48); cursor: pointer; font-size: .9rem; overflow: hidden; }
+  .add-photo { position: relative; color: var(--yellow, #ffdf48); background: #d5d7dc14; cursor: pointer; font-size: .9rem; overflow: hidden; }
   input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
   .disabled { opacity: .5; }
   .add-photo:focus-within, button:focus-visible, a:focus-visible { outline: 2px solid #bfc5ce; outline-offset: 3px; }

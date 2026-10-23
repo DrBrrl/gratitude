@@ -1,6 +1,7 @@
 <script lang="ts">
 	import favicon from '$lib/assets/favicon.svg';
 	import inkBackground from '$lib/assets/backgrounds/charcoal-ochre-ink.png';
+	import '$lib/styles/card-actions.css';
 
 	let { children } = $props();
 </script>

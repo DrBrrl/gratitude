@@ -474,14 +474,14 @@
             <label class="prompt-edit-label" for="prompt-text">Prompt</label>
             <textarea id="prompt-text" class="prompt-text" aria-label="Prompt text" rows="3" maxlength="600" bind:value={promptBuffer}></textarea>
             <p class="hint">Prompt changes stay in this draft until you save the reflection.</p>
-            <div class="prompt-actions"><button type="button" onclick={savePromptEdit} disabled={busy || !promptBuffer.trim()}>Save prompt</button><button type="button" onclick={() => editingPrompt = false}>Cancel prompt edit</button></div>
+            <div class="prompt-actions"><button class="card-action" type="button" onclick={savePromptEdit} disabled={busy || !promptBuffer.trim()}>Save prompt</button><button class="card-action" type="button" onclick={() => editingPrompt = false}>Cancel prompt edit</button></div>
           {:else}
             <div class="writing-prompt editable-prompt" role="button" tabindex="0" aria-label="Edit prompt text" onclick={event => { if (event.detail === 0) void beginPromptEdit(); }} ondblclick={beginPromptEdit} onkeydown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); void beginPromptEdit(); } }}>{editorPrompt}</div>
-            <div class="prompt-actions"><button type="button" onclick={beginPromptEdit} disabled={busy}>Edit prompt</button><button type="button" onclick={generateEditorPrompt} disabled={busy || generatingPrompt || !!view.aiResultPending || !view.state.ai.choices.enabled || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : 'Generate AI prompt'}</button></div>
+            <div class="prompt-actions"><button class="card-action" type="button" onclick={beginPromptEdit} disabled={busy}>Edit prompt</button><button class="card-action" type="button" onclick={generateEditorPrompt} disabled={busy || generatingPrompt || !!view.aiResultPending || !view.state.ai.choices.enabled || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : 'Generate AI prompt'}</button></div>
             {#if !view.state.ai.choices.enabled}<p class="hint prompt-hint">Enable AI prompts in Settings to generate a question. You can still edit it yourself.</p>{/if}
           {/if}
           {#if showPromptCandidate && promptCandidate}
-            <aside class="prompt-option" aria-label="Generated prompt option"><p class="hint">Generated option</p><p class="writing-prompt">{promptCandidate.payload.text}</p><div class="prompt-actions"><button type="button" onclick={useEditorPrompt} disabled={busy || editingPrompt}>Use this prompt</button><button type="button" onclick={() => dismissedPrompt = promptCandidate!.eventId}>Keep current prompt</button></div></aside>
+            <aside class="prompt-option" aria-label="Generated prompt option"><p class="hint">Generated option</p><p class="writing-prompt">{promptCandidate.payload.text}</p><div class="prompt-actions"><button class="card-action" type="button" onclick={useEditorPrompt} disabled={busy || editingPrompt}>Use this prompt</button><button class="card-action" type="button" onclick={() => dismissedPrompt = promptCandidate!.eventId}>Keep current prompt</button></div></aside>
           {/if}
           <ReflectionEditor value={text} oninput={value => void persistDraft(value)} disabled={busy || !draftRestored} />
         </section>
@@ -525,7 +525,7 @@
           <h2>Prompt</h2><p class="entry-prompt"><HighlightedText text={selected.prompt} {query} /></p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={selected.text} {query} /></p>
           {#if client && repository}<PhotoPanel {client} {repository} {view} uid={user.uid} entryId={selected.id} {query} />{/if}
-          <button class="entry-action" onclick={() => edit(selected)} disabled={!!view.pending || busy}><Icon name="edit" size={16} />Edit reflection</button>
+          <button class="entry-action card-action" onclick={() => edit(selected)} disabled={!!view.pending || busy}><Icon name="edit" size={16} />Edit reflection</button>
         </article>
       {:else}
         <h1 class="page-heading">Your journal</h1>
@@ -642,6 +642,7 @@
   .primary, .outline { display: flex; gap: 12px; align-items: center; justify-content: center; width: 100%; min-height: 58px; padding: 13px 18px; border: 1px solid #fff09a; border-radius: 13px; font-size: 1.08rem; }
   .primary { background: linear-gradient(115deg, #ffe76b, #ffdc43 75%, #ffe773); color: #14140d; font-weight: 600; box-shadow: inset 0 1px 0 #fff8c780, 0 3px 18px #ffd94a12; }
   .outline { background: #10141850; border-color: #e8d478; }
+  .ai-generate { background: #d5d7dc14; }
   .text-button { color: var(--yellow); display: block; width: 100%; margin: 12px 0; padding: 12px; font-size: 1.05rem; }
   .underlined { text-decoration: underline; text-underline-offset: 4px; padding: 8px 0; }
   .today-secondary { font-size: .95rem; }
@@ -654,8 +655,8 @@
   .writing-prompt { font: italic 400 1.17rem/1.4 Georgia, serif; color: color-mix(in srgb, var(--entry-colour) 38%, #ecf4ff); margin: 0 0 20px; }
   .composer { padding: 18px 20px; }
   .hint { font-size: .88rem; color: #b7bdc6; line-height: 1.5; }
-  .prompt-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: -12px 0 14px; }
-  .prompt-actions button { padding: 6px 8px; color: var(--yellow); font-size: .8rem; line-height: 1.25; min-height: 36px; border: 1px solid #bda74688; border-radius: 12px; }
+  .prompt-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: -12px 0 14px; }
+  .prompt-actions button { padding: 4px 8px; color: var(--yellow); font-size: .8rem; line-height: 1.25; min-height: 30px; }
   .editable-prompt { cursor: text; }
   .editable-prompt:focus-visible { outline: 1px solid var(--entry-colour); outline-offset: 5px; border-radius: 4px; }
   .prompt-edit-label { display: block; font-size: .85rem; font-weight: 700; margin-bottom: 8px; }
@@ -692,7 +693,7 @@
   .card .entry-prompt, .detail .entry-prompt { font-size: .975rem; font-style: italic; font-weight: 400; color: color-mix(in srgb, var(--entry-colour) 38%, #ecf4ff); }
   .detail { padding: 22px; margin-top: 12px; }
   .entry-text { white-space: pre-wrap; overflow-wrap: anywhere; }
-  .entry-action { display: inline-flex; align-items: center; gap: 6px; color: var(--yellow); border: 1px solid #bda74688; border-radius: 12px; min-height: 28px; padding: 2px 8px; margin-top: 16px; font-size: .85rem; }
+  .entry-action { display: inline-flex; align-items: center; gap: 6px; color: var(--yellow); min-height: 28px; padding: 2px 8px; margin-top: 16px; font-size: .85rem; }
   .empty { text-align: center; padding: 36px 22px !important; }
   .empty :global(svg) { color: var(--yellow); margin-bottom: 20px; }
   .empty h2 { font-size: 1.65rem; }
