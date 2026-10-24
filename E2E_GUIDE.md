@@ -99,6 +99,10 @@ As time-dependent behaviour is implemented, freeze the clock before opening the 
 
 Wait for observable conditions with Playwright assertions; do not use fixed sleeps. Assertions and actions default to a two-second budget, each test defaults to 30 seconds, and server startup has 30 seconds. Full-page screenshot comparisons allow ten seconds to obtain two stable renders on constrained CI runners; their pixel tolerance remains zero. Authentication and reopening a journal with a pending outbox allow fifteen seconds for account restoration and server acknowledgement. Multi-step journal scenarios declare longer total budgets. A timeout change requires an explanation of the behaviour that needs it.
 
+For photo replay, wait for the expected image count, each image's `complete` state and nonzero `naturalWidth`, then await `decode()` before comparing the screenshot. Matching summary text alone does not establish that the photos have rendered. Scenario 011 checks all three replayed photos this way.
+
+The 37-step draft-recovery walkthrough has a 240-second total budget for hosted software rendering. Its earlier 150-second budget expired even though all 38 screenshot comparisons matched, including the final new-day screen. This total budget does not change individual action/assertion limits, the ten-second screenshot budget or zero pixel tolerances.
+
 ## Related checks
 
 `npm run check` checks Svelte and TypeScript. `npm run test:unit` checks local-day identity/colour and preview truncation boundaries. `npm run test:deployment` verifies production replacement, preview isolation, closed-preview cleanup, and rejection of unsafe build inputs. These support the E2E checks; see [DEPLOYMENT.md](DEPLOYMENT.md) for publication behaviour.
