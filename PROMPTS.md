@@ -647,3 +647,15 @@ That appears to be functioning as intended! As a small style preference, can we 
 ```text
 I'm about to be so annoying about this so i apologise in advance :') Wherever a button is on a coloured gratitude card (i.e. In the Your reflection page, on the gratitude cards in the journal, in the view entry page, etc), can we get the border to match the colour and style of the card it is on, with the same sort of colour bleed as the card? The buttons in question that i would like to look this way are: Edit prompt, Generate AI prompt, View entry, and Edit reflection. There should be a little bit less top and bottom padding for the edit prompt and generate ai prompt buttons, and those two buttons should have a little bit more space between them. Finally, wherever the "Add photo" button appears, let's have a mostly transparent light grey background to the button. I want that format for the Find me a prompt button too, please. And some small edits to the landing page - let's change the yellow text at the top from "A little space for you" to "Let us find joy in the small things". I'd also like to change the text below "Gratitude" to A space to practice being thankful every day" - and i want the sentence to be able to stretch without being forced to go down a line unless the screen is very narrow. Let's get rid of the text that says "your pace, no streaks". I have plans for the box on that page, but we'll do that in our next PR! :)
 ```
+
+## 2026-10-24 — UI review acknowledgement (recorded after interruption)
+
+```text
+Okay, that all looks really good, thanks robot friend!
+```
+
+## 2026-10-24 — Finalise PR 10 checks
+
+```text
+Okay, that all looks really good, thanks robot friend! Looks like some checks didn't pass for PR 10. Let's tighten those up and finalise it before i rebase and merge.
+```
