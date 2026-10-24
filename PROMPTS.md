@@ -581,3 +581,9 @@ put this up as a pr for review
 ```text
 Retarget this PR dirctly against main and assume that support to add photos will be added before we do this design
 ```
+
+## 2026-10-24 — Update import planning after PR 10
+
+```text
+Wonderful, we're all sorted then! Let's go back to the import (pr7) and update it now that we've merged 10 with main, it should have fixed all the issues you had with images in previous gratitude entries. I think another question you had was what to do with the prompt-less entries - we'll just put [No prompt] in for those entries' prompts. Go forth, and good luck!
+```
