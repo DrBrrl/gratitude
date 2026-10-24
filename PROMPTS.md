@@ -564,6 +564,106 @@ projects/122994614403
 We've enabled paid tier - can you edit our config files and make using it the default?
 ```
 
+## 2026-10-15 — Backfill and multiple daily reflections
+
+```text
+We've rebased and merged! We'd like to add the ability to backfill entries on previous dates and to write more than one entry a day.
+```
+
+## 2026-10-15 — Image attachments and searchable editable AI summaries
+
+```text
+we're going to test this now but while we're doing that, please add an image attachment feature. AI should be used to write a summary of what is in the image that can be searched later. let's also show the summary to the user and let them edit it.
+```
+
+## 2026-10-15 — Locate preview Firestore journal events
+
+```text
+We're confused when we look at user wTEai77zJOM82bY6jUzzHmCLxbJ3 in firestore for the preview project - there are entries and ai, but no events so we can't see any of the entries we've been testing with
+```
+
+## 2026-10-15 — Events collection absent in console view
+
+```text
+https://console.firebase.google.com/u/0/project/gratitude-drbrrl-dev/firestore/databases/-default-/data/~2Fusers~2FwTEai77zJOM82bY6jUzzHmCLxbJ3~2Fstreams~2Fv1 We are at this URL and we do not see an events collection!
+```
+
+## 2026-10-20 — Resume photo attachment work
+
+```text
+Are you able to continue this process?
+```
+
+## 2026-10-21 — Interrupted PR base observation
+
+```text
+I noticed this in PR #10: "This PR is stacked on #9 so its backfill preview stays unchanged during review. Merge #9 first, then retarget this PR to main."
+```
+
+## 2026-10-21 — Retarget photo PR after merging backfill
+
+```text
+I noticed this in PR #10: "This PR is stacked on #9 so its backfill preview stays unchanged during review. Merge #9 first, then retarget this PR to main." I have merged pr #9, can we retarget pr #10 to main please? :)
+```
+
+## 2026-10-21 — Preview AI prompt generation differs from production
+
+```text
+Question for you - in the preview, i can't seem to get an AI prompt generated - is that expected? All the AI switches are toggled on... In the main application, i can get an AI prompt, though.
+```
+
+## 2026-10-21 — Generate and edit prompts in the reflection editor
+
+```text
+Right, okay! When i try to write another reflection, it takes me straight to the Your reflection page with the default prompt and no way to generate an AI prompt. I would like, in the "write a reflection/reflection editing page" for there to be an option to generate an AI prompt, as well as double clicking on the prompt itself to allow me to edit the prompt text manually.
+```
+
+## 2026-10-22 — Change reflection dates in every editor
+
+```text
+When i click "write a reflection" on the main page, i would like for there to be the option to change the datetime of the reflection. I would like the same thing to be possible when i edit a reflection.
+```
+
+## 2026-10-22 — Session capacity check
+
+```text
+Are you still at capacity? :)
+```
+
+## 2026-10-22 — Continue the date update
+
+```text
+Are you still at capacity? :) if not, let's keep going.
+```
+
+## 2026-10-23 — Outline and tighten journal action buttons
+
+```text
+That appears to be functioning as intended! As a small style preference, can we format the "Edit prompt" and "Generate AI prompt" buttons so that they look a little more like buttons? Similar to the format of the "Add photo" button - and you can fit them both on the same line, extending from one side of the card to the other, with a little bit less padding between them and the prompt above. I have a similar request for the "AI image summary" buttons: "Edit summary" and "Remove photo". And for the "View entry" and "Edit reflection" buttons - can we get a border around these left-aligned buttons? Slightly less padding too.
+```
+
+## 2026-10-23 — Card-coloured buttons and landing copy
+
+```text
+I'm about to be so annoying about this so i apologise in advance :') Wherever a button is on a coloured gratitude card (i.e. In the Your reflection page, on the gratitude cards in the journal, in the view entry page, etc), can we get the border to match the colour and style of the card it is on, with the same sort of colour bleed as the card? The buttons in question that i would like to look this way are: Edit prompt, Generate AI prompt, View entry, and Edit reflection. There should be a little bit less top and bottom padding for the edit prompt and generate ai prompt buttons, and those two buttons should have a little bit more space between them. Finally, wherever the "Add photo" button appears, let's have a mostly transparent light grey background to the button. I want that format for the Find me a prompt button too, please. And some small edits to the landing page - let's change the yellow text at the top from "A little space for you" to "Let us find joy in the small things". I'd also like to change the text below "Gratitude" to A space to practice being thankful every day" - and i want the sentence to be able to stretch without being forced to go down a line unless the screen is very narrow. Let's get rid of the text that says "your pace, no streaks". I have plans for the box on that page, but we'll do that in our next PR! :)
+```
+
+## 2026-10-24 — UI review acknowledgement (recorded after interruption)
+
+```text
+Okay, that all looks really good, thanks robot friend!
+```
+
+## 2026-10-24 — Finalise PR 10 checks
+
+```text
+Okay, that all looks really good, thanks robot friend! Looks like some checks didn't pass for PR 10. Let's tighten those up and finalise it before i rebase and merge.
+```
+
+## Import branch history retained during main integration — 2026-10-24
+
+The following dated records are preserved from PR #7.
+
 ## 2026-10-08 — Plan alternate gratitude export import
 
 ```text

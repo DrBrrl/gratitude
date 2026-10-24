@@ -2,12 +2,14 @@ import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, order
 import { appendReflection, decodeEvent } from './append';
 import { openDB, type IDBPDatabase } from 'idb';
 import { base } from '$app/paths';
-import { applyEvent, emptyProjection, replay, GENERATION, PROJECTION_VERSION, type Action, type AIAction, type ResponseAction, type Projection } from '../domain';
+import { applyEvent, emptyProjection, replay, GENERATION, PROJECTION_VERSION, type Action, type AIAction, type ResponseAction, type Projection, type PhotoAction, photoKey } from '../domain';
 import type { FirebaseClient } from './client';
 import { makeRequest, buildContext, type GeneratePrompt } from '../ai/context';
 
+import { erasePhoto, type StagedPhoto } from '../photos';
+
 type Checkpoint = { state: Projection; digest: string };
-export type JournalView = { state: Projection; pending: Action | null; status: string; error: string; ready: boolean; aiResultPending?: boolean };
+export type JournalView = { state: Projection; pending: Action | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean };
 async function digest(state: Projection) {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(state)));
   return [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, '0')).join('');
@@ -26,11 +28,14 @@ export class JournalRepository {
   private rebuilding = false;
   private aiResult: ResponseAction | null = null;
   private generating = false;
+  private photoResults: Record<string, PhotoAction> = {};
+  private photoCleanup: Record<string, string> = {};
+  private photoRequests = new Set<string>();
   private status = 'Opening your journal…';
   private error = '';
   constructor(private client: FirebaseClient, private uid: string, private notify: (view: JournalView) => void) {}
   private emit() {
-    if (!this.stopped) this.notify({ state: this.state, pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult });
+    if (!this.stopped) this.notify({ state: this.state, pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
   }
   async start() {
     const generation = ++this.listenerGeneration;
@@ -40,11 +45,14 @@ export class JournalRepository {
     if (this.stopped) { this.db.close(); return; }
     this.pending = await this.db.get('outbox', 'pending') ?? null;
     this.aiResult = await this.db.get('outbox', 'ai-result') ?? null;
+    this.photoResults = await this.db.get('outbox', 'photo-results') ?? {};
+    this.photoCleanup = await this.db.get('outbox', 'photo-cleanup') ?? {};
+    if (Object.keys(this.photoCleanup).length) void this.retryPhotoCleanup().catch(() => {});
     const checkpoint = await this.db.get('cache', 'checkpoint') as Checkpoint | undefined;
     if (checkpoint) {
       try {
         const s = checkpoint.state;
-        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests ||
+        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.photos || !s.prompts ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
           const anchor = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${s.lastEventId}`));
@@ -83,6 +91,32 @@ export class JournalRepository {
     this.emit();
     if (this.pending) void this.retry();
   }
+  async cancelStagedPhoto(entryId: string) {
+    const staged = await this.readStagedPhoto(entryId);
+    if (!staged) return;
+    const committed = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${staged.eventId}`));
+    if (!committed.exists()) await erasePhoto(this.client, this.uid, staged.photoId);
+    await this.clearStagedPhoto(entryId);
+  }
+  async removePhoto(action: Extract<PhotoAction, { type: 'PhotoRemoved' }>) {
+    this.photoCleanup[action.eventId] = action.payload.photoId;
+    await this.db.put('outbox', this.photoCleanup, 'photo-cleanup');
+    try { await this.commitAI(action); await this.retryPhotoCleanup(); }
+    finally { this.emit(); }
+  }
+  async retryPhotoCleanup() {
+    for (const [eventId, photoId] of Object.entries(this.photoCleanup)) {
+      const committed = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${eventId}`));
+      if (this.stopped) return;
+      if (committed.exists()) await erasePhoto(this.client, this.uid, photoId);
+      delete this.photoCleanup[eventId];
+      await this.db.put('outbox', this.photoCleanup, 'photo-cleanup');
+    }
+    this.emit();
+  }
+  async readStagedPhoto(entryId: string): Promise<StagedPhoto | null> { return await this.db.get('outbox', `photo:${entryId}`) ?? null; }
+  async stagePhoto(entryId: string, photo: StagedPhoto) { await this.db.put('outbox', photo, `photo:${entryId}`); }
+  async clearStagedPhoto(entryId: string) { await this.db.delete('outbox', `photo:${entryId}`); }
   async readDraft(key = 'draft'): Promise<Action | null> {
     await this.draftChain;
     const draft = await this.db.get('outbox', key) as Action | undefined;
@@ -136,7 +170,7 @@ export class JournalRepository {
     await this.db.delete('outbox', 'pending');
     this.pending = null; this.error = ''; this.status = 'Pending save returned to editor'; this.emit();
   }
-  async commitAI(action: AIAction) {
+  async commitAI(action: AIAction | PhotoAction) {
     if (!this.ready || this.stopped || !navigator.onLine) throw new Error('Connect and wait for your journal to sync first.');
     const result = await appendReflection(this.client.db, this.uid, action);
     // Await the confirmed projection, never invoke an AI adapter from a listener.
@@ -148,11 +182,11 @@ export class JournalRepository {
     if (this.stopped) throw new Error('This journal session has closed.');
     return result;
   }
-  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt) {
+  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string) {
     if (this.generating) return;
     if (this.aiResult) throw new Error('Sync the received prompt before requesting another.');
     const snapshot = this.state;
-    const request = makeRequest(snapshot, day, mode, crypto.randomUUID());
+    const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId);
     this.generating = true;
     try {
       const committed = await this.commitAI(request);
@@ -187,6 +221,49 @@ export class JournalRepository {
       throw new Error('That request was replaced or AI sharing changed. The late prompt was discarded.');
     }
     await this.db.delete('outbox', 'ai-result'); this.aiResult = null; this.emit();
+  }
+
+  async requestPhotoSummary(entryId: string, slot: number, generate: () => Promise<{ text: string; model: string; finishReason: 'STOP' }>) {
+    const key = photoKey(entryId, slot);
+    if (this.photoRequests.has(key)) return;
+    const photo = this.state.photos[key];
+    if (!photo || photo.removed) throw new Error('This photo is no longer attached.');
+    if (Object.values(this.photoResults).some(action => action.payload.entryId === entryId && action.payload.slot === slot)) throw new Error('Sync the received summary first.');
+    const request: PhotoAction = { eventId: crypto.randomUUID(), type: 'PhotoSummaryRequested', schemaVersion: 1,
+      payload: { entryId, slot, photoId: photo.photoId, previousEventId: photo.lastEventId } };
+    this.photoRequests.add(key); this.emit();
+    try {
+      const result = await this.commitAI(request);
+      if (!result.created || this.stopped) return;
+      const control = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/photos/${key}`));
+      if (control.get('lastEventId') !== request.eventId || this.stopped) return;
+      let output;
+      try { output = await generate(); }
+      catch (cause) {
+        if (this.stopped || this.state.photos[key]?.lastEventId !== request.eventId) return;
+        const reason = cause instanceof Error && ['blocked', 'invalid-response'].includes(cause.message) ? cause.message as 'blocked' | 'invalid-response' : 'unavailable';
+        await this.commitAI({ eventId: `${request.eventId}_failure`, type: 'PhotoSummaryFailed', schemaVersion: 1,
+          payload: { ...request.payload, previousEventId: request.eventId, reason } });
+        return;
+      }
+      if (this.stopped) return;
+      const response: PhotoAction = { eventId: `${request.eventId}_response`, type: 'PhotoSummaryResponseReceived', schemaVersion: 1,
+        payload: { ...request.payload, previousEventId: request.eventId, ...output } };
+      this.photoResults[request.eventId] = response;
+      await this.db.put('outbox', this.photoResults, 'photo-results'); this.emit();
+      await this.syncPhotoResult(request.eventId);
+    } finally { this.photoRequests.delete(key); this.emit(); }
+  }
+  async syncPhotoResult(requestId: string) {
+    const action = this.photoResults[requestId];
+    if (!action) return;
+    try { await this.commitAI(action); }
+    catch (cause) {
+      if (!(cause instanceof Error) || !cause.message.includes('photo changed on another device')) throw cause;
+      // A manual correction, removal or newer request wins; never overwrite it.
+    }
+    delete this.photoResults[requestId];
+    await this.db.put('outbox', this.photoResults, 'photo-results'); this.emit();
   }
   async exportSnapshot() {
     if (this.pending || this.sending) throw new Error('Sync your pending save before exporting.');
@@ -223,4 +300,4 @@ export class JournalRepository {
 }
 
 /** UI-facing contract shared with the development event-fixture adapter. */
-export type JournalStore = Pick<JournalRepository, 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult'>;
+export type JournalStore = Pick<JournalRepository, 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult' | 'requestPhotoSummary' | 'syncPhotoResult' | 'readStagedPhoto' | 'stagePhoto' | 'clearStagedPhoto' | 'cancelStagedPhoto' | 'removePhoto' | 'retryPhotoCleanup'>;

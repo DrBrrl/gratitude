@@ -1,4 +1,4 @@
-import { parseAction, replay, type Action, type AIAction, type SourceAction, type JournalEvent } from '../domain';
+import { parseAction, replay, type Action, type PhotoAction, type AIAction, type SourceAction, type JournalEvent } from '../domain';
 import type { JournalStore, JournalView } from '../firebase/repository';
 import fixture from './journal-events.json';
 
@@ -31,6 +31,12 @@ export class ReviewRepository implements JournalStore {
     }
     this.emit();
   }
+  async cancelStagedPhoto() {}
+  async removePhoto() {}
+  async retryPhotoCleanup() {}
+  async readStagedPhoto() { return null; }
+  async stagePhoto() {}
+  async clearStagedPhoto() {}
   async readDraft(key = 'draft') {
     const draft = this.drafts[key];
     if (draft && this.events.some(event => event.eventId === draft.eventId)) { await this.clearDraft(key); return null; }
@@ -50,9 +56,11 @@ export class ReviewRepository implements JournalStore {
     replay(events); // Real reducer enforces ordering and edit revisions.
     this.persist(events); this.emit();
   }
-  async commitAI(action: AIAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
+  async commitAI(action: AIAction | PhotoAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
   async requestPrompt() { throw new Error('Use the Firebase preview to try Gemini. UI review stays entirely on this device.'); }
   async syncPromptResult() {}
+  async requestPhotoSummary() { throw new Error('Use the Firebase preview to summarize photos.'); }
+  async syncPhotoResult() {}
   async retry() { this.emit(); }
   async discardPending() { this.emit(); }
   async exportSnapshot() { return replay(this.events); }

@@ -3,7 +3,10 @@ import { TestStepHelper } from '../helpers/test-step-helper';
 import { backFromEditor, editor, expectEditor, expectSynced, navigate, openEditor, seedHistory, startJournal } from '../helpers/journal-session';
 
 test('daily and historical drafts stay separate through navigation, reload and discard', async ({ page }, info) => {
-  test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(150_000);
+  test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators');
+  // Full-page software rendering across 37 steps needs headroom on hosted runners.
+  // Keep individual action and screenshot assertion limits unchanged.
+  test.setTimeout(240_000);
   const steps = new TestStepHelper(page, info);
   await startJournal(page, info, steps, 'draft');
   await seedHistory(page, [{ text: 'Yesterday I appreciated the garden.', recordedAt: '2026-09-30T04:31:07Z' }]);

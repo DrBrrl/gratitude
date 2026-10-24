@@ -4,7 +4,7 @@
   import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
   import { createFirebaseClient, googleSignIn, type FirebaseClient } from '$lib/firebase/client';
   import { JournalRepository, type JournalView, type JournalStore } from '$lib/firebase/repository';
-  import { emptyProjection, STARTER_ID, STARTER_PROMPT, promptId, type AIChoices, type Entry, type Action } from '$lib/domain';
+  import { entryPhotos, emptyProjection, STARTER_ID, STARTER_PROMPT, promptId, resolvePrompt, type AIChoices, type Entry, type Action } from '$lib/domain';
 
   import { aiAvailable, personalContextAvailable, geminiGenerator } from '$lib/ai/gemini';
 
@@ -31,12 +31,13 @@
       if (session === reviewSession) await loadDrafts(opened);
     } catch { initialized = true; error = 'Could not open the local UI review fixture.'; }
   }
-  let client: FirebaseClient | null = null;
-  let repository: JournalStore | null = null;
+  let client = $state.raw<FirebaseClient | null>(null);
+  let repository = $state.raw<JournalStore | null>(null);
   let user = $state<Pick<User, 'uid' | 'email'> | null>(null);
   let configured = $state(false);
   let initialized = $state(false);
   let busy = $state(false);
+  let photoBusy = $state(false);
   let error = $state('');
   let text = $state('');
   let editing = $state<Entry | null>(null);
@@ -64,22 +65,69 @@
   let selectedId = $state<string | null>(null);
   let journalScroll = 0;
   const selected = $derived(view.state.entries.find((entry) => entry.id === selectedId));
-  const results = $derived(searchEntries(view.state.entries, query));
-  let today = $state(localDay(new Date()));
+  const results = $derived(searchEntries(view.state.entries, query, Object.values(view.state.photos)));
+  let currentInstant = $state(new Date());
+  const today = $derived(localDay(currentInstant));
   let todayDraft = $state<Action | null>(null);
   let todayDraftDay = $state('');
   let editorDraftKey = $state('');
   const todayKey = $derived(`draft:today:${today}`);
+  const newEntryKey = 'draft:new';
+  let editorDateTime = $state('');
+  let editorEntryAt = $state('');
+  let editorDateChanged = $state(false);
+  function chosenEntryAt(value: string) {
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime()) || localDateTime(date) !== (value.length === 16 ? `${value}:00` : value) || date.getFullYear() < 1) return null;
+    return date.toISOString();
+  }
+  // Validate the visible second; an untouched server timestamp may retain milliseconds.
+  const entryDateError = $derived(!chosenEntryAt(editorDateTime) ? 'Choose a valid entry date and time.'
+    : new Date(chosenEntryAt(editorDateTime)!) > currentInstant ? 'Choose a date and time that is now or earlier.' : '');
   const daily = $derived(todayReflection(view.state.entries, today));
-  const todayColour = $derived(colours[daily.colour]);
-  const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft?.payload.text.trim());
+  const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft && (!!todayDraft.payload.text.trim() || entryPhotos(view.state, todayDraft.payload.entryId).length > 0 || todayDraft.schemaVersion === 6 && todayDraft.payload.entryAt !== null || (todayDraft.schemaVersion === 5 || todayDraft.schemaVersion === 6) && (todayDraft.payload.promptText !== null || todayDraft.payload.promptId !== (daily.entry?.promptId ?? view.state.ai.days[today] ?? STARTER_ID))));
+  const todayDraftEntry = $derived(hasTodayDraft ? view.state.entries.find(entry => entry.id === todayDraft?.payload.entryId) : undefined);
+  const todayColour = $derived(colours[hasTodayDraft ? todayDraftEntry?.colour ?? view.state.entries.length % colours.length : daily.colour]);
   let editorColour = $state(colours[0]);
   let editorPromptId = $state(STARTER_ID);
-  const currentPromptId = $derived(daily.entry?.promptId ?? (hasTodayDraft && todayDraft ? promptId(todayDraft) : view.state.ai.days[today]) ?? STARTER_ID);
-  const currentPrompt = $derived(currentPromptId === STARTER_ID ? STARTER_PROMPT : view.state.ai.responses[currentPromptId]?.payload.text ?? STARTER_PROMPT);
-  const editorPrompt = $derived(editorPromptId === STARTER_ID ? STARTER_PROMPT : view.state.ai.responses[editorPromptId]?.payload.text ?? STARTER_PROMPT);
+  const currentPromptId = $derived((hasTodayDraft && todayDraft ? promptId(todayDraft) : daily.entry?.promptId ?? view.state.ai.days[today]) ?? STARTER_ID);
+  const currentPrompt = $derived(hasTodayDraft && todayDraft ? ((todayDraft.schemaVersion === 5 || todayDraft.schemaVersion === 6) ? todayDraft.payload.promptText : null) ?? resolvePrompt(view.state, promptId(todayDraft)) ?? todayDraftEntry?.prompt ?? STARTER_PROMPT : daily.entry?.prompt ?? resolvePrompt(view.state, currentPromptId) ?? STARTER_PROMPT);
+  let editorManualPrompt = $state<string | null>(null);
+  let editingPrompt = $state(false);
+  let promptBuffer = $state('');
+  let dismissedPrompt = $state('');
+  const editorPrompt = $derived(editorManualPrompt ?? resolvePrompt(view.state, editorPromptId) ?? STARTER_PROMPT);
+  const promptCandidate = $derived(Object.values(view.state.ai.responses).filter(response => {
+    const request = view.state.ai.requests[response.payload.requestId];
+    return request?.schemaVersion === 2 && request.payload.entryId === (draft?.payload.entryId ?? editing?.id) && request.payload.entryRevision === (editing?.revision ?? 0);
+  }).at(-1));
+  const showPromptCandidate = $derived(promptCandidate && promptCandidate.eventId !== editorPromptId && promptCandidate.eventId !== dismissedPrompt);
+  async function beginPromptEdit() { if (busy || !draftRestored) return; promptBuffer = editorPrompt; editingPrompt = true; await tick(); document.getElementById('prompt-text')?.focus(); }
+  async function savePromptEdit() {
+    if (busy || !promptBuffer.trim() || promptBuffer.length > 600) return;
+    editorManualPrompt = promptBuffer; editingPrompt = false; await persistDraft();
+  }
+  async function generateEditorPrompt() {
+    const active = repository;
+    if (!active || !client) return;
+    generatingPrompt = true; aiMessage = ''; dismissedPrompt = '';
+    try {
+      if (!draft) await persistDraft();
+      if (!draft || !draftStatus.startsWith('Draft saved')) throw new Error('Save this draft on your device before requesting a prompt.');
+      await active.requestPrompt(localDay(editorEntryAt), personalContextAvailable ? 'personal' : 'generic', geminiGenerator(client), draft.payload.entryId);
+    } catch (cause) { if (repository === active) aiMessage = cause instanceof Error ? cause.message : 'Could not request a prompt.'; }
+    finally { if (repository === active) generatingPrompt = false; }
+  }
+  async function useEditorPrompt() {
+    if (!promptCandidate || editingPrompt || busy) return;
+    editorPromptId = promptCandidate.eventId; editorManualPrompt = null; await persistDraft();
+  }
   const currentResponse = $derived(view.state.ai.responses[currentPromptId]);
   const currentRequest = $derived(currentResponse ? view.state.ai.requests[currentResponse.payload.requestId] : null);
+  const pendingDailyRequest = $derived(view.state.ai.control.requestId ? view.state.ai.requests[view.state.ai.control.requestId] : null);
+  const dailyRequestPending = $derived(pendingDailyRequest?.schemaVersion === 1 && pendingDailyRequest.payload.day === today);
+  const failedDailyRequest = $derived(view.state.ai.failure ? view.state.ai.requests[view.state.ai.failure.payload.requestId] : null);
+  const dailyRequestFailed = $derived(failedDailyRequest?.schemaVersion === 1 && failedDailyRequest.payload.day === today);
   let aiBusy = $state(false);
   let generatingPrompt = $state(false);
   let aiMessage = $state('');
@@ -133,7 +181,10 @@
     finally { aiBusy = false; }
   }
 
-  function keyForEntry(entry: Entry) { return entry.id === daily.entry?.id ? todayKey : `draft:entry:${entry.id}`; }
+  function keyForEntry(entry: Entry) {
+    const occupied = todayDraftDay === today && todayDraft && todayDraft.payload.entryId !== entry.id;
+    return entry.id === daily.entry?.id && !occupied ? todayKey : `draft:entry:${entry.id}`;
+  }
   async function loadDrafts(active: JournalStore) {
     const legacy = await active.readDraft();
     if (legacy) {
@@ -155,21 +206,24 @@
     return () => { cancelled = true; };
   });
   onMount(() => {
-    const updateDay = () => { today = localDay(new Date()); };
+    const updateDay = () => { currentInstant = new Date(); };
     const timer = window.setInterval(updateDay, 30_000);
     window.addEventListener('focus', updateDay);
     return () => { clearInterval(timer); window.removeEventListener('focus', updateDay); };
   });
-  import { exportJournal } from '$lib/export';
+  import { exportArchive } from '$lib/export';
+  import { readPhoto } from '$lib/photos';
   let exportStatus = $state('');
   let exporting = $state(false);
-  let preparedFile = $state<ReturnType<typeof exportJournal> | null>(null);
-  import { colours, searchEntries, localDay, todayReflection } from '$lib/journal';
+  let preparedFile = $state<Awaited<ReturnType<typeof exportArchive>> | null>(null);
+  import { colours, searchEntries, localDay, localDateTime, entryTimestamp, todayReflection } from '$lib/journal';
   import HighlightedText from '$lib/components/HighlightedText.svelte';
   import ReflectionText from '$lib/components/ReflectionText.svelte';
   import ReflectionEditor from '$lib/components/ReflectionEditor.svelte';
   import ReflectionPreview from '$lib/components/ReflectionPreview.svelte';
   let expandedEntries = $state<Set<string>>(new Set());
+  import PhotoPanel from '$lib/components/PhotoPanel.svelte';
+  import PhotoImage from '$lib/components/PhotoImage.svelte';
   import Icon from '$lib/components/Icon.svelte';
   let writing = $state(false);
   let settingsPage = $state<'menu' | 'ai' | 'export' | 'privacy' | 'account'>('menu');
@@ -206,8 +260,14 @@
       draft = stored;
       const original = stored ? view.state.entries.find(item => item.id === stored.payload.entryId) : entry;
       editing = original ? { ...original, revision: stored?.payload.expectedRevision ?? original.revision } : null;
-      editorPromptId = stored ? promptId(stored) : original?.promptId ?? currentPromptId;
-      editorColour = original ? colours[original.colour] : todayColour;
+      editorPromptId = stored ? promptId(stored) : original?.promptId ?? (resolvePrompt(view.state, currentPromptId) ? currentPromptId : STARTER_ID);
+      editorManualPrompt = (stored?.schemaVersion === 5 || stored?.schemaVersion === 6) ? stored.payload.promptText : null;
+      editingPrompt = false; dismissedPrompt = '';
+      editorColour = original ? colours[original.colour] : key === newEntryKey ? colours[view.state.entries.length % colours.length] : todayColour;
+      currentInstant = new Date();
+      editorDateTime = localDateTime((stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || stored?.schemaVersion === 6) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
+      editorDateChanged = !!stored && 'entryAt' in stored.payload && stored.payload.entryAt !== null;
+      editorEntryAt = (stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || stored?.schemaVersion === 6) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant.toISOString();
       text = stored?.payload.text ?? original?.text ?? '';
       draftStatus = stored ? 'Draft saved on this device' : '';
       draftWrite++; tab = 'today'; writing = true; savedId = null; selectedId = null;
@@ -216,20 +276,35 @@
     } catch { error = 'Could not open this reflection. Your drafts are still saved.'; }
     finally { busy = false; }
   }
-  async function beginWriting() { await openComposer(todayKey, daily.entry); }
+  async function beginWriting() {
+    const key = daily.entry && (!hasTodayDraft || todayDraft?.payload.entryId === daily.entry.id) ? keyForEntry(daily.entry) : todayKey;
+    await openComposer(key, daily.entry);
+  }
+  async function newEntry() { await openComposer(newEntryKey, undefined); }
   async function openSettings(next: typeof settingsPage) { settingsPage = next; exportStatus = ''; preparedFile = null; aiMessage = ''; if (next === 'ai') choices = { ...view.state.ai.choices }; await tick(); window.scrollTo(0, 0); }
 
   async function navigate(next: typeof tab) { chooseInitialPage = false; tab = next; selectedId = null; writing = false; savedId = null; settingsPage = 'menu'; aiMessage = ''; feedbackOpen = false; await tick(); window.scrollTo(0, 0); }
   async function openEntry(entry: Entry) { journalScroll = window.scrollY; selectedId = entry.id; await tick(); document.getElementById('entry-heading')?.focus(); window.scrollTo(0, 0); }
   async function closeEntry() { const id = selectedId; selectedId = null; await tick(); document.getElementById(`view-${id}`)?.focus({ preventScroll: true }); window.scrollTo(0, journalScroll); }
 
+  async function ensurePhotoEntry() {
+    if (!draft) await persistDraft();
+    if (!draft || !draftStatus.startsWith('Draft saved')) throw new Error('Save the draft on this device before attaching a photo.');
+    return draft.payload.entryId;
+  }
   async function persistDraft(value = text) {
     text = value;
     if (!repository || !draftRestored || !editorDraftKey) return;
     const version = ++draftWrite;
-    draft = { eventId: draft?.eventId ?? crypto.randomUUID(), type: 'ReflectionWritten', schemaVersion: 1,
-      payload: { entryId: editing?.id ?? draft?.payload.entryId ?? crypto.randomUUID(), text, expectedRevision: editing?.revision ?? 0, starterId: STARTER_ID } };
-    if (editorPromptId !== STARTER_ID) draft = { eventId: draft.eventId, type: 'ReflectionWritten', schemaVersion: 2, payload: { entryId: draft.payload.entryId, text, expectedRevision: draft.payload.expectedRevision, promptId: editorPromptId } };
+    const eventId = draft?.eventId ?? crypto.randomUUID();
+    if (editorManualPrompt !== null) editorPromptId = eventId;
+    draft = { eventId, type: 'ReflectionWritten', schemaVersion: 6, payload: {
+      entryId: editing?.id ?? draft?.payload.entryId ?? crypto.randomUUID(), text,
+      expectedRevision: editing?.revision ?? draft?.payload.expectedRevision ?? 0,
+      promptId: editorPromptId, promptText: editorManualPrompt,
+      entryAt: editorDateChanged || editorDraftKey === newEntryKey ? editorEntryAt : editing?.entryAt ?? null,
+      photoSlot: entryPhotos(view.state, editing?.id ?? draft?.payload.entryId ?? '')[0]?.slot ?? null
+    } };
     if (editorDraftKey === todayKey) { todayDraft = draft; todayDraftDay = today; }
     draftStatus = 'Saving draft on this device…';
     try { await repository.writeDraft($state.snapshot(draft), editorDraftKey); if (version === draftWrite) draftStatus = 'Draft saved on this device'; }
@@ -242,7 +317,12 @@
     try {
       const state = await active.exportSnapshot();
       if (repository !== active) return;
-      const file = exportJournal(state, format);
+      const exportingClient = client, owner = user?.uid;
+      const file = await exportArchive(state, format, photoId => {
+        if (!exportingClient || !owner) throw new Error('Sign in to include your photos.');
+        return readPhoto(exportingClient, owner, photoId);
+      });
+      if (repository !== active) return;
       preparedFile = file;
       exportStatus = `Export ready: ${state.entries.length} saved ${state.entries.length === 1 ? 'reflection' : 'reflections'}.`;
     } catch (cause) { if (repository === active) exportStatus = cause instanceof Error ? cause.message : 'Export failed. Please try again.'; }
@@ -250,19 +330,31 @@
   }
   function downloadPrepared() {
     if (!preparedFile) return;
-    const url = URL.createObjectURL(new Blob([preparedFile.content], { type: `${preparedFile.type};charset=utf-8` }));
+    const url = URL.createObjectURL(new Blob([preparedFile.content], { type: typeof preparedFile.content === 'string' ? `${preparedFile.type};charset=utf-8` : preparedFile.type }));
     const link = document.createElement('a'); link.href = url; link.download = preparedFile.name; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   async function discardDraft() {
+    const active = repository;
+    if (!active || busy) return;
     const wasEditing = !!editing;
+    busy = true;
     try {
-      await repository?.clearDraft(editorDraftKey);
+      if (!editing && draft) {
+        for (const photo of entryPhotos(view.state, draft.payload.entryId)) {
+          await active.removePhoto({ eventId: crypto.randomUUID(), type: 'PhotoRemoved', schemaVersion: 1,
+            payload: { entryId: photo.entryId, slot: photo.slot, photoId: photo.photoId, previousEventId: photo.lastEventId } });
+        }
+        await active.cancelStagedPhoto(draft.payload.entryId);
+      }
+      await active.clearDraft(editorDraftKey);
+      if (repository !== active) return;
       if (editorDraftKey === todayKey) todayDraft = null;
       draftWrite++; draft = null; text = ''; editing = null; discardOpen = false; draftStatus = '';
       if (wasEditing) await returnFromEditor();
     }
-    catch { error = 'Could not discard the draft. Your text is still here.'; }
+    catch { if (repository === active) error = 'Could not discard the draft. Your text is still here.'; }
+    finally { if (repository === active) busy = false; }
   }
 
   onMount(() => {
@@ -318,11 +410,15 @@
   }
   async function save() {
     if (!repository) return;
+    currentInstant = new Date();
+    if (!chosenEntryAt(editorDateTime) || new Date(chosenEntryAt(editorDateTime)!) > currentInstant) {
+      error = 'Choose a valid entry date and time that is now or earlier.'; return;
+    }
     const savingRepository = repository;
     const savingKey = editorDraftKey;
     busy = true; error = '';
     try {
-      if (!draft) await persistDraft();
+      await persistDraft();
       const savedEntryId = draft!.payload.entryId;
       await savingRepository.save($state.snapshot(draft!));
       if (repository !== savingRepository) return;
@@ -345,9 +441,13 @@
       text = pending.payload.text;
       editing = view.state.entries.find((entry) => entry.id === pending.payload.entryId) ?? null;
       editorPromptId = promptId(pending);
-      editorColour = editing ? colours[editing.colour] : todayColour;
-      editorDraftKey = editing ? keyForEntry(editing) : todayKey;
-      draft = null; tab = 'today'; writing = true; await persistDraft();
+      editorManualPrompt = (pending.schemaVersion === 5 || pending.schemaVersion === 6) ? pending.payload.promptText : null; editingPrompt = false;
+      editorColour = editing ? colours[editing.colour] : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? colours[view.state.entries.length % colours.length] : todayColour;
+      editorDraftKey = editing ? keyForEntry(editing) : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? newEntryKey : todayKey;
+      editorDateTime = localDateTime((pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? pending.payload.entryAt : currentInstant);
+      editorEntryAt = (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? pending.payload.entryAt : chosenEntryAt(editorDateTime)!;
+      editorDateChanged = 'entryAt' in pending.payload && pending.payload.entryAt !== null;
+      draft = { ...pending, eventId: crypto.randomUUID() }; tab = 'today'; writing = true; await persistDraft();
     } catch (cause) { error = cause instanceof Error ? cause.message : 'Please try again.'; }
   }
 </script>
@@ -365,36 +465,55 @@
       {#if writing}
         <button class="back" onclick={returnFromEditor} disabled={busy}><Icon name="back" />{editorOrigin.label}</button>
         <h1 class="page-heading reflection-heading">Your reflection</h1>
+        <label class="entry-date-label" for="entry-date">Entry date and time</label>
+        <input class="entry-date-input glass" id="entry-date" type="datetime-local" step="1" min="0001-01-01T00:00" max={localDateTime(currentInstant)} value={editorDateTime}
+          oninput={event => { editorDateTime = event.currentTarget.value; const chosen = chosenEntryAt(editorDateTime); if (chosen) editorEntryAt = chosen; editorDateChanged = true; void persistDraft(); }} disabled={busy} aria-describedby={entryDateError ? 'entry-date-error' : undefined} aria-invalid={!!entryDateError} />
+        {#if entryDateError}<p id="entry-date-error" class="hint date-error">{entryDateError}</p>{/if}
         <section class="tinted composer" style:--entry-colour={editorColour}>
-          <p class="writing-prompt">{editing?.prompt ?? editorPrompt}</p>
+          {#if editingPrompt}
+            <label class="prompt-edit-label" for="prompt-text">Prompt</label>
+            <textarea id="prompt-text" class="prompt-text" aria-label="Prompt text" rows="3" maxlength="600" bind:value={promptBuffer}></textarea>
+            <p class="hint">Prompt changes stay in this draft until you save the reflection.</p>
+            <div class="prompt-actions"><button class="card-action" type="button" onclick={savePromptEdit} disabled={busy || !promptBuffer.trim()}>Save prompt</button><button class="card-action" type="button" onclick={() => editingPrompt = false}>Cancel prompt edit</button></div>
+          {:else}
+            <div class="writing-prompt editable-prompt" role="button" tabindex="0" aria-label="Edit prompt text" onclick={event => { if (event.detail === 0) void beginPromptEdit(); }} ondblclick={beginPromptEdit} onkeydown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); void beginPromptEdit(); } }}>{editorPrompt}</div>
+            <div class="prompt-actions"><button class="card-action" type="button" onclick={beginPromptEdit} disabled={busy}>Edit prompt</button><button class="card-action" type="button" onclick={generateEditorPrompt} disabled={busy || generatingPrompt || !!view.aiResultPending || !view.state.ai.choices.enabled || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : 'Generate AI prompt'}</button></div>
+            {#if !view.state.ai.choices.enabled}<p class="hint prompt-hint">Enable AI prompts in Settings to generate a question. You can still edit it yourself.</p>{/if}
+          {/if}
+          {#if showPromptCandidate && promptCandidate}
+            <aside class="prompt-option" aria-label="Generated prompt option"><p class="hint">Generated option</p><p class="writing-prompt">{promptCandidate.payload.text}</p><div class="prompt-actions"><button class="card-action" type="button" onclick={useEditorPrompt} disabled={busy || editingPrompt}>Use this prompt</button><button class="card-action" type="button" onclick={() => dismissedPrompt = promptCandidate!.eventId}>Keep current prompt</button></div></aside>
+          {/if}
           <ReflectionEditor value={text} oninput={value => void persistDraft(value)} disabled={busy || !draftRestored} />
         </section>
+        {#if client && repository}<PhotoPanel {client} {repository} {view} uid={user.uid} entryId={draft?.payload.entryId ?? editing?.id ?? null} ensureEntry={ensurePhotoEntry} colour={editorColour} disabled={busy || !draftRestored} draft={!editing} onbusy={value => photoBusy = value} />{/if}
         <p class="hint draft-status" aria-live="polite">{draftStatus || 'Drafts stay on this device until you save.'}</p>
-        <button class="primary" onclick={save} disabled={busy || !text.trim() || !!view.pending}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Save reflection'}</button>
-        {#if text}<button class="text-button muted" onclick={() => discardOpen = true}>Discard draft</button>{/if}
+        <button class="primary" onclick={save} disabled={busy || photoBusy || editingPrompt || !text.trim() && !entryPhotos(view.state, draft?.payload.entryId ?? editing?.id ?? '').length || !!view.pending || !!entryDateError}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Save reflection'}</button>
+        {#if text || draft}<button class="text-button muted" disabled={photoBusy} onclick={() => discardOpen = true}>Discard draft</button>{/if}
       {:else if savedEntry}
-        <div class="saved-heading"><h1 class="page-heading">Reflection saved</h1><time datetime={savedEntry.recordedAt}>{shortDate(savedEntry.recordedAt)}</time></div>
+        <div class="saved-heading"><h1 class="page-heading">Reflection saved</h1><time datetime={entryTimestamp(savedEntry)}>{shortDate(entryTimestamp(savedEntry))}</time></div>
         <article class="tinted card saved-card" style:--entry-colour={colours[savedEntry.colour]}>
           <h2>Prompt</h2><p class="entry-prompt">{savedEntry.prompt}</p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={savedEntry.text} /></p>
         </article>
+        {#if client && repository}<PhotoPanel {client} {repository} {view} uid={user.uid} entryId={savedEntry.id} colour={colours[savedEntry.colour]} />{/if}
         <div class="saved-actions"><button class="primary" onclick={() => navigate('journal')}>Done</button><button class="outline" onclick={() => edit(savedEntry)}>Edit reflection</button></div>
       {:else}
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
         <h1 class="today-heading">Reflection time</h1>
         {#if view.ready}
-          <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID ? 'Starter prompt' : 'AI prompt'}</span><h2>{daily.entry?.prompt ?? currentPrompt}</h2></section>
+          <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID ? 'Starter prompt' : currentResponse ? 'AI prompt' : 'Your prompt'}</span><h2>{currentPrompt}</h2></section>
           <button class="primary today-response" onclick={beginWriting} disabled={busy || !draftLoaded || todayDraftDay !== today}>{hasTodayDraft || daily.entry ? 'Continue your reflection' : 'Write a response'}</button>
+          {#if daily.entry}<button class="outline additional-response" onclick={newEntry} disabled={busy || !draftLoaded || !!view.pending}>Write another reflection</button>{/if}
           {#if !daily.entry && !hasTodayDraft}
             {#if view.state.ai.choices.enabled}
-              <button class="outline ai-generate" onclick={generatePrompt} disabled={aiBusy || generatingPrompt || !!view.aiResultPending || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : view.state.ai.control.requestId || view.state.ai.failure ? 'Try another request' : currentResponse ? 'Another prompt' : 'Find me a prompt'}</button>
-              {#if view.state.ai.control.requestId && !generatingPrompt && !view.aiResultPending}<p class="hint">A request is unfinished. It will not restart by itself. Try another request or use the starter.</p>{/if}
-              {#if currentResponse || view.state.ai.control.requestId || view.state.ai.failure}<button class="text-button today-secondary" onclick={useStarter} disabled={aiBusy}>Use starter prompt</button>{/if}
+              <button class="outline ai-generate" onclick={generatePrompt} disabled={aiBusy || generatingPrompt || !!view.aiResultPending || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : dailyRequestPending || dailyRequestFailed ? 'Try another request' : currentResponse ? 'Another prompt' : 'Find me a prompt'}</button>
+              {#if dailyRequestPending && !generatingPrompt && !view.aiResultPending}<p class="hint">A request is unfinished. It will not restart by itself. Try another request or use the starter.</p>{/if}
+              {#if currentResponse || dailyRequestPending || dailyRequestFailed}<button class="text-button today-secondary" onclick={useStarter} disabled={aiBusy}>Use starter prompt</button>{/if}
             {:else}<button class="text-button today-secondary" onclick={async () => { await navigate('settings'); await openSettings('ai'); }}>Set up AI prompts</button>{/if}
           {/if}
           {#if view.aiResultPending}<section class="glass"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
           <button class="text-button today-secondary" onclick={() => navigate('journal')}>Browse your journal</button>
-          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<div class="glass explanation">{#if currentRequest}<p>This question was generated by Gemini.{currentRequest.payload.contextMode === 'generic' ? ' No journal text, preferences or feedback was shared.' : ` It used your saved preferences, ${currentRequest.payload.entryRefs.length} recent reflections and ${currentRequest.payload.feedbackIds.length} pieces of feedback.`}</p>{:else}<p>A simple starting point for noticing something good. You can write as little or as much as you like. This starter works without sending anything to AI.</p>{/if}<button class="underlined" onclick={openFeedback}>Give prompt feedback</button>{#if feedbackOpen}<label class="ai-label" for="prompt-feedback">What would make prompts better for you?</label><textarea id="prompt-feedback" maxlength="500" rows="3" bind:value={feedbackText}></textarea><p class="hint">A short note in your own words. Clear the text to remove it from future personalization.</p><button class="outline" onclick={saveFeedback} disabled={aiBusy}>Save feedback</button>{/if}</div>{/if}</div>
+          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<div class="glass explanation">{#if currentRequest}<p>This question was generated by Gemini.{currentRequest.payload.contextMode === 'generic' ? ' No journal text, preferences or feedback was shared.' : ` It used your saved preferences, ${currentRequest.payload.entryRefs.length} recent reflections and ${currentRequest.payload.feedbackIds.length} pieces of feedback.`}</p>{:else if currentPromptId !== STARTER_ID}<p>You wrote this prompt. It is saved with your reflection.</p>{:else}<p>A simple starting point for noticing something good. You can write as little or as much as you like. This starter works without sending anything to AI.</p>{/if}<button class="underlined" onclick={openFeedback} disabled={!resolvePrompt(view.state, currentPromptId)}>Give prompt feedback</button>{#if feedbackOpen}<label class="ai-label" for="prompt-feedback">What would make prompts better for you?</label><textarea id="prompt-feedback" maxlength="500" rows="3" bind:value={feedbackText}></textarea><p class="hint">A short note in your own words. Clear the text to remove it from future personalization.</p><button class="outline" onclick={saveFeedback} disabled={aiBusy}>Save feedback</button>{/if}</div>{/if}</div>
         {/if}
       {/if}
     {:else if tab === 'journal'}
@@ -402,13 +521,15 @@
         <button class="back" onclick={closeEntry}><Icon name="back" />Journal</button>
         <h1 class="sr-only" id="entry-heading" tabindex="-1">Your reflection</h1>
         <article class="tinted detail" style:--entry-colour={colours[selected.colour]}>
-          <time datetime={selected.recordedAt}>{entryDateTime(selected.recordedAt)}</time>
+          <time datetime={entryTimestamp(selected)}>{entryDateTime(entryTimestamp(selected))}</time>
           <h2>Prompt</h2><p class="entry-prompt"><HighlightedText text={selected.prompt} {query} /></p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={selected.text} {query} /></p>
-          <button class="entry-action" onclick={() => edit(selected)} disabled={!!view.pending || busy}><Icon name="edit" />Edit reflection</button>
+          {#if client && repository}<PhotoPanel {client} {repository} {view} uid={user.uid} entryId={selected.id} {query} />{/if}
+          <button class="entry-action card-action" onclick={() => edit(selected)} disabled={!!view.pending || busy}><Icon name="edit" size={16} />Edit reflection</button>
         </article>
       {:else}
         <h1 class="page-heading">Your journal</h1>
+        <button class="outline new-entry" onclick={newEntry} disabled={busy || !view.ready || !draftLoaded || !!view.pending}>New entry</button>
         <div class="search glass"><Icon name="search" /><input id="search" type="search" aria-label="Search reflections" bind:value={query} placeholder="Search reflections" />{#if query}<button class="icon-button" aria-label="Clear search" onclick={() => query = ''}><Icon name="close" /></button>{/if}</div>
         {#if query || view.status !== 'Synced'}<p class="result-count" aria-live="polite">{results.length} {results.length === 1 ? 'reflection' : 'reflections'}{view.status !== 'Synced' ? ' on this device' : ''}</p>{/if}
         {#if view.ready && view.state.entries.length === 0}<section class="glass empty"><Icon name="journal" size={44} /><h2>Your story starts small.</h2><p>A moment, a kindness, a little light.<br />Your reflections will find a home here.</p><button class="primary" onclick={() => navigate('today')}>Write your first reflection</button></section>
@@ -417,7 +538,11 @@
           {#each results as entry (entry.id)}
             <article class="tinted card" class:expanded={expandedEntries.has(entry.id)} style:--entry-colour={colours[entry.colour]}>
               <h2>Prompt</h2><p class="entry-prompt prompt-preview"><HighlightedText text={entry.prompt} {query} /></p>
-              <h2>Reflection</h2><ReflectionPreview text={entry.text} {query} entryId={entry.id} recordedAt={entry.recordedAt} expanded={expandedEntries.has(entry.id)} onexpand={() => expandedEntries = new Set([...expandedEntries, entry.id])} oncollapse={() => expandedEntries = new Set([...expandedEntries].filter(id => id !== entry.id))} onopen={() => openEntry(entry)} />
+              {#if client && entryPhotos(view.state, entry.id).length}
+                <div class="card-photos">{#each entryPhotos(view.state, entry.id) as photo (photo.photoId)}<div class="card-thumbnail"><PhotoImage {client} uid={user.uid} photoId={photo.photoId} summary={photo.summary} /></div>{/each}</div>
+                {#if query && entry.text.trim()}<p class="photo-search"><HighlightedText text={entryPhotos(view.state, entry.id).map(photo => photo.summary).filter(Boolean).join(' · ')} {query} /></p>{/if}
+              {/if}
+              <h2>Reflection</h2><ReflectionPreview text={entry.text || entryPhotos(view.state, entry.id).map(photo => photo.summary).filter(Boolean).join(' · ') || 'Photo reflection'} {query} entryId={entry.id} entryAt={entryTimestamp(entry)} expanded={expandedEntries.has(entry.id)} onexpand={() => expandedEntries = new Set([...expandedEntries, entry.id])} oncollapse={() => expandedEntries = new Set([...expandedEntries].filter(id => id !== entry.id))} onopen={() => openEntry(entry)} />
             </article>
           {/each}
         </div>
@@ -435,7 +560,7 @@
         {#if uiReview}<details class="review-tools glass"><summary>UI review</summary><p class="hint">Fictional journal on this browser only.</p><button class="outline" onclick={() => resetReview?.()}>Restore sample journal</button><button class="text-button" onclick={() => resetReview?.(true)}>Show empty journal</button></details>{/if}
       {:else if settingsPage === 'ai'}
         <h1 class="page-heading">AI settings</h1>
-        <p class="hint">Ask Gemini for a gentle gratitude question. Nothing is sent until you request a prompt.</p>
+        <p class="hint">Ask Gemini for a gentle gratitude question. Prompt context is sent only when you request one.</p>
         {#if !aiAvailable || uiReview}<p class="hint">Live AI is available only on a configured Firebase site.</p>{/if}
         <section class="glass preferences">
           <div class="preference"><span>AI prompts</span><button class="switch" role="switch" aria-checked={choices.enabled} aria-label="AI prompts" onclick={() => choices.enabled = !choices.enabled} disabled={aiBusy || !aiAvailable || uiReview}><span></span></button></div>
@@ -448,7 +573,7 @@
           <p class="hint">Your saved preferences are shared when requesting a prompt. The switches optionally include up to 5 recent reflections and 20 notes of feedback. Google processes this context to generate your prompt.</p>
         {:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
-        <section class="glass"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are not available yet.</p></section>
+        <section class="glass"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose Gemini processing for each photo.</p></section>
       {:else if settingsPage === 'export'}
         <h1>Export your journal</h1>
         <fieldset class="export-choices"><legend class="sr-only">Export format</legend>
@@ -458,19 +583,25 @@
         </fieldset>
         <p class="hint export-note">All saved reflections. Unfinished drafts are excluded.</p>
         <button class="primary" onclick={() => prepareExport(exportFormat)} disabled={exporting || !!view.pending}>{exporting ? 'Preparing…' : 'Prepare export'}</button>
-        {#if preparedFile}<div class="ready glass" role="status"><span class="ready-icon"><Icon name="check" /></span>Export ready</div><button class="outline download" onclick={downloadPrepared}><Icon name="download" />Download {exportFormat === 'markdown' ? 'Markdown' : 'JSON'}</button>{:else if exportStatus}<p aria-live="polite">{exportStatus}</p>{/if}
+        {#if preparedFile}<div class="ready glass" role="status"><span class="ready-icon"><Icon name="check" /></span>Export ready</div><button class="outline download" onclick={downloadPrepared}><Icon name="download" />Download {exportFormat === 'markdown' ? 'Markdown' : 'JSON'}{preparedFile.type === 'application/zip' ? ' ZIP' : ''}</button>{:else if exportStatus}<p aria-live="polite">{exportStatus}</p>{/if}
         <p class="hint export-warning">This file contains your private reflections.</p>
       {:else if settingsPage === 'privacy'}
-        <h1>Privacy & data</h1><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device. AI sharing is controlled in AI settings and starts off disabled.</p><button class="outline" onclick={() => openSettings('export')}>Export your journal</button></section>
+        <h1>Privacy & data</h1><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device. Daily AI prompt sharing starts off disabled in AI settings. Photo summaries are a separate choice for each photo.</p><button class="outline" onclick={() => openSettings('export')}>Export your journal</button></section>
         <section class="glass"><h2>Journal recovery</h2><p class="muted">Rebuild this device’s view from your saved account history.</p><button class="outline" onclick={() => repository?.rebuild().catch(() => error = 'Could not rebuild. Please reload and try again.')} disabled={busy}>Rebuild local view</button></section>
       {:else}
         <h1>Your account</h1><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
       {/if}
     {/if}
+    {#if view.aiResultPending && (writing || tab !== 'today' || savedEntry)}<section class="glass photo-recovery"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
+    {#if view.photoResultsPending?.length}<section class="glass photo-recovery"><p>An image summary arrived and is saved on this device.</p><button class="outline" onclick={async () => { try { for (const id of view.photoResultsPending ?? []) await repository?.syncPhotoResult(id); } catch { error = 'Could not sync image summaries. Reconnect and try again.'; } }}>Sync received summaries</button></section>{/if}
+    {#if view.photoCleanupPending}<section class="glass photo-recovery"><p>Photo cleanup needs a connection to finish.</p><button class="outline" onclick={() => repository?.retryPhotoCleanup().catch(() => error = 'File deletion failed. Reconnect and retry.')}>Retry photo cleanup</button></section>{/if}
     {#if aiMessage}<p class="ai-message hint" role="status">{aiMessage}</p>{/if}
+    <!-- A screen change needs a fresh notice, avoiding Chromium’s cached gradient from its previous position. -->
+    {#key writing}
     {#if view.pending}<section class="glass pending"><h2>A reflection is waiting to sync</h2><p class="entry-text"><ReflectionText text={view.pending.payload.text} /></p><button class="primary" onclick={() => repository?.retry()} disabled={busy}>Retry sync</button><button class="text-button" onclick={recoverPending}>Return text to editor</button></section>{/if}
+    {/key}
     {#if view.status !== 'Synced'}<p class="sync-status" role="status">{view.status}</p>{/if}
-    <dialog bind:this={discardDialog} onclose={() => discardOpen = false} aria-labelledby="discard-title"><h2 id="discard-title">Discard this draft?</h2><p>Your saved reflections will remain in your journal.</p><button class="primary" onclick={() => discardOpen = false}>Keep writing</button><button class="outline" onclick={discardDraft}>Discard draft permanently</button></dialog>
+    <dialog bind:this={discardDialog} oncancel={event => { if (busy) event.preventDefault(); }} onclose={() => discardOpen = false} aria-labelledby="discard-title"><h2 id="discard-title">Discard this draft?</h2><p>Your saved reflections will remain in your journal.</p><button class="primary" onclick={() => discardOpen = false} disabled={busy}>Keep writing</button><button class="outline" onclick={discardDraft} disabled={busy}>Discard draft permanently</button></dialog>
     {#if !writing}<nav class="glass" aria-label="Journal navigation">{#each [{ id: 'today', label: 'Today' }, { id: 'journal', label: 'Journal' }, { id: 'settings', label: 'Settings' }] as item}<button aria-current={tab === item.id ? 'page' : undefined} onclick={() => navigate(item.id as typeof tab)}><Icon name={item.id} size={28} filled={tab === item.id} /><span>{item.label}</span></button>{/each}</nav>{/if}
   {/if}
   {#if error || view.error}<p role="alert">{error || view.error}</p>{/if}
@@ -481,6 +612,15 @@
   :global(*) { box-sizing: border-box; }
   main { --yellow: #ffdf48; max-width: 480px; min-height: 100svh; margin: 0 auto; padding: 40px 20px 120px; background: #080b0d3d; text-align: justify; }
   main.composing { padding-bottom: 32px; }
+  .card-photos { display: flex; gap: 8px; margin: 8px 0 12px; }
+  .card-thumbnail { width: 72px; }
+  .photo-search { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: .8rem; color: #bfc5ce; margin: 0 0 10px; }
+  .new-entry { margin-bottom: 20px; }
+  .additional-response { margin-top: 14px; }
+  .entry-date-label { display: block; font-size: .875rem; color: #bfc5ce; margin-bottom: 8px; }
+  .entry-date-input { display: block; width: 100%; min-width: 0; color: #e1e3e8; font: inherit; padding: 12px; margin-bottom: 16px; }
+  .entry-date-input:focus { outline: none; border-color: #8b9099; }
+  .date-error { color: #f6b3bf; }
   h1 { font: 600 2.4rem/1.15 Georgia, 'Times New Roman', serif; letter-spacing: -.035em; margin: 24px 0; }
   h2 { font: 400 1.5rem/1.35 Georgia, 'Times New Roman', serif; margin: 0 0 16px; }
   p { line-height: 1.55; margin: 0 0 20px; }
@@ -494,6 +634,7 @@
   .today-heading { margin: 0 0 14px; font: 700 2.15rem/1.15 Arial, Helvetica, sans-serif; letter-spacing: .015em; text-align: center; color: #c6c8ce; }
   .glass { background: linear-gradient(130deg, #55585b52, #191d1fc9 60%, #55514b57); border: 1px solid #c2c7ca65; border-radius: 16px; box-shadow: inset 0 1px 0 #ffffff15, 0 8px 24px #00000020; -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
   section.glass { padding: 22px; margin: 24px 0; }
+  .photo-recovery p { line-height: 1.5; }
   .tinted { border: 1px solid color-mix(in srgb, var(--entry-colour) 86%, white); border-radius: 17px; background: linear-gradient(125deg, color-mix(in srgb, var(--entry-colour) 28%, #0e1016) 0%, color-mix(in srgb, var(--entry-colour) 14%, #090d14) 65%, color-mix(in srgb, var(--entry-colour) 24%, #0c1017) 100%); box-shadow: inset 0 0 24px color-mix(in srgb, var(--entry-colour) 22%, transparent), inset 0 1px 0 #ffffff25, 0 0 12px color-mix(in srgb, var(--entry-colour) 12%, transparent); }
   .daily-prompt { padding: 20px; margin: 0 0 22px; display: flex; flex-direction: column; gap: 12px; }
   .badge { align-self: flex-start; color: var(--yellow); background: #7962229c; box-shadow: inset 0 1px 0 #e4c87025; border-radius: 30px; padding: 8px 13px; font-size: .85rem; }
@@ -501,6 +642,7 @@
   .primary, .outline { display: flex; gap: 12px; align-items: center; justify-content: center; width: 100%; min-height: 58px; padding: 13px 18px; border: 1px solid #fff09a; border-radius: 13px; font-size: 1.08rem; }
   .primary { background: linear-gradient(115deg, #ffe76b, #ffdc43 75%, #ffe773); color: #14140d; font-weight: 600; box-shadow: inset 0 1px 0 #fff8c780, 0 3px 18px #ffd94a12; }
   .outline { background: #10141850; border-color: #e8d478; }
+  .ai-generate { background: #d5d7dc14; }
   .text-button { color: var(--yellow); display: block; width: 100%; margin: 12px 0; padding: 12px; font-size: 1.05rem; }
   .underlined { text-decoration: underline; text-underline-offset: 4px; padding: 8px 0; }
   .today-secondary { font-size: .95rem; }
@@ -513,6 +655,16 @@
   .writing-prompt { font: italic 400 1.17rem/1.4 Georgia, serif; color: color-mix(in srgb, var(--entry-colour) 38%, #ecf4ff); margin: 0 0 20px; }
   .composer { padding: 18px 20px; }
   .hint { font-size: .88rem; color: #b7bdc6; line-height: 1.5; }
+  .prompt-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: -12px 0 14px; }
+  .prompt-actions button { padding: 4px 8px; color: var(--yellow); font-size: .8rem; line-height: 1.25; min-height: 30px; }
+  .editable-prompt { cursor: text; }
+  .editable-prompt:focus-visible { outline: 1px solid var(--entry-colour); outline-offset: 5px; border-radius: 4px; }
+  .prompt-edit-label { display: block; font-size: .85rem; font-weight: 700; margin-bottom: 8px; }
+  .prompt-text { background: #ffffff06; border-color: var(--entry-colour); margin-bottom: 16px; }
+  .prompt-text:focus { outline: none; border-color: var(--entry-colour); }
+  .prompt-option { border-top: 1px solid #ffffff25; padding-top: 12px; margin-bottom: 16px; }
+  .prompt-option .writing-prompt { margin-bottom: 16px; }
+  .prompt-hint { margin-top: -8px; }
   .draft-status { margin: 16px 0; }
   .saved-heading { text-align: center; margin: 38px 0 26px; }
   .saved-heading h1 { margin-bottom: 16px; }
@@ -541,7 +693,7 @@
   .card .entry-prompt, .detail .entry-prompt { font-size: .975rem; font-style: italic; font-weight: 400; color: color-mix(in srgb, var(--entry-colour) 38%, #ecf4ff); }
   .detail { padding: 22px; margin-top: 12px; }
   .entry-text { white-space: pre-wrap; overflow-wrap: anywhere; }
-  .entry-action { display: flex; align-items: center; gap: 16px; color: var(--yellow); border-top: 1px solid #ffffff35; width: 100%; padding: 18px 0 0; margin-top: 24px; font-size: .85rem; }
+  .entry-action { display: inline-flex; align-items: center; gap: 6px; color: var(--yellow); min-height: 28px; padding: 2px 8px; margin-top: 16px; font-size: .85rem; }
   .empty { text-align: center; padding: 36px 22px !important; }
   .empty :global(svg) { color: var(--yellow); margin-bottom: 20px; }
   .empty h2 { font-size: 1.65rem; }

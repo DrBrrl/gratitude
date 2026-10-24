@@ -4,7 +4,7 @@ Gratitude's E2E tests combine functional checks, screenshot comparisons, and gen
 
 ## Screenshot comparison rule
 
-**No masking is allowed, in any circumstance. Every pixel must match: `maxDiffPixels: 0` and `threshold: 0`.** Do not add masks, crop away content, hide or replace rendered content, or use screenshot-only styles to bypass differences. Fix nondeterminism in the test inputs and clocks. Review actual rendered dates and other dynamic content in the committed screenshots.
+**No masking is allowed, in any circumstance. Every pixel must match: `maxDiffPixels: 0` and `threshold: 0`.** Do not add masks, crop away content, hide or replace rendered content, or use screenshot-only styles to bypass differences. Fix nondeterminism in the test inputs and clocks. Review actual rendered dates and other dynamic content in the committed screenshots. The helper records the current scroll position, captures the complete page from document origin (0, 0), then restores that position. This stabilizes Chromium mobile beyond-viewport capture without hiding, cropping or replacing any content. Action checks run before capture at the user’s actual scroll position.
 
 ## Run the tests
 
@@ -93,11 +93,15 @@ Commit the reviewed baselines, generated documents, and test changes together. D
 
 ## Determinism and waits
 
-The runner fixes the locale (`en-AU`), timezone (`Australia/Hobart`), dark colour scheme, reduced motion, and device scale factor. Screenshot comparisons disable animations and hide the caret. Chromium disables GPU rendering, partial raster reuse, CPU-specific Skia optimizations, font hinting, LCD text, and font subpixel positioning. Full rasterization avoids rounded-border differences caused by repaint history; the application content and styling remain intact. The browser and fonts come from the same Nix lock locally and in CI.
+The runner fixes the locale (`en-AU`), timezone (`Australia/Hobart`), dark colour scheme, reduced motion, and device scale factor. Screenshot comparisons disable animations and hide the caret. Chromium disables GPU rendering, partial raster reuse, CPU-specific Skia optimizations, font hinting, LCD text, and font subpixel positioning. It also runs all compositor stages before drawing and disables threaded scrolling, following [Chrome’s tooling guidance](https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md#rendering--gpu), so scroll and paint work complete in a consistent order. Full rasterization avoids rounded-border differences caused by repaint history; the application content and styling remain intact. The browser and fonts come from the same Nix lock locally and in CI.
 
 As time-dependent behaviour is implemented, freeze the clock before opening the page. Seed randomized colours and identifiers and provide explicit storage fixtures. Stub AI responses and photo summaries at the application boundary; normal CI should not depend on live model output, credentials, cost, or network timing. Use fictional entries and photos, never private reflections.
 
 Wait for observable conditions with Playwright assertions; do not use fixed sleeps. Assertions and actions default to a two-second budget, each test defaults to 30 seconds, and server startup has 30 seconds. Full-page screenshot comparisons allow ten seconds to obtain two stable renders on constrained CI runners; their pixel tolerance remains zero. Authentication and reopening a journal with a pending outbox allow fifteen seconds for account restoration and server acknowledgement. Multi-step journal scenarios declare longer total budgets. A timeout change requires an explanation of the behaviour that needs it.
+
+For photo replay, wait for the expected image count, each image's `complete` state and nonzero `naturalWidth`, then await `decode()` before comparing the screenshot. Matching summary text alone does not establish that the photos have rendered. Scenario 011 checks all three replayed photos this way.
+
+The 37-step draft-recovery walkthrough has a 240-second total budget for hosted software rendering. Its earlier 150-second budget expired even though all 38 screenshot comparisons matched, including the final new-day screen. This total budget does not change individual action/assertion limits, the ten-second screenshot budget or zero pixel tolerances.
 
 ## Related checks
 
@@ -144,6 +148,23 @@ All rendered content, including dates, is compared without masks or screenshot-o
 
 The tests intercept the exact Firebase AI Logic Gemini Developer API HTTP endpoint. They assert provider-call counts and submitted fictional context; they never make live inference requests. The application has no production response stub. Rules tests exercise duplicate/concurrent device claims, stale consent, changed prompt identity and forged atomic writes. Shared synchronization assertions also reject visible journal error alerts, so screenshot review cannot quietly accept a failed recovery.
 
-CI splits the original journal scenarios and new AI scenarios into separate viewport/suite jobs, with isolated emulators and serial workers in each. All four jobs must pass before publication. This keeps the expanded coverage within the existing job budgets without relaxing screenshot comparisons.
+CI splits journal, AI, photo and editor-prompt scenarios into eight viewport/suite jobs, with isolated emulators and serial workers in each. All eight jobs and the build must pass before publication. This keeps the expanded coverage within the existing job budgets without relaxing screenshot comparisons.
 
 [`009-generic-ai`](tests/e2e/009-generic-ai/README.md) builds with `VITE_AI_DATA_MODE=generic` and runs with `E2E_AI_GENERIC=true`. It verifies the optional generic privacy configuration: unavailable personal sharing controls and a fixed generic instruction even when the account has saved reflections. The AI CI jobs run this second build after the personal-context fixtures; both configurations must pass.
+
+## Backfilled and additional reflections
+
+[`010-backfill-entries`](tests/e2e/010-backfill-entries/README.md) follows a past-date draft through reload, save and edit, rejects future dates, adds two reflections for the same day, rebuilds the journal from events and checks the downloaded Markdown dates. The journal CI jobs run it alongside scenarios 001–006. All actions retain full-page zero-tolerance comparisons, with the checks beneath their images. Unit and Rules tests additionally cover timestamp encoding, concurrent devices, legacy events, legacy immutable dates, explicit schema 6 date edits, chronological tie breaks and JSON archive version 2.
+
+## Photo attachment walkthrough
+
+`011-photo-attachments` tests both viewports against Auth, Firestore and Storage emulators with fictional Gemini responses. It follows selection and AI disclosure, oversized/unsupported rejection, reload recovery, photo-only save, AI/manual summary search, correction during an in-flight request, failure/retry, four-photo limits, removal confirmation, complete replay and real photo ZIP download contents. Each action has a full-page zero-pixel screenshot and generated checks below its image. The fixture is a deterministic synthetic yellow mug/window illustration with a fictional metadata marker; the intercepted request verifies that normalization strips the marker. It contains no private journal data. `012-photo-recovery` additionally verifies offline attachment, cancellation, received-summary outbox recovery and photo preservation during text edits/discard. CI runs these scenarios in its own `photos` suite, alongside the journal and AI suites, to keep individual jobs within their time budgets.
+
+### Editor prompts
+
+Scenario `013-editor-prompts` exercises generating and selecting a question for an additional entry, double-click and button-based manual editing, cancellation/blank rejection, saving/searching a changed question, durable drafts and received-output recovery, late AI output retaining manual input, replay without inference and Today isolation. It runs in its own `editor` viewport/suite jobs. Every user action has a full-page, unmasked screenshot comparison at zero tolerance and generated checks below the image.
+
+
+### Dates in every editor
+
+Scenario `014-reflection-dates` runs alongside 013 in the editor suite. It starts a backfill directly from Today, reloads its draft, recovers an offline pending save, edits the saved date into Today, reloads before committing, and checks completion, colour, replay and actual Markdown download contents. Empty and future dates are rejected in the editor. Each action has a full-page, unmasked zero-pixel comparison with checks underneath.

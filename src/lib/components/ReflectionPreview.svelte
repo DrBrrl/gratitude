@@ -3,8 +3,8 @@
   import Icon from './Icon.svelte';
   import { reflectionPreview } from '$lib/reflection-preview';
 
-  let { text, query, entryId, recordedAt, expanded, onexpand, oncollapse, onopen }: {
-    text: string; query: string; entryId: string; recordedAt: string; expanded: boolean;
+  let { text, query, entryId, entryAt, expanded, onexpand, oncollapse, onopen }: {
+    text: string; query: string; entryId: string; entryAt: string; expanded: boolean;
     onexpand: () => void; oncollapse: () => void; onopen: () => void;
   } = $props();
   let space = $state<HTMLDivElement>();
@@ -12,7 +12,7 @@
   let preview = $state('');
   let overflowing = $state(false);
   const dateLabel = $derived.by(() => {
-    const date = new Date(recordedAt);
+    const date = new Date(entryAt);
     const pad = (value: number) => String(value).padStart(2, '0');
     const weekday = new Intl.DateTimeFormat('en-AU', { weekday: 'short' }).format(date);
     const month = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
@@ -65,8 +65,8 @@
   <p bind:this={paragraph}><ReflectionText text={expanded ? text : preview} {query} /></p>
   {#if expanded || overflowing}<button class="more" aria-expanded={expanded} onclick={expanded ? oncollapse : onexpand}>{expanded ? '(see less)' : '(see more)'}</button>{/if}
   <div class="card-footer">
-    <button class="view-entry" id={`view-${entryId}`} onclick={onopen}>View entry<Icon name="next" size={20} /></button>
-    <time datetime={recordedAt}>{dateLabel}</time>
+    <button class="view-entry card-action" id={`view-${entryId}`} onclick={onopen}>View entry<Icon name="next" size={20} /></button>
+    <time datetime={entryAt}>{dateLabel}</time>
   </div>
 </div>
 
@@ -77,6 +77,6 @@
   .more { align-self: flex-start; padding: 0; white-space: nowrap; font-size: .9rem; line-height: 1.4; }
   .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; padding-top: 8px; }
   .card-footer time { font-size: .85rem; color: #b7bdc6; text-align: right; }
-  .view-entry { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; min-height: 28px; padding: 0; font-size: .85rem; }
+  .view-entry { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; min-height: 28px; padding: 2px 6px; font-size: .85rem; }
   button:focus-visible { outline: 2px solid var(--yellow); outline-offset: 4px; }
 </style>

@@ -13,7 +13,9 @@ PRs #5–6 add Today/Journal/Settings navigation, content-sized rainbow cards, f
 - `004-draft-recovery`: navigation/reload recovery, save and confirmed discard.
 - `005-export`: complete downloadable Markdown/JSON, literal text and offline errors.
 
-These are implemented slices of increments 3, 4 and 7. The AI integration adds starter/AI prompt choices, durable request/response events and feedback as described in increment 5. Preview and production configurations now select paid-service personalization after billing verification; sharing remains opt-in and is tested with fictional inputs. Optional onboarding, skip/resume, photos, deletion, cross-device drafts and offline cold starts remain planned.
+These are implemented slices of increments 3, 4 and 7. The AI integration adds starter/AI prompt choices, durable request/response events and feedback as described in increment 5. Preview and production configurations now select paid-service personalization after billing verification; sharing remains opt-in and is tested with fictional inputs. Photo attachments and editable summaries are implemented in the photo increment below. Optional onboarding, skip/resume, deletion, cross-device drafts and offline cold starts remain planned.
+
+The dated-entry increment adds **Journal → New entry** and **Today → Write another reflection**, an independent autosaved draft, past local date/time selection, same-day multiple entries and chronological history/export. Scenario `010-backfill-entries` covers date validation, draft recovery, separate entries, editing, replay and Markdown export on mobile and desktop. `ReflectionWritten` version 3 carries the chosen time; projection version 3 rebuilds older checkpoints.
 
 ## Acceptance contract
 
@@ -97,7 +99,7 @@ Enforce four photos per entry, 10 MB each, and JPEG/PNG/WebP; normalize orientat
 
 Use the independent photo-processing disclosure/control. Manual corrections override late response events; replacing/removing a photo invalidates matching pending work. Do not create public asset URLs or fetch arbitrary caller-supplied URLs.
 
-**Evidence:** scenario `008-photos-and-summaries` covers failures, offline staging, reconnection, unsupported files, retry, remove/replace, manual correction and photo-only save. Verify another signed-in device can access the same authorized photo and another UID cannot. Rebuild summaries from response events with no Gemini calls or dependency on the original camera file. Test orphan uploads and the boundary between successful upload and event finalization.
+**Evidence:** scenario `011-photo-attachments` covers failures, offline staging, reconnection, unsupported files, retry, remove/replace, manual correction and photo-only save. Verify another signed-in device can access the same authorized photo and another UID cannot. Rebuild summaries from response events with no Gemini calls or dependency on the original camera file. Test orphan uploads and the boundary between successful upload and event finalization.
 
 **Dependency:** increments 2–5 and the provisioned private bucket.
 
@@ -126,3 +128,16 @@ Complete separate production/development Firebase configurations, authorized dom
 ## Review practices
 
 Each PR states the resulting behaviour, event/schema changes, authorization boundaries, replay/cache invariants, migration impact and generated E2E evidence. Maintain [PROMPTS.md](PROMPTS.md) verbatim and append discoveries to [LEARNINGS.md](LEARNINGS.md); keep [VISION.md](VISION.md) end-state-only. This revision replaces the prior local-only and deterministic-AI implementation gates rather than layering new work on top of them.
+
+## Photo increment delivered for review
+
+Private normalized attachments, photo-only save, per-photo Gemini consent, response events, editable/searchable summaries, four-photo limits, upload selection recovery, confirmed removal/cleanup retry, and complete Markdown/JSON photo ZIP exports are implemented. Source-event and cache compatibility is documented in MVP_DESIGN.md. The 011/012 walkthroughs cover mobile and desktop actions with zero-difference screenshots and fictional provider responses; unit and Firebase tests cover full/cached replay, late-result rejection and owner access. Preview and production buckets are provisioned separately in Sydney. Server-wide orphan sweeping, whole-journal erasure and cold offline startup remain separate increments.
+
+## Reflection editor prompts
+
+Implemented: generate/review/select an AI option inside new, additional, backfilled and saved-entry composers; double-click or use the accessible Edit prompt button to write a manual question; retain confirmed choices in local drafts and commit prompt/body changes together. Dates/colours are unchanged by edits. Generated options do not replace manual text or change Today. Source schemas and cache migration are described in MVP_DESIGN.md. Scenario 013 covers mobile/desktop gestures, cancellation/empty input, draft reload, manual search, late/received-offline output recovery, exact replay and Today isolation.
+
+
+## Date editing in all composers
+
+Implemented for review: a local date/time control for Today’s first response and saved-entry editing, in addition to independent entries. Schema 6 records explicit date changes with revision checks, preserving historical source events, colour and server creation time. Scenario 014 covers both editor paths, invalid/future rejection, draft recovery, Today selection, replay and Markdown export; source/Rules checks cover cross-device conflicts and legacy compatibility.

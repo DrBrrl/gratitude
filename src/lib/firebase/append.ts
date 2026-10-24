@@ -1,8 +1,10 @@
-import { doc, getDocFromServer, runTransaction, serverTimestamp, type Firestore, type DocumentData } from 'firebase/firestore';
-import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, type SourceAction, type JournalEvent } from '../domain.ts';
+import { doc, getDocFromServer, runTransaction, serverTimestamp, Timestamp, type Firestore, type DocumentData } from 'firebase/firestore';
+import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, type SourceAction, type JournalEvent, isPhotoAction, photoKey } from '../domain.ts';
 
 export function decodeEvent(data: DocumentData): JournalEvent {
-  return { ...data, recordedAt: typeof data.recordedAt === 'string' ? data.recordedAt : data.recordedAt.toDate().toISOString() } as JournalEvent;
+  const payload = data.type === 'ReflectionWritten' && (data.schemaVersion === 3 || data.schemaVersion === 4 || data.schemaVersion === 5 || data.schemaVersion === 6) && data.payload.entryAt
+    ? { ...data.payload, entryAt: typeof data.payload.entryAt === 'string' ? data.payload.entryAt : data.payload.entryAt.toDate().toISOString() } : data.payload;
+  return { ...data, payload, recordedAt: typeof data.recordedAt === 'string' ? data.recordedAt : data.recordedAt.toDate().toISOString() } as JournalEvent;
 }
 
 /** Security Rules independently validate every part of this atomic append. */
@@ -10,9 +12,10 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
   const action = parseAction(input);
   const stream = doc(db, `users/${uid}/streams/${GENERATION}`);
   const event = doc(db, `${stream.path}/events/${action.eventId}`);
-  const pointer = doc(db, action.type === 'ReflectionWritten' ? `${stream.path}/entries/${action.payload.entryId}` : `${stream.path}/ai/control`);
+  const pointer = doc(db, action.type === 'ReflectionWritten' ? `${stream.path}/entries/${action.payload.entryId}` : isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
   const resultFromPrior = (value: DocumentData) => {
-    const original = parseAction({ eventId: value.eventId, type: value.type, schemaVersion: value.schemaVersion, payload: value.payload });
+    const decoded = decodeEvent(value);
+    const original = parseAction({ eventId: decoded.eventId, type: decoded.type, schemaVersion: decoded.schemaVersion, payload: decoded.payload });
     if (JSON.stringify(original) !== JSON.stringify(action)) throw new Error('Action ID already used with different input.');
     return { sequence: value.sequence, eventId: action.eventId, created: false };
   };
@@ -30,9 +33,14 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
           if (!previous.exists()) throw new Error('Incomplete reflection history.');
           revision = previous.get('payload.expectedRevision') + 1;
           const original = previous.get('payload.promptId') ?? STARTER_ID;
-          if (promptId(action) !== original) throw new Error('A saved reflection keeps its original prompt.');
+          if (action.schemaVersion !== 5 && action.schemaVersion !== 6 && promptId(action) !== original) throw new Error('A saved reflection keeps its original prompt.');
+          const previousAt = previous.get('payload.entryAt') as Timestamp | undefined;
+          if (action.schemaVersion !== 6 && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 ? (previousAt?.toDate().toISOString() ?? null) !== action.payload.entryAt : !!previousAt)) throw new Error('A saved reflection keeps its original entry date.');
         }
         if (revision !== action.payload.expectedRevision) throw new Error('This reflection changed on another device. Your text has been kept; reload the reflection before editing again.');
+        metadata = { lastEventId: action.eventId };
+      } else if (isPhotoAction(action)) {
+        if ((latest.get('lastEventId') ?? null) !== action.payload.previousEventId) throw new Error('This photo changed on another device. Reload before trying again.');
         metadata = { lastEventId: action.eventId };
       } else {
         const control = latest.exists() ? latest.data() as ReturnType<typeof emptyControl> : emptyControl();
@@ -50,19 +58,21 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
         }
       }
       const sequence = (head.get('sequence') ?? 0) + 1;
-      tx.set(event, { ...action, sequence, recordedAt: serverTimestamp() });
+      const payload = action.type === 'ReflectionWritten' && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6) && action.payload.entryAt
+        ? { ...action.payload, entryAt: Timestamp.fromDate(new Date(action.payload.entryAt)) } : action.payload;
+      tx.set(event, { ...action, payload, sequence, recordedAt: serverTimestamp() });
       tx.set(stream, { sequence, lastEventId: action.eventId });
       tx.set(pointer, metadata);
       return { sequence, eventId: action.eventId, created: true };
     }); } catch (error) {
       // Racing identical commits can fail Rules before the SDK retries its precondition.
       // Only a server-confirmed, identical immutable event counts as acknowledgement.
-      if ((error as { code?: string }).code === 'permission-denied') {
-        const prior = await getDocFromServer(event);
-        if (prior.exists()) return resultFromPrior(prior.data());
-        // Another device can advance the head before Rules evaluates our commit.
-        if (attempt < 2) continue;
-      }
+      // A transaction can observe a newer control after reading an absent event.
+      // Check for an identical concurrent commit before interpreting any stale-state error.
+      let prior;
+      try { prior = await getDocFromServer(event); } catch { /* Preserve the original failure if the server is unavailable. */ }
+      if (prior?.exists()) return resultFromPrior(prior.data());
+      if ((error as { code?: string }).code === 'permission-denied' && attempt < 2) continue;
       throw error;
     }
   }
