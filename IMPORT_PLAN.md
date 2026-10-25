@@ -1,6 +1,6 @@
-# Alternate gratitude journal import design
+# Alternate gratitude journal import
 
-Prepared 2026-10-08; revised 2026-10-24 against main commit `4013a61` after PR #10 merged. This document specifies a proposed importer. The photo, date and prompt features described as existing below are implemented; the import events, receipt index and Settings import flow are not. No account data has been imported.
+Prepared 2026-10-08; implemented for PR #7 on 2026-10-25 after integrating main commit `4013a61` (PR #10). The adapter, source events, receipts, private photo resume, provenance export and Settings workflow below are implemented. The supplied archive passed local validation; no private account data has been imported.
 
 ## Source evidence and agreed behaviour
 
@@ -13,9 +13,9 @@ The original 2026-10-08 inspection of `GratitudeApp_DATA.zip` found:
 - Numeric millisecond dates agree with their offset-bearing creation/update strings; no update precedes creation. Different update timestamps do not establish an edit history.
 - Source fields: `id`, `noteId`, `noteText`, `createdOn`, `createdOnStr`, `updatedOn`, `updatedOnStr`, `noteColor`, `imagePath`, `driveImagePath`, `addressTo`, `prompt`, `promptId`, `moodId`, `backgroundId`. Address/background fields are empty or null; one record has mood metadata.
 
-These are retained aggregate findings, not a new scan or migration. The original archive stays untracked in the original worktree. Private text, prompts, filenames and photos must not enter Git, diagnostic logs or synthetic fixtures. The source program's brand/version is unconfirmed; identify the observed schema as `alternate-gratitude-zip-v1` rather than guessing a brand.
+Local validation with the implemented adapter on 2026-10-25 confirmed 686 supported records, five photos, one photo-only entry and three null prompts. This was a read-only local parse, with aggregate-only output and no migration. The original archive stays untracked in the original worktree. Private text, prompts, filenames and photos must not enter Git, diagnostic logs or synthetic fixtures. The source program's brand/version is unconfirmed; identify the observed schema as `alternate-gratitude-zip-v1` rather than guessing a brand.
 
-The proposed entry point remains **Settings → Import journal**: choose the ZIP, validate and preview locally, then confirm the signed-in destination account and exact import summary. Keep source colours as private provenance while using the app's existing rainbow presentation. Parsing and preview perform no cloud writes or AI calls. Import all five images and the photo-only record; a text-only subset is not the default scope.
+The entry point is **Settings → Import journal**: choose the ZIP, validate and preview locally, then confirm the signed-in destination account and exact import summary. Keep source colours as private provenance while using the app's existing rainbow presentation. Parsing and preview perform no cloud writes or AI calls. Import all five images and the photo-only record; a text-only subset is not the default scope.
 
 ## What PR #10 already provides
 
@@ -27,11 +27,11 @@ The proposed entry point remains **Settings → Import journal**: choose the ZIP
 | `preparePhoto` in `src/lib/photos.ts` | Reuse orientation handling, at-most-2048px longest edge and metadata-free JPEG encoding. Limits are four photos per entry and 10 MB per input/output. Preserve visible images, not byte-for-byte original JPEG encoding or EXIF. Retain the source ZIP. |
 | Private Storage objects at `users/{uid}/v1/{photoId}` | Reuse Google-authenticated owner access, immutable creates, authenticated downloads and verified cleanup. No public download URLs, second bucket or Cloud Functions. |
 | `chronologicalEntries`, `entryTimestamp`, `todayReflection` in `src/lib/journal.ts` | Feed imported creation instants into `entryAt`. Keep the existing descending-date/creation-order tie policy and independent same-day entries. Backfills must not complete Today. |
-| Projection version 5 with cached tail replay | Extend the projection for import receipts/provenance and bump its version once. Full replay must recover import progress and entries without an archive or model call. Image display still requires retained Storage objects. |
+| Projection version 5 with cached tail replay | Version 6 adds import receipts/provenance. Full replay must recover import progress and entries without an archive or model call. Image display still requires retained Storage objects. |
 | `exportArchive` and JSON archive version 2 in `src/lib/export.ts` | Complete photo journals already export as ZIPs; no-photo journals remain single files. Add import provenance to a versioned JSON export instead of building a second asset exporter. |
 | Locked `fflate` dependency | Reuse it for a bounded ZIP reader; no new ZIP package is needed by this design. |
 
-These contracts were checked in the merged domain, append/repository, photo/export helpers, Firestore Rules and Storage Rules. Remaining work is the import adapter, source events and receipts, integrity-aware upload/resume, provenance projection/export and Settings workflow—not basic photo support.
+These contracts were checked in the merged domain, append/repository, photo/export helpers, Firestore Rules and Storage Rules. The import adapter, source events and receipts, integrity-aware upload/resume, provenance projection/export and Settings workflow now build on these contracts.
 
 ## Mapping and prompt policy
 
@@ -49,9 +49,9 @@ These contracts were checked in the merged domain, append/repository, photo/expo
 
 `[No prompt]` is a deterministic presentation rule for an imported null prompt, not invented source text. Every journal card, full entry and editor must resolve it consistently. JSON exposes the current prompt string while retaining `origin.source.prompt: null`; a source prompt literally equal to `[No prompt]` remains distinguishable from a null. Markdown includes the prompt line using normal Markdown escaping, so it renders `[No prompt]` rather than omitting the question.
 
-Later explicit prompt/date edits use the existing editor. They change current presentation, never the immutable original prompt/date metadata. An identical reimport must preserve those user edits. Source colour retention and the Settings flow remain the proposed design choices; the missing-prompt display is settled.
+Later explicit prompt/date edits use the existing editor. They change current presentation, never the immutable original prompt/date metadata. An identical reimport must preserve those user edits. Source colour retention, Settings confirmation and missing-prompt display follow this policy.
 
-## Proposed events, receipts and replay
+## Implemented events, receipts and replay
 
 Keep the `v1` stream and the existing server `recordedAt` ingestion time. Do not backdate server timestamps or write projected entry documents administratively. Add two versioned source-event types, processed through the authenticated append transaction:
 
@@ -62,7 +62,7 @@ Between confirmation and completion, reuse normal `PhotoAttached` events. Photo-
 
 Add a per-source `imports/{sourceKey}` receipt index beneath the account stream, containing event references only: the original confirmation and latest import-phase event. Claims and completion are each atomic with the stream head and event; completion also advances the entry pointer. A stable action ID acknowledges only identical previously committed input. A second client seeing a different record under the same source key reports a conflict, never overwrites it. Derive counts and progress from source events; the receipt index is a checked lookup aid, not a second authoritative journal.
 
-Update `parseAction`, `applyEvent`, `decodeEvent`, append routing and transaction validation, repository/cache loading, the development adapter and Firestore Rules together. Proposed projection version 6 adds import receipts and per-entry immutable origin references; discard older checkpoints once, then resume cached tail replay. Existing event schemas retain their meanings.
+Update `parseAction`, `applyEvent`, `decodeEvent`, append routing and transaction validation, repository/cache loading, the development adapter and Firestore Rules together. Projection version 6 adds import receipts and per-entry immutable origin references; discard older checkpoints once, then resume cached tail replay. Existing event schemas retain their meanings.
 
 Integration points requiring explicit tests:
 
@@ -77,7 +77,7 @@ Keep exact source milliseconds even though the current display-order comparator 
 ## Validation and duplicate detection
 
 1. Bound compressed and actual expanded bytes, file count, record count and individual assets before large allocations. Use incremental decompression with an enforced output budget, not an unrestricted unzip followed by a size check. Reject traversal/absolute paths, duplicate archive names, encrypted/unsupported members and ambiguous image basenames. Document limits from the earlier 917,743-byte expanded archive and synthetic larger cases.
-2. Validate every record's supported fields/types, unique identity, numeric/string date agreement, creation/update ordering, non-future creation, colour syntax, text/prompt bounds and image decodability/references. Reuse current bounds where applicable (10,000 reflection characters, 600 prompt characters); preflight must block unsupported values rather than truncate them. All 686 supplied records must pass the eventual adapter's dry run before migration is enabled.
+2. Validate every record's supported fields/types, unique identity, numeric/string date agreement, creation/update ordering, non-future creation, colour syntax, text/prompt bounds and image decodability/references. Reuse current bounds where applicable (10,000 reflection characters, 600 prompt characters); preflight must block unsupported values rather than truncate them. The supplied 686 records passed the adapter’s local dry run; malformed archives still block confirmation.
 3. Build a local canonical manifest over source fields and source attachment digests. Preview total/new/identical/conflicting/blocked records, date span, three missing prompts and image/photo-only counts. Keep content previews local and diagnostics content-free. A missing image blocks its record; no silent loss or placeholder-photo substitution.
 4. Scope canonical keys to format namespace plus source `noteId`, not ZIP filename or archive hash. Repackaging an unchanged ZIP must still skip identical records. The canonical source digest excludes destination timestamps, normalization output and later user edits; include null values and original file content references. Text-identical records with different source IDs stay separate.
 5. Compare against the immutable confirmed input. An identical completed record adds zero events, even after subsequent app edits. An identical pending claim resumes; changed source input under an existing identity is a visible conflict. Validate the whole archive before confirmation. A subset requires a separate explicit selection and exact exclusions; it is never an automatic fallback.
@@ -94,9 +94,9 @@ Do not assume browser JPEG encoding is byte-identical across devices. The first 
 
 Persist per-account local progress/prepared blobs, but derive authoritative progress from confirmation, attachment and completion events. Reselecting the archive plus replayed receipts must recover on another device without the original device's counter. Pause on cancellation, sign-out, account change or disconnection; keep existing drafts independent. Concurrent normal saves and import clients must preserve a contiguous stream and one completed entry per source identity.
 
-Reuse cleanup intents for failed/discarded uploads only after checking whether any acknowledged claim/attachment still needs the object. Current cleanup intents are device-local, not a server-wide orphan sweep or cross-device rollback. Leave canceled partial claims visible and resumable; cancellation stops future work and does not promise deletion of completed imports or the last image of a photo-only entry. Do not delete a winning concurrent upload. Verify cleanup/retry after lost acknowledgements and reload. Retain the original ZIP until a complete source/destination comparison and photo export have been checked.
+Import failures and pauses retain pending claims/assets for explicit resume. Existing ordinary photo-removal cleanup intents remain device-local; the importer does not automatically delete unfinished uploads or provide a server-wide orphan sweep or rollback. Partial claims stay visible and resumable. Stopping work does not delete completed imports or the last image of a photo-only entry. A winning concurrent upload is reused after verification. Retain the original ZIP until a complete source/destination comparison and photo export have been checked.
 
-## Export and implementation gates
+## Export and verification gates
 
 Extend the JSON archive to a documented version 3 with immutable import origin and current entry/photo state. Preserve version-2 `createdAt` as the actual server save/ingestion time and `entryAt` as the current logical date; source creation/update representations belong under origin. Do not reinterpret old version-1/version-2 archives or claim a general native-backup restore feature as part of this alternate-format adapter. Reuse `exportArchive`: all five normalized photos and the photo-only entry must survive download, full replay, display and export; missing bytes fail visibly. Markdown keeps its date/prompt/reflection/image format and includes `[No prompt]` for missing original questions unless explicitly edited later.
 
@@ -105,4 +105,14 @@ Extend the JSON archive to a documented version 3 with immutable import origin a
 3. **Authenticated resumable import with photos.** Implement identity/integrity-aware Storage handling, reuse attachment events and connect Settings preview/confirmation/progress/pause/resume. Gate: emulator tests prove owner isolation, rejected forged phases/revisions, concurrent clients, zero-event identical repeats, changed-source conflicts, no duplicate photo events, photo-only guards and preservation of existing drafts/edits. Exercise 686 synthetic records and five synthetic photos with bounded resource use.
 4. **Review and migration.** Review the implementation and local dry-run summary. Actual migration is a separate explicit confirmation in the signed-in app, naming the destination account and exact counts. Verify 686 completed source identities, five images, one photo-only entry, three placeholder prompts, exact source field/date/prompt digests and current exported image digests. Retain the original archive. Updating this design does not perform or authorize an automatic production import.
 
-For implementation, follow `E2E_GUIDE.md`: mobile and desktop walkthroughs with deterministic clocks and fictional fixtures; screenshot comparison after every action; checks beneath images; no masking; `maxDiffPixels: 0`, `threshold: 0`. Cover preview, validation failure, confirmation, progress/completion, interruption/reselection on another device, repeat/conflict, `[No prompt]`, image rendering, photo-only editing and complete export. Wait for decoded images before captures. Run relevant Svelte/unit/Firebase/deployment/E2E checks in Nix. This design-only PR changes no application code or screenshot baselines.
+For implementation, follow `E2E_GUIDE.md`: mobile and desktop walkthroughs with deterministic clocks and fictional fixtures; screenshot comparison after every action; checks beneath images; no masking; `maxDiffPixels: 0`, `threshold: 0`. Cover preview, validation failure, confirmation, progress/completion, interruption/reselection on another device, repeat/conflict, `[No prompt]`, image rendering, photo-only editing and complete export. Wait for decoded images before captures. Run relevant Svelte/unit/Firebase/deployment/E2E checks in Nix. The implementation adds the importer and regenerated Settings screenshots, with scenarios 015 and 016 covering import and recovery. The separate scale job exercises all 686 fictional records and five photos through real emulator Rules, cross-device resume and a verified ZIP export.
+
+## Limits and recovery behaviour
+
+The adapter accepts this observed alternate ZIP schema, not a general backup restore format. Limits are 20 MiB compressed, 64 MiB expanded/prepared photos, 512 members, 5,000 records, 20 MiB JSON and 10 MiB per JPEG. JPEG headers are bounded to 40 megapixels before browser decoding. The archive must pass as a whole; there is no partial-selection fallback. Unknown record fields, missing or ambiguous images, malformed dates, changed input under an existing source identity and empty entries without a photo block confirmation.
+
+Selecting a ZIP saves it and prepared metadata-free JPEGs in private account/project/base-path IndexedDB storage. Reload revalidates that selection; it does not run the importer. **Forget selected ZIP on this device** removes only that local recovery selection. Another device must select the ZIP again and explicitly confirm resume. Signing out or leaving the screen stops between operations; a current authenticated operation may finish. Pause retains completed entries and pending claims/assets. There is no rollback or automatic deletion of pending import assets.
+
+Identical completed records are skipped even if their current writing, prompt, date or photos were edited. Import origin remains immutable. JSON version 3 is used when entries have origin; ordinary journals retain version 2. Neither format implies native JSON restore support. Markdown remains readable date/prompt/reflection content.
+
+A paused upload is private and retained for resuming. As with existing photo cleanup, a narrow concurrent completion/removal/upload race can leave an unreferenced private object; there is no automatic cross-device orphan sweep. Saved-entry state remains governed by immutable events, and an identical reimport does not restore removed attachments. Retain the original ZIP until the signed-in import and exported entries/photos have been reviewed.

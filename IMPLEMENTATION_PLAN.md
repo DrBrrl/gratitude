@@ -141,3 +141,9 @@ Implemented: generate/review/select an AI option inside new, additional, backfil
 ## Date editing in all composers
 
 Implemented for review: a local date/time control for Today’s first response and saved-entry editing, in addition to independent entries. Schema 6 records explicit date changes with revision checks, preserving historical source events, colour and server creation time. Scenario 014 covers both editor paths, invalid/future rejection, draft recovery, Today selection, replay and Markdown export; source/Rules checks cover cross-device conflicts and legacy compatibility.
+
+## Alternate-format import delivered in PR #7
+
+Settings now validates and previews an alternate journal ZIP, confirms the destination account, imports historical writing/photos with `[No prompt]` for missing questions, and supports explicit pause/resume and duplicate/conflict handling. Two source-event types and a receipt index preserve immutable raw provenance while projection version 6 derives current entries and progress. Existing schema-6 editors can change imported dates, prompts and text without changing origin. Photo integrity checks protect immutable upload retries, and complete JSON version-3 exports carry current entries, origin and normalized assets.
+
+Unit and authenticated Firebase tests cover malformed archives, raw Rules forgeries, cross-device concurrency, origin-preserving edits, photo-only guards and replay. Scenarios 015/016 document mobile/desktop import and recovery with a screenshot after each action. A separate CI job imports 686 fictional records/five photos, pauses after 100, resumes on a second device and verifies export. The real archive has only been validated locally; its production import remains an explicit signed-in user action.

@@ -84,7 +84,7 @@ Both deployment configurations select `aiDataMode: "paid"`, and billing was veri
 
 ## Project records
 
-- [IMPORT_PLAN.md](IMPORT_PLAN.md): proposed ZIP import using private photos, historical dates, `[No prompt]` placeholders and resumable source receipts; importer not yet implemented.
+- [IMPORT_PLAN.md](IMPORT_PLAN.md): implemented alternate ZIP import, provenance, limits and recovery contract.
 - [VISION.md](VISION.md): the project’s intended end state.
 - [MVP_DESIGN.md](MVP_DESIGN.md): proposed Firebase/Gemini architecture, source events, and replayable cached projections.
 - [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md): reviewable implementation increments and acceptance gates.
@@ -116,3 +116,9 @@ Inside **Your reflection**, choose **Generate AI prompt** to request a question 
 Double-click the displayed question to edit it, or use **Edit prompt** on touch screens or with the keyboard. Enter a nonblank question of up to 600 characters, then **Save prompt** to keep it in the local draft. **Cancel prompt edit** keeps the existing question. Save the reflection to synchronize the changed prompt and response together; discarding the draft leaves the saved question unchanged. Confirmed prompt edits and selected AI options survive draft reload. Unconfirmed text in the inline prompt editor is not saved.
 
 An AI result is a separate option and cannot replace a manual edit automatically. An already-received option waiting for sync survives reload without another model call. Its request identifies the entry, and exact AI output remains in response events. Manually written questions are literal source input in ReflectionWritten schemas 5/6, with revisions protecting concurrent edits. Full replay and cached replay reconstruct both kinds of question.
+
+## Import an existing journal
+
+Open **Settings → Import journal**, choose the alternate app’s ZIP containing `gratitudeEntries.json` and its JPEGs, review the counts and date span, then confirm the signed-in destination account. Original writing, prompts and historical instants are retained; missing prompts display `[No prompt]`. Photo-only and multiple-per-day entries remain separate. Photos use the app’s private metadata-free JPEG format. Import makes no Gemini requests.
+
+You can pause and explicitly resume. Reload restores the chosen ZIP on this device without running it; another device can select the ZIP again. Identical completed source records are skipped and preserve later edits. Changed source records block import instead of overwriting entries. JSON exports with imported entries use version 3 and retain original source fields under `origin`; other journals retain version 2. Keep your original archive until you have checked the imported journal and complete photo export. See [supported format, limits and recovery details](IMPORT_PLAN.md#limits-and-recovery-behaviour). This is an alternate-format importer, not a native JSON backup restore tool.
