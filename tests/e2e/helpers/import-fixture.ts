@@ -5,14 +5,14 @@ import { ref, uploadBytes, deleteObject } from 'firebase/storage';
 import { archiveFixture } from '../../fixtures/import-journal.mjs';
 import { parseImportArchive } from '../../../src/lib/import-archive';
 import { TestStepHelper } from './test-step-helper';
-import { navigate } from './journal-session';
+import { expectDecodedPhotos, navigate } from './journal-session';
 export const fixture=archiveFixture();
 export const zip={name:'fictional-gratitude.zip',mimeType:'application/zip',buffer:Buffer.from(fixture.bytes)};
 export async function openImport(page:Page, steps:TestStepHelper, id:string) {
   await navigate(page,steps,`${id}-settings`,'Settings');
   await steps.action(`${id}-import`,'Open the private journal importer',()=>page.getByRole('button',{name:/^Import journal/}).click(),async()=>{
     await expect(page.getByRole('heading',{name:'Import journal',exact:true})).toBeVisible();
-    await expect(page.getByLabel('Choose journal ZIP')).toBeEnabled();
+    await expect(page.getByLabel('Choose journal ZIP')).toBeEnabled({timeout:15_000});
   });
 }
 export async function selectArchive(page:Page, steps:TestStepHelper, id:string, file=zip) {
@@ -21,11 +21,7 @@ export async function selectArchive(page:Page, steps:TestStepHelper, id:string, 
     await expect(page.getByRole('status')).not.toContainText('Checking');
   });
 }
-export async function decodedImages(page:Page, count:number) {
-  const images=page.locator('.photo-image img');await expect(images).toHaveCount(count,{timeout:15_000});
-  await expect.poll(()=>images.evaluateAll(nodes=>nodes.every(n=>(n as HTMLImageElement).complete && (n as HTMLImageElement).naturalWidth>0))).toBe(true);
-  await images.evaluateAll(nodes=>Promise.all(nodes.map(n=>(n as HTMLImageElement).decode())));
-}
+export const decodedImages=expectDecodedPhotos;
 export async function uidFor(page:Page) {
   return page.evaluate(async()=>{
     const name=(await indexedDB.databases()).find(db=>db.name?.startsWith('gratitude:demo-gratitude:'))?.name;

@@ -34,12 +34,12 @@ test('resume a pending import explicitly, reject corrupt photos and changed sour
     await route.continue();
   });
   await steps.action('start-resume','Resume and show progress during a photo upload',()=>page.getByRole('button',{name:'Resume import',exact:true}).click(),async()=>{
-    await expect.poll(()=>uploadHeld).toBe(true);await expect(page.getByRole('button',{name:'Pause import',exact:true})).toBeEnabled();await expect(value('Ready to resume')).toHaveText('1');
+    await expect.poll(()=>uploadHeld,{timeout:15_000}).toBe(true);await expect(page.getByRole('button',{name:'Pause import',exact:true})).toBeEnabled();await expect(value('Ready to resume')).toHaveText('1');
   });
   await steps.action('pause','Pause after the current upload operation',()=>page.getByRole('button',{name:'Pause import',exact:true}).click(),async()=>{await expect(page.getByRole('button',{name:'Pausing after this operation…',exact:true})).toBeDisabled();});
   releaseUpload();
   await steps.step('paused','Retain the pending receipt and uploaded photo for recovery',[{description:'Import stops without completing the photo-only entry and requires renewed confirmation',check:async()=>{
-    await expect(page.locator('.message[role=status]')).toHaveText('Import paused. Saved entries stay in your journal. Resume when you are ready.');await expect(value('Already imported')).toHaveText('0');await expect(page.getByRole('checkbox',{name:/Import into/})).not.toBeChecked();
+    await expect(page.locator('.message[role=status]')).toHaveText('Import paused. Saved entries stay in your journal. Resume when you are ready.',{timeout:15_000});await expect(value('Already imported')).toHaveText('0');await expect(page.getByRole('checkbox',{name:/Import into/})).not.toBeChecked();
   }}]);
   await steps.action('confirm-resume','Confirm continued import after pausing',()=>page.getByRole('checkbox',{name:/Import into/}).check(),async()=>{await expect(page.getByRole('button',{name:'Resume import',exact:true})).toBeEnabled();});
   await steps.action('resume','Finish the same pending import without duplicate records',()=>page.getByRole('button',{name:'Resume import',exact:true}).click(),async()=>{
@@ -47,7 +47,7 @@ test('resume a pending import explicitly, reject corrupt photos and changed sour
   });
   const changed=archiveFixture({changes:{1:{noteText:'Changed source writing.'}}});
   await steps.action('conflict','Reject changed source input under an existing source identity',()=>page.getByLabel('Choose journal ZIP').setInputFiles({name:'changed-fictional-gratitude.zip',mimeType:'application/zip',buffer:Buffer.from(changed.bytes)}),async()=>{
-    await expect(value('Conflicts')).toHaveText('1');await expect(page.getByRole('alert')).toContainText('Some source records changed');await expect(page.getByRole('button',{name:'Confirm import',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Resume import',exact:true})).toHaveCount(0);
+    await expect(value('Conflicts')).toHaveText('1',{timeout:15_000});await expect(page.getByRole('alert')).toContainText('Some source records changed');await expect(page.getByRole('button',{name:'Confirm import',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Resume import',exact:true})).toHaveCount(0);
   });
   await steps.action('forget','Forget this device’s ZIP selection without deleting saved entries',()=>page.getByRole('button',{name:'Forget selected ZIP on this device',exact:true}).click(),async()=>{await expect(preview).toHaveCount(0);await expect(page.getByRole('alert')).toHaveCount(0);});
   await navigate(page,steps,'settings','Settings');

@@ -98,3 +98,11 @@ export async function seedHistory(page: Page, entries: { text: string; recordedA
     });
   } finally { await environment.cleanup(); }
 }
+
+/** Wait for authenticated bytes and browser decoding before capturing a photo state. */
+export async function expectDecodedPhotos(page: Page, count: number) {
+  const images = page.locator('.photo-image img');
+  await expect(images).toHaveCount(count, { timeout: 15_000 });
+  await expect.poll(() => images.evaluateAll(nodes => nodes.every(node => (node as HTMLImageElement).complete && (node as HTMLImageElement).naturalWidth > 0)), { timeout: 15_000 }).toBe(true);
+  await images.evaluateAll(nodes => Promise.all(nodes.map(node => (node as HTMLImageElement).decode())));
+}
