@@ -659,3 +659,31 @@ Okay, that all looks really good, thanks robot friend!
 ```text
 Okay, that all looks really good, thanks robot friend! Looks like some checks didn't pass for PR 10. Let's tighten those up and finalise it before i rebase and merge.
 ```
+
+## Import branch history retained during main integration — 2026-10-24
+
+The following dated records are preserved from PR #7.
+
+## 2026-10-08 — Plan alternate gratitude export import
+
+```text
+We just put a zip file of an export from an altenate program I've been using for gratitude. Let's make a plan for how to import the data from that system into our new system, on a new gratitude-import branch and worktree, for review.
+```
+
+## 2026-10-08 — Publish import plan for PR review
+
+```text
+put this up as a pr for review
+```
+
+## 2026-10-15 — Target main and assume prior photo support
+
+```text
+Retarget this PR dirctly against main and assume that support to add photos will be added before we do this design
+```
+
+## 2026-10-24 — Update import planning after PR 10
+
+```text
+Wonderful, we're all sorted then! Let's go back to the import (pr7) and update it now that we've merged 10 with main, it should have fixed all the issues you had with images in previous gratitude entries. I think another question you had was what to do with the prompt-less entries - we'll just put [No prompt] in for those entries' prompts. Go forth, and good luck!
+```

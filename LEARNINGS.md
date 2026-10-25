@@ -500,3 +500,33 @@ Validation: zero Svelte errors/warnings; 26 applicable paid-mode scenarios passe
 ## 2026-10-24 — PR 10 check audit before merge
 
 Confirmed through GitHub's current-head check rollup: commit e2c0a7b has ten successful checks (build, eight Firebase jobs and publication), and the PR is CLEAN/MERGEABLE. Run 39910234352 passed all normal walkthrough comparisons. Historical red runs remain visible: 39737049627 failed photo replay capture before the explicit image-readiness fix in 11a0da2, and 39871246578 exceeded the draft scenario's 150-second total budget before 8904e1a changed it to 240 seconds. Their failure logs and the current test source confirm those fixes are already included; no additional application or screenshot changes are warranted by this audit. The E2E guide now records both readiness and total-budget requirements. Current-head results, rather than superseded failed runs, establish the merge check status.
+
+## Import branch history retained during main integration — 2026-10-24
+
+The following dated records are preserved from PR #7.
+
+## 2026-10-08 — Alternate journal import investigation and planning review
+
+Confirmed by in-memory inspection of the supplied ZIP: 686 uniquely identified entries spanning 2024-11-28 to 2026-10-07, five matching JPEG attachments, one photo-only entry, three null prompts, 43 source colours and seven extra same-day entries. Numeric and offset-bearing string dates agree for all creation/update fields. No private reflection text or photos were copied into project records or fixtures. The original archive remains untracked in the original worktree.
+
+The current event contract and Security Rules require server-time creation, the fixed starter prompt and nonblank reflection text. Existing browsing/export reverse event insertion order. Therefore faithful historical import requires a separate imported event contract, independent historical timestamps, chronological presentation, metadata-preserving edits/exports, and cache invalidation. A direct reuse of normal save would lose dates/prompts and reject the photo-only entry.
+
+`IMPORT_PLAN.md` proposes a local dry run, authenticated explicit confirmation, stable source-ID/digest deduplication, per-record atomic resumable appends and staged acceptance gates. Attachment storage is not currently implemented; full photo support versus explicitly limited import remains a review decision. These are proposals, not implemented behavior.
+
+Planning-task retrospective: the prompt requested a plan on an isolated branch/worktree, not a production migration. Creating `gratitude-import` from the current reviewed UI preserved that baseline and left the private archive in place. Inspecting aggregate source structure before proposing a converter exposed the photo-only and timestamp constraints early. The review artifact documents these decisions and implementation gates; no import or application change has been performed.
+
+## 2026-10-15 — Import planning prerequisites revised
+
+The user requested PR #7 target main directly and specified that photo support will precede this design. The import plan now treats the completed photo capability as a prerequisite, reuses its contracts, and requires all five photos plus the photo-only entry to survive migration and export. The earlier limited-mode proposal is superseded; this assumption does not claim photo support is implemented today. Recheck baseline event constraints after it lands.
+
+Follow-up retrospective: explicit prerequisite sequencing removes the attachment-policy decision from this import review and avoids designing a second photo subsystem. Documentation validation uses diff checks; application behavior is unchanged.
+
+## 2026-10-24 — Import design after merged photo support
+
+PR #10 is merged into main as 4013a61. Reinspection confirms ReflectionWritten schemas 1–6, projection version 5, literal/editable prompts, editable logical dates, independent same-day entries, private PhotoAttached/summary/removal events, attachment-before-save/photo-only support and complete photo ZIP exports. These replace the limitations recorded in the original import investigation; the importer itself remains unimplemented. The user settled missing prompts as the literal display `[No prompt]`; the design retains the original null in immutable source input and derives the placeholder in projections, including app/export presentation. Later user prompt/date edits retain original provenance and are not overwritten by an identical reimport.
+
+Confirmed gap: uploadPhoto currently acknowledges any existing object metadata without verifying its contents. The revised import design proposes immutable per-source confirmations and integrity-aware upload reuse, with raw source-file identity distinct from normalized stored-byte identity. First-successful normalized uploads can be reused across devices without assuming identical browser encoding. The receipt events, metadata checks, projection version 6 and JSON archive version 3 are proposals with explicit emulator/fixture acceptance gates, not implemented guarantees. Import does not invoke AI automatically.
+
+Main was integrated into the existing gratitude-import worktree. Both branches' append-only prompt/learning histories were retained with a merge context note. The review diff against main is limited to IMPORT_PLAN.md, README.md, PROMPTS.md and LEARNINGS.md; application code, Rules and screenshot baselines match main. No private archive was rescanned, copied or imported.
+
+Validation: both parent histories were checked for verbatim retention. The working review diff contains only the four import/project-record documents, with no changes to application, Rules, dependencies, workflows or tests relative to merged main. Documentation whitespace/conflict checks pass. No baseline regeneration or new local application test run is needed for this design-only update; the existing hosted checks still run on the updated PR head.
