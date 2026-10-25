@@ -168,3 +168,9 @@ Scenario `013-editor-prompts` exercises generating and selecting a question for 
 ### Dates in every editor
 
 Scenario `014-reflection-dates` runs alongside 013 in the editor suite. It starts a backfill directly from Today, reloads its draft, recovers an offline pending save, edits the saved date into Today, reloads before committing, and checks completion, colour, replay and actual Markdown download contents. Empty and future dates are rejected in the editor. Each action has a full-page, unmasked zero-pixel comparison with checks underneath.
+
+### Alternate journal import
+
+Scenarios `015-import-journal` and `016-import-recovery` exercise local validation/preview, account confirmation, missing prompts, photo-only entries, source-preserving edits, repeated/conflicting input, private photo integrity failures, explicit pause/resume, reload recovery, complete replay and real JSON ZIP contents. They use only fictional raw records and a synthetic mug image. Each action has a full-page unmasked screenshot at `maxDiffPixels: 0`, `threshold: 0`, with generated checks underneath. Image checks wait for decoding. A held emulator upload makes the progress/pause screen deterministic without altering rendered content.
+
+The `import` matrix suite runs those scenarios in both viewports. The separate `import-scale` CI job runs `nix develop -c bash scripts/firebase-test.sh 'node --test tests/import/scale.test.mjs'` once. It imports 686 fictional records and five photos through actual authenticated emulator transactions, pauses after 100 completions, edits an entry, resumes on another client, verifies zero-event identical repeat and checks every exported photo digest. It contains no real journal data and needs no live account or AI call.

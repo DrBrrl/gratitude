@@ -99,3 +99,9 @@ Firestore Rules/indexes deployed successfully to preview and production for Refl
 ## Editable reflection dates (2026-10-22)
 
 Firestore Rules/indexes were deployed successfully to both preview and production for ReflectionWritten schema 6. It permits explicit entry-date replacement with expected-revision checks while preserving legacy schemas and original server save timestamps. The updated app is required to read schema 6 events; existing compatible clients can still read older streams. No Auth, App Check, AI, billing or Storage configuration changed.
+
+## Alternate journal import (2026-10-25)
+
+Compatible Firestore Rules/indexes and Storage Rules deployed successfully to both `gratitude-drbrrl-dev` and `gratitude-drbrrl` after emulator verification. The changes add exact import source-event shapes and atomic per-source receipt references, retain provenance pointers across schema-6 edits, and validate optional immutable import integrity metadata on Storage creates. No Auth, AI, billing, project, bucket, index layout or Cloud Functions change was required; no private journal data was uploaded or migrated.
+
+Deploy both rule sets before publishing this client: `nix develop -c npx firebase deploy --only firestore,storage --project <projectId> --non-interactive`. Updated app versions are required to read new import events. Older event schemas and existing photo uploads retain their original semantics. The owner imports the actual archive through **Settings → Import journal** after deployment and explicitly confirms the destination account. Preview imports use the separate development project and do not migrate production data.
