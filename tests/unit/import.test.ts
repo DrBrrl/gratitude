@@ -18,6 +18,12 @@ test('bounded adapter validates source data and stable identity independently of
   const repacked=zipSync({'gratitudeEntries.json':strToU8(JSON.stringify(fixture.records.map(r=>Object.fromEntries(Object.entries(r).reverse())))), 'other/photo-0.jpg':fixture.jpeg},{level:0});
   const second=await parseImportArchive(new Blob([new Uint8Array(repacked)]),new Date(time));
   assert.deepEqual(first.records,second.records);
+  const ambiguous=zipSync({'gratitudeEntries.json':strToU8(JSON.stringify(fixture.records)),'photos/photo-0.jpg':fixture.jpeg,'other/photo-0.jpg':fixture.jpeg});
+  await assert.rejects(parseImportArchive(new Blob([new Uint8Array(ambiguous)]),new Date(time)),/ambiguous/);
+  const sameDay=await plans({photos:[],missing:[],changes:{1:{...sourceRecord(0),id:2,noteId:'fictional-note-2'}}});
+  assert.equal(sameDay.records[0].input.source.createdOn,sameDay.records[1].input.source.createdOn);
+  assert.notEqual(sameDay.records[0].input.entryId,sameDay.records[1].input.entryId);
+  assert.equal(replay(log(sameDay.records.flatMap(actionsFor))).entries.length,3);
   assert.equal(new Set(first.records.map(r=>r.input.entryId)).size,3);
   for(const p of first.records)assert.ok([p.confirmationId,p.completionId,...p.attachmentIds].every(id=>id.length+9<=80));
   assert.ok(validImportSource(sourceRecord(0)));

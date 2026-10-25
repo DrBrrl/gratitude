@@ -64,10 +64,12 @@ jobs:
       fail-fast: false
       matrix:
         project: [mobile-chromium, desktop-chromium]
-        suite: [journal, ai, photos, editor]
+        suite: [journal, ai, photos, editor, import]
         include:
           - suite: journal
             scenarios: tests/e2e/(00[1-6]|010-)
+          - suite: import
+            scenarios: tests/e2e/01[56]-import
           - suite: editor
             scenarios: tests/e2e/01[34]-
           - suite: photos
@@ -106,11 +108,24 @@ jobs:
             test-results/
           retention-days: 14
 
+  import-scale:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+      - run: nix develop -c npm ci
+      - name: Verify complete import, cross-device resume and asset export
+        run: nix develop -c bash scripts/firebase-test.sh 'node --test tests/import/scale.test.mjs'
+
   publish:
-    needs: [build, firebase]
+    needs: [build, firebase, import-scale]
     if: >-
       always() && !cancelled() &&
-      ((needs.build.result == 'success' && needs.firebase.result == 'success') || github.event.action == 'closed') &&
+      ((needs.build.result == 'success' && needs.firebase.result == 'success' && needs.import-scale.result == 'success') || github.event.action == 'closed') &&
       ((github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
        (github.event_name != 'pull_request' && github.ref == 'refs/heads/main'))
     runs-on: ubuntu-latest
