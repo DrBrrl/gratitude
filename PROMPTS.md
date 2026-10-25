@@ -699,3 +699,9 @@ Fantastic, so that means that when i eventually merge this PR and use the main a
 ```text
 Okay, let's go ahead and do that now in PR7! :)
 ```
+
+## 2026-10-25 — GitHub rebase conflict message
+
+```text
+That's so cool, thank you fobot friend! I see this in Github: "This branch cannot be rebased due to conflicts" - What should we do about that?
+```
