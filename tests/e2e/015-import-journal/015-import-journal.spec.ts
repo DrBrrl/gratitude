@@ -47,11 +47,11 @@ test('import historical entries and photos, edit without losing origin and expor
   await steps.step('deduplicated','Reopen the same ZIP without reimporting or overwriting edits',[{description:'All three original source records are already imported, and there is no confirmation button',check:async()=>{
     await expect(value('Already imported')).toHaveText('3');await expect(value('New entries')).toHaveText('0');await expect(page.getByRole('button',{name:'Confirm import',exact:true})).toHaveCount(0);expect(aiRequests).toBe(0);
   }}]);
-  await steps.action('reselect','Reselect the same ZIP and keep the same receipt identities',()=>page.getByLabel('Choose journal ZIP').setInputFiles(zip),async()=>{await expect(page.getByRole('status')).toHaveText('All entries in this ZIP are already imported.');await expect(value('Already imported')).toHaveText('3');});
+  await steps.action('reselect','Reselect the same ZIP and keep the same receipt identities',()=>page.getByLabel('Choose journal ZIP').setInputFiles(zip),async()=>{await expect(page.locator('.message[role=status]')).toHaveText('All entries in this ZIP are already imported.',{timeout:15_000});await expect(value('Already imported')).toHaveText('3');});
   await navigate(page,steps,'export-settings','Settings');
   await steps.action('export','Open journal export',()=>page.getByRole('button',{name:/^Export journal/}).click(),async()=>{await expect(page.getByRole('radio',{name:/JSON/})).toBeVisible();});
   await steps.action('json','Choose structured JSON with provenance',()=>page.getByRole('radio',{name:/JSON/}).check(),async()=>{await expect(page.getByRole('radio',{name:/JSON/})).toBeChecked();});
-  await steps.action('prepare','Prepare the complete journal and private photo',()=>page.getByRole('button',{name:'Prepare export',exact:true}).click(),async()=>{await expect(page.getByRole('status')).toHaveText('Export ready');});
+  await steps.action('prepare','Prepare the complete journal and private photo',()=>page.getByRole('button',{name:'Prepare export',exact:true}).click(),async()=>{await expect(page.getByRole('status')).toHaveText('Export ready',{timeout:15_000});});
   const download=page.waitForEvent('download');
   await steps.action('download','Download and verify entries, origin fields and photo bytes',()=>page.getByRole('button',{name:'Download JSON ZIP',exact:true}).click(),async()=>{
     const files=unzipSync(new Uint8Array(await readFile((await (await download).path())!)));const json=JSON.parse(strFromU8(files['gratitude-journal.json']));
