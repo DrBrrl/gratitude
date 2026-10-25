@@ -7,7 +7,12 @@ service firebase.storage {
       // Normalized JPEGs only. Immutable objects: replacement gets a fresh ID.
       allow create: if resource == null && owns(uid) && photoId.matches('^[a-zA-Z0-9_-]{1,80}$')
         && request.resource.size > 0 && request.resource.size <= 10 * 1024 * 1024
-        && request.resource.contentType == 'image/jpeg';
+        && request.resource.contentType == 'image/jpeg'
+        && (!request.resource.metadata.keys().hasAny(['importSourceKey','sourceDigest','storedDigest'])
+          || request.resource.metadata.keys().hasAll(['importSourceKey','sourceDigest','storedDigest'])
+          && request.resource.metadata.importSourceKey.matches('^[a-f0-9]{64}$')
+          && request.resource.metadata.sourceDigest.matches('^[a-f0-9]{64}$')
+          && request.resource.metadata.storedDigest.matches('^[a-f0-9]{64}$'));
       allow update: if false;
     }
     match /{path=**} { allow read, write: if false; }

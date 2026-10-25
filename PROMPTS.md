@@ -687,3 +687,15 @@ Retarget this PR dirctly against main and assume that support to add photos will
 ```text
 Wonderful, we're all sorted then! Let's go back to the import (pr7) and update it now that we've merged 10 with main, it should have fixed all the issues you had with images in previous gratitude entries. I think another question you had was what to do with the prompt-less entries - we'll just put [No prompt] in for those entries' prompts. Go forth, and good luck!
 ```
+
+## 2026-10-25 — Clarify import readiness
+
+```text
+Fantastic, so that means that when i eventually merge this PR and use the main app, the import of my data should work okay? :)
+```
+
+## 2026-10-25 — Implement the importer in PR 7
+
+```text
+Okay, let's go ahead and do that now in PR7! :)
+```

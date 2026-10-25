@@ -27,8 +27,13 @@ service cloud.firestore {
       function aiBefore() { return exists(aiPath()) ? get(aiPath()).data : {'lastEventId': null, 'choicesId': null, 'requestId': null}; }
       function validDay(day) { return day is string && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'); }
       function text(value, max) { return value is string && value.size() <= max; }
+      function importPath(key) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/imports/$(key); }
+      function entryHasText(entryId) {
+        let e = get(eventPath(get(pointerPath(entryId)).data.lastEventId)).data;
+        return e.type == 'ReflectionImported' ? e.payload.photoSlot == null : e.payload.text.matches('[\\s\\S]*[^\\s][\\s\\S]*');
+      }
       function promptId(e) { return e.schemaVersion == 1 ? e.payload.starterId : e.payload.promptId; }
-      function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && (get(eventPath(id)).data.type == 'PromptResponseReceived' || get(eventPath(id)).data.type == 'ReflectionWritten' && get(eventPath(id)).data.schemaVersion in [5, 6] && get(eventPath(id)).data.payload.promptText is string && get(eventPath(id)).data.payload.promptId == id)); }
+      function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && (get(eventPath(id)).data.type in ['PromptResponseReceived', 'ImportRecordConfirmed'] || get(eventPath(id)).data.type == 'ReflectionWritten' && get(eventPath(id)).data.schemaVersion in [5, 6] && get(eventPath(id)).data.payload.promptText is string && get(eventPath(id)).data.payload.promptId == id)); }
       function unchangedEntryDate(e) {
         let previous = exists(pointerPath(e.payload.entryId)) ? get(eventPath(get(pointerPath(e.payload.entryId)).data.lastEventId)).data : e;
         return e.schemaVersion == 6 || (e.schemaVersion in [3, 4, 5]
@@ -49,6 +54,7 @@ service cloud.firestore {
             || (e.schemaVersion == 4 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot'])
               && knownPrompt(p.promptId) && (p.entryAt == null || p.entryAt is timestamp && p.entryAt <= request.time)
               && (p.photoSlot == null || p.photoSlot is int && p.photoSlot >= 0 && p.photoSlot < 4)))
+          && (e.schemaVersion == 6 || !exists(pointerPath(p.entryId)) || get(pointerPath(p.entryId)).data.get('importId', null) == null)
           && unchangedEntryDate(e)
           && validId(p.entryId) && text(p.text, 10000)
           && (p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*') || e.schemaVersion in [4, 5, 6] && p.photoSlot is int && activePhoto(p.entryId, p.photoSlot))
@@ -129,11 +135,52 @@ service cloud.firestore {
           && (e.type == 'PhotoAttached' ? old == null || old.type == 'PhotoRemoved'
             : old != null && old.type != 'PhotoRemoved' && p.photoId == old.payload.photoId)
           && (e.type == 'PhotoAttached' || e.type == 'PhotoSummaryRequested'
-            || (e.type == 'PhotoRemoved' && (!exists(pointerPath(p.entryId)) || get(eventPath(get(pointerPath(p.entryId)).data.lastEventId)).data.payload.text.matches('[\\s\\S]*[^\\s][\\s\\S]*') || otherPhoto(p.entryId, p.slot)))
+            || (e.type == 'PhotoRemoved' && (!exists(pointerPath(p.entryId)) || entryHasText(p.entryId) || otherPhoto(p.entryId, p.slot)))
             || (e.type == 'PhotoSummaryEdited' && text(p.text, 1000))
             || (e.type == 'PhotoSummaryResponseReceived' && old.type == 'PhotoSummaryRequested' && e.eventId == p.previousEventId + '_response'
               && text(p.text, 1000) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*') && text(p.model, 100) && p.model.size() > 0 && p.finishReason == 'STOP')
             || (e.type == 'PhotoSummaryFailed' && old.type == 'PhotoSummaryRequested' && e.eventId == p.previousEventId + '_failure' && p.reason in ['unavailable', 'blocked', 'invalid-response']));
+      }
+      function optionalText(value, max) { return value == null || text(value, max); }
+      function validSource(s) {
+        return s is map && s.keys().hasAll(['id','noteId','noteText','createdOn','createdOnStr','updatedOn','updatedOnStr','noteColor','imagePath','driveImagePath','addressTo','prompt','promptId','moodId','backgroundId'])
+          && s.keys().hasOnly(['id','noteId','noteText','createdOn','createdOnStr','updatedOn','updatedOnStr','noteColor','imagePath','driveImagePath','addressTo','prompt','promptId','moodId','backgroundId'])
+          && s.id is int && s.id >= 0 && text(s.noteId, 80) && s.noteId.size() > 0 && text(s.noteText, 10000)
+          && s.createdOn is int && s.createdOn >= 0 && s.updatedOn is int && s.updatedOn >= s.createdOn && s.updatedOn <= request.time.toMillis()
+          && text(s.createdOnStr, 40) && text(s.updatedOnStr, 40) && s.noteColor is string && s.noteColor.matches('^#[0-9a-fA-F]{6}$')
+          && optionalText(s.imagePath,512) && optionalText(s.driveImagePath,512) && text(s.addressTo,500)
+          && (s.prompt == null || text(s.prompt,600) && s.prompt.matches('[\\s\\S]*[^\\s][\\s\\S]*'))
+          && optionalText(s.promptId,80) && optionalText(s.moodId,80) && optionalText(s.backgroundId,80);
+      }
+      function sourceHasPhoto(s) { return s.imagePath != null && s.imagePath != '' || s.driveImagePath != null && s.driveImagePath != ''; }
+      function validImport(e) {
+        let p = e.payload;
+        return e.schemaVersion == 1 && p.sourceKey is string && p.sourceKey.matches('^[a-f0-9]{64}$')
+          && p.entryId == 'e_' + p.sourceKey
+          && (e.type == 'ImportRecordConfirmed'
+            ? p.keys().hasAll(['format','sourceKey','entryId','source','attachments']) && p.keys().hasOnly(['format','sourceKey','entryId','source','attachments'])
+              && e.eventId == 'ic_' + p.sourceKey && p.format == 'alternate-gratitude-zip-v1' && validSource(p.source)
+              && p.attachments is list && p.attachments.size() == (sourceHasPhoto(p.source) ? 1 : 0)
+              && (p.attachments.size() == 0 || p.attachments[0] is map && p.attachments[0].keys().hasAll(['photoId','sourceDigest']) && p.attachments[0].keys().hasOnly(['photoId','sourceDigest']) && validId(p.attachments[0].photoId) && p.attachments[0].sourceDigest is string && p.attachments[0].sourceDigest.matches('^[a-f0-9]{64}$'))
+              && (p.source.noteText.matches('[\\s\\S]*[^\\s][\\s\\S]*') || p.attachments.size() > 0)
+              && !exists(importPath(p.sourceKey)) && !exists(pointerPath(p.entryId))
+              && getAfter(importPath(p.sourceKey)).data.confirmationId == e.eventId && getAfter(importPath(p.sourceKey)).data.lastEventId == e.eventId
+            : validImportCompletion(e));
+      }
+      function validImportCompletion(e) {
+        let p = e.payload;
+        let receipt = get(importPath(p.sourceKey)).data;
+        let confirmed = get(eventPath(p.confirmationId)).data;
+        let input = confirmed.payload;
+        return e.type == 'ReflectionImported' && e.eventId == 'iw_' + p.sourceKey
+          && p.keys().hasAll(['sourceKey','confirmationId','entryId','expectedRevision','photoSlot']) && p.keys().hasOnly(['sourceKey','confirmationId','entryId','expectedRevision','photoSlot'])
+          && p.confirmationId == 'ic_' + p.sourceKey && p.expectedRevision == 0 && !exists(pointerPath(p.entryId))
+          && receipt.confirmationId == p.confirmationId && receipt.lastEventId == p.confirmationId
+          && confirmed.type == 'ImportRecordConfirmed' && input.sourceKey == p.sourceKey && input.entryId == p.entryId
+          && p.photoSlot == (input.source.noteText.matches('[\\s\\S]*[^\\s][\\s\\S]*') ? null : 0)
+          && (input.attachments.size() == 0 || activePhoto(p.entryId,0) && photoBefore(p.entryId,0).payload.photoId == input.attachments[0].photoId)
+          && getAfter(importPath(p.sourceKey)).data.confirmationId == p.confirmationId && getAfter(importPath(p.sourceKey)).data.lastEventId == e.eventId
+          && getAfter(pointerPath(p.entryId)).data.lastEventId == e.eventId && getAfter(pointerPath(p.entryId)).data.importId == p.confirmationId;
       }
       match /events/{eventId} {
         allow read: if owns(uid);
@@ -142,7 +189,7 @@ service cloud.firestore {
           && request.resource.data.eventId == eventId && request.resource.data.recordedAt == request.time
           && request.resource.data.sequence == nextSequence()
           && getAfter(root()).data.sequence == request.resource.data.sequence && getAfter(root()).data.lastEventId == eventId
-          && (request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
+          && (request.resource.data.type in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(request.resource.data) : request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
         allow update, delete: if false;
       }
       match /ai/{id} {
@@ -162,14 +209,29 @@ service cloud.firestore {
           && photoKey == getAfter(eventPath(request.resource.data.lastEventId)).data.payload.entryId + '_' + string(getAfter(eventPath(request.resource.data.lastEventId)).data.payload.slot);
         allow delete: if false;
       }
+      match /imports/{sourceKey} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && generation == 'v1'
+          && request.resource.data.keys().hasAll(['confirmationId','lastEventId']) && request.resource.data.keys().hasOnly(['confirmationId','lastEventId'])
+          && validId(request.resource.data.lastEventId) && !exists(eventPath(request.resource.data.lastEventId))
+          && (resource == null
+            ? request.resource.data.confirmationId == request.resource.data.lastEventId && getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ImportRecordConfirmed'
+            : resource.data.lastEventId == resource.data.confirmationId && request.resource.data.confirmationId == resource.data.confirmationId && getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ReflectionImported')
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.payload.sourceKey == sourceKey;
+        allow delete: if false;
+      }
       match /entries/{entryId} {
         allow read: if owns(uid);
         allow create, update: if owns(uid) && generation == 'v1' && validId(entryId)
-          && request.resource.data.keys().hasOnly(['lastEventId'])
-          && validId(request.resource.data.lastEventId)
-          && !exists(eventPath(request.resource.data.lastEventId))
-          && getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ReflectionWritten'
-          && getAfter(eventPath(request.resource.data.lastEventId)).data.payload.entryId == entryId;
+          && request.resource.data.keys().hasAll(['lastEventId']) && request.resource.data.keys().hasOnly(['lastEventId','importId'])
+          && validId(request.resource.data.lastEventId) && !exists(eventPath(request.resource.data.lastEventId))
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.type in ['ReflectionWritten','ReflectionImported']
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.payload.entryId == entryId
+          && (getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ReflectionImported'
+            ? resource == null && request.resource.data.importId == getAfter(eventPath(request.resource.data.lastEventId)).data.payload.confirmationId
+            : (resource == null || resource.data.get('importId',null) == null
+              ? !request.resource.data.keys().hasAny(['importId'])
+              : request.resource.data.importId == resource.data.importId && getAfter(eventPath(request.resource.data.lastEventId)).data.schemaVersion == 6));
         allow delete: if false;
       }
     }

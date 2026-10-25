@@ -359,3 +359,103 @@ test('explicit schema 6 date edits synchronize across devices with revision chec
   assert.equal(full.entries[0].recordedAt, log[0].recordedAt); assert.equal(full.entries[0].colour, 0);
   for (let split = 0; split <= log.length; split++) assert.deepEqual(replay(log.slice(split), replay(log.slice(0, split))), full);
 });
+
+async function importFixture(options={}) {
+  const { archiveFixture }=await import('../fixtures/import-journal.mjs');
+  const { parseImportArchive }=await import('../../src/lib/import-archive.ts');
+  return parseImportArchive(new Blob([archiveFixture(options).bytes]),new Date('2026-10-01T04:31:07Z'));
+}
+function claim(plan) {return {eventId:plan.confirmationId,type:'ImportRecordConfirmed',schemaVersion:1,payload:plan.input};}
+function finish(plan) {return {eventId:plan.completionId,type:'ReflectionImported',schemaVersion:1,payload:{sourceKey:plan.input.sourceKey,confirmationId:plan.confirmationId,entryId:plan.input.entryId,expectedRevision:0,photoSlot:plan.input.source.noteText.trim()?null:0}};}
+function photoFor(plan,slot=0,previousEventId=null) {return {eventId:plan.attachmentIds[0],type:'PhotoAttached',schemaVersion:1,payload:{entryId:plan.input.entryId,slot,photoId:plan.input.attachments[0].photoId,previousEventId}};}
+
+test('concurrent import clients resume identical claims and preserve source origin through prompt/date edits',async()=>{
+  const first=await device('import@example.test','import-first'), second=await device('import@example.test','import-second');
+  const archive=await importFixture();
+  for(const plan of archive.records){
+    const results=await Promise.all([first.append(claim(plan)),second.append(claim(plan))]);
+    assert.equal(results[0].data.sequence,results[1].data.sequence);
+    if(plan.input.attachments.length)await first.append(photoFor(plan));
+    const completed=await Promise.all([first.append(finish(plan)),second.append(finish(plan))]);
+    assert.equal(completed[0].data.sequence,completed[1].data.sequence);
+  }
+  let state=replay(await events(first));assert.equal(state.entries.length,3);
+  assert.equal(state.entries[0].prompt,'[No prompt]');assert.equal(state.entries[0].text,'');
+  const plan=archive.records[1],original=state.entries[1].origin;
+  await first.append({eventId:'import-edit',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:plan.input.entryId,text:'An explicit edit.',expectedRevision:1,promptId:'import-edit',promptText:'My new question?',entryAt:'2024-02-01T04:00:00.000Z',photoSlot:null}});
+  await first.append({eventId:'import-edit-again',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:plan.input.entryId,text:'A second edit.',expectedRevision:2,promptId:'import-edit',promptText:null,entryAt:'2024-02-01T04:00:00.000Z',photoSlot:null}});
+  const before=(await events(first)).length;
+  for(const p of archive.records){await second.append(claim(p));await second.append(finish(p));}
+  state=replay(await events(second));assert.equal(state.cursor,before);assert.deepEqual(state.entries[1].origin,original);assert.equal(state.entries[1].text,'A second edit.');
+  await assert.rejects(second.append({...claim(plan),payload:{...plan.input,source:{...plan.input.source,noteText:'Changed archive input.'}}}),/already used/);
+  await assert.rejects(first.append({eventId:'import-downgrade',type:'ReflectionWritten',schemaVersion:5,payload:{entryId:plan.input.entryId,text:'Not permitted.',expectedRevision:3,promptId:'import-edit',promptText:null,entryAt:'2024-02-01T04:00:00.000Z',photoSlot:null}}),/current editor/);
+  const log=await events(first);for(const cut of [0,1,4,log.length])assert.deepEqual(replay(log.slice(cut),replay(log.slice(0,cut))),state);
+  const other=environment.authenticatedContext('not-import-owner',{firebase:{sign_in_provider:'google.com'}});
+  await assertFails(getDocs(collection(other.firestore(),`users/${first.uid}/streams/v1/imports`)));
+});
+
+test('import completion requires its photo and photo-only removal guards work after an imported initial entry',async()=>{
+  const first=await device('import-photo@example.test','import-photo');
+  const plan=(await importFixture()).records[0];
+  await first.append(claim(plan));
+  await assert.rejects(first.append(finish(plan)));
+  await first.append(photoFor(plan));await first.append(finish(plan));
+  await assert.rejects(first.append({eventId:'remove-import-last',type:'PhotoRemoved',schemaVersion:1,payload:{entryId:plan.input.entryId,slot:0,photoId:plan.input.attachments[0].photoId,previousEventId:plan.attachmentIds[0]}}));
+  await first.append({eventId:'import-extra-photo',type:'PhotoAttached',schemaVersion:1,payload:{entryId:plan.input.entryId,slot:3,photoId:'import-another-photo',previousEventId:null}});
+  await first.append({eventId:'remove-import-first',type:'PhotoRemoved',schemaVersion:1,payload:{entryId:plan.input.entryId,slot:0,photoId:plan.input.attachments[0].photoId,previousEventId:plan.attachmentIds[0]}});
+  assert.equal(replay(await events(first)).entries[0].text,'');
+});
+
+test('import uploads verify immutable identity and bytes, reuse a winning encoding and reject mismatched objects',async()=>{
+  const { uploadImportedPhoto }=await import('../../src/lib/photos.ts');
+  const { sha256 }=await import('../../src/lib/import-archive.ts');
+  const { getBytes, updateMetadata }=await import('firebase/storage');
+  const first=await device('import-storage@example.test','import-storage');
+  const own=environment.authenticatedContext(first.uid,{firebase:{sign_in_provider:'google.com'}});
+  const storage=own.storage('demo-gratitude.firebasestorage.app'), client={storage};
+  const key='a'.repeat(64),sourceDigest='b'.repeat(64),bytes=new Uint8Array([255,216,255,1]);
+  await uploadImportedPhoto(client,first.uid,'import-storage-photo',key,sourceDigest,new Blob([bytes],{type:'image/jpeg'}));
+  await uploadImportedPhoto(client,first.uid,'import-storage-photo',key,sourceDigest,new Blob([new Uint8Array([255,216,255,2])],{type:'image/jpeg'}));
+  assert.deepEqual(new Uint8Array(await getBytes(ref(storage,`users/${first.uid}/v1/import-storage-photo`))),bytes);
+  await assert.rejects(uploadImportedPhoto(client,first.uid,'import-storage-photo',key,'c'.repeat(64),new Blob([bytes])),/identity/);
+  await assertFails(updateMetadata(ref(storage,`users/${first.uid}/v1/import-storage-photo`),{customMetadata:{sourceDigest:'c'.repeat(64)}}));
+  await uploadBytes(ref(storage,`users/${first.uid}/v1/import-corrupt`),bytes,{contentType:'image/jpeg',customMetadata:{importSourceKey:key,sourceDigest,storedDigest:'d'.repeat(64)}});
+  await assert.rejects(uploadImportedPhoto(client,first.uid,'import-corrupt',key,sourceDigest,new Blob([bytes])),/integrity/);
+  const fresh='import-storage-concurrent';
+  await Promise.all([uploadImportedPhoto(client,first.uid,fresh,key,sourceDigest,new Blob([bytes])),uploadImportedPhoto(client,first.uid,fresh,key,sourceDigest,new Blob([bytes]))]);
+  assert.equal(await sha256(new Uint8Array(await getBytes(ref(storage,`users/${first.uid}/v1/${fresh}`)))),await sha256(bytes));
+});
+
+test('import Rules reject forged phases, detached receipts, computed state and provenance removal',async()=>{
+  const {writeBatch,serverTimestamp,Timestamp}=await import('firebase/firestore');
+  const client=await device('import-forgeries@example.test','import-forgeries');
+  const archive=await importFixture({photos:[],missing:[]}), plan=archive.records[0],root=`users/${client.uid}/streams/v1`;
+  const forged=async(event,sequence,{receipt=true,entry=true,importId=plan.confirmationId}={})=>{
+    const batch=writeBatch(client.db);
+    batch.set(doc(client.db,`${root}/events/${event.eventId}`),{...event,sequence,recordedAt:serverTimestamp()});
+    batch.set(doc(client.db,root),{sequence,lastEventId:event.eventId});
+    if(receipt)batch.set(doc(client.db,`${root}/imports/${plan.input.sourceKey}`),{confirmationId:plan.confirmationId,lastEventId:event.eventId});
+    if(entry && event.type!=='ImportRecordConfirmed')batch.set(doc(client.db,`${root}/entries/${plan.input.entryId}`),{lastEventId:event.eventId,...(importId?{importId}:{})});
+    return batch.commit();
+  };
+  await assertFails(forged(finish(plan),1));
+  await assertFails(forged(claim(plan),1,{receipt:false}));
+  for(const payload of [{...plan.input,colour:0},{...plan.input,source:{...plan.input.source,createdOn:Date.parse('2026-10-02T00:00:00Z'),updatedOn:Date.parse('2026-10-02T00:00:00Z')}},{...plan.input,source:{...plan.input.source,prompt:'x'.repeat(601)}}])await assertFails(forged({...claim(plan),payload},1));
+  await client.append(claim(plan));
+  await assertFails(forged(finish(plan),2,{receipt:false}));
+  await assertFails(forged(finish(plan),2,{entry:false}));
+  await assertFails(forged({...finish(plan),payload:{...finish(plan).payload,photoSlot:0}},2));
+  await assertFails(forged({...finish(plan),payload:{...finish(plan).payload,expectedRevision:1}},2));
+  await assertFails(forged(finish(plan),2,{importId:null}));
+  await client.append(finish(plan));
+  const edit={eventId:'forged-import-edit',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:plan.input.entryId,text:'An edit.',promptId:plan.confirmationId,promptText:null,expectedRevision:1,entryAt:Timestamp.fromDate(new Date('2024-01-01T04:00:00Z')),photoSlot:null}};
+  await assertFails(forged(edit,3,{receipt:false,importId:null}));
+  await assertFails(forged({...edit,schemaVersion:5},3,{receipt:false}));
+  assert.equal((await events(client)).length,2);
+  await client.append({eventId:'import-ai-choices',type:'AIChoicesConfirmed',schemaVersion:1,payload:{previousEventId:null,enabled:true,useJournal:true,useFeedback:true,guidance:''}});
+  const {makeRequest}=await import('../../src/lib/ai/context.ts');
+  const state=replay(await events(client));
+  const request=makeRequest(state,'2026-10-01','personal','import-ai-request',plan.input.entryId);
+  await client.append(request);
+  assert.equal(request.payload.entryRevision,1);assert.equal(request.payload.entryRefs[0].revision,1);
+});
