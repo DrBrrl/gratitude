@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
+  import ImportPanel from '$lib/components/ImportPanel.svelte';
   import { base } from '$app/paths';
   import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
   import { createFirebaseClient, googleSignIn, type FirebaseClient } from '$lib/firebase/client';
@@ -226,7 +227,7 @@
   import PhotoImage from '$lib/components/PhotoImage.svelte';
   import Icon from '$lib/components/Icon.svelte';
   let writing = $state(false);
-  let settingsPage = $state<'menu' | 'ai' | 'export' | 'privacy' | 'account'>('menu');
+  let settingsPage = $state<'menu' | 'ai' | 'export' | 'privacy' | 'account' | 'import'>('menu');
   let exportFormat = $state<'markdown' | 'json'>('markdown');
   let showPromptInfo = $state(false);
   let savedId = $state<string | null>(null);
@@ -552,7 +553,7 @@
       {#if settingsPage === 'menu'}
         <h1 class="page-heading">Settings</h1>
         <div class="settings-menu">
-          {#each [{ id: 'ai', icon: 'sparkles', title: 'AI settings', subtitle: 'Answers, memory and sharing' }, { id: 'export', icon: 'file', title: 'Export journal', subtitle: 'Markdown or JSON' }, { id: 'privacy', icon: 'shield', title: 'Privacy & data', subtitle: 'Your journal, your control' }, { id: 'account', icon: 'account', title: 'Your account', subtitle: user.email ?? 'Signed in' }] as item}
+          {#each [{ id: 'ai', icon: 'sparkles', title: 'AI settings', subtitle: 'Answers, memory and sharing' }, { id: 'export', icon: 'file', title: 'Export journal', subtitle: 'Markdown or JSON' }, { id: 'import', icon: 'file', title: 'Import journal', subtitle: 'ZIP export, photos and dates' }, { id: 'privacy', icon: 'shield', title: 'Privacy & data', subtitle: 'Your journal, your control' }, { id: 'account', icon: 'account', title: 'Your account', subtitle: user.email ?? 'Signed in' }] as item}
             <button class="glass settings-row" onclick={() => openSettings(item.id as typeof settingsPage)}><span class="row-icon" class:yellow={item.id === 'ai'}><Icon name={item.icon} size={30} /></span><span class="row-copy"><strong>{item.title}</strong><span>{item.subtitle}</span></span><Icon name="next" size={20} /></button>
           {/each}
         </div>
@@ -574,6 +575,9 @@
         {:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
         <section class="glass"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose Gemini processing for each photo.</p></section>
+      {:else if settingsPage === 'import'}
+        <h1 class="page-heading">Import journal</h1>
+        {#if client && repository}<ImportPanel {client} {repository} {view} uid={user.uid} email={user.email ?? 'your signed-in account'} />{:else}<p>Sign in to your synced journal to import an export.</p>{/if}
       {:else if settingsPage === 'export'}
         <h1>Export your journal</h1>
         <fieldset class="export-choices"><legend class="sr-only">Export format</legend>
