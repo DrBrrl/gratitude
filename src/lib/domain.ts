@@ -1,6 +1,7 @@
+import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 5;
+export const PROJECTION_VERSION = 6;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v1';
@@ -33,16 +34,18 @@ type PhotoTarget = { entryId: string; slot: number; photoId: string; previousEve
 export type Photo = { entryId: string; slot: number; photoId: string; lastEventId: string; summary: string; origin: 'none' | 'ai' | 'user'; status: 'idle' | 'pending' | 'failed'; removed: boolean };
 export function photoKey(entryId: string, slot: number) { return `${entryId}_${slot}`; }
 export function entryPhotos(state: Projection, entryId: string) { return Object.values(state.photos).filter(photo => photo.entryId === entryId && !photo.removed).sort((a,b) => a.slot - b.slot); }
-export type SourceAction = Action | AIAction | PhotoAction;
+export type ImportAction = Envelope<'ImportRecordConfirmed', ImportInput> | Envelope<'ReflectionImported', { sourceKey: string; confirmationId: string; entryId: string; expectedRevision: 0; photoSlot: number | null }>;
+export type ImportReceipt = { confirmationId: string; input: ImportInput; completedId: string | null };
+export type SourceAction = Action | AIAction | PhotoAction | ImportAction;
 export function isPhotoAction(action: SourceAction): action is PhotoAction { return action.type.startsWith('Photo'); }
 export type JournalEvent = SourceAction & { sequence: number; recordedAt: string };
-export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string };
+export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 5; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 6; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
-export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
+export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
   control: emptyControl(), choices: { enabled: false, useJournal: false, useFeedback: false, guidance: '' },
   requests: {}, responses: {}, days: {}, feedback: [], failure: null
 } }; }
@@ -65,7 +68,11 @@ export function parseAction(input: unknown): SourceAction {
   if (!keys(v, ['eventId', 'type', 'schemaVersion', 'payload']) || !id(v.eventId) || !v.payload || typeof v.payload !== 'object' || Array.isArray(v.payload)) throw new Error('Invalid action');
   const p = v.payload as Record<string, unknown>;
   let valid = false;
-  if (v.type === 'ReflectionWritten') {
+  if (v.type === 'ImportRecordConfirmed') {
+    valid = v.schemaVersion === 1 && validImportInput(p) && v.eventId === `ic_${p.sourceKey}`;
+  } else if (v.type === 'ReflectionImported') {
+    valid = v.schemaVersion === 1 && keys(p, ['sourceKey','confirmationId','entryId','expectedRevision','photoSlot']) && typeof p.sourceKey === 'string' && /^[a-f0-9]{64}$/.test(p.sourceKey) && p.entryId === `e_${p.sourceKey}` && p.expectedRevision === 0 && v.eventId === `iw_${p.sourceKey}` && p.confirmationId === `ic_${p.sourceKey}` && (p.photoSlot === null || p.photoSlot === 0);
+  } else if (v.type === 'ReflectionWritten') {
     valid = (v.schemaVersion === 1 && keys(p, ['entryId', 'text', 'expectedRevision', 'starterId']) && p.starterId === STARTER_ID
       || v.schemaVersion === 2 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId']) && id(p.promptId)
       || v.schemaVersion === 3 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt']) && id(p.promptId) && validEntryTime(p.entryAt)
@@ -119,11 +126,26 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
   const action = parseAction({ eventId: event.eventId, type: event.type, schemaVersion: event.schemaVersion, payload: event.payload });
   if (event.sequence !== state.cursor + 1 || !Number.isFinite(Date.parse(event.recordedAt))) throw new Error('Incomplete or invalid event stream');
   const next = { ...state, cursor: event.sequence, lastEventId: event.eventId };
+  if (action.type === 'ImportRecordConfirmed') {
+    const p = action.payload;
+    if (state.imports[p.sourceKey] || state.entries.some(e => e.id === p.entryId) || Object.values(state.imports).some(r => r.input.entryId === p.entryId)) throw new Error('Import identity already claimed');
+    if (p.source.updatedOn > Date.parse(event.recordedAt)) throw new Error('An import cannot be dated in the future');
+    return { ...next, imports: { ...state.imports, [p.sourceKey]: { confirmationId: action.eventId, input: p, completedId: null } }, prompts: { ...state.prompts, [action.eventId]: p.source.prompt ?? NO_PROMPT } };
+  }
+  if (action.type === 'ReflectionImported') {
+    const p = action.payload; const receipt = state.imports[p.sourceKey];
+    if (!receipt || receipt.confirmationId !== p.confirmationId || receipt.completedId || receipt.input.entryId !== p.entryId || state.entries.some(e => e.id === p.entryId)) throw new Error('Invalid import completion');
+    const input = receipt.input;
+    if (p.photoSlot !== (input.source.noteText.trim() ? null : 0) || input.attachments.some((a, slot) => !entryPhotos(state,p.entryId).some(photo => photo.slot === slot && photo.photoId === a.photoId))) throw new Error('Import photos are not attached');
+    const entry: Entry = { id: p.entryId, text: input.source.noteText, prompt: input.source.prompt ?? NO_PROMPT, promptId: receipt.confirmationId, entryAt: new Date(input.source.createdOn).toISOString(), recordedAt: event.recordedAt, revision: 1, colour: state.entries.length % 7, origin: { ...input, confirmationId: receipt.confirmationId } };
+    return { ...next, entries: [...state.entries, entry], imports: { ...state.imports, [p.sourceKey]: { ...receipt, completedId: action.eventId } } };
+  }
   if (isPhotoAction(action)) return applyPhoto(next, action);
   if (action.type === 'ReflectionWritten') {
     const existing = state.entries.find(entry => entry.id === action.payload.entryId);
     if ((existing?.revision ?? 0) !== action.payload.expectedRevision) throw new Error('Conflicting reflection revision');
     if (!action.payload.text.trim() && !((action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6) && entryPhotos(state, action.payload.entryId).some(photo => photo.slot === action.payload.photoSlot))) throw new Error('Write a reflection or attach a photo.');
+    if (existing?.origin && action.schemaVersion !== 6) throw new Error('Use the current editor for imported reflections');
     const chosen = promptId(action);
     if (existing && action.schemaVersion !== 5 && action.schemaVersion !== 6 && chosen !== (existing.promptId ?? STARTER_ID)) throw new Error('A saved reflection keeps its original prompt.');
     const chosenAt = action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6 ? action.payload.entryAt ?? undefined : undefined;
@@ -134,7 +156,7 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
     if (!prompt) throw new Error('Missing prompt response');
     const entry: Entry = { id: action.payload.entryId, text: action.payload.text, prompt, promptId: chosen,
       revision: action.payload.expectedRevision + 1, colour: existing?.colour ?? state.entries.length % 7, recordedAt: existing?.recordedAt ?? event.recordedAt,
-      ...(chosenAt ? { entryAt: chosenAt } : {}) };
+      ...(chosenAt ? { entryAt: chosenAt } : {}), ...(existing?.origin ? { origin: existing.origin } : {}) };
     return { ...next, prompts: manual === null ? state.prompts : { ...state.prompts, [action.eventId]: manual }, entries: existing ? state.entries.map(old => old.id === entry.id ? entry : old) : [...state.entries, entry] };
   }
   const ai = { ...state.ai, control: nextControl(state.ai.control, action) };

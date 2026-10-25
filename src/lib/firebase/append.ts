@@ -1,3 +1,4 @@
+import { stableJSON } from '../import-source.ts';
 import { doc, getDocFromServer, runTransaction, serverTimestamp, Timestamp, type Firestore, type DocumentData } from 'firebase/firestore';
 import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, type SourceAction, type JournalEvent, isPhotoAction, photoKey } from '../domain.ts';
 
@@ -12,11 +13,11 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
   const action = parseAction(input);
   const stream = doc(db, `users/${uid}/streams/${GENERATION}`);
   const event = doc(db, `${stream.path}/events/${action.eventId}`);
-  const pointer = doc(db, action.type === 'ReflectionWritten' ? `${stream.path}/entries/${action.payload.entryId}` : isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
+  const pointer = doc(db, action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
   const resultFromPrior = (value: DocumentData) => {
     const decoded = decodeEvent(value);
     const original = parseAction({ eventId: decoded.eventId, type: decoded.type, schemaVersion: decoded.schemaVersion, payload: decoded.payload });
-    if (JSON.stringify(original) !== JSON.stringify(action)) throw new Error('Action ID already used with different input.');
+    if (stableJSON(original) !== stableJSON(action)) throw new Error('Action ID already used with different input.');
     return { sequence: value.sequence, eventId: action.eventId, created: false };
   };
   for (let attempt = 0; ; attempt++) {
@@ -26,19 +27,28 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
       const head = await tx.get(stream);
       const latest = await tx.get(pointer);
       let metadata: Record<string, unknown>;
-      if (action.type === 'ReflectionWritten') {
+      if (action.type === 'ImportRecordConfirmed') {
+        if (latest.exists() || (await tx.get(doc(db, `${stream.path}/entries/${action.payload.entryId}`))).exists()) throw new Error('Import identity already claimed.');
+        metadata = { confirmationId: action.eventId, lastEventId: action.eventId };
+      } else if (action.type === 'ReflectionImported') {
+        const receiptRef = doc(db, `${stream.path}/imports/${action.payload.sourceKey}`);
+        const receipt = await tx.get(receiptRef);
+        if (latest.exists() || receipt.get('confirmationId') !== action.payload.confirmationId || receipt.get('lastEventId') !== action.payload.confirmationId) throw new Error('Import cannot be completed in this state.');
+        metadata = { lastEventId: action.eventId, importId: action.payload.confirmationId };
+      } else if (action.type === 'ReflectionWritten') {
         let revision = 0;
         if (latest.exists()) {
           const previous = await tx.get(doc(db, `${stream.path}/events/${latest.get('lastEventId')}`));
           if (!previous.exists()) throw new Error('Incomplete reflection history.');
           revision = previous.get('payload.expectedRevision') + 1;
+          if (latest.get('importId') && action.schemaVersion !== 6) throw new Error('Use the current editor for imported reflections.');
           const original = previous.get('payload.promptId') ?? STARTER_ID;
           if (action.schemaVersion !== 5 && action.schemaVersion !== 6 && promptId(action) !== original) throw new Error('A saved reflection keeps its original prompt.');
           const previousAt = previous.get('payload.entryAt') as Timestamp | undefined;
           if (action.schemaVersion !== 6 && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 ? (previousAt?.toDate().toISOString() ?? null) !== action.payload.entryAt : !!previousAt)) throw new Error('A saved reflection keeps its original entry date.');
         }
         if (revision !== action.payload.expectedRevision) throw new Error('This reflection changed on another device. Your text has been kept; reload the reflection before editing again.');
-        metadata = { lastEventId: action.eventId };
+        metadata = { lastEventId: action.eventId, ...(latest.get('importId') ? { importId: latest.get('importId') } : {}) };
       } else if (isPhotoAction(action)) {
         if ((latest.get('lastEventId') ?? null) !== action.payload.previousEventId) throw new Error('This photo changed on another device. Reload before trying again.');
         metadata = { lastEventId: action.eventId };
@@ -63,6 +73,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
       tx.set(event, { ...action, payload, sequence, recordedAt: serverTimestamp() });
       tx.set(stream, { sequence, lastEventId: action.eventId });
       tx.set(pointer, metadata);
+      if (action.type === 'ReflectionImported') tx.set(doc(db, `${stream.path}/imports/${action.payload.sourceKey}`), { confirmationId: action.payload.confirmationId, lastEventId: action.eventId });
       return { sequence, eventId: action.eventId, created: true };
     }); } catch (error) {
       // Racing identical commits can fail Rules before the SDK retries its precondition.

@@ -1,5 +1,6 @@
-import { ref, uploadBytes, getBlob, getMetadata, deleteObject } from 'firebase/storage';
+import { ref, uploadBytes, getBlob, getBytes, getMetadata, deleteObject } from 'firebase/storage';
 import type { FirebaseClient } from './firebase/client';
+import { sha256 } from './import-archive.ts';
 import { GENERATION } from './domain.ts';
 export type StagedPhoto = { photoId: string; eventId: string; blob: Blob; slot: number; previousEventId: string | null };
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -36,4 +37,29 @@ export function readPhoto(client: FirebaseClient, uid: string, photoId: string) 
 export async function erasePhoto(client: FirebaseClient, uid: string, photoId: string) {
   try { await deleteObject(ref(client.storage, photoPath(uid, photoId))); }
   catch (cause) { if ((cause as { code?: string }).code !== 'storage/object-not-found') throw cause; }
+}
+
+/** Import retries verify identity and bytes; existence alone is never an acknowledgement. */
+export async function uploadImportedPhoto(client: FirebaseClient, uid: string, photoId: string, sourceKey: string, sourceDigest: string, blob: Blob) {
+  const object = ref(client.storage, photoPath(uid, photoId));
+  const verify = async () => {
+    const metadata = await getMetadata(object);
+    const custom = metadata.customMetadata;
+    if (metadata.contentType !== 'image/jpeg' || !metadata.size || metadata.size > MAX_PHOTO_BYTES || custom?.importSourceKey !== sourceKey || custom.sourceDigest !== sourceDigest || !/^[a-f0-9]{64}$/.test(custom.storedDigest ?? '')) throw new Error('An existing import photo has different identity or integrity metadata. Nothing was overwritten.');
+    const stored = await getBytes(object, MAX_PHOTO_BYTES);
+    if (await sha256(new Uint8Array(stored)) !== custom.storedDigest) throw new Error('An existing import photo failed its integrity check. Nothing was overwritten.');
+  };
+  try { await verify(); return; }
+  catch (cause) { if ((cause as { code?: string }).code !== 'storage/object-not-found') throw cause; }
+  const storedDigest = await sha256(new Uint8Array(await blob.arrayBuffer()));
+  try { await uploadBytes(object, blob, { contentType: 'image/jpeg', cacheControl: 'private, max-age=0', customMetadata: { importSourceKey: sourceKey, sourceDigest, storedDigest } }); }
+  catch (cause) {
+    // A concurrent immutable create may win with another valid JPEG encoding.
+    // Acknowledge only a complete, authenticated, verified winning object.
+    try { await verify(); return; } catch (verification) {
+      if ((verification as { code?: string }).code === 'storage/object-not-found') throw cause;
+      throw verification;
+    }
+  }
+  await verify();
 }

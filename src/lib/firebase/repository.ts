@@ -1,8 +1,9 @@
+import type { ImportSelection } from '../import-archive';
 import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { appendReflection, decodeEvent } from './append';
 import { openDB, type IDBPDatabase } from 'idb';
 import { base } from '$app/paths';
-import { applyEvent, emptyProjection, replay, GENERATION, PROJECTION_VERSION, type Action, type AIAction, type ResponseAction, type Projection, type PhotoAction, photoKey } from '../domain';
+import { applyEvent, emptyProjection, replay, GENERATION, PROJECTION_VERSION, type Action, type AIAction, type ResponseAction, type Projection, type PhotoAction, type ImportAction, photoKey } from '../domain';
 import type { FirebaseClient } from './client';
 import { makeRequest, buildContext, type GeneratePrompt } from '../ai/context';
 
@@ -52,7 +53,7 @@ export class JournalRepository {
     if (checkpoint) {
       try {
         const s = checkpoint.state;
-        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.photos || !s.prompts ||
+        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.photos || !s.prompts || !s.imports ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
           const anchor = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${s.lastEventId}`));
@@ -117,6 +118,8 @@ export class JournalRepository {
   async readStagedPhoto(entryId: string): Promise<StagedPhoto | null> { return await this.db.get('outbox', `photo:${entryId}`) ?? null; }
   async stagePhoto(entryId: string, photo: StagedPhoto) { await this.db.put('outbox', photo, `photo:${entryId}`); }
   async clearStagedPhoto(entryId: string) { await this.db.delete('outbox', `photo:${entryId}`); }
+  async readImportArchive(): Promise<ImportSelection | null> { return await this.db.get('outbox', 'import-archive') ?? null; }
+  async storeImportArchive(file: ImportSelection | null) { if (file) await this.db.put('outbox', file, 'import-archive'); else await this.db.delete('outbox', 'import-archive'); }
   async readDraft(key = 'draft'): Promise<Action | null> {
     await this.draftChain;
     const draft = await this.db.get('outbox', key) as Action | undefined;
@@ -170,7 +173,7 @@ export class JournalRepository {
     await this.db.delete('outbox', 'pending');
     this.pending = null; this.error = ''; this.status = 'Pending save returned to editor'; this.emit();
   }
-  async commitAI(action: AIAction | PhotoAction) {
+  async commitAI(action: AIAction | PhotoAction | ImportAction) {
     if (!this.ready || this.stopped || !navigator.onLine) throw new Error('Connect and wait for your journal to sync first.');
     const result = await appendReflection(this.client.db, this.uid, action);
     // Await the confirmed projection, never invoke an AI adapter from a listener.
@@ -300,4 +303,4 @@ export class JournalRepository {
 }
 
 /** UI-facing contract shared with the development event-fixture adapter. */
-export type JournalStore = Pick<JournalRepository, 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult' | 'requestPhotoSummary' | 'syncPhotoResult' | 'readStagedPhoto' | 'stagePhoto' | 'clearStagedPhoto' | 'cancelStagedPhoto' | 'removePhoto' | 'retryPhotoCleanup'>;
+export type JournalStore = Pick<JournalRepository, 'readImportArchive' | 'storeImportArchive' | 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult' | 'requestPhotoSummary' | 'syncPhotoResult' | 'readStagedPhoto' | 'stagePhoto' | 'clearStagedPhoto' | 'cancelStagedPhoto' | 'removePhoto' | 'retryPhotoCleanup'>;
