@@ -717,3 +717,9 @@ Thank you little robot! :) All sorted out now, and merged. Next up, i would like
 ```text
 A few little things i would like to be different! On the Today page, between the gratitude/date line and Reflection time, i would like a little display of the present week (starting on sunday), displaying the filled in days, non-filled in days, and the days we haven't reached yet greyed out. Clicking it takes you to a calendar display, clicking on a date takes you to the entry for that date, or a journal view for that date (allowing multiple entires to be displayed if necessary - use this behaviour for all date-clicking in the calendars throughout the app - and i just noticed you came to the same conclusion yourself in the pr, nice one!). At the top of the little calendar box, let's get the streak displayed like "xxx days of gratitude in a row". I don't want us to add a tab for the landing page - i already like that we can get there by clicking "gratitude" at the top. The calendar display doesn't need its own tab either. On the journal page, between your journal and new entry, lets get the same week box i just described and have it open to the calendar view. The calendar view is an infinitely scrolling calendar with the journal colours circled around fill-in dates.
 ```
+
+## 2026-10-26 — Implement the reviewed streak design
+
+```text
+Nice one! Make it so, little robot friend, go forth and code if you're ready! :)
+```
