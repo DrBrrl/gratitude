@@ -616,3 +616,11 @@ The September default had a concrete navigation cause: the landing restoration e
 Calendar frame/control borders, the month heading, focus rings and Today dot use yellow. Saved-day circle borders continue to use the projected entry colour. Scenario 018 now includes a fictional saved entry in its current month and asserts the actual orange circle border, as well as the January entry; its earlier October fixture contained no saved October entries. Separately, the development sample file contains September dates, and live previews do not insert fictional entries into a signed-in account. The user's missing-circle environment remains a clarification question; no live account data has been read or changed.
 
 Validation of this refinement passed all 26 unit tests, zero Svelte errors/warnings and strict mobile/desktop comparisons for both the full scrolling calendar and landing calendar (four E2E cases). The landing walkthrough includes a current-month circle, fresh-visit reset, editable month/year actions and retained return month; no masks or screenshot tolerance changes were introduced.
+
+## 2026-10-27 — Compact inline landing-calendar controls
+
+The month/year fields now replace the heading in its original row, beside the navigation controls. Nine-character month and four-character year widths use a monospace font plus padding and space for native dropdown indicators, so September and a complete year remain readable. The normal chooser hint and visible labels were removed; accessible Month/Year names remain. Invalid input still gets a visible validation message.
+
+The user explicitly requested less padding and square arrows. Landing navigation is now 32px high with 32px square arrows using the existing back/next chevron icons; week/date-button sizing is unchanged. This supersedes the earlier 44px minimum for these specific landing navigation controls and the full-width chooser-row treatment recorded above.
+
+The updated mobile and desktop scenario 018 passes strict unmasked screenshot comparisons, including 320px layout, same-row field/control geometry, nine-/four-character sizing, September text and square arrows. Svelte check reports zero errors and warnings. Screenshots and generated walkthroughs are updated together, with obsolete images from step renumbering removed. No state, event, authentication or backend changes were needed.
