@@ -13,5 +13,5 @@
   .number{display:grid;place-items:center;width:34px;height:34px;border:2px solid transparent;border-radius:50%;font-size:.9rem;}
   .filled .number{border-color:var(--day-colour);box-shadow:0 0 8px color-mix(in srgb,var(--day-colour) 28%,transparent);}
   .future{color:#727782;cursor:default;} small{position:absolute;right:0;bottom:2px;font-size:.6rem;background:#22262e;color:#e3e5e9;border-radius:6px;padding:0 3px;line-height:12px;}
-  i{position:absolute;bottom:1px;width:4px;height:4px;background:#d7dce2;border-radius:50%;} button:focus-visible{outline:2px solid #e0d8ab;outline-offset:-2px;} button:hover:not(:disabled){background:#ffffff0b;}
+  i{position:absolute;bottom:1px;width:4px;height:4px;background:var(--calendar-highlight,#d7dce2);border-radius:50%;} button:focus-visible{outline:2px solid var(--calendar-highlight,#e0d8ab);outline-offset:-2px;} button:hover:not(:disabled){background:#ffffff0b;}
 </style>

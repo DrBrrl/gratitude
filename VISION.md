@@ -6,7 +6,7 @@ Users receive a daily AI-generated gratitude prompt and can write and save a res
 
 Users can revisit previous reflections, request an alternative prompt, or skip a day. They control what information informs personalization and can inspect, reset, or disable it.
 
-Users see Sunday-first current-week summaries on Today and Journal, with their streak, entry-coloured saved dates and subdued future dates. They explore their reflections through an infinitely scrolling calendar and a single-month landing calendar with previous/current/next controls and a month chooser on its heading. Both use the same date-selection behaviour. Gentle streaks reflect the dates of their entries, and backfilling a missed day restores continuity without penalties. Opening an entry from the calendar preserves the month they return to.
+Users see Sunday-first current-week summaries on Today and Journal, with their streak, entry-coloured saved dates and subdued future dates. They explore their reflections through an infinitely scrolling calendar and a single-month landing calendar with previous/current/next controls and editable Month and Year dropdowns on its heading. Both use the same date-selection behaviour. Gentle streaks reflect the dates of their entries, and backfilling a missed day restores continuity without penalties. Opening an entry from the calendar preserves the month they return to.
 
 Reflections are private. Users can export and delete their data and understand what information is shared with an AI service.
 

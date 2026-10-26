@@ -268,12 +268,13 @@
     }
   }
   $effect(()=>{
-    const value=page.state.calendar;const ready=view.ready;const owner=navOwner;const path=page.url.searchParams.has('calendar');
+    const value=page.state.calendar;const ready=view.ready;const owner=navOwner;const path=page.url.searchParams.has('calendar');const isLanding=landing;
     if(!ready || !owner)return;
     untrack(()=>{
       let next=readCalendarFlow(value,owner);
-      if(!next && (path || landing)){try{const saved=readCalendarFlow(JSON.parse(sessionStorage.getItem(navKey)??'null'),owner);next=path || saved?.root.tab==='home' && !saved.trail.length?saved:null;}catch{ /* Ignore invalid recovery context. */ }}
+      if(!next && path){try{const saved=readCalendarFlow(JSON.parse(sessionStorage.getItem(navKey)??'null'),owner);next=saved;}catch{ /* Ignore invalid recovery context. */ }}
       if(next)void applyFlow(next);
+      else if(isLanding){homeAnchor={month:localDay(new Date()).slice(0,7),offset:0};flow=null;appliedFlow='';}
     });
   });
   async function done() {
