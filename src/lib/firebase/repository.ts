@@ -27,6 +27,7 @@ export class JournalRepository {
   private draftChain = Promise.resolve();
   private ready = false;
   private rebuilding = false;
+  private pendingAnchor: { id: string; sequence: number } | null = null;
   private aiResult: ResponseAction | null = null;
   private generating = false;
   private photoResults: Record<string, PhotoAction> = {};
@@ -40,6 +41,7 @@ export class JournalRepository {
   }
   async start() {
     const generation = ++this.listenerGeneration;
+    this.pendingAnchor = null;
     this.db = await openDB(`gratitude:${this.client.projectId}:${base}:${this.uid}:${GENERATION}`, 1, {
       upgrade(db) { db.createObjectStore('cache'); db.createObjectStore('outbox'); }
     });
@@ -56,10 +58,22 @@ export class JournalRepository {
         if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.photos || !s.prompts || !s.imports ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
-          const anchor = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${s.lastEventId}`));
-          if (!anchor.exists() || anchor.get('sequence') !== s.cursor) throw new Error('Stale checkpoint');
+          if (!s.lastEventId) throw new Error('Invalid checkpoint anchor');
+          try {
+            const anchor = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${s.lastEventId}`));
+            if (!anchor.exists() || anchor.get('sequence') !== s.cursor) throw new Error('Stale checkpoint');
+          } catch (cause) {
+            // Unavailability is not evidence of corruption. Retain a digest-checked
+            // prefix provisionally, then verify its anchor before accepting a server tail.
+            const code = (cause as { code?: string }).code;
+            if (code !== 'unavailable' && code !== 'deadline-exceeded') throw cause;
+            this.pendingAnchor = { id: s.lastEventId, sequence: s.cursor };
+          }
         }
         this.state = s;
+        this.ready = true;
+        this.status = 'Showing entries on this device; waiting to sync';
+        this.emit();
       } catch { await this.db.delete('cache', 'checkpoint'); }
     }
     if (this.stopped) return;
@@ -69,6 +83,13 @@ export class JournalRepository {
       { includeMetadataChanges: true }, (snapshot) => {
         this.chain = this.chain.then(async () => {
           if (this.stopped || generation !== this.listenerGeneration || snapshot.metadata.hasPendingWrites) return;
+          if (this.pendingAnchor && !snapshot.metadata.fromCache) {
+            const pending = this.pendingAnchor;
+            const anchor = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${pending.id}`));
+            if (!anchor.exists() || anchor.get('sequence') !== pending.sequence) throw new Error('Stale checkpoint. Rebuild the local view.');
+            if (this.stopped || generation !== this.listenerGeneration) return;
+            this.pendingAnchor = null;
+          }
           let next = this.state;
           for (const item of snapshot.docs) {
             const event = decodeEvent(item.data());
