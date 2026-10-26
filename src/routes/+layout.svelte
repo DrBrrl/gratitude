@@ -1,4 +1,6 @@
 <script lang="ts">
+	import GratitudeApp from '$lib/components/GratitudeApp.svelte';
+	import { page } from '$app/state';
 	import favicon from '$lib/assets/favicon.svg';
 	import inkBackground from '$lib/assets/backgrounds/charcoal-ochre-ink.png';
 	import '$lib/styles/card-actions.css';
@@ -12,6 +14,7 @@
 
 <div class="app-background" aria-hidden="true" style:background-image={`url(${inkBackground})`}></div>
 {@render children()}
+<GratitudeApp landing={page.route.id === '/'} />
 
 <style>
   :global(body) { isolation: isolate; min-height: 100svh; }
