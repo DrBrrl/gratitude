@@ -763,3 +763,9 @@ A small behaviour to fix - when i click into the month/year, let's get it to tur
 ```text
 Let's also get the calendar highlight colours in our nice yellow - the borter of the box and buttons, etc
 ```
+
+## 2026-10-26 — Compact inline month/year chooser and navigation buttons
+
+```text
+Let's get the month/year chooser to fit in the space where the month and year sit - you can have a 4-character-long year box (with a bit of padding of course) and a 9-character long month box (ditto on the padding) and they will definitely fit between box-end and the < current month > buttons! (Speaking of - maybe nicer arrows on those buttons and a bit less vertical padding, but do keep the  < > buttons square - so less horizontal padding on those ones too
+```
