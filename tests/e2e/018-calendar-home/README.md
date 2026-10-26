@@ -2,7 +2,7 @@
 
 # Private landing calendar and durable return navigation
 
-The existing Gratitude link opens the calendar without a new tab. Home-to-entry navigation and browser Forward/reload retain the originating month. A Today draft survives routes/reload; sign-out and a different account cannot reuse its calendar or draft. Every user action has a full-page unmasked zero-pixel screenshot with checks underneath.
+The existing Gratitude link opens the calendar without a new tab. The landing page shows one non-scrolling month, with previous/current/next buttons and a month chooser opened by the heading. Home-to-entry navigation and browser Forward/reload retain the originating month. A Today draft survives routes/reload; sign-out and a different account cannot reuse its calendar or draft. Every user action has a full-page unmasked zero-pixel screenshot with checks underneath.
 
 Viewport: mobile-chromium.
 
@@ -97,9 +97,54 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Move to the previous month
+
+![Move to the previous month](./screenshots/010-previous-month-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Move to the next month
+
+![Move to the next month](./screenshots/011-next-month-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Browse away from the current month again
+
+![Browse away from the current month again](./screenshots/012-past-again-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to the current month
+
+![Return to the current month](./screenshots/013-current-month-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the month chooser from the calendar heading
+
+![Open the month chooser from the calendar heading](./screenshots/014-month-heading-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Jump to a historical month on the landing page
 
-![Jump to a historical month on the landing page](./screenshots/010-old-month-mobile-chromium.png)
+![Jump to a historical month on the landing page](./screenshots/015-old-month-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Read an entry from the landing calendar
 
-![Read an entry from the landing calendar](./screenshots/011-home-entry-mobile-chromium.png)
+![Read an entry from the landing calendar](./screenshots/016-home-entry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Restore the same landing calendar month and focused date
 
-![Restore the same landing calendar month and focused date](./screenshots/012-home-back-mobile-chromium.png)
+![Restore the same landing calendar month and focused date](./screenshots/017-home-back-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Follow browser Forward back to the entry
 
-![Follow browser Forward back to the entry](./screenshots/013-home-forward-mobile-chromium.png)
+![Follow browser Forward back to the entry](./screenshots/018-home-forward-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Reload the entry and preserve its Home return context
 
-![Reload the entry and preserve its Home return context](./screenshots/014-entry-reload-mobile-chromium.png)
+![Reload the entry and preserve its Home return context](./screenshots/019-entry-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Return to the captured month after reloading the entry
 
-![Return to the captured month after reloading the entry](./screenshots/015-return-after-reload-mobile-chromium.png)
+![Return to the captured month after reloading the entry](./screenshots/020-return-after-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Open the journal using the existing landing-page action
 
-![Open the journal using the existing landing-page action](./screenshots/016-journal-link-mobile-chromium.png)
+![Open the journal using the existing landing-page action](./screenshots/021-journal-link-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/017-resume-draft-mobile-chromium.png)
+![Open the reflection editor](./screenshots/022-resume-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Retain the independent Today draft across both routes and reload
 
-![Retain the independent Today draft across both routes and reload](./screenshots/018-draft-preserved-mobile-chromium.png)
+![Retain the independent Today draft across both routes and reload](./screenshots/023-draft-preserved-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Return to Today without losing the draft
 
-![Return to Today without losing the draft](./screenshots/019-back-again-mobile-chromium.png)
+![Return to Today without losing the draft](./screenshots/024-back-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/020-settings-mobile-chromium.png)
+![Open Settings](./screenshots/025-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Open account settings
 
-![Open account settings](./screenshots/021-account-mobile-chromium.png)
+![Open account settings](./screenshots/026-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Sign out and clear private calendar state
 
-![Sign out and clear private calendar state](./screenshots/022-sign-out-mobile-chromium.png)
+![Sign out and clear private calendar state](./screenshots/027-sign-out-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/023-google-popup-mobile-chromium.png)
+![Choose Google sign-in](./screenshots/028-google-popup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Add a fictional Google account
 
-![Add a fictional Google account](./screenshots/024-new-account-mobile-chromium.png)
+![Add a fictional Google account](./screenshots/029-new-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +279,7 @@ Viewport: mobile-chromium.
 
 ## Enter the fictional email address
 
-![Enter the fictional email address](./screenshots/025-email-mobile-chromium.png)
+![Enter the fictional email address](./screenshots/030-email-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +288,7 @@ Viewport: mobile-chromium.
 
 ## Enter a display name
 
-![Enter a display name](./screenshots/026-name-mobile-chromium.png)
+![Enter a display name](./screenshots/031-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +297,7 @@ Viewport: mobile-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/027-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/032-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -262,7 +307,7 @@ Viewport: mobile-chromium.
 
 ## Open a different account with no prior calendar or drafts
 
-![Open a different account with no prior calendar or drafts](./screenshots/028-isolated-mobile-chromium.png)
+![Open a different account with no prior calendar or drafts](./screenshots/033-isolated-mobile-chromium.png)
 
 **Verifications:**
 
@@ -271,7 +316,34 @@ Viewport: mobile-chromium.
 
 ## Show only the new account’s empty landing calendar
 
-![Show only the new account’s empty landing calendar](./screenshots/029-other-home-mobile-chromium.png)
+![Show only the new account’s empty landing calendar](./screenshots/034-other-home-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Review the non-scrolling calendar at 320px
+
+![Review the non-scrolling calendar at 320px](./screenshots/035-narrow-home-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Choose a month from the heading on a narrow screen
+
+![Choose a month from the heading on a narrow screen](./screenshots/036-narrow-chooser-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Dismiss the chooser with Escape
+
+![Dismiss the chooser with Escape](./screenshots/037-cancel-chooser-mobile-chromium.png)
 
 **Verifications:**
 

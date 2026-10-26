@@ -598,3 +598,11 @@ Implementation commit `da8e031` passed all 19 GitHub jobs in run `40292458861`, 
 New walkthroughs 017–021 and all affected existing images were visually reviewed. Every comparison remains full-page, unmasked and zero-tolerance, with checks below the generated images. The cached-calendar notice is placed above the scroll viewport so it remains readable above the bottom navigation. The PR preview is published at https://drbrrl.github.io/gratitude/pr-preview/pr-11/ . This record update changes documentation only; it does not alter the validated application bundle or backend.
 
 Read-only verification of the deployed PR preview passed the landing-page screenshot comparison and configured Google-sign-in availability check in both mobile and desktop browsers (four passed checks). No real account sign-in or private journal access was needed.
+
+## 2026-10-26 — Single-month landing calendar
+
+User feedback distinguishes two calendar surfaces: the main landing page now shows one non-scrolling month, with `<`, `Current month`, `>` buttons at the top right and month/year selection activated by its month heading. The redundant visible calendar title, streak count and standalone month controls are removed there. The secondary calendar opened from Today/Journal week boxes keeps continuous scrolling.
+
+`LandingCalendar` reuses the existing day index, `CalendarDay` buttons, date dispatcher and account-scoped return anchor. It adds no event, session owner or backend operation. The same entry/back/browser-history flow preserves the landing month. Review at 320px showed that the month input needed a full-width row while open so its year remained visible; the normal controls keep their corner position and 44px targets. Escape closes the chooser and restores focus to the month heading.
+
+Targeted emulator validation passed landing, shared scrolling calendar, private landing navigation and narrow-screen scenarios in both viewports (seven passed; the desktop copy of the mobile-only narrow scenario is intentionally skipped). All 26 unit tests and Svelte check pass. Scenario 018 now documents each arrow/current-month/chooser action and the narrow layout with strict, full-page, unmasked screenshots; obsolete images from renumbered steps are removed. The anonymous landing baseline also reflects removal of the extra heading.
