@@ -84,7 +84,7 @@ Both deployment configurations select `aiDataMode: "paid"`, and billing was veri
 
 ## Planned calendar and gentle streaks
 
-[STREAKS_DESIGN.md](STREAKS_DESIGN.md) proposes a private calendar in the welcome-page box, entry-coloured date rings, repairable streaks based on reflection dates, and navigation that returns to the same month. Backfilled and imported dates count; an unfinished today does not break yesterday’s stretch. This is a design for review, not an implemented feature. Its Home navigation, multiple-entry display and timezone policy are explicit review choices.
+[STREAKS_DESIGN.md](STREAKS_DESIGN.md) specifies Sunday-first current-week boxes below the Today header and below Your journal, headed **N days of gratitude in a row**. Filled dates have entry-coloured circles; unfilled dates are neutral and future dates greyed out. The boxes open an infinitely scrolling calendar; all calendar date buttons share direct-entry or date-filtered-journal navigation and preserve their return context. The existing Gratitude link opens the landing page, with no extra landing/calendar tab. Backfills and imports can repair streaks. This remains a design for review, not an implemented feature; timezone, multi-entry circle selection and historical default time remain proposals.
 
 ## Project records
 
