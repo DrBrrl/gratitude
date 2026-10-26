@@ -53,7 +53,7 @@ Today uses the device’s local calendar date and its own draft. Editing another
 
 Use **Journal → New entry** to backfill an earlier local date/time or add another reflection today. After today’s first save, **Today → Write another reflection** opens the same independent composer. Its draft is separate from Today’s draft and saved-entry edits, and **New entry** resumes that draft until it is saved or discarded. Future times cannot be saved. Every reflection editor, including Today’s first response and saved-entry edits, exposes **Entry date and time** in your device’s local timezone. Date changes stay in the draft until you save the reflection; blank/invalid and future times cannot be saved. Edits retain the entry’s colour and original save timestamp. Unchanged dates retain their existing meaning. The prompt stays unchanged unless you explicitly replace it in the editor. Journal cards and Markdown exports sort by the entry date/time, with newer-created entries first when times match to the second. Backfills do not complete Today.
 
-Signed-in sessions start on Today until a reflection has been saved for the local day, then start on Journal. A new local day starts on Today again. The saved-reflection confirmation shares the journal card typography and a centered page heading; Done opens Journal after both new reflections and edits. The bottom navigation uses a nearly opaque frosted surface so entries behind it stay subdued.
+Signed-in sessions start on Today until a reflection has been saved for the local day, then start on Journal. A new local day starts on Today again. The saved-reflection confirmation shares the journal card typography and a centered page heading; Done opens Journal after ordinary new reflections and edits; calendar flows restore their dated journal or invoking calendar/week box. The bottom navigation uses a nearly opaque frosted surface so entries behind it stay subdued.
 
 The reviewed interface is covered by mobile and desktop E2E walkthroughs, including paragraph writing, card expansion, search, independent drafts, Settings and export. Each action compares a full-page screenshot with zero pixel tolerance and no masking. Use the normal app and emulator workflows to validate changes before publication; `dev:ui` remains available for quick visual iteration.
 
@@ -82,14 +82,18 @@ Both deployment configurations select `aiDataMode: "paid"`, and billing was veri
 
 [Firebase setup](FIREBASE_SETUP.md) records deployment and live verification. The private repository Gemini key is unused and never enters the frontend. This integration needs no Cloud Functions.
 
-## Planned calendar and gentle streaks
+## Calendar and gentle streaks
 
-[STREAKS_DESIGN.md](STREAKS_DESIGN.md) specifies Sunday-first current-week boxes below the Today header and below Your journal, headed **N days of gratitude in a row**. Filled dates have entry-coloured circles; unfilled dates are neutral and future dates greyed out. The boxes open an infinitely scrolling calendar; all calendar date buttons share direct-entry or date-filtered-journal navigation and preserve their return context. The existing Gratitude link opens the landing page, with no extra landing/calendar tab. Backfills and imports can repair streaks. This remains a design for review, not an implemented feature; timezone, multi-entry circle selection and historical default time remain proposals.
+Today and Journal show the same Sunday-first current-week box headed **N days of gratitude in a row**. Saved dates have journal-coloured circles, unfilled dates are neutral and future dates are greyed out. Select a date to open its sole entry, or a journal for that date when it has several entries or none. An empty dated journal offers **Write a reflection for this date**; a historical draft starts at editable local noon. An existing independent draft requires an explicit Resume/Keep/discard choice.
+
+Open the box to browse the continuously scrolling calendar, jump to a month/year or return to This month. The existing Gratitude link opens the landing page with the same private calendar after sign-in. Navigation retains the three tabs. Back, browser history, reload and save/Done preserve the originating date/month and scroll context, including when an edit moves an entry elsewhere.
+
+Streaks count saved logical entry dates in the viewing device's timezone. An unfinished today retains yesterday's run; backfills and imports can repair gaps. Multiple entries count once, and the first-created entry supplies that day's primary ring colour. Drafts and unacknowledged saves earn no credit. Counts are derived from confirmed projected events, with no stored streak events or automatic AI calls. A warm cached prefix is labelled as waiting to sync when the backend is unavailable; missing dates may be incomplete until synchronization. Offline cold starts remain unsupported. See [STREAKS_DESIGN.md](STREAKS_DESIGN.md) for the rules and implementation details.
 
 ## Project records
 
 - [IMPORT_PLAN.md](IMPORT_PLAN.md): implemented alternate ZIP import, provenance, limits and recovery contract.
-- [STREAKS_DESIGN.md](STREAKS_DESIGN.md): proposed gentle streak rules, calendar interactions, return navigation and implementation/test slices.
+- [STREAKS_DESIGN.md](STREAKS_DESIGN.md): implemented gentle streak rules, calendar interactions, return navigation and verification.
 - [VISION.md](VISION.md): the project’s intended end state.
 - [MVP_DESIGN.md](MVP_DESIGN.md): proposed Firebase/Gemini architecture, source events, and replayable cached projections.
 - [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md): reviewable implementation increments and acceptance gates.
