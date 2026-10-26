@@ -5,7 +5,7 @@ declare global {
 		// interface Error {}
 		// interface Locals {}
 		// interface PageData {}
-		// interface PageState {}
+		interface PageState { calendar?: import('./lib/calendar-navigation').CalendarFlow | null }
 		// interface Platform {}
 	}
 }

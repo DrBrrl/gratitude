@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {dayInZone,indexCalendarDays,summarizeStretches,weekCells,monthCells,shiftDay,shiftMonth,monthOrdinal,monthFromOrdinal,validDay,dateEntries} from '../../src/lib/calendar.ts';
+import {dayInZone,indexCalendarDays,summarizeStretches,weekCells,monthCells,shiftDay,shiftMonth,monthOrdinal,monthFromOrdinal,validDay,dateEntries,cellFor} from '../../src/lib/calendar.ts';
 import {replay,STARTER_ID,type JournalEvent,type Entry} from '../../src/lib/domain.ts';
 const entry=(day:string,id=day):Entry=>({id,text:'A fictional moment.',prompt:'What helped?',revision:1,colour:0,recordedAt:'2026-10-01T04:31:07Z',entryAt:`${day}T12:00:00Z`});
 test('backfills bridge stretches, today has grace, duplicate days count once and date edits move credit',()=>{
@@ -19,7 +19,7 @@ test('logical dates, creation colours, photo-only entries and viewer zones are r
  const index=indexCalendarDays([a,b],'UTC');assert.equal(index.get('2026-01-01')![0].colour,3);assert.equal(dateEntries(index,'2026-01-01')[0].id,'first');
  assert.equal(dayInZone(a.entryAt!,'Australia/Hobart'),'2026-01-02');assert.equal(dayInZone(a.entryAt!,'America/Los_Angeles'),'2026-01-01');
  assert.equal(indexCalendarDays([{...a,entryAt:undefined}],'UTC').has('2026-10-01'),true);
- assert.equal(summarizeStretches(index,'2025-12-31').total,0);
+ assert.equal(summarizeStretches(index,'2025-12-31').total,0);assert.equal(cellFor(index,'2026-01-01','2025-12-31').entries.length,0);
 });
 test('Sunday weeks cross month/year and leap/DST days use civil adjacency',()=>{
  assert.equal(weekCells(new Map(),'2026-10-01')[0].day,'2026-09-27');assert.equal(weekCells(new Map(),'2026-10-04')[0].day,'2026-10-04');
@@ -36,4 +36,16 @@ test('full and cached-tail replay yield identical calendar credit without receip
  const full=replay(events),cached=replay(events.slice(2),replay(events.slice(0,2)));
  assert.deepEqual(indexCalendarDays(full.entries,'UTC'),indexCalendarDays(cached.entries,'UTC'));
  assert.equal(summarizeStretches(indexCalendarDays(full.entries,'UTC'),'2026-10-01').current,3);
+});
+
+test('navigation context rejects other accounts, malformed dates and unsafe identifiers',async()=>{
+ const {readCalendarFlow}=await import('../../src/lib/calendar-navigation.ts');
+ const flow={owner:'preview:base:owner:v1',root:{tab:'journal',query:'',expanded:[],scroll:0,anchor:{month:'2026-09',offset:80}},trail:[{kind:'day',day:'2026-09-29',query:'',expanded:[],scroll:0}]};
+ assert.deepEqual(readCalendarFlow(flow,flow.owner),flow);
+ assert.equal(readCalendarFlow(flow,'production:base:owner:v1'),null);
+ assert.equal(readCalendarFlow(flow,'preview:base:other:v1'),null);
+ assert.equal(readCalendarFlow({...flow,root:{...flow.root,focusDay:'bad-selector'}},flow.owner),null);
+ assert.equal(readCalendarFlow({...flow,trail:[{kind:'entry',id:'bad"selector'}]},flow.owner),null);
+ assert.equal(readCalendarFlow({...flow,trail:[{...flow.trail[0],day:'2026-02-30'}]},flow.owner),null);
+ assert.equal(readCalendarFlow({...flow,root:{...flow.root,anchor:{month:'2026-09',offset:9999}}},flow.owner),null);
 });

@@ -40,7 +40,7 @@ export function summarizeStretches(index: DayIndex, today: DayKey) {
   while(index.has(cursor)) {current++;if(cursor==='0001-01-01')break;cursor=shiftDay(cursor,-1);}
   return {current,longest,latest:length,total:days.length,latestDay:last||null};
 }
-export function cellFor(index: DayIndex, day: DayKey, today: DayKey): CalendarCell {return {day,number:Number(day.slice(-2)),future:day>today,today:day===today,entries:index.get(day)??[]};}
+export function cellFor(index: DayIndex, day: DayKey, today: DayKey): CalendarCell {return {day,number:Number(day.slice(-2)),future:day>today,today:day===today,entries:day>today?[]:index.get(day)??[]};}
 export function weekCells(index: DayIndex,today: DayKey) {
   const weekday=civilDate(today).getUTCDay();
   return Array.from({length:7},(_,i)=>cellFor(index,shiftDay(today,i-weekday),today));
