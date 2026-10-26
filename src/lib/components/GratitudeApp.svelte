@@ -5,6 +5,7 @@
   import WelcomePage from './WelcomePage.svelte';
   import WeekBox from './WeekBox.svelte';
   import GratitudeCalendar from './GratitudeCalendar.svelte';
+  import LandingCalendar from './LandingCalendar.svelte';
   import { indexCalendarDays, summarizeStretches, validDay, dayLabel } from '$lib/calendar';
   import { readCalendarFlow, type CalendarFlow, type CalendarFrame, type CalendarAnchor } from '$lib/calendar-navigation';
   let { landing=false }: {landing?:boolean}=$props();
@@ -580,7 +581,7 @@
 {#if landing}
   <WelcomePage>
     {#snippet calendar()}
-      {#if user && view.ready}<p class="calendar-summary">{stretches.current} {stretches.current===1?'day':'days'} of gratitude in a row{#if view.status!=='Synced'}<small class="calendar-cache-note">Saved on this device · waiting to sync</small>{/if}</p><GratitudeCalendar index={dayIndex} {today} anchor={homeAnchor} onanchor={rememberAnchor} onchoose={selectDate} />{#if view.status!=='Synced'}<p class="hint">Saved on this device · waiting to sync</p>{/if}
+      {#if user && view.ready}<LandingCalendar index={dayIndex} {today} anchor={homeAnchor} onanchor={rememberAnchor} onchoose={selectDate} />{#if view.status!=='Synced'}<p class="hint">Saved on this device · waiting to sync</p>{/if}
       {:else if !initialized || user}<p role="status">Opening your calendar…</p>{:else}<p>Sign in to see your gratitude calendar.</p>{/if}
     {/snippet}
   </WelcomePage>

@@ -14,7 +14,7 @@
     <p class="eyebrow">Let us find joy in the small things</p>
     <h1>Gratitude<span aria-hidden="true">.</span></h1>
     <p class="introduction">A space to practice being thankful every day</p>
-    {#if calendar}<section class="welcome-calendar" aria-label="Your gratitude calendar"><h2>Your gratitude calendar</h2>{@render calendar()}</section>{:else}<section aria-labelledby="reflection-heading" class="reflection">
+    {#if calendar}<section class="welcome-calendar" aria-label="Your gratitude calendar">{@render calendar()}</section>{:else}<section aria-labelledby="reflection-heading" class="reflection">
       <p class="card-label" id="reflection-heading">A moment to notice</p>
       <p class="prompt">What is one small thing you appreciated today?</p>
       <p class="gentle-note">A small moment is enough.</p>
@@ -43,7 +43,6 @@
   .prompt { font: 400 clamp(1.6rem, 6vw, 2.15rem)/1.4 Georgia, serif; margin: 0; }
   .gentle-note { margin: 28px 0 0; color: #c6c4bd; font-size: 0.875rem; line-height: 1.6; }
   .welcome-calendar { margin-top: 28px; }
-  .welcome-calendar h2 { font-size: 1.2rem; }
   @media(max-width:360px){ .page { padding-left:2px; padding-right:2px; } }
   footer { display: flex; flex-wrap: wrap; gap: 16px 24px; justify-content: space-between; margin-top: 32px; color: #c6c4bd; font-size: 0.8rem; }
   a { color: #f4d35e; text-underline-offset: 4px; min-height: 44px; display: inline-flex; gap: 6px; align-items: flex-start; }

@@ -735,3 +735,19 @@ Can you continue, friend? :)
 ```text
 At capacity again! Are you able to continue?
 ```
+
+## 2026-10-26 — Refine the landing calendar controls
+
+```text
+For the main page of the application, let's get the calendar to not be scollable, but for us to be able to move from month to month with < > arrows in the top right corner. :) Three buttons: <, Current month, >. The jump to month behaviour is cool, but should happen when you click the month in the calendar instead. Let's get rid of "Your gratitude calendar
+
+0 days of gratitude in a row
+This month
+Jump to month" above the calendar proper.
+```
+
+## 2026-10-26 — Continue landing-calendar refinement
+
+```text
+Are you able to continue? :)
+```
