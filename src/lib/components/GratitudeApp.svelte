@@ -580,7 +580,7 @@
 {#if landing}
   <WelcomePage>
     {#snippet calendar()}
-      {#if user && view.ready}<p class="calendar-summary">{stretches.current} {stretches.current===1?'day':'days'} of gratitude in a row</p><GratitudeCalendar index={dayIndex} {today} anchor={homeAnchor} onanchor={rememberAnchor} onchoose={selectDate} />{#if view.status!=='Synced'}<p class="hint">Saved on this device · waiting to sync</p>{/if}
+      {#if user && view.ready}<p class="calendar-summary">{stretches.current} {stretches.current===1?'day':'days'} of gratitude in a row{#if view.status!=='Synced'}<small class="calendar-cache-note">Saved on this device · waiting to sync</small>{/if}</p><GratitudeCalendar index={dayIndex} {today} anchor={homeAnchor} onanchor={rememberAnchor} onchoose={selectDate} />{#if view.status!=='Synced'}<p class="hint">Saved on this device · waiting to sync</p>{/if}
       {:else if !initialized || user}<p role="status">Opening your calendar…</p>{:else}<p>Sign in to see your gratitude calendar.</p>{/if}
     {/snippet}
   </WelcomePage>
@@ -596,7 +596,7 @@
     {#if calendarShown && frame?.kind==='calendar'}
       <button class="back" onclick={backFlow}><Icon name="back" />{flow && flow.trail.length>1?'Journal':flow?.root.tab==='today'?'Today':'Journal'}</button>
       <h1 class="page-heading">Your calendar</h1>
-      <p class="calendar-summary">{stretches.current} {stretches.current===1?'day':'days'} of gratitude in a row</p>
+      <p class="calendar-summary">{stretches.current} {stretches.current===1?'day':'days'} of gratitude in a row{#if view.status!=='Synced'}<small class="calendar-cache-note">Saved on this device · waiting to sync</small>{/if}</p>
       <GratitudeCalendar index={dayIndex} {today} anchor={frame.anchor} onanchor={rememberAnchor} onchoose={selectDate} />
     {:else if tab === 'today'}
       {#if writing}
@@ -755,6 +755,7 @@
 </main>
 {/if}
 <style>
+  .calendar-cache-note{display:block;font-size:.7rem;font-weight:400;color:#b4bdca;margin-top:5px}
   .date-heading{font:600 1rem/1.5 Arial,Helvetica,sans-serif;color:#c1c7d1;margin:0 0 12px}.day-back{margin-top:12px}.calendar-summary{font:600 .94rem/1.5 Arial,Helvetica,sans-serif;color:#d4d9e1}.draft-choice button{margin-top:12px}
   :global(html) { color-scheme: dark; background: #0c0d10; }
   :global(body) { margin: 0; color: #f4f5fa; font-family: Arial, Helvetica, sans-serif; font-size: 16px; }

@@ -18,7 +18,7 @@ test('an unavailable backend retains a verified cached calendar and reconnects w
  await steps.action('cached-reload','Reload during a backend outage without discarding the cached prefix',()=>page.reload(),async()=>{
   await expect(page.locator('.calendar-scroll')).toHaveAttribute('data-anchor','2026-09');
   await expect(page.locator('.calendar-scroll [data-day="2026-09-30"]')).toHaveAttribute('aria-label',/1 reflection/);
-  await expect(page.locator('.sync-status')).toContainText('waiting to sync');
+  await expect(page.locator('.calendar-cache-note')).toHaveText('Saved on this device · waiting to sync');
   await expect(page.getByRole('alert')).toHaveCount(0);
  });
  await page.context().unroute(outage);
