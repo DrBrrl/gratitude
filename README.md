@@ -82,9 +82,14 @@ Both deployment configurations select `aiDataMode: "paid"`, and billing was veri
 
 [Firebase setup](FIREBASE_SETUP.md) records deployment and live verification. The private repository Gemini key is unused and never enters the frontend. This integration needs no Cloud Functions.
 
+## Planned calendar and gentle streaks
+
+[STREAKS_DESIGN.md](STREAKS_DESIGN.md) proposes a private calendar in the welcome-page box, entry-coloured date rings, repairable streaks based on reflection dates, and navigation that returns to the same month. Backfilled and imported dates count; an unfinished today does not break yesterday’s stretch. This is a design for review, not an implemented feature. Its Home navigation, multiple-entry display and timezone policy are explicit review choices.
+
 ## Project records
 
 - [IMPORT_PLAN.md](IMPORT_PLAN.md): implemented alternate ZIP import, provenance, limits and recovery contract.
+- [STREAKS_DESIGN.md](STREAKS_DESIGN.md): proposed gentle streak rules, calendar interactions, return navigation and implementation/test slices.
 - [VISION.md](VISION.md): the project’s intended end state.
 - [MVP_DESIGN.md](MVP_DESIGN.md): proposed Firebase/Gemini architecture, source events, and replayable cached projections.
 - [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md): reviewable implementation increments and acceptance gates.

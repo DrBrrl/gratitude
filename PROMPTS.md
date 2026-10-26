@@ -705,3 +705,9 @@ Okay, let's go ahead and do that now in PR7! :)
 ```text
 That's so cool, thank you fobot friend! I see this in Github: "This branch cannot be rebased due to conflicts" - What should we do about that?
 ```
+
+## 2026-10-26 — Gentle streaks and a landing-page calendar
+
+```text
+Thank you little robot! :) All sorted out now, and merged. Next up, i would like for us to add a new feature - the one i teased for the box on the landing page of the app. I'd love to implement streaks, but ones that aren't punishing - if a day is missed, e.g., and the gratitudee goes and backfills that day, the streak is saved. :) I thought that box on the langing page would be a good spot for an interactive calendar that the user can scroll back through to see the days where gratitude entries were and weren't written to repair their strak or just see how far they've come, with the ability to click on a date and have it take you to that gratitude entry (and the back arrow going back to the landing page, on the month that the entry came from). I'd love for each date that has an entry to have a circle around it that matches the colour of the gratitude entry. Let's start sketching out the implementation of this whole streak setup in a new PR please!
+```
