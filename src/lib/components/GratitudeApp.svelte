@@ -199,6 +199,8 @@
   let homeAnchor = $state<CalendarAnchor>({month:localDay(new Date()).slice(0,7),offset:0});
   let flow = $state.raw<CalendarFlow|null>(null);
   let conflictDay = $state<string|null>(null);
+  let draftDialog = $state<HTMLDialogElement>();
+  $effect(() => { if (conflictDay && draftDialog && !draftDialog.open) draftDialog.showModal(); else if (!conflictDay && draftDialog?.open) draftDialog.close(); });
   let appliedFlow = '';
   const frame = $derived(flow?.trail.at(-1));
   const calendarShown = $derived(frame?.kind === 'calendar' && !writing && !savedId);
@@ -739,7 +741,7 @@
     {#if view.aiResultPending && (writing || tab !== 'today' || savedEntry)}<section class="glass photo-recovery"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
     {#if view.photoResultsPending?.length}<section class="glass photo-recovery"><p>An image summary arrived and is saved on this device.</p><button class="outline" onclick={async () => { try { for (const id of view.photoResultsPending ?? []) await repository?.syncPhotoResult(id); } catch { error = 'Could not sync image summaries. Reconnect and try again.'; } }}>Sync received summaries</button></section>{/if}
     {#if view.photoCleanupPending}<section class="glass photo-recovery"><p>Photo cleanup needs a connection to finish.</p><button class="outline" onclick={() => repository?.retryPhotoCleanup().catch(() => error = 'File deletion failed. Reconnect and retry.')}>Retry photo cleanup</button></section>{/if}
-    {#if conflictDay}<div class="glass draft-choice" role="dialog" tabindex="-1" aria-label="Existing reflection draft"><h2>A draft is already waiting.</h2><p>Your independent draft belongs to another date. Keep it or explicitly discard it before writing for {dayLabel(conflictDay)}.</p><button class="outline" onclick={()=>startDateReflection(conflictDay!,'resume')}>Resume existing draft</button><button class="outline" onclick={()=>conflictDay=null}>Keep draft and return to this date</button><button class="outline" onclick={()=>startDateReflection(conflictDay!,'discard')}>Discard draft and write for this date</button></div>{/if}
+    <dialog bind:this={draftDialog} class="draft-choice" oncancel={()=>conflictDay=null} aria-label="Existing reflection draft">{#if conflictDay}<h2>A draft is already waiting.</h2><p>Your independent draft belongs to another date. Keep it or explicitly discard it before writing for {dayLabel(conflictDay)}.</p><button class="outline" onclick={()=>startDateReflection(conflictDay!,'resume')}>Resume existing draft</button><button class="outline" onclick={()=>conflictDay=null}>Keep draft and return to this date</button><button class="outline" onclick={()=>startDateReflection(conflictDay!,'discard')}>Discard draft and write for this date</button>{/if}</dialog>
     {#if aiMessage}<p class="ai-message hint" role="status">{aiMessage}</p>{/if}
     <!-- A screen change needs a fresh notice, avoiding Chromium’s cached gradient from its previous position. -->
     {#key writing}
