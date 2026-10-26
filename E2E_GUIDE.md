@@ -148,13 +148,13 @@ All rendered content, including dates, is compared without masks or screenshot-o
 
 The tests intercept the exact Firebase AI Logic Gemini Developer API HTTP endpoint. They assert provider-call counts and submitted fictional context; they never make live inference requests. The application has no production response stub. Rules tests exercise duplicate/concurrent device claims, stale consent, changed prompt identity and forged atomic writes. Shared synchronization assertions also reject visible journal error alerts, so screenshot review cannot quietly accept a failed recovery.
 
-CI splits journal, AI, photo and editor-prompt scenarios into eight viewport/suite jobs, with isolated emulators and serial workers in each. All eight jobs and the build must pass before publication. This keeps the expanded coverage within the existing job budgets without relaxing screenshot comparisons.
+CI splits journal, drafts, AI, photo, editor, import, calendar and calendar-edit scenarios into sixteen viewport/suite jobs, with isolated emulators and serial workers in each. All sixteen jobs, import-scale and the build must pass before publication. This keeps the expanded coverage within the existing job budgets without relaxing screenshot comparisons.
 
 [`009-generic-ai`](tests/e2e/009-generic-ai/README.md) builds with `VITE_AI_DATA_MODE=generic` and runs with `E2E_AI_GENERIC=true`. It verifies the optional generic privacy configuration: unavailable personal sharing controls and a fixed generic instruction even when the account has saved reflections. The AI CI jobs run this second build after the personal-context fixtures; both configurations must pass.
 
 ## Backfilled and additional reflections
 
-[`010-backfill-entries`](tests/e2e/010-backfill-entries/README.md) follows a past-date draft through reload, save and edit, rejects future dates, adds two reflections for the same day, rebuilds the journal from events and checks the downloaded Markdown dates. The journal CI jobs run it alongside scenarios 001–006. All actions retain full-page zero-tolerance comparisons, with the checks beneath their images. Unit and Rules tests additionally cover timestamp encoding, concurrent devices, legacy events, legacy immutable dates, explicit schema 6 date edits, chronological tie breaks and JSON archive version 2.
+[`010-backfill-entries`](tests/e2e/010-backfill-entries/README.md) follows a past-date draft through reload, save and edit, rejects future dates, adds two reflections for the same day, rebuilds the journal from events and checks the downloaded Markdown dates. The journal CI jobs run it alongside scenarios 001–003; scenarios 004–006 run in the separate drafts suite. All actions retain full-page zero-tolerance comparisons, with the checks beneath their images. Unit and Rules tests additionally cover timestamp encoding, concurrent devices, legacy events, legacy immutable dates, explicit schema 6 date edits, chronological tie breaks and JSON archive version 2.
 
 ## Photo attachment walkthrough
 
@@ -178,3 +178,13 @@ The `import` matrix suite runs those scenarios in both viewports. The separate `
 Import ZIP validation/reselection, cached-selection reopening, photo-upload start/pause completion and archive preparation allow fifteen seconds for decoding, IndexedDB and a verified server-prefix read on hosted runners. Ordinary clicks/assertions retain their existing defaults. This matches the existing recovery/network allowance and changes no screenshot tolerance or rendered content.
 
 `expectDecodedPhotos` in the shared journal-session helper checks authenticated image count, load completion, nonzero dimensions and `decode()` before photo captures. Both import scenarios and the photo attachment walkthrough use it when opening or adding photos; a ready summary alone is not an image-readiness condition.
+
+## Calendar, gentle streaks and return navigation
+
+- [017-gratitude-calendar](tests/e2e/017-gratitude-calendar/README.md): week/date dispatch, continuous scrolling, single/multiple/empty dates, explicit backfill, restored month and repaired streak.
+- [018-calendar-home](tests/e2e/018-calendar-home/README.md): private landing calendar, browser Back/Forward and reload, independent draft preservation and account isolation.
+- [019-calendar-editing](tests/e2e/019-calendar-editing/README.md): Resume/Keep/explicit discard, historical noon, nested date edits, original date/month returns and a second authenticated device moving an entry without jumping the calendar.
+- [020-calendar-narrow](tests/e2e/020-calendar-narrow/README.md): 320px layout, 44px week buttons, native keyboard scrolling, seven-month DOM window and foreground Sunday rollover. Mobile-only by design.
+- [021-calendar-cache](tests/e2e/021-calendar-cache/README.md): Firestore-only outage during a warm reload, retained provisional saved dates and server anchor verification on reconnect. HTML/auth stay available, so this does not simulate or claim offline cold starts. Initial cached availability allows 30 seconds because the SDK first exhausts its server probe; ordinary clicks and strict screenshot tolerances are unchanged.
+
+The calendar suite runs 017–018; calendar-edit runs 019–021. Every action, including scrolling, reload and keyboard navigation, has a full-page unmasked screenshot comparison and generated checks beneath it. Browser time, timezone and raw event fixtures are deterministic. Environment changes (network faults, source events and clock rollover) use explicit checked screenshot steps. The real calendar viewport is part of the product; screenshots themselves are never cropped or masked.

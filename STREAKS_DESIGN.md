@@ -1,6 +1,6 @@
 # Gentle streaks, week boxes and a scrolling calendar
 
-Design for review, revised 2026-10-26 after user feedback, based on merged main `0003485`. This PR specifies the feature; it does not implement a calendar, streak counters or new navigation. The user wants repairable streaks, Sunday-first current-week boxes on Today and Journal, an infinitely scrolling calendar, entry-coloured date circles and return navigation that preserves the originating calendar position. The original welcome-page box also remains a calendar surface.
+Implemented in PR #11 after the 2026-10-26 design review, based on merged main `0003485`. This document describes the delivered calendar, gentle streak rules and return-navigation contract. The source event schemas and projection version remain unchanged.
 
 ## Experience and placement
 
@@ -15,7 +15,7 @@ The box shows the present local week, **Sunday through Saturday**, regardless of
 
 Activating the box header, its calendar-open control or non-date space opens the shared full calendar at the current local month. A day button instead follows the common date-selection rules below, without also firing the calendar-open action. Provide a labelled keyboard-accessible **Open calendar** control; do not nest date buttons inside another button. The same click behaviour and component are used on both pages.
 
-The originally teased **A moment to notice** box on `/` becomes a private calendar for signed-in users, using the same scrollable calendar component. The existing Gratitude link is its entry point; do not add another navigation item. Keep the welcome copy and reachable **Open your journal** action. Signed-out visitors see the welcome/sign-in explanation, never another account's calendar or a fictional personal history. The welcome route currently has no session/repository ownership, so share the existing authenticated session with it in implementation. During restoration, show loading rather than empty history.
+The originally teased **A moment to notice** box on `/` becomes a private calendar for signed-in users, using the same scrollable calendar component. The existing Gratitude link is its entry point; do not add another navigation item. Keep the welcome copy and reachable **Open your journal** action. Signed-out visitors see the welcome/sign-in explanation, never another account's calendar or a fictional personal history. A persistent application shell in the shared layout owns the single authenticated session and repository across both routes. During restoration, show loading rather than empty history.
 
 The dedicated calendar is a secondary view opened from a week box, with a compact **Today** or **Journal** back control according to its origin. It does not select or create a Calendar tab. Explicit navigation-tab selection leaves that flow. Writing still hides the navigation bar. Retain the dark ink background, glass surfaces, yellow accent and existing entry colours.
 
@@ -63,7 +63,7 @@ A date counts once when at least one saved projected entry belongs to it. Use `e
 - Saving a date edit moves that entry's contribution. The old day empties only if no other saved entry remains; the new day fills. Unsaved date edits never change counts or circles.
 - Reimporting identical records adds no days. Future dates never earn credit; apply existing save validation and exclude future local days from summaries.
 
-The inputs to the calendar selectors are the current confirmed entries, the current clock and the viewer's timezone. **Proposal:** retain today's device-local timezone semantics. Devices in different timezones can group boundary-hour entries differently, and travel can change counts. Midnight must update the view even without a new event. A fixed account timezone would be a separate, explicit product decision; do not silently add one or reinterpret stored instants as source-offset dates.
+The inputs to the calendar selectors are the current confirmed entries, the current clock and the viewer's timezone. The implementation retains today's device-local timezone semantics. Devices in different timezones can group boundary-hour entries differently, and travel can change counts. Midnight must update the view even without a new event. A fixed account timezone would be a separate, explicit product decision; do not silently add one or reinterpret stored instants as source-offset dates.
 
 ## Repairable streak rules
 
@@ -88,13 +88,13 @@ All calendars use **Sunday-first** weekday headings with full accessible names, 
 
 The full calendar is an **infinitely scrolling vertical list of months**. Start with the current month anchored in view when opened from a week box. Scrolling up reveals earlier months; scrolling down reveals later months, including greyed-out future dates. Continue through empty months and beyond the earliest saved entry within the supported civil-date range. There is no artificial history cutoff, finite stack of preloaded years or horizontal month-pager requirement. Date selection in future months remains disabled. **This month** returns to now, and an accessible month/year chooser allows direct jumps across a multi-year imported journal without replacing continuous scrolling.
 
-Use a bounded scroll viewport in the product: a calendar panel in the landing-page box, or the available content area of the dedicated calendar view. Keep the landing-page journal action and surrounding navigation reachable. Virtualize/window the month list so indefinite browsing does not create an indefinitely large DOM or document. Render a limited set of months with appropriate spacers, prepend/append as needed, and preserve the visible month/day and offset when recycling nodes. Month controls and headings must remain accessible; do not recycle away the focused date without preserving a usable focus target. There is no keyboard focus trap. Scrolling requires no new journal fetch, event replay or image download.
+Use a bounded scroll viewport in the product: a calendar panel in the landing-page box, or the available content area of the dedicated calendar view. Keep the landing-page journal action and surrounding navigation reachable. Virtualize/window the month list so indefinite browsing does not create an indefinitely large DOM or document. Render seven months at a time, recenter the window as scrolling advances, and compensate the scroll offset to preserve the visible month/day. Month controls and headings must remain accessible; do not recycle away the focused date without preserving a usable focus target. There is no keyboard focus trap. Scrolling requires no new journal fetch, event replay or image download.
 
 Maintain a stable scroll anchor while months load into the rendered window or background synchronization updates circles. Save an anchor month/day plus local offset, rather than relying only on a document pixel coordinate that becomes invalid after virtualization. Restore the same logical month/position after entry viewing, editing and browser Back, even if that month was recycled out of the DOM. Future months are viewable but never writable.
 
 ### Date circles and multiple entries
 
-**Proposed default:** a date's full circle uses the first-created entry currently belonging to that day, following the same stable primary-entry selection used by `todayReflection`. Here first-created means its order in the canonical projection, as used by Today—not the earliest chosen date/time or the source app’s creation timestamp. Use `colours[entry.colour]`; never assign a new colour from the date, month, visible order or streak position. Repeated colours are normal.
+**Implemented default:** a date's full circle uses the first-created entry currently belonging to that day, following the same stable primary-entry selection used by `todayReflection`. Here first-created means its order in the canonical projection, as used by Today—not the earliest chosen date/time or the source app’s creation timestamp. Use `colours[entry.colour]`; never assign a new colour from the date, month, visible order or streak position. Repeated colours are normal.
 
 For multiple entries, add a small count indicator and an accessible label such as **26 October 2026, 2 reflections**. The circle represents the primary entry; the date-filtered journal shows every entry with its own existing tint. Do not create arbitrarily thin ring segments or silently hide extra entries. Re-evaluate the primary when date membership changes: moving the primary away selects the next entry, and moving an earlier-created entry into a day can make it primary. Text/prompt edits, browsing and clock changes do not recolour a date. A segmented or concentric ring is an alternative for review, not the initial implementation contract.
 
@@ -112,7 +112,7 @@ Colour is not the only signal: occupied dates have a visible ring and a saved-re
 
 Use this dispatcher for **every date button**: both week boxes, the landing-page calendar and the dedicated scrolling calendar. Single-entry dates go directly to the entry; multiple-entry and empty dates go to the date-filtered journal. A date filter is separate from ordinary journal search; returning to a pre-existing journal restores its prior search, expansion and scroll state.
 
-For a new historical reflection, propose local noon on the chosen date as the initial editable time, avoiding routine midnight/DST boundary problems. For today use now, so the default is not accidentally in the future. Validate the civil date/time round-trip through the existing editor; never silently move a selected day because a timezone skipped it. Explain the default time so it is not mistaken for recovered historical precision. Calendar selection never edits an existing reflection or starts an AI call automatically.
+For a new historical reflection, use local noon on the chosen date as the initial editable time, avoiding routine midnight/DST boundary problems. For today use now, so the default is not accidentally in the future. Validate the civil date/time round-trip through the existing editor; never silently move a selected day because a timezone skipped it. Explain the default time so it is not mistaken for recovered historical precision. Calendar selection never edits an existing reflection or starts an AI call automatically.
 
 ## Returning to the same calendar position
 
@@ -141,7 +141,7 @@ Keep this context outside the event stream and separate from reflection drafts, 
 
 No new event type is needed for streaks or calendar browsing. Existing ReflectionWritten (including explicit dates), ReflectionImported and photo-backed saved entries provide the source of truth. Never append StreakUpdated, DayCompleted, StreakBroken or computed calendar snapshots. Calendar navigation, selected month and return context are local UI state. No AI request, scheduler, Cloud Function, Firebase schema/Rules change or new secret is required by this design.
 
-Keep projection version 6 and its existing IndexedDB checkpoint/tail replay. Add pure presentation selectors, proposed in `src/lib/calendar.ts`, over the loaded projection:
+Keep projection version 6 and its existing IndexedDB checkpoint/tail replay. Pure presentation selectors in `src/lib/calendar.ts` operate over the loaded projection:
 
 - `indexCalendarDays(entries, zone)` groups IDs by occupied civil day, retaining creation order for the primary ring and chronological order for a day list.
 - `summarizeStretches(dayIndex, today)` derives the four summaries from occupied date keys.
@@ -149,7 +149,7 @@ Keep projection version 6 and its existing IndexedDB checkpoint/tail replay. Add
 - `monthCells(dayIndex, month, today)` creates a month grid for the virtualized list.
 - A shared date-selection resolver chooses a direct entry or date-filtered journal consistently across all calendar surfaces.
 
-These are proposed interfaces, not implemented exports. Reuse or extend `entryTimestamp`, `localDay`, `todayReflection` and `chronologicalEntries` consistently rather than introducing competing date/colour rules. Sort occupied days for run detection; do not scan every day since the first entry. Recompute or memoize the day index by confirmed projection cursor and timezone; recompute summaries/week cells at civil-day or timezone changes, and month cells when their rendered month or underlying day index changes. Refresh on local midnight, focus and visibility restoration; roll from Saturday to a new Sunday-first week without needing a saved event. Count civil-date adjacency using calendar arithmetic, not `24 * 60 * 60 * 1000` differences between local-midnight instants. DST can produce 23- or 25-hour days.
+These selectors are implemented exports. Reuse or extend `entryTimestamp`, `localDay`, `todayReflection` and `chronologicalEntries` consistently rather than introducing competing date/colour rules. Sort occupied days for run detection; do not scan every day since the first entry. Recompute or memoize the day index by confirmed projection cursor and timezone; recompute summaries/week cells at civil-day or timezone changes, and month cells when their rendered month or underlying day index changes. Refresh on local midnight, focus and visibility restoration; roll from Saturday to a new Sunday-first week without needing a saved event. Count civil-date adjacency using calendar arithmetic, not `24 * 60 * 60 * 1000` differences between local-midnight instants. DST can produce 23- or 25-hour days.
 
 Keep clock/zone-dependent presentation out of the canonical reducer and durable checkpoint. Discarding an optional presentation memo must recreate the same result from the same projection, clock and zone. Browsing a month reads neither Firestore nor Storage and does not replay the full stream. Photos load only where the existing entry/day presentation needs them; the month grid needs no image downloads.
 
@@ -159,7 +159,7 @@ A reopened warm cache can supply known saved dates while offline, labelled **Sav
 
 ## Implementation slices
 
-Each slice is a working feature with its own focused commit(s) and relevant tests. The latest user feedback settles week placement, Sunday-first ordering, the streak wording, common date selection, three-tab navigation and infinite scrolling. Remaining policy choices are listed below.
+Each slice is a working feature with its own focused commit(s) and relevant tests. The latest user feedback settles week placement, Sunday-first ordering, the streak wording, common date selection, three-tab navigation and infinite scrolling. The policy defaults used by the implementation are recorded below.
 
 1. **Pure calendar and stretch model.** Implement selectors and unit fixtures, including a sparse imported history, logical entry dates versus receipt time, current-day grace, run bridging and moving dates. Prove full replay and cached-tail replay feed equivalent calendar results for a fixed clock/zone. No UI or backend migration.
 2. **Shared current-week boxes.** Add a shared WeekBox between the Today header and Reflection time, and between Your journal and New entry. Include the requested streak heading, Sunday-first dates, coloured saved circles, neutral unfilled days, disabled grey future dates and a separate calendar-open action. Preserve the three tabs and existing Gratitude link. Add placement, date-state, rollover and action-by-action E2E checks.
@@ -171,7 +171,7 @@ If a resumed draft belongs to a different day than the selected empty date, show
 
 ## Verification contract
 
-Follow E2E_GUIDE.md: every click, swipe, date selection, typing action, back navigation and reload has a screenshot comparison; generated checks appear underneath the full-page image. No masking, cropping or hidden content. Keep `maxDiffPixels: 0` and `threshold: 0`. Freeze clocks/timezones and use fictional source events; make sync and image readiness observable rather than adding sleeps. Do not regenerate any screenshots for this design-only PR.
+Follow E2E_GUIDE.md: every click, swipe, date selection, typing action, back navigation and reload has a screenshot comparison; generated checks appear underneath the full-page image. No masking, cropping or hidden content. Keep `maxDiffPixels: 0` and `threshold: 0`. Freeze clocks/timezones and use fictional source events; make sync and image readiness observable rather than adding sleeps. Scenarios 017–021 provide the new walkthroughs; affected existing baselines are regenerated for the visible week boxes.
 
 | Layer | Required cases |
 | --- | --- |
@@ -181,10 +181,16 @@ Follow E2E_GUIDE.md: every click, swipe, date selection, typing action, back nav
 | Repair E2E | Select a gap, open the empty dated journal, explicitly start writing, choose date/time and save, see the ring and joined count; second entry gives no extra day; pending/offline save gives no confirmed credit; reload/draft recovery; draft conflict choice; photo-only repair; imported history; cross-device save/date-edit updates without month jumps. |
 | Privacy/regression | Sign-out/account switch clears history; preview/prod session namespaces; no cross-user state; no inference from browsing/replay; optional AI only through existing explicit controls; unchanged Markdown format and historical entry dates; no new Rules needed. |
 
-Use the next available E2E scenario numbers when implementation begins (currently after 016). Add a narrow 320px layout case rather than silently changing existing mobile baselines. Check calendar accessibility with keyboard/focus assertions and an accessible day label, not just image inspection.
+Scenarios 017–021 cover calendar navigation, the private landing calendar, repairs/date edits, narrow-screen access and cached backend recovery. Add a narrow 320px layout case rather than silently changing existing mobile baselines. Check calendar accessibility with keyboard/focus assertions and an accessible day label, not just image inspection.
 
 ## Review decisions
 
 Confirmed by the latest user feedback: the two exact week-box placements, Sunday–Saturday ordering, **N days of gratitude in a row** heading, grey future days, box-to-calendar opening, consistent entry/date-filtered-journal date selection across all calendar surfaces, infinite vertical scrolling and no additional navigation tabs. The landing page remains accessible through the existing Gratitude link. These replace the earlier Home-tab and month-pager proposals.
 
-Remaining proposals are device-local day boundaries, the first-created primary ring plus a count for multiple entries, and editable noon as the default for historical writing. These can be revised during review. The PR remains a design document; it does not implement the feature.
+Implementation defaults are device-local day boundaries, the first-created primary ring plus a count for multiple entries, and editable noon for historical writing. These follow the existing Today selection and local-date contracts and remain revisable through explicit product changes.
+
+## Delivered structure
+
+`GratitudeApp.svelte` persists in the shared layout and owns auth, repository, drafts and navigation. `WeekBox`, `CalendarDay` and `GratitudeCalendar` share the pure day index. The scrolling calendar renders seven fixed-height months and compensates scroll offsets when recycling them; it does not create full-history DOM or huge spacer elements. `calendar-navigation.ts` validates typed parent frames. SvelteKit history state and account/project/base-path-scoped session storage retain the return context; URLs carry only a calendar-flow marker. Sign-out/account changes clear active context.
+
+Warm checkpoint validation distinguishes a temporarily unavailable server from a corrupt or stale prefix. Digest-checked saved entries remain provisional during the outage; a server tail revalidates the checkpoint anchor before reporting synchronization. Authentication and app HTML must still be available. No offline cold-start support or automatic submission of repairs is added.

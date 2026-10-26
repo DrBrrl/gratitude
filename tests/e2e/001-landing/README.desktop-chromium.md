@@ -14,5 +14,6 @@ Viewport: desktop-chromium.
 
 - [x] The landing document returns HTTP 200
 - [x] The page identifies itself as Gratitude
+- [x] Calendar account restoration finishes before the page is captured
 - [x] The main heading is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)

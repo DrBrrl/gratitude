@@ -9,6 +9,7 @@ test('the landing page serves', async ({ page }, testInfo) => {
   await steps.step('landing-serves', 'A visitor can open Gratitude', [
     { description: 'The landing document returns HTTP 200', check: async () => { expect(response?.status()).toBe(200); } },
     { description: 'The page identifies itself as Gratitude', check: async () => { await expect(page).toHaveTitle('Gratitude'); } },
+    { description: 'Calendar account restoration finishes before the page is captured', check: async () => { await expect(page.getByText('Opening your calendar…', { exact: true })).toHaveCount(0, { timeout: 15_000 }); } },
     { description: 'The main heading is visible', check: async () => { await expect(page.getByRole('heading', { level: 1, name: 'Gratitude', exact: true })).toBeVisible(); } }
   ]);
   steps.generateDocs('The Gratitude landing page',
