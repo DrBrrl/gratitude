@@ -13,6 +13,28 @@
   } = $props();
   let choosingMonth = $state(false);
   let monthInput = $state<HTMLInputElement>();
+  const monthNames = Array.from({ length: 12 }, (_, index) => monthLabel(`2026-${String(index + 1).padStart(2, '0')}`).replace(/ 2026$/, ''));
+  let monthText = $state('');
+  let yearText = $state('');
+  let invalidChoice = $state(false);
+  const years = $derived([...new Set([Number(anchor.month.slice(0, 4)), ...Array.from({ length: 21 }, (_, i) => Number(today.slice(0, 4)) - 10 + i), ...[...index.keys()].map(day => Number(day.slice(0, 4)))])].filter(year => year >= 1 && year <= 9999).sort((a, b) => b - a));
+  function selectedMonth() {
+    const text = monthText.trim().toLowerCase();
+    const number = /^\d{1,2}$/.test(text) ? Number(text) : monthNames.findIndex(name => name.toLowerCase() === text || name.slice(0, 3).toLowerCase() === text) + 1;
+    if (number < 1 || number > 12 || !/^\d{1,4}$/.test(yearText.trim()) || Number(yearText) < 1) return null;
+    return `${String(Number(yearText)).padStart(4, '0')}-${String(number).padStart(2, '0')}`;
+  }
+  function applyChoice() {
+    const month = selectedMonth();
+    invalidChoice = !month;
+    if (month) onanchor({ month, offset: 0 });
+    return !!month;
+  }
+  async function closeChooser() { choosingMonth = false; await tick(); monthButton?.focus({ preventScroll: true }); }
+  function chooserKey(event: KeyboardEvent) {
+    if (event.key === 'Escape') { event.preventDefault(); void closeChooser(); }
+    if (event.key === 'Enter') { event.preventDefault(); if (applyChoice()) void closeChooser(); }
+  }
   let monthButton = $state<HTMLButtonElement>();
   const previous = $derived(shiftMonth(anchor.month, -1));
   const next = $derived(shiftMonth(anchor.month, 1));
@@ -27,6 +49,9 @@
     }
   }
   async function openMonthChooser() {
+    monthText = monthNames[Number(anchor.month.slice(5)) - 1];
+    yearText = String(Number(anchor.month.slice(0, 4)));
+    invalidChoice = false;
     choosingMonth = true;
     await tick();
     monthInput?.focus();
@@ -37,10 +62,13 @@
   <header class:choosing-month={choosingMonth}>
     <h2>
       {#if choosingMonth}
-        <input bind:this={monthInput} type="month" aria-label="Jump to month" min="0001-01" max="9999-12" value={anchor.month}
-          onchange={event => chooseMonth(event.currentTarget.value)}
-          onkeydown={event => { if (event.key === 'Escape') { choosingMonth = false; void tick().then(() => monthButton?.focus()); } }}
-          onblur={() => choosingMonth = false} />
+        <div class="month-chooser">
+          <label>Month<input bind:this={monthInput} list="landing-month-options" aria-label="Month" bind:value={monthText} onchange={applyChoice} onkeydown={chooserKey} aria-invalid={invalidChoice} autocomplete="off" /></label>
+          <label>Year<input list="landing-year-options" aria-label="Year" bind:value={yearText} onchange={applyChoice} onkeydown={chooserKey} aria-invalid={invalidChoice} inputmode="numeric" maxlength="4" autocomplete="off" /></label>
+          <datalist id="landing-month-options">{#each monthNames as month}<option value={month}></option>{/each}</datalist>
+          <datalist id="landing-year-options">{#each years as year}<option value={year}></option>{/each}</datalist>
+        </div>
+        {#if invalidChoice}<p class="choice-hint" role="alert">Choose a month and a year from 1 to 9999.</p>{:else}<p class="choice-hint">Choose or type a month and year. Enter closes the chooser.</p>{/if}
       {:else}
         <button bind:this={monthButton} class="month-heading" aria-label={`Choose month, ${monthLabel(anchor.month)}`} onclick={openMonthChooser}>{monthLabel(anchor.month)}</button>
       {/if}
@@ -56,20 +84,24 @@
 </section>
 
 <style>
-  .landing-calendar { padding: 12px 8px 14px; border: 1px solid #b8bdc43d; border-radius: 16px; background: linear-gradient(120deg,#494e5533,#13171bd9); backdrop-filter: blur(18px); }
+  .landing-calendar { --calendar-highlight: #ffdf48; padding: 12px 8px 14px; border: 1px solid #f4d35e80; border-radius: 16px; background: linear-gradient(120deg,#494e5533,#13171bd9); backdrop-filter: blur(18px); }
   header { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 4px 8px; margin-bottom: 12px; }
-  h2 { margin: 0; min-width: 0; font: 600 1.06rem/1.4 Arial,Helvetica,sans-serif; color: #e2e4eb; }
-  button, input { font: inherit; color: inherit; min-height: 44px; border: 1px solid #9a9da34f; border-radius: 8px; background: #d3d8df12; padding: 6px 8px; }
+  h2 { margin: 0; min-width: 0; font: 600 1.06rem/1.4 Arial,Helvetica,sans-serif; color: #f4d35e; }
+  button, input { font: inherit; color: inherit; min-height: 44px; border: 1px solid #f4d35e80; border-radius: 8px; background: #d3d8df12; padding: 6px 8px; }
   button { cursor: pointer; }
   button:disabled { opacity: .35; cursor: default; }
   .month-heading { background: none; border-color: transparent; padding-inline: 5px; text-align: left; max-width: 100%; }
-  .month-controls { display: flex; gap: 4px; margin-left: auto; color: #bac1cd; font-size: .72rem; }
+  .month-controls { display: flex; gap: 4px; margin-left: auto; color: #f4d35e; font-size: .72rem; }
   .month-controls button { min-width: 44px; }
   .weekdays, .month-dates { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); }
   .weekdays { text-align: center; font-size: .7rem; color: #a5adba; height: 26px; }
   input { width: 100%; min-width: 0; font-size: .9rem; }
+  .month-chooser { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .month-chooser label { min-width: 0; font-size: .75rem; font-weight: 400; color: #bac1cd; }
+  .month-chooser input { display: block; margin-top: 5px; }
+  .choice-hint { font-size: .7rem; font-weight: 400; color: #bac1cd; margin: 8px 0 0; }
   .choosing-month h2 { grid-column: 1 / -1; grid-row: 2; }
   .choosing-month .month-controls { grid-column: 2; grid-row: 1; }
-  button:focus-visible, input:focus-visible { outline: 2px solid #c8cbd1; outline-offset: 2px; }
+  button:focus-visible, input:focus-visible { outline: 2px solid #ffdf48; outline-offset: 2px; }
   @media(max-width:360px) { .landing-calendar { padding-left: 0; padding-right: 0; } }
 </style>

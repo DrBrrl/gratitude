@@ -751,3 +751,15 @@ Jump to month" above the calendar proper.
 ```text
 Are you able to continue? :)
 ```
+
+## 2026-10-26 — Editable month/year dropdowns and calendar defaults
+
+```text
+A small behaviour to fix - when i click into the month/year, let's get it to turn into two dropdown boxes that can be written in. Also i am not seeing the test circles on the calendar, and it defaulted to september 2026 for some reason
+```
+
+## 2026-10-26 — Yellow calendar highlights
+
+```text
+Let's also get the calendar highlight colours in our nice yellow - the borter of the box and buttons, etc
+```
