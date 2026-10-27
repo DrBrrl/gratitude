@@ -74,13 +74,17 @@ Saved user actions are appended in a browser transaction. Security Rules enforce
 
 **Already have a Gemini API key?** This integration uses Firebase-managed authorization and needs no supplied Gemini key. See [where keys belong and how to enable paid personalization](FIREBASE_SETUP.md#where-to-put-a-gemini-api-key).
 
-Open **Settings → AI settings**, enable AI prompts and save your choices. On Today, choose **Find me a prompt**. You can request another before writing, use the starter, and leave a short note under **Why this prompt? → Give prompt feedback**. A draft and a saved reflection retain the question they started with.
+Open **Settings → AI settings**, enable AI prompts and save your choices. On Today, choose **Find me a prompt**. You can request another before writing, use the starter, and leave a short note under **Why this prompt? → Give prompt feedback**. A draft and a saved reflection retain the question they started with. New requests use the revised `gratitude-v2` instruction for a personalised gratitude prompt under 100 words; older `gratitude-v1` requests and saved outputs remain replayable. The existing 600-character response bound remains.
 
 Gemini results are immutable events: their exact visible text, reported model version and completion reason are stored against the initiating request. Reopening, syncing and rebuilding never call Gemini. An interrupted request needs an explicit retry; a received response waiting to sync is stored on this device and can be retried without inference. Changing sharing choices cancels pending requests across tabs/devices. Calls have a 30-second timeout and no automatic inference retries.
 
 Both deployment configurations select `aiDataMode: "paid"`, and billing was verified enabled for both Firebase projects on 2026-10-15. App Check, Google sign-in and a 5-request/minute/user gateway quota protect requests. AI prompts and sharing remain opt-in. Personalization uses only approved sources: optional preferences (500 characters), up to 5 saved reflections (1,000 characters each) and 20 current feedback notes (250 characters each). Draft text, account identity, photos and photo summaries are never included in daily-prompt context. Authentication still identifies the account to the Firebase gateway.
 
 [Firebase setup](FIREBASE_SETUP.md) records deployment and live verification. The private repository Gemini key is unused and never enters the frontend. This integration needs no Cloud Functions.
+
+## Proposed broader AI context
+
+[AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md) proposes up to twenty reflections selected by logical entry date: eight around anniversaries, seven least recently used in successful AI prompts and five sampled from the preceding fortnight, with deduplication and sparse-history fallback. That selection is for review and is not implemented; the live five-entry selection above remains. Gemini-curated monthly user notes are recorded there as a deferred idea and are neither generated nor sent.
 
 ## Calendar and gentle streaks
 
@@ -92,6 +96,7 @@ Streaks count saved logical entry dates in the viewing device's timezone. An unf
 
 ## Project records
 
+- [AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md): implemented instruction update, proposed twenty-reflection selection and deferred curated-notes idea.
 - [IMPORT_PLAN.md](IMPORT_PLAN.md): implemented alternate ZIP import, provenance, limits and recovery contract.
 - [STREAKS_DESIGN.md](STREAKS_DESIGN.md): implemented gentle streak rules, calendar interactions, return navigation and verification.
 - [VISION.md](VISION.md): the project’s intended end state.
