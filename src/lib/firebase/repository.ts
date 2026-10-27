@@ -1,3 +1,4 @@
+import type { GenerateSummary } from '../ai/local-contract';
 import type { ImportSelection } from '../import-archive';
 import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { appendReflection, decodeEvent } from './append';
@@ -210,7 +211,7 @@ export class JournalRepository {
     if (this.generating) return;
     if (this.aiResult) throw new Error('Sync the received prompt before requesting another.');
     const snapshot = this.state;
-    const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId);
+    const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId, undefined, generate.target);
     this.generating = true;
     try {
       const committed = await this.commitAI(request);
@@ -223,6 +224,7 @@ export class JournalRepository {
         if (this.stopped) return;
         const reason = cause instanceof Error && ['blocked', 'invalid-response'].includes(cause.message) ? cause.message as 'blocked' | 'invalid-response' : 'unavailable';
         await this.commitAI({ eventId: `${request.eventId}_failure`, type: 'AIRequestFailed', schemaVersion: 1, payload: { requestId: request.eventId, reason } });
+        if(generate.target) throw new Error(reason==='invalid-response'?'LM Studio returned an incomplete or invalid prompt. Try again or use the starter prompt.':cause instanceof Error?cause.message:'Could not reach LM Studio.');
         throw new Error('No new prompt arrived. You can try again or use the starter prompt.');
       }
       if (this.stopped) return;
@@ -247,32 +249,38 @@ export class JournalRepository {
     await this.db.delete('outbox', 'ai-result'); this.aiResult = null; this.emit();
   }
 
-  async requestPhotoSummary(entryId: string, slot: number, generate: () => Promise<{ text: string; model: string; finishReason: 'STOP' }>) {
+  async requestPhotoSummary(entryId: string, slot: number, generate: GenerateSummary) {
     const key = photoKey(entryId, slot);
+    if((generate.target?.provider??'gemini')!==this.state.ai.choices.provider) throw new Error('AI provider changed. Review your model settings.');
     if (this.photoRequests.has(key)) return;
     const photo = this.state.photos[key];
     if (!photo || photo.removed) throw new Error('This photo is no longer attached.');
     if (Object.values(this.photoResults).some(action => action.payload.entryId === entryId && action.payload.slot === slot)) throw new Error('Sync the received summary first.');
-    const request: PhotoAction = { eventId: crypto.randomUUID(), type: 'PhotoSummaryRequested', schemaVersion: 1,
-      payload: { entryId, slot, photoId: photo.photoId, previousEventId: photo.lastEventId } };
+    const eventId=crypto.randomUUID(),payload={entryId,slot,photoId:photo.photoId,previousEventId:photo.lastEventId};
+    const request: PhotoAction = generate.target ? {eventId,type:'PhotoSummaryRequested',schemaVersion:2,payload:{...payload,...generate.target}} : {eventId,type:'PhotoSummaryRequested',schemaVersion:1,payload};
     this.photoRequests.add(key); this.emit();
     try {
       const result = await this.commitAI(request);
       if (!result.created || this.stopped) return;
       const control = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/photos/${key}`));
       if (control.get('lastEventId') !== request.eventId || this.stopped) return;
+      const aiControl=await getDocFromServer(doc(this.client.db,`users/${this.uid}/streams/${GENERATION}/ai/control`));
+      const choicesId=aiControl.get('choicesId');
+      const choices=choicesId?await getDocFromServer(doc(this.client.db,`users/${this.uid}/streams/${GENERATION}/events/${choicesId}`)):null;
+      if((choices?.get('payload.provider')??'gemini')!==(generate.target?.provider??'gemini')) throw new Error('AI provider changed. Review your model settings.');
       let output;
       try { output = await generate(); }
       catch (cause) {
         if (this.stopped || this.state.photos[key]?.lastEventId !== request.eventId) return;
         const reason = cause instanceof Error && ['blocked', 'invalid-response'].includes(cause.message) ? cause.message as 'blocked' | 'invalid-response' : 'unavailable';
         await this.commitAI({ eventId: `${request.eventId}_failure`, type: 'PhotoSummaryFailed', schemaVersion: 1,
-          payload: { ...request.payload, previousEventId: request.eventId, reason } });
+          payload: { entryId, slot, photoId: photo.photoId, previousEventId: request.eventId, reason } });
+        if(generate.target) throw new Error(reason==='invalid-response'?'LM Studio returned an incomplete or invalid image summary.':cause instanceof Error?cause.message:'Could not reach LM Studio.');
         return;
       }
       if (this.stopped) return;
       const response: PhotoAction = { eventId: `${request.eventId}_response`, type: 'PhotoSummaryResponseReceived', schemaVersion: 1,
-        payload: { ...request.payload, previousEventId: request.eventId, ...output } };
+        payload: { entryId, slot, photoId: photo.photoId, previousEventId: request.eventId, ...output } };
       this.photoResults[request.eventId] = response;
       await this.db.put('outbox', this.photoResults, 'photo-results'); this.emit();
       await this.syncPhotoResult(request.eventId);

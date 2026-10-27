@@ -837,3 +837,58 @@ Aha, i also caught the error in the prompt re-write, sorry! Let's correct that t
 ```text
 Alllrighty, let's go ahead and code that proposal up please!
 ```
+
+## 2026-10-27 — Connect to LM Studio
+
+```text
+Fab,i reckon i'll go ahead and rebase and merge that now. the next very exciting feature i would like is an additional option for the AI model settings - the possibility to connect to a local LLM being run in LM Studio. Tell me the information you need from me and let's make it happen! Preferences: model with the API identifier google/gemma-4-31b, and     if supports_thinking:
+        payload["chat_template_kwargs"] = {
+            "enable_thinking": FALSE,
+        }
+```
+
+## 2026-10-27 — LM Studio address and version
+
+```text
+http://127.0.0.1:8080
+
+Most up-to-date version, downloaded from website less than an hour ago
+```
+
+## 2026-10-27 — LM Studio devices
+
+```text
+Both the computer and mobile devices
+```
+
+## 2026-10-27 — LM Studio authentication
+
+Context: “Is Require Authentication enabled on your LM Studio server?”
+
+```text
+Yes
+```
+
+## 2026-10-27 — Enable CORS in LM Studio
+
+```text
+Done!
+```
+
+## 2026-10-27 — Mobile browser family
+
+```text
+Another browser
+```
+
+## 2026-10-27 — Firefox on all devices
+
+```text
+I'm using firefox everywhere :)
+```
+
+## 2026-10-27 — Use private Tailscale HTTPS
+
+```text
+Yes, use Tailscale HTTPS
+```

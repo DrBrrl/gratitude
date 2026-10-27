@@ -1,9 +1,10 @@
+import { validLocalTarget, type LocalModelTarget } from './ai/local-contract.ts';
 import { dayInZone } from './civil-date.ts';
 import { SELECTOR_VERSION, validSelection } from './ai/selection.ts';
 import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 7;
+export const PROJECTION_VERSION = 8;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
@@ -16,17 +17,20 @@ export type Action = Envelope<'ReflectionWritten', ReflectionPayload & { starter
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; entryAt: string | null; photoSlot: number | null }, 4>
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 5>
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 6>;
-export type AIChoices = { enabled: boolean; useJournal: boolean; useFeedback: boolean; guidance: string };
+type LegacyAIChoices = { enabled: boolean; useJournal: boolean; useFeedback: boolean; guidance: string };
+export type AIChoices = LegacyAIChoices & {provider:'gemini'|'lm-studio'};
 type Previous = { previousEventId: string | null };
-export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & AIChoices>;
+export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & LegacyAIChoices> | Envelope<'AIChoicesConfirmed', Previous & AIChoices,2>;
 type RequestPayload = Previous & { choicesId: string; day: string; templateVersion: PromptTemplateVersion;
   contextMode: 'generic' | 'personal'; feedbackIds: string[] };
 type LegacyRequestPayload = RequestPayload & { entryRefs: { entryId: string; revision: number }[] };
 type SelectorPayload = RequestPayload & { entryRefs: Record<string, string>; selectorVersion: typeof SELECTOR_VERSION; timeZone: string; selectionSeed: string };
 export type RequestAction = Envelope<'PromptRequested', LegacyRequestPayload> | Envelope<'PromptRequested', LegacyRequestPayload & { entryId: string; entryRevision: number }, 2>
-  | Envelope<'PromptRequested', SelectorPayload, 3> | Envelope<'PromptRequested', SelectorPayload & { entryId: string; entryRevision: number }, 4>;
-export function isEditorRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 2 | 4}> { return request.schemaVersion === 2 || request.schemaVersion === 4; }
-export function isMixedRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 3 | 4}> { return request.schemaVersion === 3 || request.schemaVersion === 4; }
+  | Envelope<'PromptRequested', SelectorPayload, 3> | Envelope<'PromptRequested', SelectorPayload & { entryId: string; entryRevision: number }, 4>
+  | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget, 5> | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget & { entryId: string; entryRevision: number }, 6>;
+export function isEditorRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 2 | 4 | 6}> { return request.schemaVersion === 2 || request.schemaVersion === 4 || request.schemaVersion === 6; }
+export function isMixedRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 3 | 4 | 5 | 6}> { return request.schemaVersion >= 3; }
+export function isLocalRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion:5|6}> { return request.schemaVersion===5 || request.schemaVersion===6; }
 /** New wire maps enforce unique IDs and use canonical positive-decimal revision strings. */
 export function requestEntryRefs(request: RequestAction): {entryId:string;revision:number}[] {
   return isMixedRequest(request) ? Object.entries(request.payload.entryRefs).map(([entryId,revision])=>({entryId,revision:Number(revision)})) : request.payload.entryRefs;
@@ -39,6 +43,7 @@ export type AIAction = ChoicesAction | RequestAction | ResponseAction | FailureA
 export type PhotoAction = Envelope<'PhotoAttached', { entryId: string; slot: number; photoId: string; previousEventId: string | null }>
   | Envelope<'PhotoRemoved', PhotoTarget>
   | Envelope<'PhotoSummaryRequested', PhotoTarget>
+  | Envelope<'PhotoSummaryRequested', PhotoTarget & LocalModelTarget, 2>
   | Envelope<'PhotoSummaryEdited', PhotoTarget & { text: string }>
   | Envelope<'PhotoSummaryResponseReceived', PhotoTarget & { text: string; model: string; finishReason: 'STOP' }>
   | Envelope<'PhotoSummaryFailed', PhotoTarget & { reason: 'unavailable' | 'blocked' | 'invalid-response' }>;
@@ -54,12 +59,12 @@ export type JournalEvent = SourceAction & { sequence: number; recordedAt: string
 /** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 7; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 8; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
 export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
-  control: emptyControl(), choices: { enabled: false, useJournal: false, useFeedback: false, guidance: '' },
+  control: emptyControl(), choices: { enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' },
   requests: {}, responses: {}, usage: {}, days: {}, feedback: [], failure: null
 } }; }
 const idPattern = /^[a-zA-Z0-9_-]{1,80}$/;
@@ -92,24 +97,28 @@ export function parseAction(input: unknown): SourceAction {
       || (v.schemaVersion === 5 || v.schemaVersion === 6) && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.promptText === null || p.promptId === v.eventId && string(p.promptText, 600)) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4)
       || v.schemaVersion === 4 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4))
       && id(p.entryId) && string(p.text, 10_000, (v.schemaVersion === 4 || v.schemaVersion === 5 || v.schemaVersion === 6)) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
-  } else if (v.schemaVersion === 1 || [2,3,4].includes(v.schemaVersion as number) && v.type === 'PromptRequested') {
+  } else if (v.schemaVersion === 1 || [2,3,4,5,6].includes(v.schemaVersion as number) && v.type === 'PromptRequested' || v.schemaVersion===2 && ['PhotoSummaryRequested','AIChoicesConfirmed'].includes(String(v.type))) {
     const previous = p.previousEventId === null || id(p.previousEventId);
     const day = typeof p.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.day) && !isNaN(Date.parse(p.day));
     switch (v.type) {
       case 'PhotoAttached': case 'PhotoRemoved': case 'PhotoSummaryRequested': case 'PhotoSummaryEdited': case 'PhotoSummaryResponseReceived': case 'PhotoSummaryFailed': {
-        const extra = v.type === 'PhotoSummaryEdited' ? ['text'] : v.type === 'PhotoSummaryResponseReceived' ? ['text', 'model', 'finishReason'] : v.type === 'PhotoSummaryFailed' ? ['reason'] : [];
+        const extra = v.type === 'PhotoSummaryRequested' && v.schemaVersion===2 ? ['provider','model','thinking'] : v.type === 'PhotoSummaryEdited' ? ['text'] : v.type === 'PhotoSummaryResponseReceived' ? ['text', 'model', 'finishReason'] : v.type === 'PhotoSummaryFailed' ? ['reason'] : [];
         valid = keys(p, ['entryId', 'slot', 'photoId', 'previousEventId', ...extra]) && id(p.entryId) && id(p.photoId)
           && Number.isInteger(p.slot) && Number(p.slot) >= 0 && Number(p.slot) < 4 && previous && (v.type === 'PhotoAttached' || id(p.previousEventId))
+          && (v.type !== 'PhotoSummaryRequested' || v.schemaVersion!==2 || validLocalTarget(p))
           && (v.type !== 'PhotoSummaryEdited' || string(p.text, 1000, true))
           && (v.type !== 'PhotoSummaryResponseReceived' || string(p.text, 1000) && string(p.model, 100) && p.finishReason === 'STOP' && v.eventId === `${p.previousEventId}_response`)
           && (v.type !== 'PhotoSummaryFailed' || ['unavailable','blocked','invalid-response'].includes(String(p.reason)) && v.eventId === `${p.previousEventId}_failure`); break;
       }
-      case 'AIChoicesConfirmed': valid = keys(p, ['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance']) && previous
+      case 'AIChoicesConfirmed': valid = keys(p, ['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance',...(v.schemaVersion===2?['provider']:[])]) && previous
+        && (v.schemaVersion!==2 || ['gemini','lm-studio'].includes(String(p.provider)))
         && typeof p.enabled === 'boolean' && typeof p.useJournal === 'boolean' && typeof p.useFeedback === 'boolean' && string(p.guidance, 500, true); break;
       case 'PromptRequested': {
-        const mixed = v.schemaVersion === 3 || v.schemaVersion === 4;
-        const editor = v.schemaVersion === 2 || v.schemaVersion === 4;
-        valid = keys(p, ['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(editor ? ['entryId', 'entryRevision'] : []), ...(mixed ? ['selectorVersion','timeZone','selectionSeed'] : [])])
+        const mixed = [3,4,5,6].includes(v.schemaVersion as number);
+        const local = v.schemaVersion===5 || v.schemaVersion===6;
+        const editor = v.schemaVersion === 2 || v.schemaVersion === 4 || v.schemaVersion===6;
+        valid = keys(p, ['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(editor ? ['entryId', 'entryRevision'] : []), ...(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []), ...(local ? ['provider','model','thinking'] : [])])
+          && (!local || validLocalTarget(p))
           && (!editor || id(p.entryId) && Number.isSafeInteger(p.entryRevision) && Number(p.entryRevision) >= 0) && previous
           && (!mixed || p.selectorVersion === SELECTOR_VERSION && validSelection(p as unknown as Parameters<typeof validSelection>[0]))
           && id(p.choicesId) && day && ['gratitude-v1', TEMPLATE_VERSION].includes(String(p.templateVersion)) && ['generic', 'personal'].includes(String(p.contextMode))
@@ -161,6 +170,7 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
     const entry: Entry = { id: p.entryId, text: input.source.noteText, prompt: input.source.prompt ?? NO_PROMPT, promptId: receipt.confirmationId, entryAt: new Date(input.source.createdOn).toISOString(), recordedAt: event.recordedAt, revision: 1, colour: state.entries.length % 7, origin: { ...input, confirmationId: receipt.confirmationId } };
     return { ...next, entries: [...state.entries, entry], imports: { ...state.imports, [p.sourceKey]: { ...receipt, completedId: action.eventId } } };
   }
+  if (action.type==='PhotoSummaryRequested' && (action.schemaVersion===2?'lm-studio':'gemini')!==state.ai.choices.provider) throw new Error('AI provider changed. Review your model settings.');
   if (isPhotoAction(action)) return applyPhoto(next, action);
   if (action.type === 'ReflectionWritten') {
     const existing = state.entries.find(entry => entry.id === action.payload.entryId);
@@ -184,11 +194,12 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
   switch (action.type) {
     case 'AIChoicesConfirmed': {
       const { enabled, useJournal, useFeedback, guidance } = action.payload;
-      ai.choices = { enabled, useJournal, useFeedback, guidance }; ai.failure = null; break;
+      ai.choices = { enabled, useJournal, useFeedback, guidance,provider:action.schemaVersion===2?action.payload.provider:'gemini' }; ai.failure = null; break;
     }
     case 'PromptRequested': {
       const p = action.payload, refs = requestEntryRefs(action);
       if (isEditorRequest(action) && (state.entries.find(entry => entry.id === action.payload.entryId)?.revision ?? 0) !== action.payload.entryRevision) throw new Error('This reflection changed before the prompt request.');
+      if ((isLocalRequest(action)?'lm-studio':'gemini')!==ai.choices.provider) throw new Error('AI provider changed. Review your model settings.');
       if (!ai.choices.enabled || p.choicesId !== ai.control.choicesId) throw new Error('AI consent is no longer current.');
       if (p.contextMode === 'generic' && (refs.length || p.feedbackIds.length)
         || refs.length && !ai.choices.useJournal || p.feedbackIds.length && !ai.choices.useFeedback) throw new Error('Unapproved AI context');

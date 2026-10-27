@@ -82,13 +82,19 @@ service cloud.firestore {
         return ids.size() == 0 || joined.split(' ') == ids
           && joined.matches('^[a-zA-Z0-9_-]{1,80}( [a-zA-Z0-9_-]{1,80}){' + string(ids.size()-1) + '}$');
       }
+      function validLocal(p) { return p.provider == 'lm-studio' && p.thinking == false && p.model is string && p.model.matches('^[a-zA-Z0-9][a-zA-Z0-9_.:/@+-]{0,79}$'); }
       function validRequest(p, before, schema) {
         let choices = get(eventPath(before.choicesId)).data.payload;
-        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'].concat(schema in [2,4] ? ['entryId', 'entryRevision'] : []).concat(schema in [3,4] ? ['selectorVersion','timeZone','selectionSeed'] : [])) && (!(schema in [2,4]) || validId(p.entryId) && p.entryRevision is int && p.entryRevision == nextRevision(p.entryId))
-          && p.choicesId == before.choicesId && choices.enabled == true && validDay(p.day)
+        let mixed = schema in [3,4,5,6];
+        let editor = schema in [2,4,6];
+        let local = schema in [5,6];
+        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'].concat(editor ? ['entryId', 'entryRevision'] : []).concat(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []).concat(local ? ['provider','model','thinking'] : []))
+          && (!local || validLocal(p)) && (!(editor) || validId(p.entryId) && p.entryRevision is int && p.entryRevision == nextRevision(p.entryId))
+          && p.choicesId == before.choicesId && choices.enabled == true
+          && choices.get('provider','gemini') == (local ? 'lm-studio' : 'gemini') && validDay(p.day)
           && p.templateVersion in ['gratitude-v1', 'gratitude-v2'] && p.contextMode in ['generic', 'personal']
-          && (!(schema in [3,4]) || p.selectorVersion == 'mixed-v1' && p.timeZone is string && p.timeZone.size() <= 100 && p.timeZone.matches('^[A-Za-z_+-]+(/[A-Za-z0-9_+-]+)*$') && p.selectionSeed is string && p.selectionSeed.matches('^[a-f0-9]{32}$'))
-          && (schema in [3,4] ? p.entryRefs is map && p.entryRefs.size() <= 20 && validRefMap(p.entryRefs) : p.entryRefs is list && p.entryRefs.size() <= 5 && validRefs(p.entryRefs)) && p.feedbackIds is list && p.feedbackIds.size() <= 20
+          && (!(mixed) || p.selectorVersion == 'mixed-v1' && p.timeZone is string && p.timeZone.size() <= 100 && p.timeZone.matches('^[A-Za-z_+-]+(/[A-Za-z0-9_+-]+)*$') && p.selectionSeed is string && p.selectionSeed.matches('^[a-f0-9]{32}$'))
+          && (mixed ? p.entryRefs is map && p.entryRefs.size() <= 20 && validRefMap(p.entryRefs) : p.entryRefs is list && p.entryRefs.size() <= 5 && validRefs(p.entryRefs)) && p.feedbackIds is list && p.feedbackIds.size() <= 20
           && (p.feedbackIds.size() == 0 || p.feedbackIds.toSet().size() == p.feedbackIds.size() && validFeedbackIds(p.feedbackIds))
           && (p.contextMode != 'generic' || (p.entryRefs.size() == 0 && p.feedbackIds.size() == 0))
           && (choices.useJournal || p.entryRefs.size() == 0) && (choices.useFeedback || p.feedbackIds.size() == 0);
@@ -98,12 +104,13 @@ service cloud.firestore {
         let before = aiBefore();
         let after = getAfter(aiPath()).data;
         let result = e.type in ['PromptResponseReceived', 'AIRequestFailed'];
-        return (e.schemaVersion == 1 || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4]) && after.lastEventId == e.eventId
+        return (e.schemaVersion == 1 || e.type == 'AIChoicesConfirmed' && e.schemaVersion == 2 || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4,5,6]) && after.lastEventId == e.eventId
           && after.choicesId == (e.type == 'AIChoicesConfirmed' ? e.eventId : before.choicesId)
           && after.requestId == (e.type == 'PromptRequested' ? e.eventId : e.type == 'PromptFeedbackSubmitted' ? before.requestId : null)
           && (result ? validId(p.requestId) && p.requestId == before.requestId : p.previousEventId == before.lastEventId)
           && (
-            (e.type == 'AIChoicesConfirmed' && p.keys().hasOnly(['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance'])
+            (e.type == 'AIChoicesConfirmed' && p.keys().hasOnly(['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance'].concat(e.schemaVersion == 2 ? ['provider'] : []))
+              && (e.schemaVersion != 2 || p.provider in ['gemini','lm-studio'])
               && p.enabled is bool && p.useJournal is bool && p.useFeedback is bool && text(p.guidance, 500))
             || (e.type == 'PromptRequested' && validRequest(p, before, e.schemaVersion))
             || (e.type == 'PromptResponseReceived' && p.keys().hasOnly(['requestId', 'text', 'model', 'finishReason'])
@@ -120,12 +127,14 @@ service cloud.firestore {
       function photoBefore(entryId, slot) { let pointer = get(photoPath(entryId, slot)); return pointer == null ? null : get(eventPath(pointer.data.lastEventId)).data; }
       function activePhoto(entryId, slot) { let event = photoBefore(entryId, slot); return event != null && event.type != 'PhotoRemoved'; }
       function otherPhoto(entryId, slot) { return (slot != 0 && activePhoto(entryId, 0)) || (slot != 1 && activePhoto(entryId, 1)) || (slot != 2 && activePhoto(entryId, 2)) || (slot != 3 && activePhoto(entryId, 3)); }
+      function currentProvider() { let control=aiBefore(); return control.choicesId == null ? 'gemini' : get(eventPath(control.choicesId)).data.payload.get('provider','gemini'); }
       function validPhoto(e) {
         let p = e.payload;
         let old = photoBefore(p.entryId, p.slot);
-        let extras = e.type == 'PhotoSummaryEdited' ? ['text'] : e.type == 'PhotoSummaryResponseReceived' ? ['text', 'model', 'finishReason'] : e.type == 'PhotoSummaryFailed' ? ['reason'] : [];
-        return e.schemaVersion == 1 && validId(p.entryId) && validId(p.photoId) && p.slot is int && p.slot >= 0 && p.slot < 4
+        let extras = e.type == 'PhotoSummaryRequested' && e.schemaVersion == 2 ? ['provider','model','thinking'] : e.type == 'PhotoSummaryEdited' ? ['text'] : e.type == 'PhotoSummaryResponseReceived' ? ['text', 'model', 'finishReason'] : e.type == 'PhotoSummaryFailed' ? ['reason'] : [];
+        return (e.schemaVersion == 1 || e.type == 'PhotoSummaryRequested' && e.schemaVersion == 2 && validLocal(p)) && validId(p.entryId) && validId(p.photoId) && p.slot is int && p.slot >= 0 && p.slot < 4
           && p.keys().hasOnly(['entryId', 'slot', 'photoId', 'previousEventId'].concat(extras))
+          && (e.type != 'PhotoSummaryRequested' || currentProvider() == (e.schemaVersion == 2 ? 'lm-studio' : 'gemini'))
           && p.previousEventId == (old == null ? null : old.eventId)
           && getAfter(photoPath(p.entryId, p.slot)).data.lastEventId == e.eventId
           && (e.type == 'PhotoAttached' ? old == null || old.type == 'PhotoRemoved'

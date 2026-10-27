@@ -16,7 +16,7 @@ The repository contains a Svelte 5 / SvelteKit application with a responsive dar
 - Receive prompts that become more relevant over time, with control over personalization.
 - Revisit past reflections in a private journal.
 
-The journal offers a bundled starter prompt and optional Gemini prompts. Preview and production builds use paid Gemini, with personalization controlled by each user’s saved sharing choices. See [VISION.md](VISION.md) for the project’s intended end state.
+The journal offers a bundled starter prompt and optional Gemini or LM Studio prompts. Preview and production builds use paid Gemini, with personalization controlled by each user’s saved sharing choices. See [VISION.md](VISION.md) for the project’s intended end state.
 
 ## Development
 
@@ -76,11 +76,17 @@ Saved user actions are appended in a browser transaction. Security Rules enforce
 
 Open **Settings → AI settings**, enable AI prompts and save your choices. On Today, choose **Find me a prompt**. You can request another before writing, use the starter, and leave a short note under **Why this prompt? → Give prompt feedback**. A draft and a saved reflection retain the question they started with. New requests use the revised `gratitude-v2` instruction for a personalised gratitude prompt under 100 words; older `gratitude-v1` requests and saved outputs remain replayable. The existing 600-character response bound remains.
 
-Gemini results are immutable events: their exact visible text, reported model version and completion reason are stored against the initiating request. Reopening, syncing and rebuilding never call Gemini. An interrupted request needs an explicit retry; a received response waiting to sync is stored on this device and can be retried without inference. Changing sharing choices cancels pending requests across tabs/devices. Calls have a 30-second timeout and no automatic inference retries.
+AI results are immutable events: their exact visible text, reported model version and completion reason are stored against the initiating request. Reopening, syncing and rebuilding never call either AI provider. An interrupted request needs an explicit retry; a received response waiting to sync is stored on this device and can be retried without inference. Changing sharing choices cancels pending requests across tabs/devices. Gemini calls have a 30-second timeout; local LM Studio inference has a 120-second timeout. Neither is automatically retried.
 
 Both deployment configurations select `aiDataMode: "paid"`, and billing was verified enabled for both Firebase projects on 2026-10-15. App Check, Google sign-in and a 5-request/minute/user gateway quota protect requests. AI prompts and sharing remain opt-in. Personalization uses only approved sources: optional preferences (500 characters), up to 20 saved reflections (1,000 characters each) and 20 current feedback notes (250 characters each). Draft text, account identity, photos and photo summaries are never included in daily-prompt context. Authentication still identifies the account to the Firebase gateway.
 
 [Firebase setup](FIREBASE_SETUP.md) records deployment and live verification. The private repository Gemini key is unused and never enters the frontend. This integration needs no Cloud Functions.
+
+## Local models with LM Studio
+
+Open **Settings → AI settings → AI model**, choose **LM Studio**, enter the server URL and model identifier (`google/gemma-4-31b` by default), and put the API token in the local password field. **Test connection** discovers capabilities without inference; **Save model settings** saves the provider to your account and the connection details on this device. The token stays in the tab session and never enters Firebase or the repository. Existing sharing switches and twenty-reflection selection apply to local prompts; vision-capable models can also summarize photos.
+
+Provider selection syncs across devices. Each device needs its own reachable address and token, and failures never trigger a Gemini fallback. For Firefox on a phone, use a private HTTPS address such as Tailscale Serve; localhost points to the phone itself. [LM_STUDIO_SETUP.md](LM_STUDIO_SETUP.md) explains server authentication/CORS, private HTTPS, thinking-off requests, context windows and recovery. Journal and photo storage still use Firebase. Projection version 8 rebuilds older caches from recorded events without inference.
 
 ## Four-week rainbow
 
@@ -102,6 +108,7 @@ Streaks count saved logical entry dates in the viewing device's timezone. An unf
 
 ## Project records
 
+- [LM_STUDIO_SETUP.md](LM_STUDIO_SETUP.md): local model configuration, private HTTPS, credentials, provider consent and replay.
 - [AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md): implemented instruction and twenty-reflection selection, with a deferred curated-notes idea.
 - [IMPORT_PLAN.md](IMPORT_PLAN.md): implemented alternate ZIP import, provenance, limits and recovery contract.
 - [STREAKS_DESIGN.md](STREAKS_DESIGN.md): implemented gentle streak rules, calendar interactions, return navigation and verification.

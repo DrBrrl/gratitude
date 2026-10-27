@@ -13,6 +13,7 @@ if (base.endsWith('/') || base.includes('//')) {
 export default {
   preprocess: vitePreprocess(),
   kit: {
+    outDir: process.env.GRATITUDE_KIT_OUT_DIR ?? '.svelte-kit',
     adapter: adapter(),
     paths: { base }
   }
