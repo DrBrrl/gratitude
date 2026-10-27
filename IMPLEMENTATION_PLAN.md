@@ -67,7 +67,7 @@ Restore valid checkpoints and fetch only the confirmed tail. Commit cached event
 
 **Deliverable:** optional questions, explicit sharing controls, daily prompt view, starter fallback, skip/resume, durable editor, save/edit, freeform feedback, rainbow history, full entry and search.
 
-Use recorded fixture response events during UI development. Show device-pending and cloud-synced states accurately. Flush pending text before save; preserve entry identity across edits. Display prompt and reserved colour before writing. Mark offline reservations provisional until the canonical first-day commit; confirmed colours remain stable across devices. Keep Today/Journal/Settings navigation, with AI settings inside Settings.
+Use recorded fixture response events during UI development. Show device-pending and cloud-synced states accurately. Flush pending text before save; preserve entry identity across edits. Display the prompt and date-derived colour before writing. The colour is known offline; it follows the chosen local date, with no reservation or first-day colour commit. Keep Today/Journal/Settings navigation, with AI settings inside Settings.
 
 Search full saved text, prompts and accepted/manual summaries using the UX's normalization and all-word matching. Keep collapsed cards a consistent height and restore query/scroll context. Distinguish empty data, no matches, incomplete sync and failures. Add keyboard-safe controls, focus restoration, live announcements, 200% reflow and contrast checks.
 
@@ -160,3 +160,7 @@ Scenarios 017–022 add mobile/desktop action-by-action walkthroughs for calenda
 ## Proposed personalised reflection selection
 
 [AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md) sketches a logical-date 8/7/5 anniversary/rediscovery/recent selector, twenty distinct saved text inputs, usage projected from successful request/response events, seeded sampling, sparse-history fallback, versioned payloads, consent/revision checks and targeted acceptance fixtures. Implement those as separate working slices after review; do not enable twenty-entry dispatch by only raising a slice limit. The exact revised system instruction is implemented independently as `gratitude-v2`, with `gratitude-v1` replay and compatible Rules. Monthly Gemini-curated user notes are deferred and have no implementation or background job.
+
+## Implemented four-week rainbow
+
+The prompt PR also implements the approved 28-day date-colour loop. Sunday 25 October 2026 is yellow, and the palette repeats every four weeks. A shared civil-date selector drives Today, independent editor previews, saved/detail/journal cards, photo panels, calendar circles and JSON exports. Same-day entries share a shade; imports use their historical logical dates; date edits preview the new shade and update the saved card only on save. Legacy projection creation indices are retained for checkpoint compatibility but are not used for rendering. No source event, Rules deployment or data migration is needed for colours. Scenario 023 and unit/import fixtures cover the rule, with affected walkthroughs refreshed at zero pixel tolerance.

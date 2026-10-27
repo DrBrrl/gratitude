@@ -189,10 +189,14 @@ Import ZIP validation/reselection, cached-selection reopening, photo-upload star
 
 - [022-calendar-signin](tests/e2e/022-calendar-signin/README.md): disabled empty signed-out calendar, overlay/footer sign-in links, Google authentication into Journal even for an empty account, consumed destination intent and the unchanged signed-in footer.
 
-The calendar suite runs 017–018; calendar-edit runs 019–022. Every action, including scrolling, reload and keyboard navigation, has a full-page unmasked screenshot comparison and generated checks beneath it. Browser time, timezone and raw event fixtures are deterministic. Environment changes (network faults, source events and clock rollover) use explicit checked screenshot steps. The real calendar viewport is part of the product; screenshots themselves are never cropped or masked.
+The calendar suite runs 017–018; calendar-edit runs 019–023. Every action, including scrolling, reload and keyboard navigation, has a full-page unmasked screenshot comparison and generated checks beneath it. Browser time, timezone and raw event fixtures are deterministic. Environment changes (network faults, source events and clock rollover) use explicit checked screenshot steps. The real calendar viewport is part of the product; screenshots themselves are never cropped or masked.
 
 The anonymous landing scenario fixes the browser clock before loading the page so its empty calendar month is deterministic. It checks disabled controls, zero entry rings, the visible sign-in overlay and keyboard focus moving directly between sign-in links. The grey calendar and overlay are the real signed-out product state; there are no screenshot-only masks, styles or substitutions.
 
 ### Gemini instruction version compatibility
 
 Scenario 007 asserts that the actual intercepted provider request contains the exact `SYSTEM_PROMPT`; its deterministic fictional response and screenshots remain unchanged. Unit tests independently check the user-supplied instruction text, new `gratitude-v2` requests, legacy `gratitude-v1` full/cached replay and unknown-version rejection. The Firebase suite exercises both tags and bypasses the append helper to prove Rules reject an unknown template version. This instruction update does not implement the twenty-reflection proposal in AI_CONTEXT_DESIGN.md, regenerate old AI output or change screenshot tolerance.
+
+### Four-week rainbow
+
+Scenario [023-rainbow-days](tests/e2e/023-rainbow-days/README.md) verifies same-day colours, the four-week yellow Sunday loop, date-aware draft previews, saved-versus-unsaved date edits, matching calendar circles, Today independence and full replay. Scenario 014 now expects colour to follow a saved date change. Unit fixtures cover all 28 unique shades, wraparound in both directions, civil-date/DST boundaries, timezone changes, original imported dates, cached replay and JSON export. The existing projection colour index is retained for compatibility but is no longer a palette lookup. The complete affected walkthrough baselines are regenerated and visually reviewed, retaining full-page capture, no masks and zero pixel tolerance.

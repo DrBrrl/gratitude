@@ -805,3 +805,17 @@ Great start. Let's expand on this a little, and make sure journal entries are be
 ```text
 Design plus live instruction update
 ```
+
+## 2026-10-27 — Discuss a four-week rainbow colour loop
+
+Context: the user attached an image of a spectrum slider running from red through yellow, green, blue and magenta back to red.
+
+```text
+Wonderful, while the tests are running, let's talk about the rainbow cards - i love them, i would just like more of a gradient of colours across the visible spectrum of light, circling from red all the way back around to red, with 28 total colours (27?) so that the sunday in 4 weeks time is the same colour as the present sunday [Image #1] But just for fun, let's get the yellowest colour to be centered on the sunday we will count as our "looping" sunday for colours
+```
+
+## 2026-10-27 — Implement the four-week rainbow in the prompt PR
+
+```text
+Sounds perfect, let's add that to the prompt PR (since it seems silly to open a PR just for that)
+```
