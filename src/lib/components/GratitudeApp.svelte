@@ -6,6 +6,7 @@
   import WeekBox from './WeekBox.svelte';
   import GratitudeCalendar from './GratitudeCalendar.svelte';
   import LandingCalendar from './LandingCalendar.svelte';
+  import SignedOutCalendar from './SignedOutCalendar.svelte';
   import { indexCalendarDays, summarizeStretches, validDay, dayLabel } from '$lib/calendar';
   import { readCalendarFlow, type CalendarFlow, type CalendarFrame, type CalendarAnchor } from '$lib/calendar-navigation';
   let { landing=false }: {landing?:boolean}=$props();
@@ -68,7 +69,13 @@
     // not interrupt writing or an explicitly selected tab.
     if (chooseInitialPage && value.ready && value.status === 'Synced') {
       chooseInitialPage = false;
-      tab = todayReflection(value.state.entries, today).entry ? 'journal' : 'today';
+      const requestedJournal = page.url.searchParams.get('afterSignIn') === 'journal';
+      tab = requestedJournal || todayReflection(value.state.entries, today).entry ? 'journal' : 'today';
+      if (requestedJournal) {
+        const destination = new URL(page.url);
+        destination.searchParams.delete('afterSignIn');
+        replaceState(destination, page.state);
+      }
     }
   }
   let dateFilter = $state<string|null>(null);
@@ -580,10 +587,10 @@
 
 <svelte:head><title>{landing?'Gratitude':'Your journal · Gratitude'}</title>{#if !landing}<meta name="robots" content="noindex" />{/if}</svelte:head>
 {#if landing}
-  <WelcomePage>
+  <WelcomePage signedIn={!!user}>
     {#snippet calendar()}
       {#if user && view.ready}<LandingCalendar index={dayIndex} {today} anchor={homeAnchor} onanchor={rememberAnchor} onchoose={selectDate} />{#if view.status!=='Synced'}<p class="hint">Saved on this device · waiting to sync</p>{/if}
-      {:else if !initialized || user}<p role="status">Opening your calendar…</p>{:else}<p>Sign in to see your gratitude calendar.</p>{/if}
+      {:else if !initialized || user}<p role="status">Opening your calendar…</p>{:else}<SignedOutCalendar {today} />{/if}
     {/snippet}
   </WelcomePage>
 {:else}

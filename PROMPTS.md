@@ -769,3 +769,21 @@ Let's also get the calendar highlight colours in our nice yellow - the borter of
 ```text
 Let's get the month/year chooser to fit in the space where the month and year sit - you can have a 4-character-long year box (with a bit of padding of course) and a 9-character long month box (ditto on the padding) and they will definitely fit between box-end and the < current month > buttons! (Speaking of - maybe nicer arrows on those buttons and a bit less vertical padding, but do keep the  < > buttons square - so less horizontal padding on those ones too
 ```
+
+## 2026-10-27 — Confirm imported history counts toward streaks
+
+```text
+That looks great! Can you just confirm for me that when historic entries are added via data import, the streak will be set in a way that counts them? :)
+```
+
+## 2026-10-27 — Signed-out calendar preview
+
+```text
+Perfect, thank you! :) Let's just work on the box that is visible prior to signing in, on the main page, now. Currently, we just have text that says "Sign in to see your gratitude calendar." Let's get that text in a box that shows the greyed out calendar with no data in it, that shows the month and the buttons and such, but you can't interact with the calendar - it is overlaid by a small box containing the "Sign in...etc" text. :)
+```
+
+## 2026-10-27 — Signed-out sign-in links and journal destination
+
+```text
+Let's also make the "Sign in" text a hyperlink to the app sign in, and change the "Open your journal →" to "Sign in and open your journal →" that takes you to the sign in and then re-directs you to your journal (Only on the pre-sign-in langing page)
+```
