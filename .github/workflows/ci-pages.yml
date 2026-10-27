@@ -81,7 +81,7 @@ jobs:
           - suite: photos
             scenarios: tests/e2e/01[12]-photo
           - suite: ai
-            scenarios: tests/e2e/(00[7-8]|024-|025-)
+            scenarios: tests/e2e/(00[7-8]|024-|025-|026-)
     env:
       BASE_PATH: /gratitude/pr-preview/firebase-check
     steps:

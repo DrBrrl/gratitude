@@ -6,7 +6,7 @@ import {seedSelectionHistory,selectionLog} from '../helpers/ai-selection-fixture
 import {replay,isMixedRequest} from '../../../src/lib/domain';
 import {buildContext} from '../../../src/lib/ai/context';
 const expect=baseExpect.configure({timeout:15_000});
-type Context={referenceDate:string;timeZone:string;preferences:string;reflections:Record<string,{date:string;text:string}[]>;promptFeedback:string[]};
+type Context={referenceDate:string;timeZone:string;preferences:string;reflections:Record<string,{date:string;text:string}[]>;promptFeedback:{prompt:string;feedback:string}[]};
 test('personalised generation mixes twenty logical-date reflections and replays successful usage',async({page},info)=>{
   test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(360_000);
   const steps=new TestStepHelper(page,info),contexts:Context[]=[];
@@ -41,7 +41,7 @@ test('personalised generation mixes twenty logical-date reflections and replays 
     await expect(page.locator('.daily-prompt h2')).toHaveText(SECOND_PROMPT);expect(contexts).toHaveLength(2);
     const previous=new Set(Object.values(contexts[0].reflections).flat().map(e=>e.text));
     expect(contexts[1].reflections.rediscovery.every(e=>!previous.has(e.text))).toBe(true);
-    expect(contexts[1].promptFeedback).toEqual(['More about quiet outdoor moments, please.']);
+    expect(contexts[1].promptFeedback).toEqual([{prompt:FIRST_PROMPT,feedback:'More about quiet outdoor moments, please.'}]);
   },'Successful-use history rotates rediscovery sources and only the saved freeform feedback enters the JSON');
   await openEditor(page,steps,'editor');
   await steps.action('draft','Keep unfinished writing out of Gemini context',()=>editor(page).fill('UNSAVED_PRIVATE_DRAFT'),async()=>{await expectEditor(page,'UNSAVED_PRIVATE_DRAFT');});

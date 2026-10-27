@@ -20,6 +20,7 @@
 
   import { aiAvailable as geminiAvailable, personalContextAvailable as geminiPersonal, geminiGenerator } from '$lib/ai/gemini';
   import ModelSettings from './ModelSettings.svelte';
+  import PromptFeedback from './PromptFeedback.svelte';
   import {defaultConnection,readConnection,clearConnectionToken,localGenerator,type ModelConnection} from '$lib/ai/lm-studio';
   let modelConnection=$state<ModelConnection>(defaultConnection());
   let modelConnectionError=$state('');
@@ -212,6 +213,13 @@
       aiMessage = feedbackText.trim() ? 'Prompt feedback saved.' : 'Prompt feedback cleared.'; feedbackOpen = false;
     } catch (cause) { aiMessage = cause instanceof Error ? cause.message : 'Could not save feedback.'; }
     finally { aiBusy = false; }
+  }
+  async function updateSavedFeedback(eventId:string,promptId:string,text:string) {
+    if(!repository) throw new Error('Open your journal first.');
+    if(view.state.ai.feedback.find(item=>item.payload.promptId===promptId)?.eventId!==eventId) throw new Error('This feedback changed on another device. Cancel this edit and review the latest feedback.');
+    aiBusy=true;
+    try {await repository.commitAI({eventId:crypto.randomUUID(),type:'PromptFeedbackSubmitted',schemaVersion:1,payload:{previousEventId:view.state.ai.control.lastEventId,promptId,text}});}
+    finally{aiBusy=false;}
   }
 
   let zone = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -737,10 +745,10 @@
         {#if personalContextAvailable}
           <label class="ai-label" for="ai-guidance">What should prompts focus on or avoid? <span class="hint">Optional</span></label>
           <textarea id="ai-guidance" bind:value={choices.guidance} maxlength="500" rows="3" placeholder="For example: everyday moments; fewer questions about work"></textarea>
-          <p class="hint">Your saved preferences are shared when requesting a prompt. The switches optionally include up to 20 earlier reflections (anniversaries, rediscoveries and recent writing) and 20 notes of feedback. Entry dates determine selection; imports count by their original dates. {activeConnection.provider==='lm-studio'?'Your configured LM Studio server processes this context to generate your prompt.':'Google processes this context to generate your prompt.'}</p>
+          <p class="hint">Your saved preferences are shared when requesting a prompt. The switches optionally include up to 20 earlier reflections (anniversaries, rediscoveries and recent writing) and 20 original questions with their feedback. Entry dates determine selection; imports count by their original dates. {activeConnection.provider==='lm-studio'?'Your configured LM Studio server processes this context to generate your prompt.':'Google processes this context to generate your prompt.'}</p>
         {:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
-        <section class="glass"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {providerName} processing for each photo.</p></section>
+        <section class="glass"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {providerName} processing for each photo.</p><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
       {:else if settingsPage === 'import'}
         <h1 class="page-heading">Import journal</h1>
         {#if client && repository}<ImportPanel {client} {repository} {view} uid={user.uid} email={user.email ?? 'your signed-in account'} />{:else}<p>Sign in to your synced journal to import an export.</p>{/if}
