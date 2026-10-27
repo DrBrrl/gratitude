@@ -268,9 +268,9 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Opt in to using recent saved reflections
+## Opt in to using earlier saved reflections
 
-![Opt in to using recent saved reflections](./screenshots/029-include-journal-mobile-chromium.png)
+![Opt in to using earlier saved reflections](./screenshots/029-include-journal-mobile-chromium.png)
 
 **Verifications:**
 

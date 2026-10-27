@@ -32,10 +32,10 @@ test('consent, personalized prompts, freeform feedback and immutable journal his
   await steps.action('generate', 'Request the first AI prompt', () => page.getByRole('button', { name: 'Find me a prompt', exact: true }).click(), async () => {
     await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT, { timeout: 15_000 }); expect(requests).toHaveLength(1);
     expect(JSON.parse(requests[0]).systemInstruction).toEqual({parts:[{text:SYSTEM_PROMPT}]});
-    expect(requests[0]).toContain('Everyday moments'); expect(requests[0]).toContain('recentReflections');
+    expect(requests[0]).toContain('Everyday moments'); expect(requests[0]).toContain('reflections');
   }, 'The exact provider response is displayed only after it is saved, using the approved preferences');
   await steps.action('why', 'Inspect the sources used for this prompt', () => page.getByRole('button', { name: 'Why this prompt?' }).click(), async () => {
-    await expect(page.locator('.explanation')).toContainText('0 recent reflections and 0 pieces of feedback');
+    await expect(page.locator('.explanation')).toContainText('0 saved reflections and 0 pieces of feedback');
   });
   await steps.action('feedback', 'Open short freeform feedback', () => page.getByRole('button', { name: 'Give prompt feedback' }).click(), async () => {
     await expect(page.getByLabel('What would make prompts better for you?')).toBeVisible();
@@ -65,7 +65,7 @@ test('consent, personalized prompts, freeform feedback and immutable journal his
   await page.clock.setFixedTime(new Date('2026-10-01T14:31:07.000Z'));
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await aiSettings(page, steps, 'journal-context');
-  await steps.action('include-journal', 'Opt in to using recent saved reflections', () => page.getByRole('switch', { name: 'Use journal entries' }).click(), async () => {
+  await steps.action('include-journal', 'Opt in to using earlier saved reflections', () => page.getByRole('switch', { name: 'Use journal entries' }).click(), async () => {
     await expect(page.getByRole('switch', { name: 'Use journal entries' })).toHaveAttribute('aria-checked', 'true');
   });
   await saveChoices(page, steps, 'save-journal-context');

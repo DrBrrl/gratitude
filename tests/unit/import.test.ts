@@ -74,6 +74,12 @@ test('686 records, five images, three missing prompts and one photo-only record 
   assert.equal(state.entries.length,686);assert.equal(Object.keys(state.photos).length,5);
   assert.deepEqual(replay(events.slice(700),replay(events.slice(0,700))),state);
   const counts=Object.values(state.imports).filter(r=>r.completedId).length;assert.equal(counts,686);
+  const {makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
+  const shared=applyEvent(state,{eventId:'scale-choices',type:'AIChoicesConfirmed',schemaVersion:1,payload:{previousEventId:null,enabled:true,useJournal:true,useFeedback:false,guidance:''},sequence:state.cursor+1,recordedAt:time});
+  const request=makeRequest(shared,'2026-10-01','personal','scale-selection',undefined,{timeZone:'Australia/Hobart',selectionSeed:'0123456789abcdef0123456789abcdef'});
+  assert.equal(Object.keys(request.payload.entryRefs).length,20);
+  assert.equal(Object.values(JSON.parse(buildContext(shared,request)).reflections).flat().length,20);
+
 });
 
 test('imported rainbow colour follows the original logical date rather than import receipt time',async()=>{
@@ -84,4 +90,19 @@ test('imported rainbow colour follows the original logical date rather than impo
  const imported=full.entries.find(entry=>entry.origin?.source.createdOn===Date.parse(createdOnStr))!;
  assert.equal(imported.recordedAt,time);assert.equal(entryColour(imported,'Australia/Hobart'),'#c9e561');
  assert.deepEqual(full.entries.map(entry=>entryColour(entry,'Australia/Hobart')),cached.entries.map(entry=>entryColour(entry,'Australia/Hobart')));
+});
+
+
+test('imported reflections inform Gemini by original entry date and photo-only imports stay out',async()=>{
+ const {makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
+ const archive=await plans({count:3,photos:[0],missing:[]});
+ const actions:SourceAction[]=[...archive.records.flatMap(actionsFor),{eventId:'choices',type:'AIChoicesConfirmed',schemaVersion:1,payload:{previousEventId:null,enabled:true,useJournal:true,useFeedback:false,guidance:''}}];
+ const state=replay(log(actions));
+ const request=makeRequest(state,'2024-01-04','personal','request',undefined,{timeZone:'Australia/Hobart',selectionSeed:'0123456789abcdef0123456789abcdef'});
+ const context=JSON.parse(buildContext(state,request));
+ assert.equal(Object.keys(request.payload.entryRefs).length,2);
+ const selected=Object.values(context.reflections).flat() as {date:string;text:string}[];
+ assert.deepEqual(selected.map(entry=>entry.date).sort(),['2024-01-02','2024-01-03']);
+ assert.ok(selected.every(entry=>entry.text.trim()));
+ assert.ok(!JSON.stringify(context).includes('origin'));
 });

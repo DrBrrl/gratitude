@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { emptyProjection, replay, parseAction, STARTER_ID, type SourceAction, type JournalEvent } from '../../src/lib/domain.ts';
+import { emptyProjection, replay, parseAction, STARTER_ID, requestEntryRefs, type SourceAction, type JournalEvent } from '../../src/lib/domain.ts';
 import { makeRequest, buildContext, SYSTEM_PROMPT } from '../../src/lib/ai/context.ts';
 const time = '2026-10-01T04:31:07.000Z';
 const choices: SourceAction = { eventId: 'choices', type: 'AIChoicesConfirmed', schemaVersion: 1, payload: { previousEventId: null, enabled: true, useJournal: true, useFeedback: true, guidance: 'Everyday kindness' } };
@@ -24,15 +24,15 @@ test('context is opt-in, bounded, referenced and never includes drafts or unappr
   const actions: SourceAction[] = [choices];
   for (let i = 0; i < 8; i++) actions.push({ eventId: `save${i}`, type: 'ReflectionWritten', schemaVersion: 1, payload: { entryId: `entry${i}`, text: 'x'.repeat(10000), expectedRevision: 0, starterId: STARTER_ID } });
   let state = replay(events(actions));
-  const request = makeRequest(state, '2026-10-01', 'personal', 'request');
-  assert.equal(request.payload.entryRefs.length, 5);
+  const request = makeRequest(state, '2026-10-02', 'personal', 'request');
+  assert.equal(requestEntryRefs(request).length, 8);
   const context = JSON.parse(buildContext(state, request));
-  assert.equal(context.recentReflections.length, 5); assert.ok(context.recentReflections.every((text: string) => text.length === 1000));
+  assert.equal(Object.values(context.reflections).flat().length, 8); assert.ok(Object.values(context.reflections).flat().every((item: any) => item.text.length === 1000));
   const generic = makeRequest(state, '2026-10-01', 'generic', 'generic');
-  assert.deepEqual(generic.payload.entryRefs, []); assert.deepEqual(generic.payload.feedbackIds, []);
+  assert.deepEqual(generic.payload.entryRefs, {}); assert.deepEqual(generic.payload.feedbackIds, []);
   assert.ok(!buildContext(state, generic).includes('Everyday kindness'));
   state = { ...state, ai: { ...state.ai, choices: { ...state.ai.choices, useJournal: false, useFeedback: false } } };
-  assert.deepEqual(makeRequest(state, '2026-10-01', 'personal', 'off').payload.entryRefs, []);
+  assert.deepEqual(makeRequest(state, '2026-10-01', 'personal', 'off').payload.entryRefs, {});
 });
 
 test('revoking consent invalidates a late response; unexpected fields and versions fail closed', () => {
@@ -51,13 +51,18 @@ test('the revised instruction is exact and old template requests remain replayab
   const state = replay(events([choices]));
   const current = makeRequest(state, '2026-10-01', 'personal', 'new-template');
   assert.equal(current.payload.templateVersion, 'gratitude-v2');
-  if (current.schemaVersion !== 1) throw new Error('Expected a daily prompt request');
-  const legacy = {...current,eventId:'legacy-template',payload:{...current.payload,templateVersion:'gratitude-v1' as const}};
+  const {selectorVersion,timeZone,selectionSeed,...payload}=current.payload as Extract<typeof current,{schemaVersion:3}>['payload'];
+  const legacy: SourceAction = {...current,schemaVersion:1,eventId:'legacy-template',payload:{...payload,entryRefs:[],templateVersion:'gratitude-v1' as const}};
   const response: SourceAction = {eventId:'legacy-template_response',type:'PromptResponseReceived',schemaVersion:1,payload:{requestId:'legacy-template',text:'The previously saved question.',model:'recorded-model',finishReason:'STOP'}};
   const log = events([choices, legacy, response]);
   const full = replay(log);
   assert.equal(full.ai.responses[response.eventId].payload.text, 'The previously saved question.');
   assert.deepEqual(replay(log.slice(2),replay(log.slice(0,2))),full);
+  const editorLegacy: SourceAction={...legacy,eventId:'legacy-editor',schemaVersion:2,payload:{...legacy.payload,entryId:'draft',entryRevision:0}};
+  const editorResponse: SourceAction={...response,eventId:'legacy-editor_response',payload:{...response.payload,requestId:'legacy-editor'}};
+  const editorLog=events([choices,editorLegacy,editorResponse]);
+  assert.deepEqual(replay(editorLog).ai.days,{});
+  assert.deepEqual(replay(editorLog.slice(2),replay(editorLog.slice(0,2))),replay(editorLog));
   assert.equal(parseAction(current).type, 'PromptRequested');
   assert.throws(()=>parseAction({...current,payload:{...current.payload,templateVersion:'gratitude-v99'}}));
 });
