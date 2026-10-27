@@ -505,6 +505,7 @@ test('twenty-source requests fit Rules budgets with full feedback, reject malfor
   assert.equal(Object.keys(request.payload.entryRefs).length,20);assert.equal(request.payload.feedbackIds.length,20);
   const context=JSON.parse(buildContext(snapshot,request));
   assert.equal(Object.values(context.reflections).flat().length,20);assert.equal(context.promptFeedback.length,20);
+  assert.deepEqual(context.promptFeedback[0],{prompt:'Question 0?',feedback:'y'.repeat(500)});
   async function forge(change) {
     const bad={...request,eventId:'bad',...change};
     const batch=writeBatch(a.db);const root=`users/${a.uid}/streams/v1`;

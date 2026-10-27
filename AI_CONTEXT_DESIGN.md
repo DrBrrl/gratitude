@@ -76,15 +76,15 @@ This is an illustrative shape, not a complete twenty-entry payload. Dates are lo
     "fallback": [],
     "recent": [{"date": "2026-10-23", "text": "A fictional quiet morning."}]
   },
-  "promptFeedback": ["More questions about sounds, please."]
+  "promptFeedback": [{"prompt": "What small kindness made your day feel a little lighter?", "feedback": "More questions about sounds, please."}]
 }
 ```
 
-Journal sharing controls all reflection groups and their dates. Preferences remain optional, capped at 500 characters. Prompt feedback is **only the user's explicit in-app feedback**: up to twenty current nonblank notes, first 250 characters each, under its existing sharing switch. Replacing/clearing a note changes future context. No sentiment inferred from reflections is turned into feedback.
+Journal sharing controls all reflection groups and their dates. Preferences remain optional, capped at 500 characters. Prompt feedback is **only the user's explicit in-app feedback**: up to twenty current nonblank `{prompt, feedback}` pairs under its existing sharing switch. Each pair includes the exact original question (up to 600 characters) and the complete saved feedback (up to 500 characters). The most recently saved pairs are selected; blank/deleted notes are excluded. Replacing/clearing a note changes future context. No sentiment inferred from reflections is turned into feedback.
 
 Exclude account names/email, internal IDs, import provenance, photos, image summaries, drafts and unfinished entries. There is no `userNotes` field in the twenty-entry payload. With journal sharing off, supply no reflection text/dates; with feedback off, supply no feedback. Generic mode retains no personal inputs. Update AI settings and “Why this prompt?” to state the twenty-entry bounds and actual source counts; keep every sharing switch off by default and preserve existing explicit user choices.
 
-Maximum reflection text grows from 5,000 to 20,000 characters; preferences/feedback add at most 5,500 characters, plus JSON and dates. These are character bounds, not a token estimate. Budget tests must cover escaping, Unicode and long histories; do not silently truncate the entire serialized JSON into invalid data or claim the whole journal was shared.
+Maximum reflection text grows from 5,000 to 20,000 characters; preferences plus paired questions/feedback add at most 22,500 characters, plus JSON and dates. These are character bounds, not a token estimate. Budget tests must cover escaping, Unicode and long histories; do not silently truncate the entire serialized JSON into invalid data or claim the whole journal was shared.
 
 ## Event sourcing and Firebase implementation
 
@@ -129,3 +129,9 @@ Validate both viewports with fictional raw events and intercepted Gemini respons
 ## LM Studio compatibility (2026-10-27)
 
 The implemented optional local provider reuses this selector and instruction unchanged. Local daily/editor request schemas 5/6 add the literal selected provider, model identifier and thinking-off preference. Projection version 8 supersedes version 7 for the account provider choice; successful source usage and replay semantics are unchanged. Provider choice syncs through events, while server addresses and credentials remain device-local. See [LM Studio setup](LM_STUDIO_SETUP.md).
+
+## Inspect and manage prompt feedback (2026-10-28)
+
+AI settings → What informs your prompts lists every current nonblank prompt/feedback pair, newest first, including when sharing is disabled. The saved sharing choices determine the displayed on/off status; only the latest twenty pairs are sent when feedback sharing and AI prompts are enabled in personal mode. Edit feedback opens a 500-character field with Save feedback and Cancel. Saving appends an existing `PromptFeedbackSubmitted` action for that original prompt ID; it does not rewrite the question or alter AI sharing preferences. Delete feedback appends the same action with empty text and removes the pair from the current list and later contexts. Earlier source events and previously saved AI outputs remain unchanged. A changed source event during editing causes a visible conflict rather than overwriting newer feedback.
+
+The same paired JSON is used by Gemini and LM Studio, including compatible legacy context builders; replay never constructs a new request. This changes no source schema, projection version or backend Rule. Generic mode and sharing off exclude both halves of the pair, and internal IDs are not included in the model JSON.

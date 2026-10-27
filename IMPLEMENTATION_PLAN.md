@@ -170,3 +170,9 @@ The prompt PR also implements the approved 28-day date-colour loop. Sunday 25 Oc
 [LM_STUDIO_SETUP.md](LM_STUDIO_SETUP.md) describes the additional authenticated local provider for gratitude prompts and vision-capable photo summaries, defaulting to `google/gemma-4-31b` with thinking off. Account provider choice is a schema-2 user action; addresses/model connections are device-local and tokens remain in the tab session. Prompt schemas 5/6 and photo-summary request schema 2 record the literal selected target without credentials. Projection version 8 derives provider state; old checkpoints rebuild without inference. Transactions/Rules reject mismatched-provider claims, including a stale Gemini device after local selection. Responses, usage, consent, drafts and outboxes retain their existing replay semantics.
 
 Scenario 025 covers both viewports, actual local HTTP wire payloads, device isolation, prompts/photos, provider failures and replay with a screenshot after every action. Local model metadata/inference is mocked in automation; runtime connection details are configured in the app. Firefox phone access uses a private HTTPS origin, with Tailscale Serve documented. No monthly user-notes processing is added.
+
+## Prompt feedback pairs — implemented 2026-10-28
+
+- Send the exact original question with its complete saved feedback as `{prompt, feedback}`, retaining latest-twenty bounds, sharing controls and generic-mode exclusions across both providers.
+- Display all current pairs in AI settings → What informs your prompts; allow editing, cancelling and deleting individual feedback without changing saved questions or sharing preferences. Use existing replacement/empty-note source actions and reject stale edits.
+- Verify exact outbound JSON, full-length text, cap/escaping, consent, history and cached/full replay with unit/Firebase checks and the mobile/desktop 026 walkthrough, preserving unmasked zero-pixel screenshots after every action.

@@ -216,3 +216,7 @@ Unit tests cover URL/token validation, session/persistent storage separation, ca
 For concurrent interactive review and production test builds, use `GRATITUDE_KIT_OUT_DIR=.svelte-kit-live nix develop -c npm run dev -- --host 127.0.0.1 --port 5175`. The alternate generated output is ignored; the review watcher excludes ordinary test build output. Standard type checking and CI use `.svelte-kit`. Public Firebase configuration is required for live sign-in; API tokens are entered only in the model form.
 
 The screenshot helper waits for two animation frames after moving to and restoring the capture origin, allowing real glass/backdrop layers to repaint before a full-page comparison. This does not modify rendered content or relax the zero-pixel contract.
+
+### Prompt feedback pairs
+
+[026-prompt-feedback](tests/e2e/026-prompt-feedback/README.md) checks starter/generated question pairing at the actual Gemini HTTP boundary, the complete feedback beyond 250 characters, the Settings list, edit/cancel/save, individual deletion, reload, full/cached replay and both halves excluded when sharing is off. All actions have full-page unmasked comparisons at zero pixel tolerance and generated checks below each image. Unit tests also cover twenty-pair limits, 600/500-character escaped inputs, original manual/AI/starter questions, replacement/blank notes and malformed context. The existing full-capacity Firebase integration case asserts paired original questions and full feedback. CI includes 026 in both AI viewport jobs.

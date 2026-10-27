@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { replay, requestEntryRefs, emptyProjection, parseAction, STARTER_ID, type SourceAction, type JournalEvent, type Projection, type RequestAction } from '../../src/lib/domain.ts';
+import { replay, requestEntryRefs, emptyProjection, parseAction, STARTER_ID,STARTER_PROMPT, type SourceAction, type JournalEvent, type Projection, type RequestAction } from '../../src/lib/domain.ts';
 import { selectReflections, selectedEntries, type SelectionInput } from '../../src/lib/ai/selection.ts';
 import { makeRequest, buildContext } from '../../src/lib/ai/context.ts';
 
@@ -119,7 +119,7 @@ test('versioned requests pin raw selection inputs, bound JSON, exclude identifie
     assert.equal(requestEntryRefs(r).length,useJournal?20:0);
     const supplied=JSON.parse(buildContext(consent,r));
     assert.equal(Object.values(supplied.reflections).flat().length,useJournal?20:0);
-    assert.deepEqual(supplied.promptFeedback,useFeedback?['Explicit feedback '.repeat(25).slice(0,250)]:[]);
+    assert.deepEqual(supplied.promptFeedback,useFeedback?[{prompt:STARTER_PROMPT,feedback:'Explicit feedback '.repeat(25)}]:[]);
   }
   const generic=makeRequest(state,input.day,'generic','generic',undefined,input);
   assert.deepEqual(generic.payload.entryRefs,{});assert.ok(!buildContext(state,generic).includes('Small everyday'));

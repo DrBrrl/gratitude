@@ -58,7 +58,7 @@ When discovery advertises an `off` reasoning option, the request also includes `
 
 The exact final assistant content and reported model identifier become response events. Existing bounds remain 600 characters for a prompt and 1,000 for a photo summary. A server-reported model identifier is not an immutable model-weight digest. Replay, synchronization and recovery never call either model provider.
 
-Local inference has a 120-second timeout; discovery has a ten-second timeout. Neither is automatically retried. A full twenty-reflection context may need a larger loaded context window: inspect the reported length and adjust the model’s load settings if needed. Gratitude does not silently truncate the assembled JSON or reduce the chosen sources to make a server accept it.
+Local inference has a 120-second timeout; discovery has a ten-second timeout. Neither is automatically retried. A full twenty-reflection context with paired prompt feedback may need a larger loaded context window: inspect the reported length and adjust the model’s load settings if needed. Gratitude does not silently truncate the assembled JSON or reduce the chosen sources to make a server accept it.
 
 ## Troubleshooting
 
