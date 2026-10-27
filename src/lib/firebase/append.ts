@@ -1,6 +1,6 @@
 import { stableJSON } from '../import-source.ts';
 import { doc, getDocFromServer, runTransaction, serverTimestamp, Timestamp, type Firestore, type DocumentData } from 'firebase/firestore';
-import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey } from '../domain.ts';
+import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, isLocalRequest, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey } from '../domain.ts';
 
 export function decodeEvent(data: DocumentData): JournalEvent {
   const payload = data.type === 'ReflectionWritten' && (data.schemaVersion === 3 || data.schemaVersion === 4 || data.schemaVersion === 5 || data.schemaVersion === 6) && data.payload.entryAt
@@ -50,6 +50,12 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
         if (revision !== action.payload.expectedRevision) throw new Error('This reflection changed on another device. Your text has been kept; reload the reflection before editing again.');
         metadata = { lastEventId: action.eventId, ...(latest.get('importId') ? { importId: latest.get('importId') } : {}) };
       } else if (isPhotoAction(action)) {
+        if(action.type==='PhotoSummaryRequested') {
+          const control=await tx.get(doc(db,`${stream.path}/ai/control`));
+          const choicesId=control.get('choicesId');
+          const choices=choicesId?await tx.get(doc(db,`${stream.path}/events/${choicesId}`)):null;
+          if((choices?.get('payload.provider')??'gemini')!==(action.schemaVersion===2?'lm-studio':'gemini')) throw new Error('AI provider changed. Review your model settings.');
+        }
         if ((latest.get('lastEventId') ?? null) !== action.payload.previousEventId) throw new Error('This photo changed on another device. Reload before trying again.');
         metadata = { lastEventId: action.eventId };
       } else {
@@ -58,6 +64,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
         if (action.type === 'PromptRequested') {
           if (action.payload.choicesId !== control.choicesId) throw new Error('AI consent changed. Please try again.');
           const choices = await tx.get(doc(db, `${stream.path}/events/${action.payload.choicesId}`));
+          if ((choices.get('payload.provider')??'gemini')!==(isLocalRequest(action)?'lm-studio':'gemini')) throw new Error('AI provider changed. Review your model settings.');
           if (!choices.get('payload.enabled')) throw new Error('Enable AI prompts in Settings first.');
           if (requestEntryRefs(action).length && !choices.get('payload.useJournal') || action.payload.feedbackIds.length && !choices.get('payload.useFeedback')) throw new Error('AI consent changed. Please try again.');
           if (isEditorRequest(action)) {

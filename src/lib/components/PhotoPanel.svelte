@@ -1,16 +1,20 @@
 <script lang="ts">
+  import {defaultConnection,localPhotoGenerator,type ModelConnection} from '$lib/ai/lm-studio';
   import { onMount, onDestroy } from 'svelte';
   import type { FirebaseClient } from '$lib/firebase/client';
   import type { JournalStore, JournalView } from '$lib/firebase/repository';
   import { entryPhotos, photoKey, type Photo } from '$lib/domain';
   import { preparePhoto, uploadPhoto, readPhoto, type StagedPhoto } from '$lib/photos';
-  import { aiAvailable, summarizePhoto, personalContextAvailable } from '$lib/ai/gemini';
+  import { aiAvailable as geminiAvailable, summarizePhoto, personalContextAvailable as geminiPersonal } from '$lib/ai/gemini';
   import PhotoImage from './PhotoImage.svelte';
   import HighlightedText from './HighlightedText.svelte';
-  let { client, repository, view, uid, entryId, ensureEntry, query = '', disabled = false, draft = false, onbusy = () => {}, colour }: {
-    client: FirebaseClient; repository: JournalStore; view: JournalView; uid: string; entryId: string | null;
+  let { client, repository, view, uid, entryId, ensureEntry, query = '', disabled = false, draft = false, onbusy = () => {}, colour, connection=defaultConnection() }: {
+    connection?:ModelConnection; client: FirebaseClient; repository: JournalStore; view: JournalView; uid: string; entryId: string | null;
     ensureEntry?: () => Promise<string>; query?: string; disabled?: boolean; draft?: boolean; onbusy?: (busy: boolean) => void; colour?: string;
   } = $props();
+  const local=$derived(connection.provider==='lm-studio');
+  const aiAvailable=$derived(local||geminiAvailable);
+  const personalContextAvailable=$derived(local||geminiPersonal);
   let active = true;
   onDestroy(() => { active = false; });
   let staged = $state<StagedPhoto | null>(null);
@@ -82,7 +86,9 @@
     message = '';
     try {
       const photo = view.state.photos[photoKey(id, slot)];
-      await repository.requestPhotoSummary(id, slot, async () => summarizePhoto(client, await readPhoto(client, uid, photo.photoId)));
+      const read=()=>readPhoto(client,uid,photo.photoId);
+      const generate=local?localPhotoGenerator($state.snapshot(connection),read):async()=>summarizePhoto(client,await read());
+      await repository.requestPhotoSummary(id, slot, generate);
     } catch (cause) { message = failure(cause, 'Could not summarize the photo. Reconnect and try again.'); }
   }
   async function saveSummary(photo: Photo) {
@@ -119,7 +125,7 @@
           <button onclick={() => removing = photo.photoId} disabled={busy || disabled}>Remove photo</button>
           {#if !photo.summary || photo.status !== 'idle'}<button onclick={() => request(photo.entryId, photo.slot)} disabled={busy || !aiAvailable || !personalContextAvailable || view.photoResultsPending?.includes(photo.lastEventId) || view.photoGenerating?.includes(photoKey(photo.entryId, photo.slot))}>{photo.status === 'idle' ? 'Summarize photo' : 'Retry summary'}</button>{/if}
         </div>
-        {#if !photo.summary && photo.status === 'idle'}<p class="hint">Summarize photo sends only this photo to Gemini.</p>{/if}
+        {#if !photo.summary && photo.status === 'idle'}<p class="hint">Summarize photo sends only this photo to {local?'your LM Studio server':'Gemini'}.</p>{/if}
       {/if}
       {#if removing === photo.photoId}<div class="remove-confirm"><p>Remove this photo and its summary?</p>{#if lastRequiredPhoto}<p class="hint">Add reflection text before removing its last photo.</p>{/if}<div class="actions"><button onclick={() => remove(photo)} disabled={busy || lastRequiredPhoto}>Confirm removal</button><button onclick={() => removing = null} disabled={busy}>Keep photo</button></div></div>{/if}
     </article>
@@ -127,10 +133,10 @@
   {#if staged}
     <div class="photo-card selection">
       {#if preview}<img class="selected-photo" src={preview} alt="Attachment preview" />{/if}
-      <p>This photo will be sent to Gemini to create a text summary if you choose to summarize it. Only this photo is sent, without location metadata or journal text. Google processes it using this site’s paid service.</p>
+      {#if local}<p>If you choose to summarize this photo, it goes directly to your LM Studio server at {connection.baseUrl}. Only this photo is sent, without location metadata or journal text. Your saved photo still syncs through Firebase.</p>{:else}<p>This photo will be sent to Gemini to create a text summary if you choose to summarize it. Only this photo is sent, without location metadata or journal text. Google processes it using this site’s paid service.</p>{/if}
       <p class="hint">Photos sync to your account when attached. Reflection text stays on this device until saved.</p>
       {#if !online}<p class="hint" role="status">Connect to attach this photo. Your selection is saved on this device.</p>{/if}
-      <a href="https://ai.google.dev/gemini-api/terms#paid-services" target="_blank" rel="noreferrer">AI service & data use</a>
+      {#if !local}<a href="https://ai.google.dev/gemini-api/terms#paid-services" target="_blank" rel="noreferrer">AI service & data use</a>{/if}
       <button class="attach" onclick={() => attach(true)} disabled={busy || disabled || !online || !aiAvailable || !personalContextAvailable}>{busy ? 'Attaching…' : 'Attach & summarize'}</button>
       <div class="actions"><button onclick={() => attach(false)} disabled={busy || disabled || !online}>Attach without AI</button><button onclick={cancel} disabled={busy}>Cancel photo</button></div>
     </div>

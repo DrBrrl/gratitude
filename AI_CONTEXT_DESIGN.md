@@ -125,3 +125,7 @@ The user has requested logical-date selection, roughly twenty mixed reflections,
 Acceptance fixtures must cover: fewer/exactly/more than twenty eligible entries; imported old dates received today; entry-date edits; same-day separate entries; empty/photo-only text; anniversary offsets ±3 versus ±4; multi-year fairness; January/year boundaries; leap days; 23/25-hour DST dates and timezone changes; fourteen-day bounds; target-entry exclusion; pool overlap; never-used/least-recently-used ties; repeat/outbox/failed requests; legacy successful usage; fixed/new seeds; all sharing combinations; exact current revisions; fabricated or duplicate references; cross-user writes and full twenty-reference transaction/Rules budgets.
 
 Validate both viewports with fictional raw events and intercepted Gemini responses. No live inference or private imported journal is needed. Keep full-page, unmasked screenshot comparisons at `maxDiffPixels: 0`, `threshold: 0`, with checks below images.
+
+## LM Studio compatibility (2026-10-27)
+
+The implemented optional local provider reuses this selector and instruction unchanged. Local daily/editor request schemas 5/6 add the literal selected provider, model identifier and thinking-off preference. Projection version 8 supersedes version 7 for the account provider choice; successful source usage and replay semantics are unchanged. Provider choice syncs through events, while server addresses and credentials remain device-local. See [LM Studio setup](LM_STUDIO_SETUP.md).

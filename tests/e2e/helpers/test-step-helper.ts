@@ -26,6 +26,9 @@ export class TestStepHelper {
       // Capture all content, then restore the action's actual scroll position.
       const scroll = await capturePage.evaluate(() => ({ x: scrollX, y: scrollY }));
       await capturePage.evaluate(() => window.scrollTo({ left: 0, top: 0, behavior: 'instant' }));
+      // Let the browser composite glass/backdrop layers at the capture origin.
+      // The scroll position can update before those layers finish repainting.
+      await capturePage.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
       try {
         await expect(capturePage).toHaveScreenshot(filename, {
           timeout: 10_000, // Slow CI needs time for two stable full-page renders; pixel tolerance stays zero.
@@ -34,6 +37,7 @@ export class TestStepHelper {
         });
       } finally {
         await capturePage.evaluate(({ x, y }) => window.scrollTo({ left: x, top: y, behavior: 'instant' }), scroll);
+        await capturePage.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
       }
       this.steps.push({
         description,
