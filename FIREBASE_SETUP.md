@@ -108,8 +108,14 @@ Deploy both rule sets before publishing this client: `nix develop -c npx firebas
 
 ## Gemini instruction template compatibility — 2026-10-27
 
-The revised instruction uses request tag `gratitude-v2`; replay and Rules continue to accept `gratitude-v1`. The five-entry limit, ownership, consent checks and immutable stream/control contract are unchanged. This is instruction compatibility, not deployment of the proposed twenty-reflection selector in AI_CONTEXT_DESIGN.md.
+The instruction-only deployment introduced request tag `gratitude-v2` while retaining `gratitude-v1`, the five-entry limit, ownership, consent checks and the immutable stream/control contract. The subsequent twenty-reflection request deployment is recorded below; the legacy five-entry schemas remain supported.
 
 After twenty emulator integration cases passed, `firestore:rules` was deployed to `gratitude-drbrrl-dev` and `gratitude-drbrrl` with the authenticated CLI. Both active Firestore rulesets were read back through the Rules API and exactly matched local `firestore.rules`, SHA-256 `8022f938bf71a6c11a8f646c74dec6a9f5314be37503726899620d22e8a378d8`. Compilation succeeded with an existing ternary-type warning on the unchanged photo/import rule at line 180. No index, Storage rule, account, journal data, model configuration or resource was changed.
 
 The new instruction reaches the PR preview through its Pages build, and production frontend after merge. New clients read both template tags; clients that only understand `gratitude-v1` must refresh when they encounter a `gratitude-v2` request in their stream. Previously saved responses are never regenerated. Verification used fictional emulator data and intercepted provider responses, with no live Gemini inference or private journal access.
+
+## Twenty-reflection requests (2026-10-27)
+
+Firestore Rules supporting daily/editor `PromptRequested` schemas 3/4 were deployed to **both** `gratitude-drbrrl-dev` and `gratitude-drbrrl` after authenticated emulator tests, including twenty sources plus twenty feedback IDs. Both deployed sources were read back and matched the repository (SHA-256 `e71b1258d98dfc637cd38f8adaee91be93cc72fb92d6f4a9da99a89e072912e3`). Legacy schemas 1/2 retain their original five-source array bounds; new schemas use unique-ID maps of decimal revision strings and capture `mixed-v1`, reference day, timezone and a literal selection seed. Rules enforce shape/consent; client transactions also verify source revisions.
+
+No new Firebase service, index, model configuration, secret, data migration or background job is needed. Projection version 7 rebuilds older disposable checkpoints from recorded events without inference. The frontend follows the ordinary PR preview/main deployment pipeline. Tabs that cannot read the new request versions must refresh after the updated frontend is published. Gemini-curated monthly notes remain deferred.

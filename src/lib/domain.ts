@@ -1,7 +1,9 @@
+import { dayInZone } from './civil-date.ts';
+import { SELECTOR_VERSION, validSelection } from './ai/selection.ts';
 import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 6;
+export const PROJECTION_VERSION = 7;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
@@ -18,8 +20,17 @@ export type AIChoices = { enabled: boolean; useJournal: boolean; useFeedback: bo
 type Previous = { previousEventId: string | null };
 export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & AIChoices>;
 type RequestPayload = Previous & { choicesId: string; day: string; templateVersion: PromptTemplateVersion;
-  contextMode: 'generic' | 'personal'; entryRefs: { entryId: string; revision: number }[]; feedbackIds: string[] };
-export type RequestAction = Envelope<'PromptRequested', RequestPayload> | Envelope<'PromptRequested', RequestPayload & { entryId: string; entryRevision: number }, 2>;
+  contextMode: 'generic' | 'personal'; feedbackIds: string[] };
+type LegacyRequestPayload = RequestPayload & { entryRefs: { entryId: string; revision: number }[] };
+type SelectorPayload = RequestPayload & { entryRefs: Record<string, string>; selectorVersion: typeof SELECTOR_VERSION; timeZone: string; selectionSeed: string };
+export type RequestAction = Envelope<'PromptRequested', LegacyRequestPayload> | Envelope<'PromptRequested', LegacyRequestPayload & { entryId: string; entryRevision: number }, 2>
+  | Envelope<'PromptRequested', SelectorPayload, 3> | Envelope<'PromptRequested', SelectorPayload & { entryId: string; entryRevision: number }, 4>;
+export function isEditorRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 2 | 4}> { return request.schemaVersion === 2 || request.schemaVersion === 4; }
+export function isMixedRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 3 | 4}> { return request.schemaVersion === 3 || request.schemaVersion === 4; }
+/** New wire maps enforce unique IDs and use canonical positive-decimal revision strings. */
+export function requestEntryRefs(request: RequestAction): {entryId:string;revision:number}[] {
+  return isMixedRequest(request) ? Object.entries(request.payload.entryRefs).map(([entryId,revision])=>({entryId,revision:Number(revision)})) : request.payload.entryRefs;
+}
 export type ResponseAction = Envelope<'PromptResponseReceived', { requestId: string; text: string; model: string; finishReason: 'STOP' }>;
 export type FailureAction = Envelope<'AIRequestFailed', { requestId: string; reason: 'unavailable' | 'blocked' | 'invalid-response' }>;
 export type FeedbackAction = Envelope<'PromptFeedbackSubmitted', Previous & { promptId: string; text: string }>;
@@ -43,13 +54,13 @@ export type JournalEvent = SourceAction & { sequence: number; recordedAt: string
 /** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 6; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 7; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
-    days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
+    usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
 export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
   control: emptyControl(), choices: { enabled: false, useJournal: false, useFeedback: false, guidance: '' },
-  requests: {}, responses: {}, days: {}, feedback: [], failure: null
+  requests: {}, responses: {}, usage: {}, days: {}, feedback: [], failure: null
 } }; }
 const idPattern = /^[a-zA-Z0-9_-]{1,80}$/;
 function id(value: unknown): value is string { return typeof value === 'string' && idPattern.test(value); }
@@ -81,7 +92,7 @@ export function parseAction(input: unknown): SourceAction {
       || (v.schemaVersion === 5 || v.schemaVersion === 6) && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.promptText === null || p.promptId === v.eventId && string(p.promptText, 600)) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4)
       || v.schemaVersion === 4 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4))
       && id(p.entryId) && string(p.text, 10_000, (v.schemaVersion === 4 || v.schemaVersion === 5 || v.schemaVersion === 6)) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
-  } else if (v.schemaVersion === 1 || v.schemaVersion === 2 && v.type === 'PromptRequested') {
+  } else if (v.schemaVersion === 1 || [2,3,4].includes(v.schemaVersion as number) && v.type === 'PromptRequested') {
     const previous = p.previousEventId === null || id(p.previousEventId);
     const day = typeof p.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.day) && !isNaN(Date.parse(p.day));
     switch (v.type) {
@@ -95,11 +106,19 @@ export function parseAction(input: unknown): SourceAction {
       }
       case 'AIChoicesConfirmed': valid = keys(p, ['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance']) && previous
         && typeof p.enabled === 'boolean' && typeof p.useJournal === 'boolean' && typeof p.useFeedback === 'boolean' && string(p.guidance, 500, true); break;
-      case 'PromptRequested': valid = keys(p, ['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(v.schemaVersion === 2 ? ['entryId', 'entryRevision'] : [])]) && (v.schemaVersion !== 2 || id(p.entryId) && Number.isSafeInteger(p.entryRevision) && Number(p.entryRevision) >= 0) && previous
-        && id(p.choicesId) && day && ['gratitude-v1', TEMPLATE_VERSION].includes(String(p.templateVersion)) && ['generic', 'personal'].includes(String(p.contextMode))
-        && Array.isArray(p.entryRefs) && p.entryRefs.length <= 5 && p.entryRefs.every(ref => ref && keys(ref, ['entryId', 'revision']) && id(ref.entryId) && Number.isSafeInteger(ref.revision) && ref.revision > 0)
-        && Array.isArray(p.feedbackIds) && p.feedbackIds.length <= 20 && p.feedbackIds.every(id) && new Set(p.feedbackIds).size === p.feedbackIds.length
-        && (p.contextMode !== 'generic' || p.entryRefs.length === 0 && p.feedbackIds.length === 0); break;
+      case 'PromptRequested': {
+        const mixed = v.schemaVersion === 3 || v.schemaVersion === 4;
+        const editor = v.schemaVersion === 2 || v.schemaVersion === 4;
+        valid = keys(p, ['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(editor ? ['entryId', 'entryRevision'] : []), ...(mixed ? ['selectorVersion','timeZone','selectionSeed'] : [])])
+          && (!editor || id(p.entryId) && Number.isSafeInteger(p.entryRevision) && Number(p.entryRevision) >= 0) && previous
+          && (!mixed || p.selectorVersion === SELECTOR_VERSION && validSelection(p as unknown as Parameters<typeof validSelection>[0]))
+          && id(p.choicesId) && day && ['gratitude-v1', TEMPLATE_VERSION].includes(String(p.templateVersion)) && ['generic', 'personal'].includes(String(p.contextMode))
+          && (mixed ? !!p.entryRefs && typeof p.entryRefs === 'object' && !Array.isArray(p.entryRefs) && Object.keys(p.entryRefs).length <= 20
+            && Object.entries(p.entryRefs).every(([key,value])=>id(key) && typeof value === 'string' && /^[1-9][0-9]{0,14}$/.test(value) && Number.isSafeInteger(Number(value)))
+            : Array.isArray(p.entryRefs) && p.entryRefs.length <= 5 && p.entryRefs.every(ref => ref && keys(ref, ['entryId', 'revision']) && id(ref.entryId) && Number.isSafeInteger(ref.revision) && ref.revision > 0))
+          && Array.isArray(p.feedbackIds) && p.feedbackIds.length <= 20 && p.feedbackIds.every(id) && new Set(p.feedbackIds).size === p.feedbackIds.length
+          && (p.contextMode !== 'generic' || Object.keys(p.entryRefs as object).length === 0 && p.feedbackIds.length === 0); break;
+      }
       case 'PromptResponseReceived': valid = keys(p, ['requestId', 'text', 'model', 'finishReason']) && id(p.requestId)
         && string(p.text, 600) && string(p.model, 100) && p.finishReason === 'STOP' && v.eventId === `${p.requestId}_response`; break;
       case 'AIRequestFailed': valid = keys(p, ['requestId', 'reason']) && id(p.requestId)
@@ -168,12 +187,16 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
       ai.choices = { enabled, useJournal, useFeedback, guidance }; ai.failure = null; break;
     }
     case 'PromptRequested': {
-      const p = action.payload;
-      if (action.schemaVersion === 2 && (state.entries.find(entry => entry.id === action.payload.entryId)?.revision ?? 0) !== action.payload.entryRevision) throw new Error('This reflection changed before the prompt request.');
+      const p = action.payload, refs = requestEntryRefs(action);
+      if (isEditorRequest(action) && (state.entries.find(entry => entry.id === action.payload.entryId)?.revision ?? 0) !== action.payload.entryRevision) throw new Error('This reflection changed before the prompt request.');
       if (!ai.choices.enabled || p.choicesId !== ai.control.choicesId) throw new Error('AI consent is no longer current.');
-      if (p.contextMode === 'generic' && (p.entryRefs.length || p.feedbackIds.length)
-        || p.entryRefs.length && !ai.choices.useJournal || p.feedbackIds.length && !ai.choices.useFeedback) throw new Error('Unapproved AI context');
-      for (const ref of p.entryRefs) if (!state.entries.some(e => e.id === ref.entryId && e.revision === ref.revision)) throw new Error('Stale AI context');
+      if (p.contextMode === 'generic' && (refs.length || p.feedbackIds.length)
+        || refs.length && !ai.choices.useJournal || p.feedbackIds.length && !ai.choices.useFeedback) throw new Error('Unapproved AI context');
+      for (const ref of refs) {
+        const entry = state.entries.find(e => e.id === ref.entryId && e.revision === ref.revision);
+        if (!entry) throw new Error('Stale AI context');
+        if (isMixedRequest(action) && (!entry.text.trim() || dayInZone(entry.entryAt ?? entry.recordedAt,action.payload.timeZone) >= p.day || isEditorRequest(action) && ref.entryId === action.payload.entryId)) throw new Error('Ineligible AI context');
+      }
       for (const ref of p.feedbackIds) if (!state.ai.feedback.some(f => f.eventId === ref && !!f.payload.text)) throw new Error('Missing feedback context');
       ai.requests = { ...ai.requests, [action.eventId]: action }; ai.failure = null; break;
     }
@@ -181,7 +204,9 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
       const request = ai.requests[action.payload.requestId];
       if (!request || request.payload.choicesId !== ai.control.choicesId || !ai.choices.enabled) throw new Error('AI consent is no longer current.');
       ai.responses = { ...ai.responses, [action.eventId]: action };
-      if (request.schemaVersion === 1) ai.days = { ...ai.days, [request.payload.day]: action.eventId }; ai.failure = null; break;
+      const usage = Object.fromEntries([...new Set(requestEntryRefs(request).map(ref=>ref.entryId))].map(entryId=>[entryId, {count:(ai.usage[entryId]?.count??0)+1,lastSequence:event.sequence}]));
+      ai.usage = { ...ai.usage, ...usage };
+      if (!isEditorRequest(request)) ai.days = { ...ai.days, [request.payload.day]: action.eventId }; ai.failure = null; break;
     }
     case 'AIRequestFailed': ai.failure = action; break;
     case 'StarterPromptChosen': ai.days = { ...ai.days, [action.payload.day]: STARTER_ID }; ai.failure = null; break;

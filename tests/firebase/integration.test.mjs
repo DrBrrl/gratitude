@@ -457,7 +457,7 @@ test('import Rules reject forged phases, detached receipts, computed state and p
   const state=replay(await events(client));
   const request=makeRequest(state,'2026-10-01','personal','import-ai-request',plan.input.entryId);
   await client.append(request);
-  assert.equal(request.payload.entryRevision,1);assert.equal(request.payload.entryRefs[0].revision,1);
+  assert.equal(request.payload.entryRevision,1);assert.deepEqual(request.payload.entryRefs,{}); // The target reflection cannot be its own context.
 });
 
 test('AI Rules accept both instruction versions and reject an unknown version', async () => {
@@ -465,20 +465,93 @@ test('AI Rules accept both instruction versions and reject an unknown version', 
   const { makeRequest } = await import('../../src/lib/ai/context.ts');
   const { writeBatch, serverTimestamp } = await import('firebase/firestore');
   await client.append({eventId:'choices',type:'AIChoicesConfirmed',schemaVersion:1,payload:{previousEventId:null,enabled:true,useJournal:false,useFeedback:false,guidance:''}});
-  const initial = makeRequest(replay(await events(client)), '2026-10-01', 'generic', 'legacy-template');
+  const mixed = makeRequest(replay(await events(client)), '2026-10-01', 'generic', 'legacy-template');
+  const {selectorVersion,timeZone,selectionSeed,...payload}=mixed.payload;
+  const initial={...mixed,schemaVersion:1,payload:{...payload,entryRefs:[]}};
   await client.append({...initial,payload:{...initial.payload,templateVersion:'gratitude-v1'}});
   await client.append({eventId:'legacy-template_response',type:'PromptResponseReceived',schemaVersion:1,payload:{requestId:'legacy-template',text:'The old saved question.',model:'fixture',finishReason:'STOP'}});
+  const editorLegacy={...initial,eventId:'legacy-editor',schemaVersion:2,payload:{...initial.payload,previousEventId:'legacy-template_response',day:'2026-09-30',entryId:'draft',entryRevision:0}};
+  await client.append(editorLegacy);
+  await client.append({eventId:'legacy-editor_response',type:'PromptResponseReceived',schemaVersion:1,payload:{requestId:'legacy-editor',text:'An old editor option.',model:'fixture',finishReason:'STOP'}});
   const current = makeRequest(replay(await events(client)), '2026-10-01', 'generic', 'new-template');
   assert.equal(current.payload.templateVersion,'gratitude-v2');
   await client.append(current);
   const state = replay(await events(client));
   assert.equal(state.ai.requests['legacy-template'].payload.templateVersion,'gratitude-v1');
+  assert.equal(state.ai.days['2026-09-30'],undefined);
   assert.equal(state.ai.responses['legacy-template_response'].payload.text,'The old saved question.');
   const unknown = {...current,eventId:'unknown-template',payload:{...current.payload,previousEventId:'new-template',templateVersion:'gratitude-v99'}};
   const root = `users/${client.uid}/streams/v1`;
   const batch = writeBatch(client.db);
-  batch.set(doc(client.db,`${root}/events/${unknown.eventId}`),{...unknown,sequence:5,recordedAt:serverTimestamp()});
-  batch.set(doc(client.db,root),{sequence:5,lastEventId:unknown.eventId});
+  batch.set(doc(client.db,`${root}/events/${unknown.eventId}`),{...unknown,sequence:state.cursor+1,recordedAt:serverTimestamp()});
+  batch.set(doc(client.db,root),{sequence:state.cursor+1,lastEventId:unknown.eventId});
   batch.set(doc(client.db,`${root}/ai/control`),{lastEventId:unknown.eventId,choicesId:'choices',requestId:unknown.eventId});
   await assertFails(batch.commit());
+});
+
+test('twenty-source requests fit Rules budgets with full feedback, reject malformed writes and pin revisions', async () => {
+  const a=await device('ai-twenty@example.test','ai-twenty-a');
+  const b=await device('ai-twenty@example.test','ai-twenty-b');
+  const {makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
+  const {writeBatch,serverTimestamp}=await import('firebase/firestore');
+  await a.append({eventId:'choices',type:'AIChoicesConfirmed',schemaVersion:1,payload:{previousEventId:null,enabled:true,useJournal:true,useFeedback:true,guidance:'x'.repeat(500)}});
+  let previous='choices';
+  for(let i=0;i<21;i++) {
+    await a.append({eventId:`w${i}`,type:'ReflectionWritten',schemaVersion:6,payload:{entryId:`e${i}`,expectedRevision:0,text:'x'.repeat(10000),promptId:`w${i}`,promptText:`Question ${i}?`,entryAt:'2025-04-01T00:00:00.000Z',photoSlot:null}});
+    if(i<20) {await a.append({eventId:`f${i}`,type:'PromptFeedbackSubmitted',schemaVersion:1,payload:{previousEventId:previous,promptId:`w${i}`,text:'y'.repeat(500)}});previous=`f${i}`;}
+  }
+  const snapshot=replay(await events(a));
+  const request=makeRequest(snapshot,'2026-10-01','personal','twenty',undefined,{timeZone:'Australia/Hobart',selectionSeed:'0123456789abcdef0123456789abcdef'});
+  assert.equal(Object.keys(request.payload.entryRefs).length,20);assert.equal(request.payload.feedbackIds.length,20);
+  const context=JSON.parse(buildContext(snapshot,request));
+  assert.equal(Object.values(context.reflections).flat().length,20);assert.equal(context.promptFeedback.length,20);
+  async function forge(change) {
+    const bad={...request,eventId:'bad',...change};
+    const batch=writeBatch(a.db);const root=`users/${a.uid}/streams/v1`;
+    batch.set(doc(a.db,`${root}/events/bad`),{...bad,sequence:snapshot.cursor+1,recordedAt:serverTimestamp()});
+    batch.set(doc(a.db,root),{sequence:snapshot.cursor+1,lastEventId:'bad'});
+    batch.set(doc(a.db,`${root}/ai/control`),{lastEventId:'bad',choicesId:'choices',requestId:'bad'});
+    await assertFails(batch.commit());
+  }
+  await forge({payload:{...request.payload,entryRefs:{...request.payload.entryRefs,extra:'1'}}});
+  await forge({schemaVersion:1}); // Legacy schemas reject the new keys.
+  const {selectorVersion,timeZone,selectionSeed,...legacyPayload}=request.payload;
+  await forge({schemaVersion:1,payload:{...legacyPayload,entryRefs:Object.entries(request.payload.entryRefs).map(([entryId,revision])=>({entryId,revision:Number(revision)}))}}); // Legacy bounds stay at five.
+  await forge({payload:{...request.payload,selectionSeed:'bad'}});
+  await forge({payload:{...request.payload,selectorVersion:'mixed-v99'}});
+  await forge({payload:{...request.payload,feedbackIds:[1]}});
+  await forge({payload:{...request.payload,feedbackIds:['one two']}});
+  await forge({payload:{...request.payload,feedbackIds:['f0','f0']}});
+  await forge({payload:{...request.payload,feedbackIds:Array.from({length:21},(_,i)=>`f${i}`)}});
+  await forge({payload:{...request.payload,entryRefs:{bad:1}}});
+  await forge({payload:{...request.payload,entryRefs:{bad:'1 2'}}});
+  await forge({payload:{...request.payload,entryRefs:{'bad id':'1'}}});
+  await forge({payload:{...request.payload,entryRefs:{bad:'1',extraComputed:'2\n3'}}});
+  await forge({payload:{...request.payload,entryRefs:{...request.payload.entryRefs,[Object.keys(request.payload.entryRefs)[19]]:'0'}}});
+  await forge({payload:{...request.payload,entryRefs:[{entryId:'e0',revision:1},{entryId:'e0',revision:2}]}});
+  await forge({payload:{...request.payload,groups:{computed:'anniversary'}}});
+  const duplicate=await Promise.all([a.append(request),b.append(request)]);
+  assert.equal(duplicate.filter(r=>r.data.created).length,1);
+  const response={eventId:'twenty_response',type:'PromptResponseReceived',schemaVersion:1,payload:{requestId:'twenty',text:'A saved question?',model:'fixture',finishReason:'STOP'}};
+  await Promise.all([a.append(response),b.append(response)]);
+  let state=replay(await events(b));assert.equal(Object.keys(state.ai.usage).length,20);
+  assert.ok(Object.values(state.ai.usage).every(usage=>usage.count===1));
+  const stale=makeRequest(state,'2026-10-01','personal','stale',undefined,{timeZone:'Australia/Hobart',selectionSeed:'0123456789abcdef0123456789abcdef'});
+  const [entryId]=Object.keys(stale.payload.entryRefs);const selected={entryId};
+  await b.append({eventId:'source-edit',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:selected.entryId,expectedRevision:1,text:'Changed after preparation',promptId:state.entries.find(e=>e.id===selected.entryId).promptId,promptText:null,entryAt:'2025-04-01T00:00:00.000Z',photoSlot:null}});
+  await assert.rejects(a.append(stale),/AI context changed/);
+  const missing={...stale,eventId:'missing',payload:{...stale.payload,entryRefs:{'not-real':'1'}}};
+  await assert.rejects(a.append(missing),/AI context changed/);
+  state=replay(await events(a));
+  const editor=makeRequest(state,'2026-10-01','personal','editor-twenty','e0',{timeZone:'Australia/Hobart',selectionSeed:'0123456789abcdef0123456789abcdef'});
+  assert.equal(editor.schemaVersion,4);assert.equal(Object.keys(editor.payload.entryRefs).length,20);
+  assert.equal(editor.payload.entryRefs.e0,undefined);await a.append(editor);
+  await b.append({...response,eventId:'editor-twenty_response',payload:{...response.payload,requestId:'editor-twenty'}});
+  state=replay(await events(a));assert.equal(state.ai.days['2026-10-01'],'twenty_response');
+  const staleEditor=makeRequest(state,'2026-10-01','personal','stale-editor','e0');
+  const target=state.entries.find(entry=>entry.id==='e0');
+  await b.append({eventId:'target-edit',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:'e0',expectedRevision:target.revision,text:'A target edited on another device.',promptId:target.promptId,promptText:null,entryAt:target.entryAt,photoSlot:null}});
+  await assert.rejects(a.append(staleEditor),/reflection changed before/);
+  const log=await events(a);state=replay(log);
+  assert.deepEqual(replay(log.slice(20),replay(log.slice(0,20))),state);
 });

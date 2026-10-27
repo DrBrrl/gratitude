@@ -78,7 +78,7 @@ Open **Settings → AI settings**, enable AI prompts and save your choices. On T
 
 Gemini results are immutable events: their exact visible text, reported model version and completion reason are stored against the initiating request. Reopening, syncing and rebuilding never call Gemini. An interrupted request needs an explicit retry; a received response waiting to sync is stored on this device and can be retried without inference. Changing sharing choices cancels pending requests across tabs/devices. Calls have a 30-second timeout and no automatic inference retries.
 
-Both deployment configurations select `aiDataMode: "paid"`, and billing was verified enabled for both Firebase projects on 2026-10-15. App Check, Google sign-in and a 5-request/minute/user gateway quota protect requests. AI prompts and sharing remain opt-in. Personalization uses only approved sources: optional preferences (500 characters), up to 5 saved reflections (1,000 characters each) and 20 current feedback notes (250 characters each). Draft text, account identity, photos and photo summaries are never included in daily-prompt context. Authentication still identifies the account to the Firebase gateway.
+Both deployment configurations select `aiDataMode: "paid"`, and billing was verified enabled for both Firebase projects on 2026-10-15. App Check, Google sign-in and a 5-request/minute/user gateway quota protect requests. AI prompts and sharing remain opt-in. Personalization uses only approved sources: optional preferences (500 characters), up to 20 saved reflections (1,000 characters each) and 20 current feedback notes (250 characters each). Draft text, account identity, photos and photo summaries are never included in daily-prompt context. Authentication still identifies the account to the Firebase gateway.
 
 [Firebase setup](FIREBASE_SETUP.md) records deployment and live verification. The private repository Gemini key is unused and never enters the frontend. This integration needs no Cloud Functions.
 
@@ -88,9 +88,9 @@ Cards, editor previews, Today and saved-date circles use 28 distinct shades sele
 
 The rule uses civil dates in the viewer’s timezone, so travel/timezone changes can change boundary-hour entries’ displayed dates and colours. JSON export includes the displayed date colour; Markdown stays unchanged. Colours are computed presentation values, with no colour events or backend reservation. Legacy creation indices remain in disposable projections for compatibility and are not used to render the palette.
 
-## Proposed broader AI context
+## Personalised reflection context
 
-[AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md) proposes up to twenty reflections selected by logical entry date: eight around anniversaries, seven least recently used in successful AI prompts and five sampled from the preceding fortnight, with deduplication and sparse-history fallback. That selection is for review and is not implemented; the live five-entry selection above remains. Gemini-curated monthly user notes are recorded there as a deferred idea and are neither generated nor sent.
+[AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md) describes up to twenty reflections selected by logical entry date: eight around anniversaries, seven least recently used in successful AI prompts and five sampled from the preceding fortnight, with deduplication and sparse-history fallback. The reference day is Today or the editor’s chosen date; same-day/future entries, the edited target, unfinished writing and photo-only entries are excluded. Imported entries use their original dates. Sources are captured once per explicit request; successful responses update replayable usage, while failures do not. Old five-entry requests remain replayable. Gemini-curated monthly user notes are recorded there as a deferred idea and are neither generated nor sent.
 
 ## Calendar and gentle streaks
 
@@ -102,7 +102,7 @@ Streaks count saved logical entry dates in the viewing device's timezone. An unf
 
 ## Project records
 
-- [AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md): implemented instruction update, proposed twenty-reflection selection and deferred curated-notes idea.
+- [AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md): implemented instruction and twenty-reflection selection, with a deferred curated-notes idea.
 - [IMPORT_PLAN.md](IMPORT_PLAN.md): implemented alternate ZIP import, provenance, limits and recovery contract.
 - [STREAKS_DESIGN.md](STREAKS_DESIGN.md): implemented gentle streak rules, calendar interactions, return navigation and verification.
 - [VISION.md](VISION.md): the project’s intended end state.

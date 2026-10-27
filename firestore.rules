@@ -67,33 +67,29 @@ service cloud.firestore {
         return (refs.size() < 1 || validRef(refs[0])) && (refs.size() < 2 || validRef(refs[1]))
           && (refs.size() < 3 || validRef(refs[2])) && (refs.size() < 4 || validRef(refs[3])) && (refs.size() < 5 || validRef(refs[4]));
       }
-      function validFeedbackIds(ids) { return (ids.size() < 1 || validId(ids[0]))
-          && (ids.size() < 2 || validId(ids[1]))
-          && (ids.size() < 3 || validId(ids[2]))
-          && (ids.size() < 4 || validId(ids[3]))
-          && (ids.size() < 5 || validId(ids[4]))
-          && (ids.size() < 6 || validId(ids[5]))
-          && (ids.size() < 7 || validId(ids[6]))
-          && (ids.size() < 8 || validId(ids[7]))
-          && (ids.size() < 9 || validId(ids[8]))
-          && (ids.size() < 10 || validId(ids[9]))
-          && (ids.size() < 11 || validId(ids[10]))
-          && (ids.size() < 12 || validId(ids[11]))
-          && (ids.size() < 13 || validId(ids[12]))
-          && (ids.size() < 14 || validId(ids[13]))
-          && (ids.size() < 15 || validId(ids[14]))
-          && (ids.size() < 16 || validId(ids[15]))
-          && (ids.size() < 17 || validId(ids[16]))
-          && (ids.size() < 18 || validId(ids[17]))
-          && (ids.size() < 19 || validId(ids[18]))
-          && (ids.size() < 20 || validId(ids[19])); }
+      function validRefMap(refs) {
+        // Map keys enforce uniqueness. Typed round-trip equality rejects join coercion
+        // and embedded separators without unrolling twenty checks in the Rules budget.
+        let tail = '{' + string(refs.size() - 1) + '}';
+        let values = refs.values();
+        let joined = values.join(' ');
+        return refs.size() == 0 || joined.split(' ') == values
+          && refs.keys().join(' ').matches('^[a-zA-Z0-9_-]{1,80}( [a-zA-Z0-9_-]{1,80})' + tail + '$')
+          && joined.matches('^[1-9][0-9]{0,14}( [1-9][0-9]{0,14})' + tail + '$');
+      }
+      function validFeedbackIds(ids) {
+        let joined = ids.join(' ');
+        return ids.size() == 0 || joined.split(' ') == ids
+          && joined.matches('^[a-zA-Z0-9_-]{1,80}( [a-zA-Z0-9_-]{1,80}){' + string(ids.size()-1) + '}$');
+      }
       function validRequest(p, before, schema) {
         let choices = get(eventPath(before.choicesId)).data.payload;
-        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'].concat(schema == 2 ? ['entryId', 'entryRevision'] : [])) && (schema != 2 || validId(p.entryId) && p.entryRevision is int && p.entryRevision == nextRevision(p.entryId))
+        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'].concat(schema in [2,4] ? ['entryId', 'entryRevision'] : []).concat(schema in [3,4] ? ['selectorVersion','timeZone','selectionSeed'] : [])) && (!(schema in [2,4]) || validId(p.entryId) && p.entryRevision is int && p.entryRevision == nextRevision(p.entryId))
           && p.choicesId == before.choicesId && choices.enabled == true && validDay(p.day)
           && p.templateVersion in ['gratitude-v1', 'gratitude-v2'] && p.contextMode in ['generic', 'personal']
-          && p.entryRefs is list && p.entryRefs.size() <= 5 && validRefs(p.entryRefs) && p.feedbackIds is list && p.feedbackIds.size() <= 20
-          && p.feedbackIds.toSet().size() == p.feedbackIds.size() && validFeedbackIds(p.feedbackIds)
+          && (!(schema in [3,4]) || p.selectorVersion == 'mixed-v1' && p.timeZone is string && p.timeZone.size() <= 100 && p.timeZone.matches('^[A-Za-z_+-]+(/[A-Za-z0-9_+-]+)*$') && p.selectionSeed is string && p.selectionSeed.matches('^[a-f0-9]{32}$'))
+          && (schema in [3,4] ? p.entryRefs is map && p.entryRefs.size() <= 20 && validRefMap(p.entryRefs) : p.entryRefs is list && p.entryRefs.size() <= 5 && validRefs(p.entryRefs)) && p.feedbackIds is list && p.feedbackIds.size() <= 20
+          && (p.feedbackIds.size() == 0 || p.feedbackIds.toSet().size() == p.feedbackIds.size() && validFeedbackIds(p.feedbackIds))
           && (p.contextMode != 'generic' || (p.entryRefs.size() == 0 && p.feedbackIds.size() == 0))
           && (choices.useJournal || p.entryRefs.size() == 0) && (choices.useFeedback || p.feedbackIds.size() == 0);
       }
@@ -102,7 +98,7 @@ service cloud.firestore {
         let before = aiBefore();
         let after = getAfter(aiPath()).data;
         let result = e.type in ['PromptResponseReceived', 'AIRequestFailed'];
-        return (e.schemaVersion == 1 || e.type == 'PromptRequested' && e.schemaVersion == 2) && after.lastEventId == e.eventId
+        return (e.schemaVersion == 1 || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4]) && after.lastEventId == e.eventId
           && after.choicesId == (e.type == 'AIChoicesConfirmed' ? e.eventId : before.choicesId)
           && after.requestId == (e.type == 'PromptRequested' ? e.eventId : e.type == 'PromptFeedbackSubmitted' ? before.requestId : null)
           && (result ? validId(p.requestId) && p.requestId == before.requestId : p.previousEventId == before.lastEventId)

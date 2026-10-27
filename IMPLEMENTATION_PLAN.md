@@ -157,9 +157,9 @@ Streaks derive from confirmed saved logical dates, including imports/backfills a
 
 Scenarios 017–022 add mobile/desktop action-by-action walkthroughs for calendar repair, landing ownership/history, draft/date-edit recovery, 320px keyboard access, a backend outage, the disabled signed-out preview and both sign-in links' Journal destination. Existing affected screenshots show the new week boxes. CI isolates journal, drafts, AI, photos, editor, import, calendar and calendar-edit viewport suites, plus import-scale; all gate publication.
 
-## Proposed personalised reflection selection
+## Implemented personalised reflection selection
 
-[AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md) sketches a logical-date 8/7/5 anniversary/rediscovery/recent selector, twenty distinct saved text inputs, usage projected from successful request/response events, seeded sampling, sparse-history fallback, versioned payloads, consent/revision checks and targeted acceptance fixtures. Implement those as separate working slices after review; do not enable twenty-entry dispatch by only raising a slice limit. The exact revised system instruction is implemented independently as `gratitude-v2`, with `gratitude-v1` replay and compatible Rules. Monthly Gemini-curated user notes are deferred and have no implementation or background job.
+[AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md) implements a logical-date 8/7/5 anniversary/rediscovery/recent selector with twenty distinct saved text inputs, projected successful usage, seeded sampling, sparse-history fallback and consent/revision checks. Daily/editor schemas 3/4 capture the reference day, timezone, literal seed and a bounded map of entry IDs to revision strings. Legacy schemas 1/2 retain five-source bounds. Projection version 7 rebuilds old caches and derives usage from legacy and new responses. Scenario 024 covers consent, imported dates, all pools, rediscovery, explicit feedback, backfill editor context, private draft exclusion and cached/full replay with a screenshot after each action. The exact revised system instruction is implemented independently as `gratitude-v2`, with `gratitude-v1` replay and compatible Rules. Monthly Gemini-curated user notes are deferred and have no implementation or background job.
 
 ## Implemented four-week rainbow
 

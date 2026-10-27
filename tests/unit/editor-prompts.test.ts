@@ -26,7 +26,7 @@ test('editor AI requests keep Today selection separate and exact responses can r
   const choices: SourceAction = { eventId: 'choices', type: 'AIChoicesConfirmed', schemaVersion: 1, payload: { previousEventId: null, enabled: true, useJournal: false, useFeedback: false, guidance: '' } };
   const base = replay(log([choices, reflection('original', STARTER_ID, null)]));
   const request = makeRequest(base, '2026-10-01', 'generic', 'editor-request', 'entry');
-  assert.equal(request.schemaVersion, 2);
+  assert.equal(request.schemaVersion, 4);
   const response: SourceAction = { eventId: 'editor-request_response', type: 'PromptResponseReceived', schemaVersion: 1, payload: { requestId: request.eventId, text: 'What sound brought you comfort?', model: 'fictional-model', finishReason: 'STOP' } };
   const events = log([choices, reflection('original', STARTER_ID, null), request, response, reflection('edited', response.eventId, null, 1)]);
   const state = replay(events);

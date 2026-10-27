@@ -1,6 +1,6 @@
 import { stableJSON } from '../import-source.ts';
 import { doc, getDocFromServer, runTransaction, serverTimestamp, Timestamp, type Firestore, type DocumentData } from 'firebase/firestore';
-import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, type SourceAction, type JournalEvent, isPhotoAction, photoKey } from '../domain.ts';
+import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey } from '../domain.ts';
 
 export function decodeEvent(data: DocumentData): JournalEvent {
   const payload = data.type === 'ReflectionWritten' && (data.schemaVersion === 3 || data.schemaVersion === 4 || data.schemaVersion === 5 || data.schemaVersion === 6) && data.payload.entryAt
@@ -59,7 +59,13 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
           if (action.payload.choicesId !== control.choicesId) throw new Error('AI consent changed. Please try again.');
           const choices = await tx.get(doc(db, `${stream.path}/events/${action.payload.choicesId}`));
           if (!choices.get('payload.enabled')) throw new Error('Enable AI prompts in Settings first.');
-          for (const ref of action.payload.entryRefs) {
+          if (requestEntryRefs(action).length && !choices.get('payload.useJournal') || action.payload.feedbackIds.length && !choices.get('payload.useFeedback')) throw new Error('AI consent changed. Please try again.');
+          if (isEditorRequest(action)) {
+            const target = await tx.get(doc(db, `${stream.path}/entries/${action.payload.entryId}`));
+            const source = target.exists() ? await tx.get(doc(db, `${stream.path}/events/${target.get('lastEventId')}`)) : null;
+            if ((source ? source.get('payload.expectedRevision') + 1 : 0) !== action.payload.entryRevision) throw new Error('This reflection changed before the prompt request.');
+          }
+          for (const ref of requestEntryRefs(action)) {
             const entry = await tx.get(doc(db, `${stream.path}/entries/${ref.entryId}`));
             if (!entry.exists()) throw new Error('AI context changed. Please try again.');
             const source = await tx.get(doc(db, `${stream.path}/events/${entry.get('lastEventId')}`));
