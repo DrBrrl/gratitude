@@ -459,3 +459,26 @@ test('import Rules reject forged phases, detached receipts, computed state and p
   await client.append(request);
   assert.equal(request.payload.entryRevision,1);assert.equal(request.payload.entryRefs[0].revision,1);
 });
+
+test('AI Rules accept both instruction versions and reject an unknown version', async () => {
+  const client = await device('ai-template-versions@example.test', 'ai-template-versions');
+  const { makeRequest } = await import('../../src/lib/ai/context.ts');
+  const { writeBatch, serverTimestamp } = await import('firebase/firestore');
+  await client.append({eventId:'choices',type:'AIChoicesConfirmed',schemaVersion:1,payload:{previousEventId:null,enabled:true,useJournal:false,useFeedback:false,guidance:''}});
+  const initial = makeRequest(replay(await events(client)), '2026-10-01', 'generic', 'legacy-template');
+  await client.append({...initial,payload:{...initial.payload,templateVersion:'gratitude-v1'}});
+  await client.append({eventId:'legacy-template_response',type:'PromptResponseReceived',schemaVersion:1,payload:{requestId:'legacy-template',text:'The old saved question.',model:'fixture',finishReason:'STOP'}});
+  const current = makeRequest(replay(await events(client)), '2026-10-01', 'generic', 'new-template');
+  assert.equal(current.payload.templateVersion,'gratitude-v2');
+  await client.append(current);
+  const state = replay(await events(client));
+  assert.equal(state.ai.requests['legacy-template'].payload.templateVersion,'gratitude-v1');
+  assert.equal(state.ai.responses['legacy-template_response'].payload.text,'The old saved question.');
+  const unknown = {...current,eventId:'unknown-template',payload:{...current.payload,previousEventId:'new-template',templateVersion:'gratitude-v99'}};
+  const root = `users/${client.uid}/streams/v1`;
+  const batch = writeBatch(client.db);
+  batch.set(doc(client.db,`${root}/events/${unknown.eventId}`),{...unknown,sequence:5,recordedAt:serverTimestamp()});
+  batch.set(doc(client.db,root),{sequence:5,lastEventId:unknown.eventId});
+  batch.set(doc(client.db,`${root}/ai/control`),{lastEventId:unknown.eventId,choicesId:'choices',requestId:unknown.eventId});
+  await assertFails(batch.commit());
+});
