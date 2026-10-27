@@ -107,8 +107,8 @@
   const daily = $derived(todayReflection(view.state.entries, today));
   const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft && (!!todayDraft.payload.text.trim() || entryPhotos(view.state, todayDraft.payload.entryId).length > 0 || todayDraft.schemaVersion === 6 && todayDraft.payload.entryAt !== null || (todayDraft.schemaVersion === 5 || todayDraft.schemaVersion === 6) && (todayDraft.payload.promptText !== null || todayDraft.payload.promptId !== (daily.entry?.promptId ?? view.state.ai.days[today] ?? STARTER_ID))));
   const todayDraftEntry = $derived(hasTodayDraft ? view.state.entries.find(entry => entry.id === todayDraft?.payload.entryId) : undefined);
-  const todayColour = $derived(colours[hasTodayDraft ? todayDraftEntry?.colour ?? view.state.entries.length % colours.length : daily.colour]);
-  let editorColour = $state(colours[0]);
+  const todayColour = $derived(colourForDay(today));
+  const editorColour = $derived(colourForDay(validDay(editorDateTime.slice(0,10)) ? editorDateTime.slice(0,10) : editorEntryAt ? localDay(editorEntryAt) : today));
   let editorPromptId = $state(STARTER_ID);
   const currentPromptId = $derived((hasTodayDraft && todayDraft ? promptId(todayDraft) : daily.entry?.promptId ?? view.state.ai.days[today]) ?? STARTER_ID);
   const currentPrompt = $derived(hasTodayDraft && todayDraft ? ((todayDraft.schemaVersion === 5 || todayDraft.schemaVersion === 6) ? todayDraft.payload.promptText : null) ?? resolvePrompt(view.state, promptId(todayDraft)) ?? todayDraftEntry?.prompt ?? STARTER_PROMPT : daily.entry?.prompt ?? resolvePrompt(view.state, currentPromptId) ?? STARTER_PROMPT);
@@ -346,7 +346,7 @@
   let exportStatus = $state('');
   let exporting = $state(false);
   let preparedFile = $state<Awaited<ReturnType<typeof exportArchive>> | null>(null);
-  import { colours, searchEntries, localDay, localDateTime, entryTimestamp, todayReflection } from '$lib/journal';
+  import { entryColour, colourForDay, searchEntries, localDay, localDateTime, entryTimestamp, todayReflection } from '$lib/journal';
   import HighlightedText from '$lib/components/HighlightedText.svelte';
   import ReflectionText from '$lib/components/ReflectionText.svelte';
   import ReflectionEditor from '$lib/components/ReflectionEditor.svelte';
@@ -392,7 +392,6 @@
       editorPromptId = stored ? promptId(stored) : original?.promptId ?? (resolvePrompt(view.state, currentPromptId) ? currentPromptId : STARTER_ID);
       editorManualPrompt = (stored?.schemaVersion === 5 || stored?.schemaVersion === 6) ? stored.payload.promptText : null;
       editingPrompt = false; dismissedPrompt = '';
-      editorColour = original ? colours[original.colour] : key === newEntryKey ? colours[view.state.entries.length % colours.length] : todayColour;
       currentInstant = new Date();
       editorDateTime = localDateTime((stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || stored?.schemaVersion === 6) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
       editorDateChanged = !!stored && 'entryAt' in stored.payload && stored.payload.entryAt !== null;
@@ -575,7 +574,6 @@
       editing = view.state.entries.find((entry) => entry.id === pending.payload.entryId) ?? null;
       editorPromptId = promptId(pending);
       editorManualPrompt = (pending.schemaVersion === 5 || pending.schemaVersion === 6) ? pending.payload.promptText : null; editingPrompt = false;
-      editorColour = editing ? colours[editing.colour] : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? colours[view.state.entries.length % colours.length] : todayColour;
       editorDraftKey = editing ? keyForEntry(editing) : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? newEntryKey : todayKey;
       editorDateTime = localDateTime((pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? pending.payload.entryAt : currentInstant);
       editorEntryAt = (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? pending.payload.entryAt : chosenEntryAt(editorDateTime)!;
@@ -638,11 +636,11 @@
         {#if text || draft}<button class="text-button muted" disabled={photoBusy} onclick={() => discardOpen = true}>Discard draft</button>{/if}
       {:else if savedEntry}
         <div class="saved-heading"><h1 class="page-heading">Reflection saved</h1><time datetime={entryTimestamp(savedEntry)}>{shortDate(entryTimestamp(savedEntry))}</time></div>
-        <article class="tinted card saved-card" style:--entry-colour={colours[savedEntry.colour]}>
+        <article class="tinted card saved-card" style:--entry-colour={entryColour(savedEntry, zone)}>
           <h2>Prompt</h2><p class="entry-prompt">{savedEntry.prompt}</p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={savedEntry.text} /></p>
         </article>
-        {#if client && repository}<PhotoPanel {client} {repository} {view} uid={user.uid} entryId={savedEntry.id} colour={colours[savedEntry.colour]} />{/if}
+        {#if client && repository}<PhotoPanel {client} {repository} {view} uid={user.uid} entryId={savedEntry.id} colour={entryColour(savedEntry, zone)} />{/if}
         <div class="saved-actions"><button class="primary" onclick={done}>Done</button><button class="outline" onclick={() => edit(savedEntry)}>Edit reflection</button></div>
       {:else}
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
@@ -669,7 +667,7 @@
       {:else if selected}
         <button class="back" onclick={closeEntry}><Icon name="back" />{flow ? flow.trail.at(-2)?.kind==='day'?'Journal':flow.trail.at(-2)?.kind==='calendar'?'Calendar':flow.root.tab==='home'?'Home':flow.root.tab==='today'?'Today':'Journal' : 'Journal'}</button>
         <h1 class="sr-only" id="entry-heading" tabindex="-1">Your reflection</h1>
-        <article class="tinted detail" style:--entry-colour={colours[selected.colour]}>
+        <article class="tinted detail" style:--entry-colour={entryColour(selected, zone)}>
           <time datetime={entryTimestamp(selected)}>{entryDateTime(entryTimestamp(selected))}</time>
           <h2>Prompt</h2><p class="entry-prompt"><HighlightedText text={selected.prompt} {query} /></p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={selected.text} {query} /></p>
@@ -688,7 +686,7 @@
         {:else if results.length === 0}<section class="glass empty"><Icon name="search" size={40} /><h2>No matching reflections</h2><p>Try another word or return to your full journal.</p><button class="outline" onclick={() => query = ''}>Clear search</button></section>{/if}
         <div class="entries">
           {#each results as entry (entry.id)}
-            <article class="tinted card" class:expanded={expandedEntries.has(entry.id)} style:--entry-colour={colours[entry.colour]}>
+            <article class="tinted card" class:expanded={expandedEntries.has(entry.id)} style:--entry-colour={entryColour(entry, zone)}>
               <h2>Prompt</h2><p class="entry-prompt prompt-preview"><HighlightedText text={entry.prompt} {query} /></p>
               {#if client && entryPhotos(view.state, entry.id).length}
                 <div class="card-photos">{#each entryPhotos(view.state, entry.id) as photo (photo.photoId)}<div class="card-thumbnail"><PhotoImage {client} uid={user.uid} photoId={photo.photoId} summary={photo.summary} /></div>{/each}</div>

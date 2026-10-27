@@ -40,6 +40,7 @@ export type ImportReceipt = { confirmationId: string; input: ImportInput; comple
 export type SourceAction = Action | AIAction | PhotoAction | ImportAction;
 export function isPhotoAction(action: SourceAction): action is PhotoAction { return action.type.startsWith('Photo'); }
 export type JournalEvent = SourceAction & { sequence: number; recordedAt: string };
+/** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
 export type Projection = { version: 6; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];

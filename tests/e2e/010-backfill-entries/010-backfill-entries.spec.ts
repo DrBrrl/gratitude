@@ -120,5 +120,5 @@ test('backfill a local date, preserve its draft and save multiple independent en
     expect(markdown.match(/^## .+$/gm)).toEqual(['## 2026-10-01 14:31:07', '## 2026-10-01 14:31:07', '## 2026-09-29 09:15:00']);
     expect(markdown).toContain('bins and waved'); expect(markdown).not.toMatch(/createdAt|entryAt|sequence/i);
   });
-  steps.generateDocs('Backfill moments and write more than once a day', 'New entries have an explicit local date/time and their own durable draft. Future times are rejected. Backfills do not complete Today; multiple daily entries retain separate identities, colours and prompts. Editing, full replay and Markdown export preserve the chosen date. Every action has an unmasked, zero-tolerance screenshot comparison.');
+  steps.generateDocs('Backfill moments and write more than once a day', 'New entries have an explicit local date/time and their own durable draft. Future times are rejected. Backfills do not complete Today; multiple daily entries retain separate identities and prompts while sharing their date’s colour. Editing, full replay and Markdown export preserve the chosen date. Every action has an unmasked, zero-tolerance screenshot comparison.');
 });
