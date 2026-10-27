@@ -75,3 +75,13 @@ test('686 records, five images, three missing prompts and one photo-only record 
   assert.deepEqual(replay(events.slice(700),replay(events.slice(0,700))),state);
   const counts=Object.values(state.imports).filter(r=>r.completedId).length;assert.equal(counts,686);
 });
+
+test('imported rainbow colour follows the original logical date rather than import receipt time',async()=>{
+ const {entryColour}=await import('../../src/lib/journal.ts');
+ const createdOnStr='2026-09-28T12:00:00.000+10:00',updatedOnStr='2026-09-28T13:00:00.000+10:00';
+ const archive=await plans({changes:{0:{createdOn:Date.parse(createdOnStr),createdOnStr,updatedOn:Date.parse(updatedOnStr),updatedOnStr}}});
+ const source=log(archive.records.flatMap(actionsFor));const full=replay(source),cached=replay(source.slice(2),replay(source.slice(0,2)));
+ const imported=full.entries.find(entry=>entry.origin?.source.createdOn===Date.parse(createdOnStr))!;
+ assert.equal(imported.recordedAt,time);assert.equal(entryColour(imported,'Australia/Hobart'),'#c9e561');
+ assert.deepEqual(full.entries.map(entry=>entryColour(entry,'Australia/Hobart')),cached.entries.map(entry=>entryColour(entry,'Australia/Hobart')));
+});

@@ -1,24 +1,13 @@
 import type { Entry } from './domain';
+import { civilDate, dayInZone, validDay } from './civil-date.ts';
+export { civilDate, dayInZone, validDay } from './civil-date.ts';
 import { entryTimestamp, chronologicalEntries } from './journal.ts';
 export type DayKey = string;
 export type DayIndex = Map<DayKey, Entry[]>;
 export type CalendarCell = { day: DayKey; number: number; future: boolean; today: boolean; entries: Entry[] };
-const parts = new Map<string, Intl.DateTimeFormat>();
-export function dayInZone(value: Date | string, zone: string): DayKey {
-  let format=parts.get(zone);
-  if (!format) {format=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'});parts.set(zone,format);}
-  const p=Object.fromEntries(format.formatToParts(new Date(value)).map(p=>[p.type,p.value]));
-  return `${p.year.padStart(4,'0')}-${p.month}-${p.day}`;
-}
-export function civilDate(day: string) {
-  const date=new Date(`${day}T12:00:00.000Z`);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Number.isFinite(+date) || date.toISOString().slice(0,10)!==day || date.getUTCFullYear()<1) throw new Error('Invalid calendar date');
-  return date;
-}
 export function shiftDay(day: DayKey, delta: number): DayKey {
   const date=civilDate(day);date.setUTCDate(date.getUTCDate()+delta);return date.toISOString().slice(0,10);
 }
-export function validDay(day: unknown): day is string {try {return typeof day==='string' && !!civilDate(day);} catch {return false;}}
 export function validMonth(month: unknown): month is string {return typeof month==='string' && /^\d{4}-\d{2}$/.test(month) && validDay(`${month}-01`);}
 export function shiftMonth(month: string, delta: number) {
   const date=civilDate(`${month}-01`);date.setUTCMonth(date.getUTCMonth()+delta);

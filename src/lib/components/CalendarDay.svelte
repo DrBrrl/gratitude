@@ -1,11 +1,11 @@
 <script lang="ts">
   import { dayLabel, type CalendarCell } from '$lib/calendar';
-  import { colours } from '$lib/journal';
+  import { colourForDay } from '$lib/journal';
   let {cell,onchoose,disabled=false}:{cell:CalendarCell;onchoose:(day:string)=>void;disabled?:boolean}=$props();
   const count=$derived(cell.entries.length);
   const label=$derived(`${dayLabel(cell.day)}, ${cell.future?'future date':count?`${count} ${count===1?'reflection':'reflections'}`:'no reflections'}`);
 </script>
-<button type="button" class:future={cell.future} class:today={cell.today} class:filled={!!count} aria-label={label} aria-current={cell.today?'date':undefined} disabled={disabled || cell.future} onclick={event=>{event.stopPropagation();onchoose(cell.day);}} data-day={cell.day} style:--day-colour={count?colours[cell.entries[0].colour]:'transparent'}>
+<button type="button" class:future={cell.future} class:today={cell.today} class:filled={!!count} aria-label={label} aria-current={cell.today?'date':undefined} disabled={disabled || cell.future} onclick={event=>{event.stopPropagation();onchoose(cell.day);}} data-day={cell.day} style:--day-colour={count?colourForDay(cell.day):'transparent'}>
   <span class="number">{cell.number}</span>{#if count>1}<small aria-hidden="true">{count}</small>{/if}{#if cell.today}<i aria-hidden="true"></i>{/if}
 </button>
 <style>

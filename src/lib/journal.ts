@@ -1,5 +1,10 @@
 import type { Entry, Photo } from './domain';
-export const colours = ['#f16f83', '#f4a34b', '#e8cb51', '#60cf89', '#26d8e5', '#269dff', '#b669ff'];
+import { colourForDay, colourIndexForDay } from './colours.ts';
+import { dayInZone } from './civil-date.ts';
+export { colours, colourForDay, colourIndexForDay } from './colours.ts';
+export function entryColour(entry: Entry, zone = Intl.DateTimeFormat().resolvedOptions().timeZone) {
+  return colourForDay(dayInZone(entryTimestamp(entry), zone));
+}
 export function entryTimestamp(entry: Entry) { return entry.entryAt ?? entry.recordedAt; }
 export function chronologicalEntries(entries: Entry[]) {
   // User-selected times have second precision. Ignore receipt-time milliseconds
@@ -17,7 +22,7 @@ export function localDay(value: Date | string) {
 }
 export function todayReflection(entries: Entry[], day: string) {
   const entry = entries.find(entry => localDay(entryTimestamp(entry)) === day);
-  return { entry, colour: entry?.colour ?? entries.filter(entry => localDay(entryTimestamp(entry)) < day).length % colours.length };
+  return { entry, colour: colourIndexForDay(day) };
 }
 export function normalized(value: string) { return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('en'); }
 export function searchEntries(entries: Entry[], query: string, photos: Photo[] = []) {

@@ -25,7 +25,7 @@ test('choose a date from Today and change a saved reflection date without losing
   await steps.action('reload-draft', 'Reload the dated Today draft', () => page.reload(), async () => { await expectSynced(page); });
   await openEditor(page, steps, 'resume-draft');
   await steps.step('retained-date', 'Retain the chosen local date and reflection across reload', [{ description: 'Both date and text are restored from the local draft', check: async () => { await expect(date).toHaveValue('2026-09-29T09:15'); await expectEditor(page, text); } }]);
-  const colour = await page.locator('.composer').evaluate(node => node.style.getPropertyValue('--entry-colour'));
+  let colour = await page.locator('.composer').evaluate(node => node.style.getPropertyValue('--entry-colour'));
   // Network loss is fixture setup; each resulting user action is documented separately.
   await page.context().setOffline(true);
   await steps.action('pending-date', 'Retain the selected date in an offline pending save', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Return text to editor', exact: true })).toBeVisible(); });
@@ -41,7 +41,7 @@ test('choose a date from Today and change a saved reflection date without losing
   await steps.action('detail', 'Open the saved reflection', () => cards.getByRole('button', { name: 'View entry', exact: true }).click(), async () => { await expect(page.locator('.detail')).toContainText(text); });
   await steps.action('edit', 'Edit the saved reflection with its existing date', () => page.getByRole('button', { name: 'Edit reflection', exact: true }).click(), async () => { await expect(date).toHaveValue('2026-09-29T09:15'); });
   await steps.action('edit-future', 'Reject future dates when editing a saved reflection', () => date.fill('2026-10-02T09:15'), async () => { await expect(page.getByRole('button', { name: 'Save changes', exact: true })).toBeDisabled(); });
-  await steps.action('move-today', 'Move the reflection to this morning in local time', () => date.fill('2026-10-01T09:15'), async () => { await expect(date).toHaveValue('2026-10-01T09:15'); await expectEditor(page, text); });
+  await steps.action('move-today', 'Move the reflection to this morning in local time', () => date.fill('2026-10-01T09:15'), async () => { await expect(date).toHaveValue('2026-10-01T09:15'); const changed = await page.locator('.composer').evaluate(node => node.style.getPropertyValue('--entry-colour')); expect(changed).not.toBe(colour); colour = changed; await expectEditor(page, text); });
   await backFromEditor(page, steps, 'leave-edit', 'Journal');
   await steps.action('reload-edit', 'Reload without committing the changed date', () => page.reload(), async () => { await expectSynced(page); await expect(page.getByRole('heading', { name: 'Reflection time', exact: true })).toBeVisible(); });
   await navigate(page, steps, 'resume-journal', 'Journal');
@@ -62,5 +62,5 @@ test('choose a date from Today and change a saved reflection date without losing
   await steps.action('prepare', 'Prepare the reflection with its edited date', () => page.getByRole('button', { name: 'Prepare export', exact: true }).click(), async () => { await expect(page.getByRole('status')).toHaveText('Export ready'); });
   const download = page.waitForEvent('download');
   await steps.action('download', 'Download the updated local date without system metadata', () => page.getByRole('button', { name: 'Download Markdown', exact: true }).click(), async () => { const file = await download; const content = await readFile((await file.path())!, 'utf8'); expect(content).toContain('## 2026-10-01 09:15:00'); expect(content).toContain('**Reflection**: The neighbour brought in my bins\\.'); expect(content).not.toMatch(/createdAt|entryAt|sequence/); });
-  steps.generateDocs('Choose and edit reflection dates', 'Today and saved-entry editors both allow a local date/time. Empty and future dates are rejected. Date changes remain in the independent draft until reflection save, survive reload and pending-save recovery, update Today and journal dates, and replay/export correctly without changing the entry identity, text or colour. Every action has a full-page unmasked zero-tolerance screenshot with checks beneath it.');
+  steps.generateDocs('Choose and edit reflection dates', 'Today and saved-entry editors both allow a local date/time. Empty and future dates are rejected. Date changes remain in the independent draft until reflection save, survive reload and pending-save recovery, update Today and journal dates, and replay/export correctly without changing entry identity or text. The colour follows the chosen local date. Every action has a full-page unmasked zero-tolerance screenshot with checks beneath it.');
 });

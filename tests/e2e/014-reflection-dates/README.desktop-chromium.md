@@ -2,7 +2,7 @@
 
 # Choose and edit reflection dates
 
-Today and saved-entry editors both allow a local date/time. Empty and future dates are rejected. Date changes remain in the independent draft until reflection save, survive reload and pending-save recovery, update Today and journal dates, and replay/export correctly without changing the entry identity, text or colour. Every action has a full-page unmasked zero-tolerance screenshot with checks beneath it.
+Today and saved-entry editors both allow a local date/time. Empty and future dates are rejected. Date changes remain in the independent draft until reflection save, survive reload and pending-save recovery, update Today and journal dates, and replay/export correctly without changing entry identity or text. The colour follows the chosen local date. Every action has a full-page unmasked zero-tolerance screenshot with checks beneath it.
 
 Viewport: desktop-chromium.
 
