@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  let { calendar }: { calendar?: Snippet } = $props();
+  let { calendar, signedIn=false }: { calendar?: Snippet; signedIn?: boolean } = $props();
   import { base } from '$app/paths';
 </script>
 <svelte:head>
@@ -20,7 +20,7 @@
       <p class="gentle-note">A small moment is enough.</p>
     </section>{/if}
     <footer>
-      <a href={`${base}/journal/`}>Open your journal <span aria-hidden="true">→</span></a>
+      <a href={`${base}/journal/${signedIn?'':'?afterSignIn=journal'}`}>{signedIn?'Open your journal':'Sign in and open your journal'} <span aria-hidden="true">→</span></a>
     </footer>
   </main>
 </div>

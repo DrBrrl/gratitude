@@ -2,7 +2,7 @@
 
 # The Gratitude landing page
 
-A visitor opens the production build and sees the Gratitude introduction.
+A visitor opens the production build and sees an empty, disabled calendar under a sign-in overlay. Keyboard navigation skips calendar controls and reaches the sign-in links.
 
 Viewport: mobile-chromium.
 
@@ -15,5 +15,24 @@ Viewport: mobile-chromium.
 - [x] The landing document returns HTTP 200
 - [x] The page identifies itself as Gratitude
 - [x] Calendar account restoration finishes before the page is captured
+- [x] The signed-out calendar is empty, greyed out and disabled, with its sign-in notice visible
 - [x] The main heading is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Reach the sign-in link while skipping disabled calendar controls
+
+![Reach the sign-in link while skipping disabled calendar controls](./screenshots/001-signin-focus-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Reach the signed-out footer link
+
+![Reach the signed-out footer link](./screenshots/002-journal-focus-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)

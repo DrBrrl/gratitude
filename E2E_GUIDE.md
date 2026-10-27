@@ -39,7 +39,7 @@ Keep the trailing slash in an external URL. Tests navigate with `page.goto('./')
 
 ## Current coverage and files
 
-Scenario `001-landing` verifies HTTP 200, the document title, a visible main heading, and the rendered landing page. It runs in Chromium at mobile (390 × 844, touch enabled) and desktop (1280 × 800) sizes. This does not establish journal persistence, AI behaviour, accessibility compliance, or full device compatibility.
+Scenario `001-landing` verifies HTTP 200, the document title, a visible main heading, the empty disabled calendar/sign-in overlay, and keyboard navigation through the two sign-in links. It runs in Chromium at mobile (390 × 844, touch enabled) and desktop (1280 × 800) sizes. This does not establish journal persistence, AI behaviour, accessibility compliance, or full device compatibility.
 
 ```text
 tests/e2e/
@@ -187,4 +187,8 @@ Import ZIP validation/reselection, cached-selection reopening, photo-upload star
 - [020-calendar-narrow](tests/e2e/020-calendar-narrow/README.md): 320px layout, 44px week buttons, native keyboard scrolling, seven-month DOM window and foreground Sunday rollover. Mobile-only by design.
 - [021-calendar-cache](tests/e2e/021-calendar-cache/README.md): Firestore-only outage during a warm reload, retained provisional saved dates and server anchor verification on reconnect. HTML/auth stay available, so this does not simulate or claim offline cold starts. Initial cached availability allows 30 seconds because the SDK first exhausts its server probe; ordinary clicks and strict screenshot tolerances are unchanged.
 
-The calendar suite runs 017–018; calendar-edit runs 019–021. Every action, including scrolling, reload and keyboard navigation, has a full-page unmasked screenshot comparison and generated checks beneath it. Browser time, timezone and raw event fixtures are deterministic. Environment changes (network faults, source events and clock rollover) use explicit checked screenshot steps. The real calendar viewport is part of the product; screenshots themselves are never cropped or masked.
+- [022-calendar-signin](tests/e2e/022-calendar-signin/README.md): disabled empty signed-out calendar, overlay/footer sign-in links, Google authentication into Journal even for an empty account, consumed destination intent and the unchanged signed-in footer.
+
+The calendar suite runs 017–018; calendar-edit runs 019–022. Every action, including scrolling, reload and keyboard navigation, has a full-page unmasked screenshot comparison and generated checks beneath it. Browser time, timezone and raw event fixtures are deterministic. Environment changes (network faults, source events and clock rollover) use explicit checked screenshot steps. The real calendar viewport is part of the product; screenshots themselves are never cropped or masked.
+
+The anonymous landing scenario fixes the browser clock before loading the page so its empty calendar month is deterministic. It checks disabled controls, zero entry rings, the visible sign-in overlay and keyboard focus moving directly between sign-in links. The grey calendar and overlay are the real signed-out product state; there are no screenshot-only masks, styles or substitutions.

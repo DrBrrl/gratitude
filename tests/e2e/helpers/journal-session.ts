@@ -36,7 +36,7 @@ export async function startJournal(page: Page, info: TestInfo, steps: TestStepHe
   }, 'Sign-in is available and the production build preserves the frosted glass blur');
   await signIn(page, info, steps, name);
 }
-export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, name: string, existing = false, landing: 'Today' | 'Journal' = 'Today') {
+export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, name: string, existing = false, landing: 'Today' | 'Journal' = 'Today', requestedJournal = false) {
   const email = `${name}-${info.project.name}@example.test`;
   const opened = page.waitForEvent('popup');
   await page.getByRole('button', { name: 'Continue with Google' }).click();
@@ -54,7 +54,7 @@ export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, 
     await popup.locator('#sign-in').click();
   }
   const destination = landing === 'Journal' ? 'Your journal' : 'Reflection time';
-  await steps.step('signed-in', landing === 'Journal' ? 'Return to the journal after today’s saved reflection' : 'Complete sign-in and open Today', [{ description: landing === 'Journal' ? 'The saved daily reflection makes Journal the initial page on this device' : 'The private journal is synchronized and Today is ready', check: async () => {
+  await steps.step('signed-in', requestedJournal ? 'Open Journal after sign-in from the landing page' : landing === 'Journal' ? 'Return to the journal after today’s saved reflection' : 'Complete sign-in and open Today', [{ description: requestedJournal ? 'The landing sign-in link opens the synchronized Journal' : landing === 'Journal' ? 'The saved daily reflection makes Journal the initial page on this device' : 'The private journal is synchronized and Today is ready', check: async () => {
     await expectSynced(page);
     await expect(page.getByRole('heading', { name: destination, exact: true })).toBeVisible();
     if (landing === 'Today') await expect(page.getByRole('button', { name: /^(Write a response|Continue your reflection)$/ })).toBeEnabled();

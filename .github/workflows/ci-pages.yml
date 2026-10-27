@@ -73,7 +73,7 @@ jobs:
           - suite: calendar
             scenarios: tests/e2e/01[78]-
           - suite: calendar-edit
-            scenarios: tests/e2e/(019-|020-|021-)
+            scenarios: tests/e2e/(019-|020-|021-|022-)
           - suite: import
             scenarios: tests/e2e/01[56]-import
           - suite: editor

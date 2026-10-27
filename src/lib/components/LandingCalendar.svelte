@@ -5,12 +5,13 @@
   import CalendarDay from './CalendarDay.svelte';
   import Icon from './Icon.svelte';
 
-  let { index, today, anchor, onanchor, onchoose }: {
+  let { index, today, anchor, onanchor, onchoose, disabled=false }: {
     index: DayIndex;
     today: string;
     anchor: CalendarAnchor;
     onanchor: (anchor: CalendarAnchor) => void;
     onchoose: (day: string) => void;
+    disabled?: boolean;
   } = $props();
   let choosingMonth = $state(false);
   let monthInput = $state<HTMLInputElement>();
@@ -71,17 +72,17 @@
         </div>
         {#if invalidChoice}<p class="choice-hint" role="alert">Choose a month and a year from 1 to 9999.</p>{/if}
       {:else}
-        <button bind:this={monthButton} class="month-heading" aria-label={`Choose month, ${monthLabel(anchor.month)}`} onclick={openMonthChooser}>{monthLabel(anchor.month)}</button>
+        <button bind:this={monthButton} class="month-heading" aria-label={`Choose month, ${monthLabel(anchor.month)}`} {disabled} onclick={openMonthChooser}>{monthLabel(anchor.month)}</button>
       {/if}
     </h2>
     <div class="month-controls" role="group" aria-label="Calendar months">
-      <button aria-label="Previous month" disabled={!previous} class="arrow" onclick={() => chooseMonth(previous)}><Icon name="back" size={16} /></button>
-      <button class="current-month" onclick={() => chooseMonth(today.slice(0, 7))}>Current month</button>
-      <button aria-label="Next month" disabled={!next} class="arrow" onclick={() => chooseMonth(next)}><Icon name="next" size={16} /></button>
+      <button aria-label="Previous month" disabled={disabled || !previous} class="arrow" onclick={() => chooseMonth(previous)}><Icon name="back" size={16} /></button>
+      <button class="current-month" {disabled} onclick={() => chooseMonth(today.slice(0, 7))}>Current month</button>
+      <button aria-label="Next month" disabled={disabled || !next} class="arrow" onclick={() => chooseMonth(next)}><Icon name="next" size={16} /></button>
     </div>
   </header>
   <div class="weekdays" aria-hidden="true">{#each ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as day}<span>{day}</span>{/each}</div>
-  <div class="month-dates">{#each monthCells(index, anchor.month, today) as cell, i (i)}{#if cell}<CalendarDay {cell} {onchoose} />{:else}<span></span>{/if}{/each}</div>
+  <div class="month-dates">{#each monthCells(index, anchor.month, today) as cell, i (i)}{#if cell}<CalendarDay {cell} {onchoose} {disabled} />{:else}<span></span>{/if}{/each}</div>
 </section>
 
 <style>
