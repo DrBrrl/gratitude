@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 import { editor, expectEditor, expectSynced, navigate, openEditor, startJournal } from '../helpers/journal-session';
+import { SYSTEM_PROMPT } from '../../../src/lib/ai/context';
 import { AI_ENDPOINT, FIRST_PROMPT, SECOND_PROMPT, respond, aiSettings, saveChoices, toggleAI } from '../helpers/gemini';
 
 test('consent, personalized prompts, freeform feedback and immutable journal history', async ({ page }, info) => {
@@ -30,6 +31,7 @@ test('consent, personalized prompts, freeform feedback and immutable journal his
   await navigate(page, steps, 'today', 'Today');
   await steps.action('generate', 'Request the first AI prompt', () => page.getByRole('button', { name: 'Find me a prompt', exact: true }).click(), async () => {
     await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT, { timeout: 15_000 }); expect(requests).toHaveLength(1);
+    expect(JSON.parse(requests[0]).systemInstruction).toEqual({parts:[{text:SYSTEM_PROMPT}]});
     expect(requests[0]).toContain('Everyday moments'); expect(requests[0]).toContain('recentReflections');
   }, 'The exact provider response is displayed only after it is saved, using the approved preferences');
   await steps.action('why', 'Inspect the sources used for this prompt', () => page.getByRole('button', { name: 'Why this prompt?' }).click(), async () => {

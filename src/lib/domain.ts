@@ -4,7 +4,8 @@ export const GENERATION = 'v1';
 export const PROJECTION_VERSION = 6;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
-export const TEMPLATE_VERSION = 'gratitude-v1';
+export const TEMPLATE_VERSION = 'gratitude-v2';
+export type PromptTemplateVersion = 'gratitude-v1' | typeof TEMPLATE_VERSION;
 type Envelope<T extends string, P, V extends number = 1> = { eventId: string; type: T; schemaVersion: V; payload: P };
 type ReflectionPayload = { entryId: string; text: string; expectedRevision: number };
 export type Action = Envelope<'ReflectionWritten', ReflectionPayload & { starterId: typeof STARTER_ID }>
@@ -16,7 +17,7 @@ export type Action = Envelope<'ReflectionWritten', ReflectionPayload & { starter
 export type AIChoices = { enabled: boolean; useJournal: boolean; useFeedback: boolean; guidance: string };
 type Previous = { previousEventId: string | null };
 export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & AIChoices>;
-type RequestPayload = Previous & { choicesId: string; day: string; templateVersion: typeof TEMPLATE_VERSION;
+type RequestPayload = Previous & { choicesId: string; day: string; templateVersion: PromptTemplateVersion;
   contextMode: 'generic' | 'personal'; entryRefs: { entryId: string; revision: number }[]; feedbackIds: string[] };
 export type RequestAction = Envelope<'PromptRequested', RequestPayload> | Envelope<'PromptRequested', RequestPayload & { entryId: string; entryRevision: number }, 2>;
 export type ResponseAction = Envelope<'PromptResponseReceived', { requestId: string; text: string; model: string; finishReason: 'STOP' }>;
@@ -94,7 +95,7 @@ export function parseAction(input: unknown): SourceAction {
       case 'AIChoicesConfirmed': valid = keys(p, ['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance']) && previous
         && typeof p.enabled === 'boolean' && typeof p.useJournal === 'boolean' && typeof p.useFeedback === 'boolean' && string(p.guidance, 500, true); break;
       case 'PromptRequested': valid = keys(p, ['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(v.schemaVersion === 2 ? ['entryId', 'entryRevision'] : [])]) && (v.schemaVersion !== 2 || id(p.entryId) && Number.isSafeInteger(p.entryRevision) && Number(p.entryRevision) >= 0) && previous
-        && id(p.choicesId) && day && p.templateVersion === TEMPLATE_VERSION && ['generic', 'personal'].includes(String(p.contextMode))
+        && id(p.choicesId) && day && ['gratitude-v1', TEMPLATE_VERSION].includes(String(p.templateVersion)) && ['generic', 'personal'].includes(String(p.contextMode))
         && Array.isArray(p.entryRefs) && p.entryRefs.length <= 5 && p.entryRefs.every(ref => ref && keys(ref, ['entryId', 'revision']) && id(ref.entryId) && Number.isSafeInteger(ref.revision) && ref.revision > 0)
         && Array.isArray(p.feedbackIds) && p.feedbackIds.length <= 20 && p.feedbackIds.every(id) && new Set(p.feedbackIds).size === p.feedbackIds.length
         && (p.contextMode !== 'generic' || p.entryRefs.length === 0 && p.feedbackIds.length === 0); break;

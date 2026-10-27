@@ -91,7 +91,7 @@ service cloud.firestore {
         let choices = get(eventPath(before.choicesId)).data.payload;
         return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'].concat(schema == 2 ? ['entryId', 'entryRevision'] : [])) && (schema != 2 || validId(p.entryId) && p.entryRevision is int && p.entryRevision == nextRevision(p.entryId))
           && p.choicesId == before.choicesId && choices.enabled == true && validDay(p.day)
-          && p.templateVersion == 'gratitude-v1' && p.contextMode in ['generic', 'personal']
+          && p.templateVersion in ['gratitude-v1', 'gratitude-v2'] && p.contextMode in ['generic', 'personal']
           && p.entryRefs is list && p.entryRefs.size() <= 5 && validRefs(p.entryRefs) && p.feedbackIds is list && p.feedbackIds.size() <= 20
           && p.feedbackIds.toSet().size() == p.feedbackIds.size() && validFeedbackIds(p.feedbackIds)
           && (p.contextMode != 'generic' || (p.entryRefs.size() == 0 && p.feedbackIds.size() == 0))
