@@ -283,7 +283,7 @@ Viewport: desktop-chromium.
 
 **Verifications:**
 
-- [x] The new date gains its existing entry colour while September remains anchored
+- [x] The new date gains its own date colour while September remains anchored
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Open Today

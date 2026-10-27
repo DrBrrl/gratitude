@@ -2,7 +2,7 @@
 
 # Backfill moments and write more than once a day
 
-New entries have an explicit local date/time and their own durable draft. Future times are rejected. Backfills do not complete Today; multiple daily entries retain separate identities, colours and prompts. Editing, full replay and Markdown export preserve the chosen date. Every action has an unmasked, zero-tolerance screenshot comparison.
+New entries have an explicit local date/time and their own durable draft. Future times are rejected. Backfills do not complete Today; multiple daily entries retain separate identities and prompts while sharing their date’s colour. Editing, full replay and Markdown export preserve the chosen date. Every action has an unmasked, zero-tolerance screenshot comparison.
 
 Viewport: mobile-chromium.
 

@@ -43,7 +43,7 @@ These contracts were checked in the merged domain, append/repository, photo/expo
 | `prompt`, `promptId` | Retain the original nullable values in immutable import input. Project a missing prompt as exactly `[No prompt]`. Keep real prompt text unchanged. |
 | `createdOn`, `createdOnStr` | Preserve both original forms. Derive the initial `entryAt` from the source instant; retain original offsets/calendar representation in provenance. |
 | `updatedOn`, `updatedOnStr` | Preserve the reported last update without fabricating intermediate edits. |
-| `noteColor` | Preserve as provenance; assign the next normal app rainbow colour through the reducer. Do not store a computed colour or recolour existing entries. |
+| `noteColor` | Preserve as provenance. Visible colour comes from the imported logical local date in the 28-day cycle; no computed colour is written to an event, and importing does not shift other dates. |
 | `imagePath`, `driveImagePath` | Retain bounded private provenance and resolve only safe members of the chosen archive. Never fetch source device paths or Drive URLs. |
 | `addressTo`, `moodId`, `backgroundId` | Retain bounded original metadata, including null/empty values. |
 
@@ -56,7 +56,7 @@ Later explicit prompt/date edits use the existing editor. They change current pr
 Keep the `v1` stream and the existing server `recordedAt` ingestion time. Do not backdate server timestamps or write projected entry documents administratively. Add two versioned source-event types, processed through the authenticated append transaction:
 
 1. **`ImportRecordConfirmed`** records one source record from the user's confirmed import: adapter version, raw bounded source fields, destination entry identity and attachment references. Source-file digests and stable IDs are technical input/integrity references, not journal-state snapshots. Do not record computed prompt placeholders, colours, sort ranks, progress counters or derived entry state. The event creates an immutable per-source claim before upload; pending claims are visible in import progress, not as completed journal entries.
-2. **`ReflectionImported`** references that confirmation event and entry ID, carries `expectedRevision: 0` and the active photo slot needed for a blank reflection. It finalizes the user-confirmed import once required attachments have been acknowledged. It does not duplicate the source record or store a derived entry snapshot. The reducer derives text, initial date, prompt/placeholder, revision, colour and provenance from the referenced input.
+2. **`ReflectionImported`** references that confirmation event and entry ID, carries `expectedRevision: 0` and the active photo slot needed for a blank reflection. It finalizes the user-confirmed import once required attachments have been acknowledged. It does not duplicate the source record or store a derived entry snapshot. The reducer derives text, initial date, prompt/placeholder, revision, a legacy creation index and provenance from the referenced input. Visible colour is selected from the original logical date rather than that legacy index.
 
 Between confirmation and completion, reuse normal `PhotoAttached` events. Photo-less records can complete immediately; photo-only records cannot complete until their slot is active. The same confirmed user instruction drives each phase; retry/replay never manufactures new input or redoes AI.
 
