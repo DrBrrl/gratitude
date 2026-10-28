@@ -104,8 +104,8 @@ export class JournalRepository {
           await this.db.put('cache', checkpoint, 'checkpoint');
           if (this.stopped || generation !== this.listenerGeneration) return;
           this.state = next;
-          if(!snapshot.metadata.fromCache && this.backupActions.length) void this.syncBackups().catch(()=>{});
           this.ready = true; this.error = '';
+          if(!snapshot.metadata.fromCache && this.backupActions.length) void this.syncBackups().catch(()=>{});
           if(!snapshot.metadata.fromCache && !this.importedBackups){this.importedBackups=true;void this.loadBackupImports();}
           // A stream read does not acknowledge an outstanding write.
           if (!this.pending) this.status = snapshot.metadata.fromCache ? 'Showing entries on this device; waiting to sync' : 'Synced';
@@ -243,12 +243,14 @@ export class JournalRepository {
     try {
       const staged=await getDocsFromServer(query(collection(this.client.db,`users/${this.uid}/backupPromptImports`),limit(2001)));
       if(staged.size>2000)throw new Error('Too many staged prompts.');
-      for(const item of staged.docs){
-        if(this.stopped)return;
+      const inputs=await Promise.all(staged.docs.map(async item=>{
         const action=await importedBackup(item.get('text'));
         if(action.eventId!==item.id)throw new Error('Invalid staged prompt identity.');
-        if(!this.state.backups[action.eventId])await this.queueBackup(action);
-      }
+        return action;
+      }));
+      if(this.stopped)return;
+      const fresh=inputs.filter(action=>!this.state.backups[action.eventId]);
+      if(fresh.length)await this.queueBackups(fresh);
     }catch{this.backupStatus='Could not sync imported backups. Reconnect and reload to retry.';}
     finally{this.backupImporting=false;this.emit();}
   }
@@ -261,15 +263,31 @@ export class JournalRepository {
     });
     this.backupQueue=next;return next;
   }
-  async queueBackup(action:BackupAction) {
-    await this.updateBackupOutbox(actions=>actions.some(a=>a.eventId===action.eventId)?actions:[...actions,action]);
+  async queueBackup(action:BackupAction) { await this.queueBackups([action]); }
+  async queueBackups(input:BackupAction[]) {
+    await this.updateBackupOutbox(actions=>{
+      const known=new Set(actions.map(action=>action.eventId));
+      return [...actions,...input.filter(action=>{if(known.has(action.eventId))return false;known.add(action.eventId);return true;})];
+    });
     this.emit();if(navigator.onLine)await this.syncBackups();
   }
   async syncBackups() {
     if(this.backupSyncing||!navigator.onLine||this.stopped)return;this.backupSyncing=true;
-    try {while(this.backupActions.length&&!this.stopped){const action=this.backupActions[0];await this.commitAI(action);await this.updateBackupOutbox(actions=>actions.filter(a=>a.eventId!==action.eventId));}this.backupStatus='';}
-    catch {this.backupStatus='Backup changes are saved on this device; reconnect to sync.';}
-    finally{this.backupSyncing=false;this.emit();}
+    const completed=new Set<string>();let failed=false;
+    try {
+      for(;;){
+        const action=this.backupActions.find(item=>!completed.has(item.eventId));
+        if(!action||this.stopped)break;
+        await this.commitAI(action);completed.add(action.eventId);
+      }
+      this.backupStatus='';
+    }catch{failed=true;this.backupStatus='Backup changes are saved on this device; reconnect to sync.';}
+    finally{
+      try {if(completed.size&&!this.stopped)await this.updateBackupOutbox(actions=>actions.filter(action=>!completed.has(action.eventId)));}
+      catch{failed=true;this.backupStatus='Backup changes are saved on this device; reconnect to sync.';}
+      this.backupSyncing=false;this.emit();
+    }
+    if(!failed&&!this.stopped&&this.backupActions.length)void this.syncBackups();
   }
   async syncPromptResult() {
     if (!this.aiResult) return;
@@ -367,4 +385,4 @@ export class JournalRepository {
 }
 
 /** UI-facing contract shared with the development event-fixture adapter. */
-export type JournalStore = Pick<JournalRepository, 'queueBackup' | 'syncBackups' | 'readImportArchive' | 'storeImportArchive' | 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult' | 'requestPhotoSummary' | 'syncPhotoResult' | 'readStagedPhoto' | 'stagePhoto' | 'clearStagedPhoto' | 'cancelStagedPhoto' | 'removePhoto' | 'retryPhotoCleanup'>;
+export type JournalStore = Pick<JournalRepository, 'queueBackups' | 'queueBackup' | 'syncBackups' | 'readImportArchive' | 'storeImportArchive' | 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult' | 'requestPhotoSummary' | 'syncPhotoResult' | 'readStagedPhoto' | 'stagePhoto' | 'clearStagedPhoto' | 'cancelStagedPhoto' | 'removePhoto' | 'retryPhotoCleanup'>;

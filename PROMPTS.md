@@ -920,3 +920,9 @@ Main production journal
 The subsequent account-identification reply is private application account data and is excluded from this public project log.
 
 The follow-up adding the PR-preview destination also contains a private application account email; it is excluded from this public project log. Both requested destinations were verified administratively.
+
+## 2026-10-28 — Remembering and syncing LM Studio credentials
+
+```text
+(question for you while you're working on the backup prompts - Is it unsafe to get the app to remember the LM Studio API token? I ask because getting that token onto various devices will be annoying and i'd like to avoid that if possible - surely it can be securely saved to the user's information?)
+```

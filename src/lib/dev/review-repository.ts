@@ -61,6 +61,7 @@ export class ReviewRepository implements JournalStore {
   }
   async commitAI(action: AIAction | PhotoAction | ImportAction | BackupAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
   async requestPrompt() { throw new Error('Use the Firebase preview to try Gemini. UI review stays entirely on this device.'); }
+  async queueBackups(actions:BackupAction[]) {for(const action of actions)await this.save(action);}
   async queueBackup(action:BackupAction) {await this.save(action);}
   async syncBackups() {}
   async syncPromptResult() {}
