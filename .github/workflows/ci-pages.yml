@@ -84,6 +84,8 @@ jobs:
             scenarios: tests/e2e/(00[7-8]|024-)
           - suite: backups
             scenarios: tests/e2e/02[78]-
+          - suite: credentials
+            scenarios: tests/e2e/029-
           - suite: local-ai
             scenarios: tests/e2e/(025-|026-)
     env:
