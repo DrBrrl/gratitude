@@ -1,15 +1,17 @@
 <script lang="ts">
  let {prompts,onuse,onremove,disabled=false}:{prompts:{id:string;text:string}[];onuse:(id:string)=>Promise<void>;onremove:(id:string)=>Promise<void>;disabled?:boolean}=$props();
+ let applying=$state(false);
+ const locked=$derived(disabled||applying);
  let open=$state(false),index=$state(0),confirm=$state(false),message=$state('');
  const current=$derived(prompts.length?prompts[index%prompts.length]:undefined);
- async function use(){if(!current)return;try{await onuse(current.id);open=false;message='';}catch{message='Could not keep this choice on your device. Please try again.';}}
- async function remove(){if(!current)return;try{await onremove(current.id);confirm=false;}catch{message='Could not save this removal. Please try again.';}}
+ async function use(){if(!current||locked)return;const id=current.id;applying=true;try{await onuse(id);open=false;message='';}catch{message='Could not keep this choice on your device. Please try again.';}finally{applying=false;}}
+ async function remove(){if(!current||locked)return;const id=current.id;confirm=false;applying=true;try{await onremove(id);}catch{message='Could not save this removal. Please try again.';}finally{applying=false;}}
 </script>
 {#if prompts.length||open}
-<div class="backup-picker"><button class="outline card-action" onclick={()=>{open=!open;confirm=false;}} {disabled} aria-expanded={open}>Choose a backup prompt ({prompts.length})</button>
+<div class="backup-picker"><button class="outline card-action" onclick={()=>{open=!open;confirm=false;}} disabled={locked} aria-expanded={open}>Choose a backup prompt ({prompts.length})</button>
 {#if open}<aside class="glass" aria-label="Saved backup prompts">
- {#if current}<p class="hint">Personalised backup · no AI request</p><p class="question">{current.text}</p><div class="actions"><button class="outline card-action" onclick={use} {disabled}>Use this backup</button><button class="outline card-action" onclick={()=>{index=(index+1)%prompts.length;confirm=false;}} disabled={disabled||prompts.length<2}>Show another</button></div>
- {#if confirm}<p class="hint">Remove this prompt from your backups? Saved reflections keep their original question.</p><button class="outline card-action" onclick={remove} {disabled}>Remove permanently</button><button class="text-button" onclick={()=>confirm=false}>Keep it</button>{:else}<button class="text-button" onclick={()=>confirm=true} {disabled}>I won’t use this prompt</button>{/if}
+ {#if current}<p class="hint">Personalised backup · no AI request</p><p class="question">{current.text}</p><div class="actions"><button class="outline card-action" onclick={use} disabled={locked}>Use this backup</button><button class="outline card-action" onclick={()=>{index=(index+1)%prompts.length;confirm=false;}} disabled={locked||prompts.length<2}>Show another</button></div>
+ {#if confirm}<p class="hint">Remove this prompt from your backups? Saved reflections keep their original question.</p><button class="outline card-action" onclick={remove} disabled={locked}>Remove permanently</button><button class="text-button" onclick={()=>confirm=false} disabled={locked}>Keep it</button>{:else}<button class="text-button" onclick={()=>confirm=true} disabled={locked}>I won’t use this prompt</button>{/if}
  {:else}<p>No unused backups remain. Reconnect to refill or import more in AI settings.</p>{/if}
  {#if message}<p role="status">{message}</p>{/if}
 </aside>{/if}</div>

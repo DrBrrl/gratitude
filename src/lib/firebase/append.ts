@@ -23,10 +23,9 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
   };
   for (let attempt = 0; ; attempt++) {
     try { return await runTransaction(db, async (tx) => {
-      const prior = await tx.get(event);
+      // These reads are independent; transaction preconditions still protect every version.
+      const [prior,head,latest] = await Promise.all([tx.get(event),tx.get(stream),tx.get(pointer)]);
       if (prior.exists()) return resultFromPrior(prior.data());
-      const head = await tx.get(stream);
-      const latest = await tx.get(pointer);
       let metadata: Record<string, unknown>;
       if (isBackupAction(action)) {
         if(action.type==='BackupPromptRemoved' && !latest.exists()) {const source=await tx.get(doc(db,`${stream.path}/events/${action.payload.promptId}`));if(!source.exists() || source.get('type')!=='PromptResponseReceived') throw new Error('Unknown backup prompt.');}

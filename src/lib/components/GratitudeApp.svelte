@@ -647,7 +647,7 @@
     {/snippet}
   </WelcomePage>
 {:else}
-<main class:composing={writing}>
+<main class:composing={writing} class:aiSettings={tab==='settings'&&settingsPage==='ai'}>
   {#if !initialized}
     <p role="status" class="loading">Opening Gratitude…</p>
   {:else if !configured}
@@ -823,6 +823,8 @@
 </main>
 {/if}
 <style>
+  /* Keep the dynamic settings document on a whole-pixel scroll boundary. */
+  .aiSettings { height: calc-size(auto, round(nearest, size, 1px)); }
   .calendar-cache-note{display:block;font-size:.7rem;font-weight:400;color:#b4bdca;margin-top:5px}
   .date-heading{font:600 1rem/1.5 Arial,Helvetica,sans-serif;color:#c1c7d1;margin:0 0 12px}.day-back{margin-top:12px}.calendar-summary{font:600 .94rem/1.5 Arial,Helvetica,sans-serif;color:#d4d9e1}.draft-choice button{margin-top:12px}
   :global(html) { color-scheme: dark; background: #0c0d10; }
