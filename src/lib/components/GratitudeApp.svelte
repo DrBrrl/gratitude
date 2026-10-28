@@ -21,7 +21,7 @@
   import { aiAvailable as geminiAvailable, personalContextAvailable as geminiPersonal, geminiGenerator } from '$lib/ai/gemini';
   import BackupPicker from './BackupPicker.svelte';
   import BackupPrompts from './BackupPrompts.svelte';
-  import {availableBackups} from '../backup-prompts';
+  import {availableBackups,BACKUP_MINIMUM} from '../backup-prompts';
   import {BackupRefiller} from '../ai/backup-refiller';
   import ModelSettings from './ModelSettings.svelte';
   import PromptFeedback from './PromptFeedback.svelte';
@@ -89,6 +89,7 @@
   let editing = $state<Entry | null>(null);
   let view = $state<JournalView>({ state: emptyProjection(), pending: null, status: '', error: '', ready: false });
   const backups=$derived(availableBackups(view.state,view.backupRemoved,view.pending&&'promptId' in view.pending.payload?view.pending.payload.promptId:undefined));
+  const refillStatus=$derived(!view.state.ai.choices.enabled||!view.state.ai.choices.backupEnabled?'':backups.length>=BACKUP_MINIMUM?`${backups.length} backups ready.`:refillMessage||'Ready to refill while this app is open and connected.');
   const accountProvider=$derived(view.state.ai.choices.provider);
   const activeConnection=$derived({...modelConnection,provider:accountProvider});
   const localBackupConnection=$derived({...modelConnection,provider:'lm-studio' as const});
@@ -570,7 +571,7 @@
       } else initialized = true;
     } catch { initialized = true; error = 'Sign-in is unavailable. Please try again later.'; }
     const online = () => {refiller.reset();void repository?.syncBackups();void repository?.syncPromptResult().catch(()=>{});void repository?.retry();};
-    const refillTimer=setInterval(()=>{void refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting,online:navigator.onLine,visible:document.visibilityState==='visible',busy:busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state).then(()=>{refillMessage=refiller.status;});},3000);
+    const refillTimer=setInterval(()=>{const refill=refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting,online:navigator.onLine,visible:document.visibilityState==='visible',busy:busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state);refillMessage=refiller.status;void refill.then(()=>{refillMessage=refiller.status;});},3000);
     window.addEventListener('online', online);
     return () => { session++; stopAuth(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
   });
@@ -783,7 +784,7 @@
         <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {providerName} processing for each photo.</p><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
         {#if repository}<BackupPrompts {view} {repository} email={user.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups} />
         {#if view.state.ai.choices.backupProvider==='lm-studio' && accountProvider!=='lm-studio'}<details class="backup-connection"><summary>Local backup connection</summary><ModelSettings connection={localBackupConnection} scope={modelScope} connectionOnly disabled={aiBusy||uiReview} onchange={async connection=>{modelConnection=connection;modelConnectionError='';refiller.reset();}} /></details>{/if}
-        {#if refillMessage}<p class="hint" role="status">{refillMessage}</p><button class="outline" onclick={()=>{refiller.reset();refillMessage='';}}>Retry backup refill</button>{/if}{/if}
+        {#if refillStatus}<p class="hint" role="status">{refillStatus}</p>{#if backups.length<BACKUP_MINIMUM}<button class="outline" onclick={()=>{refiller.reset();refillMessage='';}}>Retry backup refill</button>{/if}{/if}{/if}
       {:else if settingsPage === 'import'}
         <h1 class="page-heading">Import journal</h1>
         {#if client && repository}<ImportPanel {client} {repository} {view} uid={user.uid} email={user.email ?? 'your signed-in account'} />{:else}<p>Sign in to your synced journal to import an export.</p>{/if}
