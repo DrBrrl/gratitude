@@ -60,9 +60,11 @@ Requests are non-streaming. Thinking-capable models receive the requested settin
 }
 ```
 
-When discovery advertises an `off` reasoning option, the request also includes `"reasoning_effort": "off"`. A model advertising reasoning with no off option is rejected before inference. Non-thinking models omit those fields. The [Gemma model profile](https://lmstudio.ai/models/google/gemma-4-31b) identifies its reasoning/vision support. Server configuration ultimately determines model execution; the client also rejects incomplete outputs or visible thinking/control markers and never saves a separate reasoning field.
+When discovery advertises an `off` reasoning option, the OpenAI-compatible request includes `"reasoning_effort": "none"` (its non-thinking value, distinct from native model discovery’s `off` option). A model advertising reasoning with no off option is rejected before inference. Non-thinking models omit those fields. The [Gemma model profile](https://lmstudio.ai/models/google/gemma-4-31b) identifies its reasoning/vision support. Server configuration ultimately determines model execution; the client also rejects incomplete outputs or visible thinking/control markers and never saves a separate reasoning field.
 
 The exact final assistant content and reported model identifier become response events. Existing bounds remain 600 characters for a prompt and 1,000 for a photo summary. A server-reported model identifier is not an immutable model-weight digest. Replay, synchronization and recovery never call either model provider.
+
+Daily prompt failures appear beside Today’s request controls; a recorded failure keeps a generic notice after reload, without automatically retrying.
 
 Local inference has a 120-second timeout; discovery has a ten-second timeout. Neither is automatically retried. A full twenty-reflection context with paired prompt feedback may need a larger loaded context window: inspect the reported length and adjust the model’s load settings if needed. Gratitude does not silently truncate the assembled JSON or reduce the chosen sources to make a server accept it.
 
@@ -84,3 +86,5 @@ Projection version 9 includes the provider choice and backup reserve. Older chec
 Scenario [025-lm-studio](tests/e2e/025-lm-studio/README.md) covers configuration, authenticated metadata, thinking-off payloads, daily/editor prompts, photos, a second device without credentials, failures and replay. Its server responses/tokens are fictional. Each action has a full-page unmasked screenshot comparison at zero pixel tolerance, with checks underneath. No private journal or live inference is needed for automated tests.
 
 Scenario [029-account-token](tests/e2e/029-account-token/README.md) covers opt-in account storage, independent-device restoration, authenticated metadata, server-destination edits, deletion propagation and reload after forgetting. All credentials and servers are fictional. Authenticated Rules tests also reject another account, collection listing, malformed records and insecure remote origins.
+
+If an older build produces `Invalid reasoning_effort value: off`, update/reload Gratitude after the fix is deployed. Model discovery can succeed while chat validation rejects the request before generation: native discovery's `off` setting maps to the chat endpoint's `none` value. Authentication and CORS do not need to be disabled.
