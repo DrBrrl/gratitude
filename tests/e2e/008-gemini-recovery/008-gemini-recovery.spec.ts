@@ -37,11 +37,30 @@ test('interrupted inference, provider failure, response outbox and consent revoc
     await expect(page.getByRole('button', { name: 'Sync received prompt' })).toBeEnabled({ timeout: 15_000 }); expect(calls).toBe(3);
     await expect(page.locator('.daily-prompt h2')).not.toHaveText(FIRST_PROMPT);
   }, 'The received response is durable on this device and is not displayed as a saved prompt yet');
-  await context.setOffline(false);
-  await steps.action('reload-result', 'Reload with a received response waiting in the outbox', () => page.reload(), async () => {
-    await expectSynced(page); await expect(page.getByRole('button', { name: 'Sync received prompt' })).toBeEnabled(); expect(calls).toBe(3);
+  // Reconnection normally auto-syncs received outputs. Keep backend confirmation
+  // unavailable through reload so its race with navigation cannot change the fixture.
+  const commitEndpoint=(url:URL)=>url.origin==='http://127.0.0.1:18080'&&url.pathname==='/v1/projects/demo-gratitude/databases/(default)/documents:commit';
+  let blockedConfirmations=0;
+  const rejectConfirmation=async(route:Route)=>{
+    const body=route.request().postDataJSON();
+    if(body.writes?.some((write:any)=>write.update?.fields?.type?.stringValue==='PromptResponseReceived')){
+      blockedConfirmations++;
+      await route.fulfill({status:503,json:{error:{code:503,status:'UNAVAILABLE',message:'Synthetic response-confirmation outage'}}});
+    }else await route.continue();
+  };
+  await context.route(commitEndpoint,rejectConfirmation);
+  await steps.action('reload-result', 'Reload with a received response waiting in the outbox', async () => {
+    await context.setOffline(false);
+    await expect.poll(()=>blockedConfirmations,{timeout:15_000}).toBeGreaterThan(0);
+    await page.reload();
+  }, async () => {
+    await expectSynced(page); await expect(page.getByRole('button', { name: 'Sync received prompt' })).toBeEnabled();
+    await expect(page.locator('.daily-prompt h2')).not.toHaveText(FIRST_PROMPT);expect(calls).toBe(3);
   });
-  await steps.action('sync-result', 'Sync the received output without new inference', () => page.getByRole('button', { name: 'Sync received prompt' }).click(), async () => {
+  await steps.action('sync-result', 'Sync the received output without new inference', async () => {
+    await page.getByRole('button', { name: 'Sync received prompt' }).click();
+    await context.unroute(commitEndpoint,rejectConfirmation);
+  }, async () => {
     await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT, { timeout: 15_000 }); await expect(page.getByRole('button', { name: 'Sync received prompt' })).toHaveCount(0); expect(calls).toBe(3);
   });
   // Prepare the other tab first so its navigation screenshots do not consume the
