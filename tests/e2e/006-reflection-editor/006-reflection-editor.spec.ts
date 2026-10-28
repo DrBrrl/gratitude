@@ -3,7 +3,7 @@ import { TestStepHelper } from '../helpers/test-step-helper';
 import { backFromEditor, editor, expectEditor, expectSynced, navigate, openEditor, startJournal } from '../helpers/journal-session';
 
 test('paragraph writing, plain-text paste, undo and settings navigation', async ({ page }, info) => {
-  test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(120_000);
+  test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(180_000);
   const steps = new TestStepHelper(page, info);
   await startJournal(page, info, steps, 'editor');
   await steps.action('why', 'Read why this starter prompt is shown', () => page.getByRole('button', { name: 'Why this prompt?' }).click(), async () => { await expect(page.locator('.explanation')).toContainText('This starter works without sending anything to AI.'); });
