@@ -10,7 +10,7 @@ const REVISED='Gentle questions about everyday sounds, please.';
 const AI_FEEDBACK='This question feels too repetitive; try a different focus.';
 test('prompt feedback pairs are visible, editable, removable and shared only by consent',async({page},info)=>{
   test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(600_000);
-  const steps=new TestStepHelper(page,info),contexts:any[]=[];
+  const steps=new TestStepHelper(page,info,{paintStaticPage:true}),contexts:any[]=[];
   await page.route(AI_ENDPOINT,async route=>{contexts.push(JSON.parse(route.request().postDataJSON().contents[0].parts[0].text));await respond(route,contexts.length===1?FIRST_PROMPT:SECOND_PROMPT);});
   const pair=(prompt:string)=>page.getByRole('article',{name:'Prompt and feedback',exact:true}).filter({has:page.locator('.feedback-prompt',{hasText:prompt})});
   async function writeFeedback(text:string,id:string){

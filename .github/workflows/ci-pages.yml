@@ -64,7 +64,7 @@ jobs:
       fail-fast: false
       matrix:
         project: [mobile-chromium, desktop-chromium]
-        suite: [journal, drafts, ai, photos, editor, import, calendar, calendar-edit]
+        suite: [journal, drafts, ai, local-ai, photos, editor, import, calendar, calendar-edit]
         include:
           - suite: journal
             scenarios: tests/e2e/(00[1-3]|010-)
@@ -81,7 +81,9 @@ jobs:
           - suite: photos
             scenarios: tests/e2e/01[12]-photo
           - suite: ai
-            scenarios: tests/e2e/(00[7-8]|024-|025-|026-)
+            scenarios: tests/e2e/(00[7-8]|024-)
+          - suite: local-ai
+            scenarios: tests/e2e/(025-|026-)
     env:
       BASE_PATH: /gratitude/pr-preview/firebase-check
     steps:

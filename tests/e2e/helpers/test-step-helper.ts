@@ -9,7 +9,7 @@ type DocStep = { description: string; image: string; checks: string[] };
 export class TestStepHelper {
   private steps: DocStep[] = [];
 
-  constructor(private page: Page, private info: TestInfo) {}
+  constructor(private page: Page, private info: TestInfo, private options: { paintStaticPage?: boolean } = {}) {}
 
   setPage(page: Page) { this.page = page; }
 
@@ -25,13 +25,27 @@ export class TestStepHelper {
       // can otherwise shift its scroll offset between beyond-viewport captures.
       // Capture all content, then restore the action's actual scroll position.
       const scroll = await capturePage.evaluate(() => ({ x: scrollX, y: scrollY }));
+      if (this.options.paintStaticPage) {
+        // Static walkthroughs can have glass layers several viewports below the
+        // fold. Visit every viewport to paint those layers before full-page capture.
+        // Never enable this for an infinite scroller: scrolling can load new content.
+        await capturePage.evaluate(async () => {
+          const bottom = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+          for (let y = 0; y <= bottom; y += innerHeight) {
+            window.scrollTo({ left: 0, top: y, behavior: 'instant' });
+            await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+          }
+          window.scrollTo({ left: 0, top: bottom, behavior: 'instant' });
+          await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+        });
+      }
       await capturePage.evaluate(() => window.scrollTo({ left: 0, top: 0, behavior: 'instant' }));
       // Let the browser composite glass/backdrop layers at the capture origin.
       // The scroll position can update before those layers finish repainting.
       await capturePage.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
       try {
         await expect(capturePage).toHaveScreenshot(filename, {
-          timeout: 10_000, // Slow CI needs time for two stable full-page renders; pixel tolerance stays zero.
+          timeout: 30_000, // Slow CI needs time for two stable full-page renders; pixel tolerance stays zero.
           fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css',
           maxDiffPixels: 0, threshold: 0
         });
