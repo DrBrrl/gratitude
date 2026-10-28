@@ -932,3 +932,27 @@ The follow-up adding the PR-preview destination also contains a private applicat
 ```text
 Wonderful, i don't want to overload you, but let's also look at the implementation of the token being saved to the user's account so it is available across devices. And can you recommend some settings for the token in LM Studio to make it as safe as possible?
 ```
+
+## 2026-10-29 — Ready to merge and begin everyday use
+
+```text
+Whooo! You've done a truly fantastic job there, friend! I think i am ready to merge that one. Tomorrow, i shall test out the app as my main gratitude app and will come back to report any bugs or issues i find! :)
+```
+
+## 2026-10-29 — Investigate a local prompt request with no result
+
+The diagnostic request included LM Studio logs containing truncated private journal context. The log payload is excluded from this public project record. The introductory instruction is preserved below.
+
+```text
+I tried getting my Gemma model to generate a prompt! Here's what the LM Studio logs say:
+```
+
+```text
+But no prompt was generated and nothing came through to the app!
+```
+
+## 2026-10-29 — Observed prompt-request failure state
+
+```text
+button turned into "find another request" - no error message
+```

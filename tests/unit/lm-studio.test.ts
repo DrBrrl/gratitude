@@ -9,7 +9,15 @@ const model={type:'llm',key:DEFAULT_LOCAL_MODEL,loaded_instances:[{id:DEFAULT_LO
 const completion=(text=' What small comfort did you notice?\n')=>({model:DEFAULT_LOCAL_MODEL,choices:[{finish_reason:'stop',message:{role:'assistant',content:text,reasoning_content:'This separate field must never enter the saved journal.'}}]});
 function endpoint(catalog:unknown={models:[model]},output:unknown=completion()) {
   const calls:{url:string;init:RequestInit}[]=[];
-  const fetcher:typeof fetch=async(url,init={})=>{calls.push({url:String(url),init});return Response.json(String(url).endsWith('/models')?catalog:output);};
+  const fetcher:typeof fetch=async(url,init={})=>{
+    calls.push({url:String(url),init});
+    if(!String(url).endsWith('/models')){
+      const body=JSON.parse(init.body as string);
+      // The live OpenAI-compatible endpoint rejects native discovery's 'off'.
+      if(body.reasoning_effort!==undefined&&!['none','minimal','low','medium','high','xhigh'].includes(body.reasoning_effort))return Response.json({error:'Invalid reasoning effort'},{status:400});
+    }
+    return Response.json(String(url).endsWith('/models')?catalog:output);
+  };
   return {calls,fetcher};
 }
 function storage():Storage {
@@ -35,7 +43,7 @@ test('Gemma receives the exact system/context messages and both supported thinki
   const context=JSON.stringify({reflections:{recent:[{date:'2026-10-01',text:'Fictional tea.'}]}});
   assert.deepEqual(await generateLocal(connection,SYSTEM_PROMPT,context,600,fetcher),{text:' What small comfort did you notice?\n',model:DEFAULT_LOCAL_MODEL,finishReason:'STOP'});
   const body=JSON.parse(calls[1].init.body as string);
-  assert.deepEqual(body,{model:DEFAULT_LOCAL_MODEL,messages:[{role:'system',content:SYSTEM_PROMPT},{role:'user',content:context}],stream:false,max_tokens:512,chat_template_kwargs:{enable_thinking:false},reasoning_effort:'off'});
+  assert.deepEqual(body,{model:DEFAULT_LOCAL_MODEL,messages:[{role:'system',content:SYSTEM_PROMPT},{role:'user',content:context}],stream:false,max_tokens:512,chat_template_kwargs:{enable_thinking:false},reasoning_effort:'none'});
   assert.equal(calls.length,2);assert.equal(calls[1].url,'http://127.0.0.1:8080/v1/chat/completions');
 });
 test('non-thinking models omit thinking arguments; models that cannot switch thinking off fail before inference',async()=>{
@@ -53,6 +61,7 @@ test('photos require a vision-capable model before any image reaches the server'
   assert.equal(textOnly.calls.length,1);assert.equal(textOnly.calls[0].init.body,undefined);
   const vision=endpoint();await generateLocal(connection,'system',[{type:'text',text:'Describe this photo.'},{type:'image_url',image_url:{url:'data:image/jpeg;base64,fictional'}}],1000,vision.fetcher);
   assert.equal(JSON.parse(vision.calls[1].init.body as string).max_tokens,768);
+  assert.equal(JSON.parse(vision.calls[1].init.body as string).reasoning_effort,'none');
 });
 test('provider failures never disclose bodies, retry inference or choose a cloud provider',async()=>{
   let count=0;

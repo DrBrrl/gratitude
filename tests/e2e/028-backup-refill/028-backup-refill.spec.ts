@@ -16,7 +16,7 @@ test('automatic backup refill uses the independent chosen model and normal promp
  await page.route('http://127.0.0.1:8080/**',async route=>{
   expect(route.request().headers().authorization).toBe('Bearer fictional-backup-token');
   if(route.request().url().endsWith('/api/v1/models'))return route.fulfill({json:{models:[{type:'llm',key:'google/gemma-4-31b',capabilities:{vision:true,reasoning:{allowed_options:['off','on']}},loaded_instances:[{id:'google/gemma-4-31b',config:{context_length:16384}}]}]}});
-  const body=route.request().postDataJSON();expect(body.model).toBe('google/gemma-4-31b');expect(body.messages[0]).toEqual({role:'system',content:SYSTEM_PROMPT});expect(body.chat_template_kwargs).toEqual({enable_thinking:false});expect(body.reasoning_effort).toBe('off');
+  const body=route.request().postDataJSON();expect(body.model).toBe('google/gemma-4-31b');expect(body.messages[0]).toEqual({role:'system',content:SYSTEM_PROMPT});expect(body.chat_template_kwargs).toEqual({enable_thinking:false});expect(body.reasoning_effort).toBe('none');
   const context=JSON.parse(body.messages[1].content);expect(context.preferences).toBe('Gentle questions about familiar sounds.');expect(context.promptFeedback).toEqual([]);localCalls++;
   return route.fulfill({json:{model:'google/gemma-4-31b',choices:[{finish_reason:'stop',message:{role:'assistant',content:LOCAL_PROMPT}}]}});
  });

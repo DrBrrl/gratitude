@@ -24,7 +24,7 @@ test('LM Studio prompts and photos use explicit local credentials and replay wit
    }
    expect(route.request().url()).toBe('http://127.0.0.1:8080/v1/chat/completions');
    const body=route.request().postDataJSON();submissions.push(body);
-   expect(body.model).toBe(MODEL);expect(body.chat_template_kwargs).toEqual({enable_thinking:false});expect(body.reasoning_effort).toBe('off');expect(body.stream).toBe(false);
+   expect(body.model).toBe(MODEL);expect(body.chat_template_kwargs).toEqual({enable_thinking:false});expect(body.reasoning_effort).toBe('none');expect(body.stream).toBe(false);
    if(failNext){failNext=false;await route.fulfill({status:503,headers,json:{error:'Do not display raw server details'}});return;}
    const image=Array.isArray(body.messages[1].content);
    if(image) {
