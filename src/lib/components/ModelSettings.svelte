@@ -1,6 +1,6 @@
 <script lang="ts">
   import {defaultConnection,saveConnection,probeLocalModel,type ModelConnection,type LocalCapabilities} from '$lib/ai/lm-studio';
-  let {connection,scope,disabled=false,initialError='',onchange}:{connection:ModelConnection;scope:string;disabled?:boolean;initialError?:string;onchange:(connection:ModelConnection)=>Promise<void>}=$props();
+  let {connection,scope,disabled=false,connectionOnly=false,initialError='',onchange}:{connection:ModelConnection;scope:string;disabled?:boolean;connectionOnly?:boolean;initialError?:string;onchange:(connection:ModelConnection)=>Promise<void>}=$props();
   let draft=$state<ModelConnection>(defaultConnection()),busy=$state(false),message=$state(''),failed=$state(false),capabilities=$state<LocalCapabilities|null>(null);
   $effect(()=>{draft={...connection};capabilities=null;});
   $effect(()=>{if(initialError){message=initialError;failed=true;}});
@@ -12,7 +12,7 @@
   }
   async function save() {
     busy=true;
-    try {const input=draft.provider==='gemini'?{...connection,provider:'gemini' as const,token:''}:$state.snapshot(draft);const saved=saveConnection(scope,input);await onchange(saved);failed=false;message='Provider saved to your account; connection settings saved on this device.';}
+    try {const input=draft.provider==='gemini'?{...connection,provider:'gemini' as const}:$state.snapshot(draft);const saved=saveConnection(scope,input);await onchange(saved);failed=false;message=connectionOnly?'Local connection saved on this device.':'Provider saved to your account; connection settings saved on this device.';}
     catch(error){failed=true;message=error instanceof Error?error.message:'Could not save model settings on this device.';}
     finally{busy=false;}
   }
@@ -20,10 +20,10 @@
 <section class="glass model-settings" aria-label="AI model connection">
   <h2>AI model</h2>
   <p class="hint">Current provider: {connection.provider==='lm-studio'?'LM Studio':'Gemini'}. Provider choice syncs across devices. The server address and token stay on this device.</p>
-  <label for="model-provider">AI provider</label>
+  {#if !connectionOnly}<label for="model-provider">AI provider</label>
   <select id="model-provider" bind:value={draft.provider} disabled={disabled||busy} onchange={()=>{message='';capabilities=null;}}>
     <option value="gemini">Gemini</option><option value="lm-studio">LM Studio · local model</option>
-  </select>
+  </select>{/if}
   {#if draft.provider==='lm-studio'}
     <label for="local-server">LM Studio server URL</label>
     <input id="local-server" type="url" bind:value={draft.baseUrl} disabled={disabled||busy} placeholder="http://127.0.0.1:8080" autocomplete="off" />

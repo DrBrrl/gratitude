@@ -71,3 +71,10 @@ test('failed and abandoned reserve requests do not change Today or block forever
   await scheduler.tick(input(),()=>state);assert.equal(calls,0);now+=180001;await scheduler.tick(input(),()=>state);assert.equal(calls,1);
   state=apply(state,{eventId:'pending_failure',type:'AIRequestFailed',schemaVersion:1,payload:{requestId:'pending',reason:'unavailable'}});assert.equal(availableBackups(state).length,0);assert.deepEqual(state.ai.days,{});
 });
+test('repeating model output pauses after three attempts and preserves all prior source output',async()=>{
+ let state=replay([{...choice,sequence:1,recordedAt:at}]);state=apply(state,await importedBackup('Which fictional sound was welcome?'));
+ let calls=0,now=Date.parse(at)+60_000;
+ const scheduler=new BackupRefiller(async()=>{calls++;const request=makeRequest(state,'2026-10-01','personal',`repeat${calls}`,undefined,undefined,target,true);state=apply(state,request);state=apply(state,{eventId:`repeat${calls}_response`,type:'PromptResponseReceived',schemaVersion:1,payload:{requestId:request.eventId,text:'Which fictional sound was welcome?',model:target.model,finishReason:'STOP'}});},()=>now);
+ for(let i=0;i<5;i++){now+=4000;await scheduler.tick({state,ready:true,online:true,visible:true,busy:false},()=>state);}
+ assert.equal(calls,3);assert.equal(availableBackups(state).length,1);assert.equal(Object.keys(state.ai.responses).length,3);assert.match(scheduler.status,/paused/);
+});

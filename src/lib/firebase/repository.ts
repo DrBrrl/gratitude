@@ -34,6 +34,7 @@ export class JournalRepository {
   private generating = false;
   private backupActions:BackupAction[]=[];
   private backupSyncing=false;
+  private backupQueue=Promise.resolve();
   private backupImporting=true;
   private importedBackups=false;
   private backupStatus='';
@@ -44,7 +45,7 @@ export class JournalRepository {
   private error = '';
   constructor(private client: FirebaseClient, private uid: string, private notify: (view: JournalView) => void) {}
   private emit() {
-    if (!this.stopped) this.notify({ state: this.state, pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, backupImporting:this.backupImporting,backupRemoved:this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),backupStatus:this.backupStatus, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
+    if (!this.stopped) this.notify({ state: this.state, pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, backupImporting:this.backupImporting||this.backupActions.some(a=>a.type==='BackupPromptImported'),backupRemoved:this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),backupStatus:this.backupStatus, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
   }
   async start() {
     const generation = ++this.listenerGeneration;
@@ -251,13 +252,22 @@ export class JournalRepository {
     }catch{this.backupStatus='Could not sync imported backups. Reconnect and reload to retry.';}
     finally{this.backupImporting=false;this.emit();}
   }
+  private updateBackupOutbox(change:(actions:BackupAction[])=>BackupAction[]) {
+    const next=this.backupQueue.catch(()=>{}).then(async()=>{
+      if(this.stopped)throw new Error('This journal session has closed.');
+      const actions=change(this.backupActions);
+      await this.db.put('outbox',actions,'backup-actions');
+      this.backupActions=actions;
+    });
+    this.backupQueue=next;return next;
+  }
   async queueBackup(action:BackupAction) {
-    if(!this.backupActions.some(a=>a.eventId===action.eventId)){this.backupActions.push(action);await this.db.put('outbox',this.backupActions,'backup-actions');}
+    await this.updateBackupOutbox(actions=>actions.some(a=>a.eventId===action.eventId)?actions:[...actions,action]);
     this.emit();if(navigator.onLine)await this.syncBackups();
   }
   async syncBackups() {
     if(this.backupSyncing||!navigator.onLine||this.stopped)return;this.backupSyncing=true;
-    try {while(this.backupActions.length&&!this.stopped){const action=this.backupActions[0];await this.commitAI(action);this.backupActions=this.backupActions.filter(a=>a.eventId!==action.eventId);await this.db.put('outbox',this.backupActions,'backup-actions');}this.backupStatus='';}
+    try {while(this.backupActions.length&&!this.stopped){const action=this.backupActions[0];await this.commitAI(action);await this.updateBackupOutbox(actions=>actions.filter(a=>a.eventId!==action.eventId));}this.backupStatus='';}
     catch {this.backupStatus='Backup changes are saved on this device; reconnect to sync.';}
     finally{this.backupSyncing=false;this.emit();}
   }
@@ -352,7 +362,7 @@ export class JournalRepository {
   stop() {
     this.stopped = true; this.listenerGeneration++;
     this.unsubscribe?.();
-    void Promise.all([this.chain, this.draftChain]).finally(() => this.db?.close());
+    void Promise.allSettled([this.chain, this.draftChain,this.backupQueue]).finally(() => this.db?.close());
   }
 }
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { isEditorRequest, requestEntryRefs } from '../domain';
+  import { isBackupRequest, isEditorRequest, requestEntryRefs } from '../domain';
   import { onMount, tick, untrack } from 'svelte';
   import { page } from '$app/state';
   import { goto, pushState, replaceState } from '$app/navigation';
@@ -19,11 +19,38 @@
   import { entryPhotos, emptyProjection, STARTER_ID, STARTER_PROMPT, promptId, resolvePrompt, type AIChoices, type Entry, type Action } from '$lib/domain';
 
   import { aiAvailable as geminiAvailable, personalContextAvailable as geminiPersonal, geminiGenerator } from '$lib/ai/gemini';
+  import BackupPicker from './BackupPicker.svelte';
+  import BackupPrompts from './BackupPrompts.svelte';
+  import {availableBackups} from '../backup-prompts';
+  import {BackupRefiller} from '../ai/backup-refiller';
   import ModelSettings from './ModelSettings.svelte';
   import PromptFeedback from './PromptFeedback.svelte';
   import {defaultConnection,readConnection,clearConnectionToken,localGenerator,type ModelConnection} from '$lib/ai/lm-studio';
   let modelConnection=$state<ModelConnection>(defaultConnection());
   let modelConnectionError=$state('');
+  let refillMessage=$state('');
+  async function selectBackup(id:string){
+    if(!repository||!resolvePrompt(view.state,id))return;
+    if(writing){editorPromptId=id;editorManualPrompt=null;await persistDraft();}
+    else{
+      const previous=todayDraftDay===today?todayDraft:null;
+      const action:Action={eventId:previous?.eventId??crypto.randomUUID(),type:'ReflectionWritten',schemaVersion:6,payload:{
+        entryId:previous?.payload.entryId??crypto.randomUUID(),expectedRevision:previous?.payload.expectedRevision??0,text:previous?.payload.text??'',promptId:id,promptText:null,
+        entryAt:previous&&'entryAt' in previous.payload?previous.payload.entryAt:null,photoSlot:previous&&'photoSlot' in previous.payload?previous.payload.photoSlot:null
+      }};
+      await repository.writeDraft(action,todayKey);todayDraft=action;todayDraftDay=today;
+    }
+  }
+  async function removeBackup(id:string){await repository?.queueBackup({eventId:crypto.randomUUID(),type:'BackupPromptRemoved',schemaVersion:1,payload:{promptId:id}});}
+  async function configureBackups(enabled:boolean,provider:'gemini'|'lm-studio'){if(!repository)return;await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:3,payload:{...view.state.ai.choices,backupEnabled:enabled,backupProvider:provider,previousEventId:view.state.ai.control.lastEventId}});refiller.reset();refillMessage='';}
+  const refiller=new BackupRefiller(async()=>{
+    if(!repository||!client)throw new Error('Open your journal first.');
+    const provider=view.state.ai.choices.backupProvider??'lm-studio';
+    if(provider==='lm-studio'&&modelConnectionError)throw new Error(modelConnectionError);
+    if(provider==='gemini'&&!geminiAvailable)throw new Error('Gemini is unavailable.');
+    const generate=provider==='lm-studio'?localGenerator({...$state.snapshot(modelConnection),provider:'lm-studio'}):geminiGenerator(client);
+    await repository.requestPrompt(today,provider==='lm-studio'||geminiPersonal?'personal':'generic',generate,undefined,true);
+  });
 
 
   const uiReview = import.meta.env.DEV && import.meta.env.VITE_UI_REVIEW === 'true';
@@ -61,8 +88,10 @@
   let text = $state('');
   let editing = $state<Entry | null>(null);
   let view = $state<JournalView>({ state: emptyProjection(), pending: null, status: '', error: '', ready: false });
+  const backups=$derived(availableBackups(view.state,view.backupRemoved,view.pending&&'promptId' in view.pending.payload?view.pending.payload.promptId:undefined));
   const accountProvider=$derived(view.state.ai.choices.provider);
   const activeConnection=$derived({...modelConnection,provider:accountProvider});
+  const localBackupConnection=$derived({...modelConnection,provider:'lm-studio' as const});
   const aiAvailable=$derived(!modelConnectionError&&(activeConnection.provider==='lm-studio'||geminiAvailable));
   const personalContextAvailable=$derived(activeConnection.provider==='lm-studio'||geminiPersonal);
   const providerName=$derived(activeConnection.provider==='lm-studio'?'LM Studio':'Gemini');
@@ -159,9 +188,9 @@
   const currentResponse = $derived(view.state.ai.responses[currentPromptId]);
   const currentRequest = $derived(currentResponse ? view.state.ai.requests[currentResponse.payload.requestId] : null);
   const pendingDailyRequest = $derived(view.state.ai.control.requestId ? view.state.ai.requests[view.state.ai.control.requestId] : null);
-  const dailyRequestPending = $derived(pendingDailyRequest && !isEditorRequest(pendingDailyRequest) && pendingDailyRequest.payload.day === today);
+  const dailyRequestPending = $derived(pendingDailyRequest && !isBackupRequest(pendingDailyRequest) && !isEditorRequest(pendingDailyRequest) && pendingDailyRequest.payload.day === today);
   const failedDailyRequest = $derived(view.state.ai.failure ? view.state.ai.requests[view.state.ai.failure.payload.requestId] : null);
-  const dailyRequestFailed = $derived(failedDailyRequest && !isEditorRequest(failedDailyRequest) && failedDailyRequest.payload.day === today);
+  const dailyRequestFailed = $derived(failedDailyRequest && !isBackupRequest(failedDailyRequest) && !isEditorRequest(failedDailyRequest) && failedDailyRequest.payload.day === today);
   let aiBusy = $state(false);
   let generatingPrompt = $state(false);
   let aiMessage = $state('');
@@ -172,8 +201,8 @@
     if (!repository) return;
     aiBusy = true; aiMessage = '';
     try {
-      await repository.commitAI({ eventId: crypto.randomUUID(), type: 'AIChoicesConfirmed', schemaVersion: 2,
-        payload: { previousEventId: view.state.ai.control.lastEventId, ...$state.snapshot(choices),provider:view.state.ai.choices.provider } });
+      await repository.commitAI({ eventId: crypto.randomUUID(), type: 'AIChoicesConfirmed', schemaVersion: 3,
+        payload: {backupEnabled:view.state.ai.choices.backupEnabled??false,backupProvider:view.state.ai.choices.backupProvider??'lm-studio', previousEventId: view.state.ai.control.lastEventId, enabled:choices.enabled,useJournal:choices.useJournal,useFeedback:choices.useFeedback,guidance:choices.guidance,provider:view.state.ai.choices.provider } });
       aiMessage = 'AI choices saved.';
     } catch (cause) { aiMessage = cause instanceof Error ? cause.message : 'Could not save AI choices.'; }
     finally { aiBusy = false; }
@@ -518,7 +547,7 @@
       client = createFirebaseClient(); configured = !!client;
       if (client) {
         stopAuth = onAuthStateChanged(client.auth, (next) => {
-          const current = ++session;
+          const current = ++session;refiller.reset();refillMessage='';
           repository?.stop(); repository = null;
           chooseInitialPage = true;
           aiBusy = false; generatingPrompt = false; aiMessage = ''; feedbackOpen = false; feedbackText = ''; choices = { enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' };
@@ -540,9 +569,10 @@
         });
       } else initialized = true;
     } catch { initialized = true; error = 'Sign-in is unavailable. Please try again later.'; }
-    const online = () => { void repository?.retry(); };
+    const online = () => {refiller.reset();void repository?.syncBackups();void repository?.syncPromptResult().catch(()=>{});void repository?.retry();};
+    const refillTimer=setInterval(()=>{void refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting,online:navigator.onLine,visible:document.visibilityState==='visible',busy:busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state).then(()=>{refillMessage=refiller.status;});},3000);
     window.addEventListener('online', online);
-    return () => { session++; stopAuth(); repository?.stop(); window.removeEventListener('online', online); };
+    return () => { session++; stopAuth(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
   });
   async function signIn() {
     if (uiReview) { await openReview(); return; }
@@ -652,6 +682,7 @@
           {#if showPromptCandidate && promptCandidate}
             <aside class="prompt-option" aria-label="Generated prompt option"><p class="hint">Generated option</p><p class="writing-prompt">{promptCandidate.payload.text}</p><div class="prompt-actions"><button class="card-action" type="button" onclick={useEditorPrompt} disabled={busy || editingPrompt}>Use this prompt</button><button class="card-action" type="button" onclick={() => dismissedPrompt = promptCandidate!.eventId}>Keep current prompt</button></div></aside>
           {/if}
+          <BackupPicker prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||editingPrompt} />
           <ReflectionEditor value={text} oninput={value => void persistDraft(value)} disabled={busy || !draftRestored} />
         </section>
         {#if client && repository}<PhotoPanel connection={activeConnection} {client} {repository} {view} uid={user.uid} entryId={draft?.payload.entryId ?? editing?.id ?? null} ensureEntry={ensurePhotoEntry} colour={editorColour} disabled={busy || !draftRestored} draft={!editing} onbusy={value => photoBusy = value} />{/if}
@@ -672,6 +703,7 @@
         <h1 class="today-heading">Reflection time</h1>
         {#if view.ready}
           <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID ? 'Starter prompt' : currentResponse ? 'AI prompt' : 'Your prompt'}</span><h2>{currentPrompt}</h2></section>
+          {#if !daily.entry}<BackupPicker prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||!draftLoaded||!!view.pending} />{/if}
           <button class="primary today-response" onclick={beginWriting} disabled={busy || !draftLoaded || todayDraftDay !== today}>{hasTodayDraft || daily.entry ? 'Continue your reflection' : 'Write a response'}</button>
           {#if daily.entry}<button class="outline additional-response" onclick={newEntry} disabled={busy || !draftLoaded || !!view.pending}>Write another reflection</button>{/if}
           {#if !daily.entry && !hasTodayDraft}
@@ -683,7 +715,7 @@
           {/if}
           {#if view.aiResultPending}<section class="glass"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
           <button class="text-button today-secondary" onclick={() => navigate('journal')}>Browse your journal</button>
-          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<div class="glass explanation">{#if currentRequest}<p>This question was generated by {'provider' in currentRequest.payload ? 'LM Studio' : 'Gemini'}.{currentRequest.payload.contextMode === 'generic' ? ' No journal text, preferences or feedback was shared.' : ` It used your saved preferences, ${requestEntryRefs(currentRequest).length} saved reflections and ${currentRequest.payload.feedbackIds.length} pieces of feedback.`}</p>{:else if currentPromptId !== STARTER_ID}<p>You wrote this prompt. It is saved with your reflection.</p>{:else}<p>A simple starting point for noticing something good. You can write as little or as much as you like. This starter works without sending anything to AI.</p>{/if}<button class="underlined" onclick={openFeedback} disabled={!resolvePrompt(view.state, currentPromptId)}>Give prompt feedback</button>{#if feedbackOpen}<label class="ai-label" for="prompt-feedback">What would make prompts better for you?</label><textarea id="prompt-feedback" maxlength="500" rows="3" bind:value={feedbackText}></textarea><p class="hint">A short note in your own words. Clear the text to remove it from future personalization.</p><button class="outline" onclick={saveFeedback} disabled={aiBusy}>Save feedback</button>{/if}</div>{/if}</div>
+          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<div class="glass explanation">{#if currentRequest}<p>This question was generated by {'provider' in currentRequest.payload ? 'LM Studio' : 'Gemini'}.{currentRequest.payload.contextMode === 'generic' ? ' No journal text, preferences or feedback was shared.' : ` It used your saved preferences, ${requestEntryRefs(currentRequest).length} saved reflections and ${currentRequest.payload.feedbackIds.length} pieces of feedback.`}</p>{:else if view.state.backups[currentPromptId]}<p>A personalised question from your saved backup prompts. No AI request was needed to choose it.</p>{:else if currentPromptId !== STARTER_ID}<p>You wrote this prompt. It is saved with your reflection.</p>{:else}<p>A simple starting point for noticing something good. You can write as little or as much as you like. This starter works without sending anything to AI.</p>{/if}<button class="underlined" onclick={openFeedback} disabled={!resolvePrompt(view.state, currentPromptId)}>Give prompt feedback</button>{#if feedbackOpen}<label class="ai-label" for="prompt-feedback">What would make prompts better for you?</label><textarea id="prompt-feedback" maxlength="500" rows="3" bind:value={feedbackText}></textarea><p class="hint">A short note in your own words. Clear the text to remove it from future personalization.</p><button class="outline" onclick={saveFeedback} disabled={aiBusy}>Save feedback</button>{/if}</div>{/if}</div>
         {/if}
       {/if}
     {:else if tab === 'journal'}
@@ -734,8 +766,8 @@
         {#if uiReview}<details class="review-tools glass"><summary>UI review</summary><p class="hint">Fictional journal on this browser only.</p><button class="outline" onclick={() => resetReview?.()}>Restore sample journal</button><button class="text-button" onclick={() => resetReview?.(true)}>Show empty journal</button></details>{/if}
       {:else if settingsPage === 'ai'}
         <h1 class="page-heading">AI settings</h1>
-        <ModelSettings connection={activeConnection} scope={modelScope} disabled={aiBusy||generatingPrompt||!!view.aiResultPending||uiReview} initialError={modelConnectionError} onchange={async connection=>{if(!repository)throw new Error('Open your journal first.');await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:2,payload:{...view.state.ai.choices,previousEventId:view.state.ai.control.lastEventId,provider:connection.provider}});modelConnection=connection;modelConnectionError='';}} />
-        <p class="hint">Ask {providerName} for a gentle gratitude question. Prompt context is sent only when you request one.</p>
+        <ModelSettings connection={activeConnection} scope={modelScope} disabled={aiBusy||generatingPrompt||!!view.aiResultPending||uiReview} initialError={modelConnectionError} onchange={async connection=>{if(!repository)throw new Error('Open your journal first.');await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:3,payload:{...view.state.ai.choices,backupEnabled:view.state.ai.choices.backupEnabled??false,backupProvider:view.state.ai.choices.backupProvider??'lm-studio',previousEventId:view.state.ai.control.lastEventId,provider:connection.provider}});modelConnection=connection;modelConnectionError='';}} />
+        <p class="hint">Ask {providerName} for a gentle gratitude question. Prompt context is sent when you request a question or enable automatic backup refills.</p>
         {#if !aiAvailable || uiReview}<p class="hint">Live AI is available only on a configured Firebase site.</p>{/if}
         <section class="glass preferences">
           <div class="preference"><span>AI prompts</span><button class="switch" role="switch" aria-checked={choices.enabled} aria-label="AI prompts" onclick={() => choices.enabled = !choices.enabled} disabled={aiBusy || !aiAvailable || uiReview}><span></span></button></div>
@@ -749,6 +781,9 @@
         {:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
         <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {providerName} processing for each photo.</p><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
+        {#if repository}<BackupPrompts {view} {repository} email={user.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups} />
+        {#if view.state.ai.choices.backupProvider==='lm-studio' && accountProvider!=='lm-studio'}<details class="backup-connection"><summary>Local backup connection</summary><ModelSettings connection={localBackupConnection} scope={modelScope} connectionOnly disabled={aiBusy||uiReview} onchange={async connection=>{modelConnection=connection;modelConnectionError='';refiller.reset();}} /></details>{/if}
+        {#if refillMessage}<p class="hint" role="status">{refillMessage}</p><button class="outline" onclick={()=>{refiller.reset();refillMessage='';}}>Retry backup refill</button>{/if}{/if}
       {:else if settingsPage === 'import'}
         <h1 class="page-heading">Import journal</h1>
         {#if client && repository}<ImportPanel {client} {repository} {view} uid={user.uid} email={user.email ?? 'your signed-in account'} />{:else}<p>Sign in to your synced journal to import an export.</p>{/if}
