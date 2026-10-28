@@ -119,6 +119,7 @@
   let tab = $state<'today' | 'journal' | 'settings'>('today');
   let chooseInitialPage = true;
   function receiveView(value: JournalView) {
+    if(value.state.ai.days[today]!==view.state.ai.days[today])dailyPromptError=null;
     view = value;
     // Choose the landing page once from the loaded projection. Later syncs must
     // not interrupt writing or an explicitly selected tab.
@@ -206,6 +207,7 @@
   let aiBusy = $state(false);
   let generatingPrompt = $state(false);
   let aiMessage = $state('');
+  let dailyPromptError=$state<{day:string;text:string}|null>(null);
   let choices = $state<AIChoices>({ enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' });
   let feedbackOpen = $state(false);
   let feedbackText = $state('');
@@ -222,13 +224,15 @@
   async function generatePrompt() {
     const active = repository;
     if (!active || !client) return;
-    generatingPrompt = true; aiMessage = '';
-    try { await active.requestPrompt(today, personalContextAvailable ? 'personal' : 'generic', promptGenerator()); }
-    catch (cause) { if (repository === active) aiMessage = cause instanceof Error ? cause.message : 'Could not request a prompt.'; }
+    const requestedDay=today;
+    generatingPrompt = true; aiMessage = '';dailyPromptError=null;
+    try { await active.requestPrompt(requestedDay, personalContextAvailable ? 'personal' : 'generic', promptGenerator()); }
+    catch (cause) { if (repository === active) dailyPromptError={day:requestedDay,text:cause instanceof Error ? cause.message : 'Could not request a prompt.'}; }
     finally { if (repository === active) generatingPrompt = false; }
   }
   async function useStarter() {
     if (!repository) return;
+    dailyPromptError=null;
     aiBusy = true; aiMessage = '';
     try { await repository.commitAI({ eventId: crypto.randomUUID(), type: 'StarterPromptChosen', schemaVersion: 1,
       payload: { previousEventId: view.state.ai.control.lastEventId, day: today, starterId: STARTER_ID } }); }
@@ -474,7 +478,7 @@
   async function newEntry() { if(dateFilter)await startDateReflection(dateFilter);else await openComposer(newEntryKey, undefined); }
   async function openSettings(next: typeof settingsPage) { settingsPage = next; exportStatus = ''; preparedFile = null; aiMessage = ''; if (next === 'ai') choices = { ...view.state.ai.choices }; await tick(); window.scrollTo(0, 0); }
 
-  async function navigate(next: typeof tab) { if(flow || page.state.calendar || page.url.searchParams.has('calendar')){flow=null;appliedFlow='';dateFilter=null;try{sessionStorage.removeItem(navKey);}catch{}pushState(`${base}/journal/`,{...page.state,calendar:null});} chooseInitialPage = false; tab = next; selectedId = null; writing = false; savedId = null; settingsPage = 'menu'; aiMessage = ''; feedbackOpen = false; await tick(); window.scrollTo(0, 0); }
+  async function navigate(next: typeof tab) { if(flow || page.state.calendar || page.url.searchParams.has('calendar')){flow=null;appliedFlow='';dateFilter=null;try{sessionStorage.removeItem(navKey);}catch{}pushState(`${base}/journal/`,{...page.state,calendar:null});} chooseInitialPage = false; tab = next; selectedId = null; writing = false; savedId = null; settingsPage = 'menu'; aiMessage = '';dailyPromptError=null; feedbackOpen = false; await tick(); window.scrollTo(0, 0); }
   async function openEntry(entry: Entry) { if(flow){await appendFrame({kind:'entry',id:entry.id});return;} journalScroll = window.scrollY; selectedId = entry.id; await tick(); document.getElementById('entry-heading')?.focus(); window.scrollTo(0, 0); }
   async function closeEntry() { if(flow){backFlow();return;} const id = selectedId; selectedId = null; await tick(); document.getElementById(`view-${id}`)?.focus({ preventScroll: true }); window.scrollTo(0, journalScroll); }
 
@@ -559,7 +563,7 @@
       client = createFirebaseClient(); configured = !!client;
       if (client) {
         stopAuth = onAuthStateChanged(client.auth, (next) => {
-          const current = ++session;refiller.reset();refillMessage='';
+          const current = ++session;refiller.reset();refillMessage='';dailyPromptError=null;
           credentialStore?.stop();credentialStore=null;credentialStatus={ready:false,saved:false,error:''};
           repository?.stop(); repository = null;
           chooseInitialPage = true;
@@ -731,6 +735,7 @@
           {#if !daily.entry}<BackupPicker prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||!draftLoaded||!!view.pending} />{/if}
           <button class="primary today-response" onclick={beginWriting} disabled={busy || !draftLoaded || todayDraftDay !== today}>{hasTodayDraft || daily.entry ? 'Continue your reflection' : 'Write a response'}</button>
           {#if daily.entry}<button class="outline additional-response" onclick={newEntry} disabled={busy || !draftLoaded || !!view.pending}>Write another reflection</button>{/if}
+          {#if !daily.entry && !hasTodayDraft && !generatingPrompt && (dailyPromptError?.day===today || dailyRequestFailed)}<p class="ai-message hint prompt-request-error" role="status">{dailyPromptError?.day===today ? dailyPromptError.text : view.state.ai.failure?.payload.reason==='invalid-response' ? 'The AI returned an incomplete or invalid prompt. Try again or choose a backup prompt.' : 'No new prompt arrived. Check your AI connection, try again, or choose a backup prompt.'}</p>{/if}
           {#if !daily.entry && !hasTodayDraft}
             {#if view.state.ai.choices.enabled}
               <button class="outline ai-generate" onclick={generatePrompt} disabled={aiBusy || generatingPrompt || !!view.aiResultPending || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : dailyRequestPending || dailyRequestFailed ? 'Try another request' : currentResponse ? 'Another prompt' : 'Find me a prompt'}</button>
@@ -964,6 +969,7 @@
   .switch[aria-checked=true] { background: #d7b839; }
   .switch[aria-checked=true] span { margin-left: auto; }
   .ai-generate { margin: 14px 0; }
+  .prompt-request-error { padding: 12px 14px; border: 1px solid #e8d47866; border-radius: 12px; background: #14181ce6; color: #e8dcc4; margin: 0 0 14px; }
   .ai-label { display: block; margin: 18px 0 10px; line-height: 1.5; }
   textarea { width: 100%; resize: vertical; font: inherit; line-height: 1.5; color: inherit; background: #171c24b3; border: 1px solid #b9c1cb80; border-radius: 12px; padding: 12px; margin-bottom: 14px; }
   textarea:focus-visible { outline: none; border-color: #d5d7dc; }
