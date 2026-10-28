@@ -11,7 +11,7 @@ const TOKEN='fictional-local-lm-token',MODEL='google/gemma-4-31b';
 const FIRST='What small outdoor moment brought you comfort?',SECOND='What everyday kindness would you like to remember?',SUMMARY='A yellow mug beside a blue window.';
 test('LM Studio prompts and photos use explicit local credentials and replay without inference',async({page,browser},info)=>{
  test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(600_000);
- const steps=new TestStepHelper(page,info);let cloud=0,discovery=0,failNext=false;
+ const steps=new TestStepHelper(page,info,{paintStaticPage:true});let cloud=0,discovery=0,failNext=false;
  const submissions:any[]=[];
  await page.route(AI_ENDPOINT,async route=>{cloud++;await route.fulfill({status:503,body:'{}'});});
  const localRoute=async (route:Route)=>{

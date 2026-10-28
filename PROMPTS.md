@@ -898,3 +898,9 @@ Yes, use Tailscale HTTPS
 ```text
 That's looking great. Let's add to this PR. I would like for any feedback the user writes on individual prompts to be added to the JSON sent to Gemini - you already seem to have a section for that called "promptFeedback" - shouldn't that section have the prompt that the user is feeding back on + the user text? And those feedback bits should be made visible to the user in the AI settings - in the What informs your prompts box. Pairs of prompts + feedback where the user is able to edit their feedback if they like or delete the pair if they like. There's more, but let's go one step at a time!
 ```
+
+## 2026-10-28 — Fix PR #13 checks
+
+```text
+Some tests failed!
+```

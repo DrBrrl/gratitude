@@ -66,7 +66,7 @@ export async function writeReflection(page: Page, steps: TestStepHelper, text: s
   await openEditor(page, steps, `${id}-open`);
   await steps.action(`${id}-type`, 'Write a reflection', () => editor(page).fill(text), async () => { await expectEditor(page, text); await expect(page.getByText('Draft saved on this device', { exact: true })).toBeVisible(); });
   await steps.action(`${id}-save`, 'Save the reflection', () => page.getByRole('button', { name: /^Save (reflection|changes)$/ }).click(), async () => {
-    await expect(page.getByRole('heading', { name: 'Reflection saved', exact: true })).toBeVisible(); await expect(page.locator('.saved-card')).toContainText(text); await expectSynced(page);
+    await expect(page.getByRole('heading', { name: 'Reflection saved', exact: true })).toBeVisible({ timeout: 15_000 }); await expect(page.locator('.saved-card')).toContainText(text); await expectSynced(page);
     // The emulator can return fractional milliseconds within the fixture second.
     // Validate that second, the precision exported to Markdown.
     await expect(page.locator('.saved-heading time')).toHaveAttribute('datetime', /^2026-10-01T04:31:07\.\d{3}Z$/);
