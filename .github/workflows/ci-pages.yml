@@ -85,9 +85,9 @@ jobs:
           - suite: backups
             scenarios: tests/e2e/02[78]-
           - suite: credentials
-            scenarios: tests/e2e/029-
+            scenarios: tests/e2e/(029-|030-)
           - suite: local-ai
-            scenarios: tests/e2e/(025-|026-|030-)
+            scenarios: tests/e2e/(025-|026-)
     env:
       BASE_PATH: /gratitude/pr-preview/firebase-check
     steps:
