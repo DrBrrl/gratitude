@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {defaultConnection,validateConnection,serverOrigin,probeLocalModel,generateLocal,localGenerator,parseLocalResponse,readConnection,saveConnection,clearConnectionToken,DEFAULT_LOCAL_MODEL,type ModelConnection} from '../../src/lib/ai/lm-studio.ts';
+import {defaultConnection,validateConnection,serverOrigin,probeLocalModel,generateLocal,localGenerator,parseLocalResponse,readConnection,saveConnection,wasAccountConnection,clearConnectionToken,DEFAULT_LOCAL_MODEL,type ModelConnection} from '../../src/lib/ai/lm-studio.ts';
 import {makeRequest,buildContext,SYSTEM_PROMPT} from '../../src/lib/ai/context.ts';
 import {replay,parseAction,STARTER_ID,type SourceAction,type JournalEvent} from '../../src/lib/domain.ts';
 
@@ -105,4 +105,22 @@ test('local photo requests record the chosen provider but replay only the receiv
   const events=log(actions),full=replay(events);assert.equal(full.photos.entry_0.summary,'A yellow mug beside a window.');
   assert.deepEqual(replay(events.slice(2),replay(events.slice(0,2))),full);
   assert.throws(()=>parseAction({...actions[2],payload:{...actions[2].payload,token:'secret'}}));
+});
+
+
+test('account-token provenance survives reloads but never follows another token or destination',()=>{
+ const preferences=storage(),secrets=storage();
+ saveConnection('account',connection,preferences,secrets,true);
+ assert.equal(wasAccountConnection('account',secrets),true);
+ assert.equal(wasAccountConnection('other-account',secrets),false);
+ saveConnection('account',{...connection,provider:'gemini'},preferences,secrets);
+ assert.equal(wasAccountConnection('account',secrets),true);
+ saveConnection('account',{...connection,token:'fictional-replacement'},preferences,secrets);
+ assert.equal(wasAccountConnection('account',secrets),false);
+ saveConnection('account',connection,preferences,secrets,true);
+ saveConnection('account',{...connection,baseUrl:'https://different.example.test'},preferences,secrets);
+ assert.equal(wasAccountConnection('account',secrets),false);
+ saveConnection('account',connection,preferences,secrets,true);
+ clearConnectionToken('account',secrets);
+ assert.equal(wasAccountConnection('account',secrets),false);
 });
