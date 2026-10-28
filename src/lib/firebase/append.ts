@@ -1,6 +1,7 @@
 import { stableJSON } from '../import-source.ts';
 import { doc, getDocFromServer, runTransaction, serverTimestamp, Timestamp, type Firestore, type DocumentData } from 'firebase/firestore';
-import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, isLocalRequest, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey } from '../domain.ts';
+import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, isLocalRequest, isBackupRequest, isBackupAction, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey } from '../domain.ts';
+import {BACKUP_LEASE_MS} from '../backup-prompts.ts';
 
 export function decodeEvent(data: DocumentData): JournalEvent {
   const payload = data.type === 'ReflectionWritten' && (data.schemaVersion === 3 || data.schemaVersion === 4 || data.schemaVersion === 5 || data.schemaVersion === 6) && data.payload.entryAt
@@ -13,7 +14,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
   const action = parseAction(input);
   const stream = doc(db, `users/${uid}/streams/${GENERATION}`);
   const event = doc(db, `${stream.path}/events/${action.eventId}`);
-  const pointer = doc(db, action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
+  const pointer = doc(db, action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
   const resultFromPrior = (value: DocumentData) => {
     const decoded = decodeEvent(value);
     const original = parseAction({ eventId: decoded.eventId, type: decoded.type, schemaVersion: decoded.schemaVersion, payload: decoded.payload });
@@ -27,7 +28,10 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
       const head = await tx.get(stream);
       const latest = await tx.get(pointer);
       let metadata: Record<string, unknown>;
-      if (action.type === 'ImportRecordConfirmed') {
+      if (isBackupAction(action)) {
+        if(action.type==='BackupPromptRemoved' && !latest.exists()) {const source=await tx.get(doc(db,`${stream.path}/events/${action.payload.promptId}`));if(!source.exists() || source.get('type')!=='PromptResponseReceived') throw new Error('Unknown backup prompt.');}
+        metadata={lastEventId:action.eventId};
+      } else if (action.type === 'ImportRecordConfirmed') {
         if (latest.exists() || (await tx.get(doc(db, `${stream.path}/entries/${action.payload.entryId}`))).exists()) throw new Error('Import identity already claimed.');
         metadata = { confirmationId: action.eventId, lastEventId: action.eventId };
       } else if (action.type === 'ReflectionImported') {
@@ -64,7 +68,11 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
         if (action.type === 'PromptRequested') {
           if (action.payload.choicesId !== control.choicesId) throw new Error('AI consent changed. Please try again.');
           const choices = await tx.get(doc(db, `${stream.path}/events/${action.payload.choicesId}`));
-          if ((choices.get('payload.provider')??'gemini')!==(isLocalRequest(action)?'lm-studio':'gemini')) throw new Error('AI provider changed. Review your model settings.');
+          if ((isBackupRequest(action)?choices.get('payload.backupProvider'):(choices.get('payload.provider')??'gemini'))!==(isLocalRequest(action)?'lm-studio':'gemini')) throw new Error('AI provider changed. Review your model settings.');
+          if(isBackupRequest(action)) {
+            if(!choices.get('payload.backupEnabled')) throw new Error('Backup generation is disabled.');
+            if(control.requestId) {const pending=await tx.get(doc(db,`${stream.path}/events/${control.requestId}`));if(pending.exists() && Date.now()-pending.get('recordedAt').toMillis()<BACKUP_LEASE_MS) throw new Error('Another prompt is being generated.');}
+          }
           if (!choices.get('payload.enabled')) throw new Error('Enable AI prompts in Settings first.');
           if (requestEntryRefs(action).length && !choices.get('payload.useJournal') || action.payload.feedbackIds.length && !choices.get('payload.useFeedback')) throw new Error('AI consent changed. Please try again.');
           if (isEditorRequest(action)) {

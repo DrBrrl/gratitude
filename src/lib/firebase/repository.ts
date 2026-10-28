@@ -1,17 +1,18 @@
 import type { GenerateSummary } from '../ai/local-contract';
 import type { ImportSelection } from '../import-archive';
-import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, orderBy, query, where, limit } from 'firebase/firestore';
 import { appendReflection, decodeEvent } from './append';
 import { openDB, type IDBPDatabase } from 'idb';
 import { base } from '$app/paths';
-import { applyEvent, emptyProjection, replay, GENERATION, PROJECTION_VERSION, type Action, type AIAction, type ResponseAction, type Projection, type PhotoAction, type ImportAction, photoKey } from '../domain';
+import { applyEvent, emptyProjection, replay, GENERATION, PROJECTION_VERSION, type Action, type AIAction, type ResponseAction, type Projection, type PhotoAction, type ImportAction, type BackupAction, photoKey } from '../domain';
 import type { FirebaseClient } from './client';
 import { makeRequest, buildContext, type GeneratePrompt } from '../ai/context';
 
 import { erasePhoto, type StagedPhoto } from '../photos';
+import {availableBackups,importedBackup,BACKUP_MINIMUM} from '../backup-prompts';
 
 type Checkpoint = { state: Projection; digest: string };
-export type JournalView = { state: Projection; pending: Action | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean };
+export type JournalView = { state: Projection; pending: Action | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean; backupRemoved?: string[]; backupStatus?: string; backupImporting?: boolean };
 async function digest(state: Projection) {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(state)));
   return [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, '0')).join('');
@@ -31,6 +32,11 @@ export class JournalRepository {
   private pendingAnchor: { id: string; sequence: number } | null = null;
   private aiResult: ResponseAction | null = null;
   private generating = false;
+  private backupActions:BackupAction[]=[];
+  private backupSyncing=false;
+  private backupImporting=true;
+  private importedBackups=false;
+  private backupStatus='';
   private photoResults: Record<string, PhotoAction> = {};
   private photoCleanup: Record<string, string> = {};
   private photoRequests = new Set<string>();
@@ -38,7 +44,7 @@ export class JournalRepository {
   private error = '';
   constructor(private client: FirebaseClient, private uid: string, private notify: (view: JournalView) => void) {}
   private emit() {
-    if (!this.stopped) this.notify({ state: this.state, pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
+    if (!this.stopped) this.notify({ state: this.state, pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, backupImporting:this.backupImporting,backupRemoved:this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),backupStatus:this.backupStatus, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
   }
   async start() {
     const generation = ++this.listenerGeneration;
@@ -48,6 +54,7 @@ export class JournalRepository {
     });
     if (this.stopped) { this.db.close(); return; }
     this.pending = await this.db.get('outbox', 'pending') ?? null;
+    this.backupActions=await this.db.get('outbox','backup-actions')??[];
     this.aiResult = await this.db.get('outbox', 'ai-result') ?? null;
     this.photoResults = await this.db.get('outbox', 'photo-results') ?? {};
     this.photoCleanup = await this.db.get('outbox', 'photo-cleanup') ?? {};
@@ -56,20 +63,11 @@ export class JournalRepository {
     if (checkpoint) {
       try {
         const s = checkpoint.state;
-        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.usage || !s.photos || !s.prompts || !s.imports ||
+        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
           if (!s.lastEventId) throw new Error('Invalid checkpoint anchor');
-          try {
-            const anchor = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${s.lastEventId}`));
-            if (!anchor.exists() || anchor.get('sequence') !== s.cursor) throw new Error('Stale checkpoint');
-          } catch (cause) {
-            // Unavailability is not evidence of corruption. Retain a digest-checked
-            // prefix provisionally, then verify its anchor before accepting a server tail.
-            const code = (cause as { code?: string }).code;
-            if (code !== 'unavailable' && code !== 'deadline-exceeded') throw cause;
-            this.pendingAnchor = { id: s.lastEventId, sequence: s.cursor };
-          }
+          this.pendingAnchor = {id:s.lastEventId,sequence:s.cursor};
         }
         this.state = s;
         this.ready = true;
@@ -105,7 +103,9 @@ export class JournalRepository {
           await this.db.put('cache', checkpoint, 'checkpoint');
           if (this.stopped || generation !== this.listenerGeneration) return;
           this.state = next;
+          if(!snapshot.metadata.fromCache && this.backupActions.length) void this.syncBackups().catch(()=>{});
           this.ready = true; this.error = '';
+          if(!snapshot.metadata.fromCache && !this.importedBackups){this.importedBackups=true;void this.loadBackupImports();}
           // A stream read does not acknowledge an outstanding write.
           if (!this.pending) this.status = snapshot.metadata.fromCache ? 'Showing entries on this device; waiting to sync' : 'Synced';
           this.emit();
@@ -148,6 +148,7 @@ export class JournalRepository {
     if (!draft) return null;
     if (this.pending?.eventId === draft.eventId) { await this.clearDraft(key); return null; }
     try {
+      if(!navigator.onLine)return draft;
       const committed = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/events/${draft.eventId}`));
       if (committed.exists()) { await this.clearDraft(key); return null; }
     } catch { /* Offline drafts remain recoverable; append deduplicates the stable action ID. */ }
@@ -195,7 +196,7 @@ export class JournalRepository {
     await this.db.delete('outbox', 'pending');
     this.pending = null; this.error = ''; this.status = 'Pending save returned to editor'; this.emit();
   }
-  async commitAI(action: AIAction | PhotoAction | ImportAction) {
+  async commitAI(action: AIAction | PhotoAction | ImportAction | BackupAction) {
     if (!this.ready || this.stopped || !navigator.onLine) throw new Error('Connect and wait for your journal to sync first.');
     const result = await appendReflection(this.client.db, this.uid, action);
     // Await the confirmed projection, never invoke an AI adapter from a listener.
@@ -207,11 +208,12 @@ export class JournalRepository {
     if (this.stopped) throw new Error('This journal session has closed.');
     return result;
   }
-  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string) {
-    if (this.generating) return;
+  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string, backup=false) {
+    if (this.generating) throw new Error('A prompt is being generated. You can use a saved backup immediately.');
+    if(backup && availableBackups(this.state,this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),this.pending&&'promptId' in this.pending.payload?this.pending.payload.promptId:undefined).length>=BACKUP_MINIMUM) return;
     if (this.aiResult) throw new Error('Sync the received prompt before requesting another.');
     const snapshot = this.state;
-    const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId, undefined, generate.target);
+    const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId, undefined, generate.target, backup);
     this.generating = true;
     try {
       const committed = await this.commitAI(request);
@@ -235,6 +237,29 @@ export class JournalRepository {
       this.aiResult = response; this.emit();
       await this.syncPromptResult();
     } finally { this.generating = false; }
+  }
+  private async loadBackupImports() {
+    try {
+      const staged=await getDocsFromServer(query(collection(this.client.db,`users/${this.uid}/backupPromptImports`),limit(2001)));
+      if(staged.size>2000)throw new Error('Too many staged prompts.');
+      for(const item of staged.docs){
+        if(this.stopped)return;
+        const action=await importedBackup(item.get('text'));
+        if(action.eventId!==item.id)throw new Error('Invalid staged prompt identity.');
+        if(!this.state.backups[action.eventId])await this.queueBackup(action);
+      }
+    }catch{this.backupStatus='Could not sync imported backups. Reconnect and reload to retry.';}
+    finally{this.backupImporting=false;this.emit();}
+  }
+  async queueBackup(action:BackupAction) {
+    if(!this.backupActions.some(a=>a.eventId===action.eventId)){this.backupActions.push(action);await this.db.put('outbox',this.backupActions,'backup-actions');}
+    this.emit();if(navigator.onLine)await this.syncBackups();
+  }
+  async syncBackups() {
+    if(this.backupSyncing||!navigator.onLine||this.stopped)return;this.backupSyncing=true;
+    try {while(this.backupActions.length&&!this.stopped){const action=this.backupActions[0];await this.commitAI(action);this.backupActions=this.backupActions.filter(a=>a.eventId!==action.eventId);await this.db.put('outbox',this.backupActions,'backup-actions');}this.backupStatus='';}
+    catch {this.backupStatus='Backup changes are saved on this device; reconnect to sync.';}
+    finally{this.backupSyncing=false;this.emit();}
   }
   async syncPromptResult() {
     if (!this.aiResult) return;
@@ -332,4 +357,4 @@ export class JournalRepository {
 }
 
 /** UI-facing contract shared with the development event-fixture adapter. */
-export type JournalStore = Pick<JournalRepository, 'readImportArchive' | 'storeImportArchive' | 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult' | 'requestPhotoSummary' | 'syncPhotoResult' | 'readStagedPhoto' | 'stagePhoto' | 'clearStagedPhoto' | 'cancelStagedPhoto' | 'removePhoto' | 'retryPhotoCleanup'>;
+export type JournalStore = Pick<JournalRepository, 'queueBackup' | 'syncBackups' | 'readImportArchive' | 'storeImportArchive' | 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult' | 'requestPhotoSummary' | 'syncPhotoResult' | 'readStagedPhoto' | 'stagePhoto' | 'clearStagedPhoto' | 'cancelStagedPhoto' | 'removePhoto' | 'retryPhotoCleanup'>;
