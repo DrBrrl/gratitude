@@ -4,24 +4,24 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
-		<link href="./_app/immutable/entry/start.DsrY-4SW.js" rel="modulepreload">
-		<link href="./_app/immutable/chunks/Dvr57Ug0.js" rel="modulepreload">
+		<link href="./_app/immutable/entry/start.w-lhrpYw.js" rel="modulepreload">
+		<link href="./_app/immutable/chunks/BZRZnxLp.js" rel="modulepreload">
 		<link href="./_app/immutable/chunks/GTgXyKOD.js" rel="modulepreload">
-		<link href="./_app/immutable/entry/app.Cqr1gCPZ.js" rel="modulepreload">
+		<link href="./_app/immutable/entry/app.B4sd3GlX.js" rel="modulepreload">
 		<link href="./_app/immutable/chunks/xihTtKlq.js" rel="modulepreload">
-		<link href="./_app/immutable/nodes/0.BtmjI0JA.js" rel="modulepreload">
-		<link href="./_app/immutable/chunks/BoLwMDVd.js" rel="modulepreload">
+		<link href="./_app/immutable/nodes/0.CH7dZhTd.js" rel="modulepreload">
+		<link href="./_app/immutable/chunks/CUkvpBS8.js" rel="modulepreload">
 		<link href="./_app/immutable/nodes/2.CPH8lvQP.js" rel="modulepreload">
 		<link href="./_app/immutable/chunks/C6kjbadr.js" rel="modulepreload">
 		<!--12qhfyh--><link rel="icon" href="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3e%3crect%20width='64'%20height='64'%20rx='16'%20fill='%230c0d10'/%3e%3ccircle%20cx='32'%20cy='32'%20r='17'%20fill='none'%20stroke='%23f4d35e'%20stroke-width='6'/%3e%3cpath%20d='M34%2031h18v6H34z'%20fill='%23f4d35e'/%3e%3cpath%20d='M47%2012h12v19H47z'%20fill='%230c0d10'/%3e%3c/svg%3e"/><!----><!--kmx792--><!--[-1--><!--]--><!----><!--ul5azb--><meta name="description" content="Let us find joy in the small things. A space to practice being thankful every day."/> <meta name="theme-color" content="#0c0d10"/><!----><title>Gratitude</title>
-		<link href="./_app/immutable/assets/0.CdLdrkd7.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/0.DdljPxX8.css" rel="stylesheet">
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents"><!--[--><!--[0--><!--[--><div class="app-background svelte-12qhfyh" aria-hidden="true" style="background-image: url(/gratitude/pr-preview/pr-13/_app/immutable/assets/charcoal-ochre-ink.DkVAsJUt.png);"></div> <!--[--><!--]--><!----> <!--[0--><div class="page svelte-ul5azb"><main class="svelte-ul5azb"><p class="eyebrow svelte-ul5azb">Let us find joy in the small things</p> <h1 class="svelte-ul5azb">Gratitude<span aria-hidden="true" class="svelte-ul5azb">.</span></h1> <p class="introduction svelte-ul5azb">A space to practice being thankful every day</p> <!--[0--><section class="welcome-calendar svelte-ul5azb" aria-label="Your gratitude calendar"><!--[1--><p role="status" class="svelte-kmx792">Opening your calendar…</p><!--]--><!----></section><!--]--> <footer class="svelte-ul5azb"><a href="./journal/?afterSignIn=journal" class="svelte-ul5azb">Sign in and open your journal <span aria-hidden="true">→</span></a></footer></main></div><!--]--><!----><!--]--><!--]--> <!--[-1--><!--]--><!--]-->
 			
 			<script>
 				{
-					__sveltekit_e1a2b = {
+					__sveltekit_ky27i1 = {
 						base: new URL(".", location).pathname.slice(0, -1),
 						assets: "/gratitude/pr-preview/pr-13"
 					};
@@ -29,8 +29,8 @@
 					const element = document.currentScript.parentElement;
 
 					Promise.all([
-						import("./_app/immutable/entry/start.DsrY-4SW.js"),
-						import("./_app/immutable/entry/app.Cqr1gCPZ.js")
+						import("./_app/immutable/entry/start.w-lhrpYw.js"),
+						import("./_app/immutable/entry/app.B4sd3GlX.js")
 					]).then(([kit, app]) => {
 						kit.start(app, element, {
 							node_ids: [0, 2],
@@ -39,6 +39,18 @@
 							error: null
 						});
 					});
+
+					if ('serviceWorker' in navigator) {
+						const script_url = './service-worker.js';
+						const policy = globalThis?.window?.trustedTypes?.createPolicy(
+							'sveltekit-trusted-url',
+							{ createScriptURL(url) { return url; } }
+						);
+						const sanitised = policy?.createScriptURL(script_url) ?? script_url;
+						addEventListener('load', function () {
+							navigator.serviceWorker.register(sanitised);
+						});
+					}
 				}
 			</script>
 		</div>
