@@ -128,7 +128,7 @@ Validate both viewports with fictional raw events and intercepted Gemini respons
 
 ## LM Studio compatibility (2026-10-27)
 
-The implemented optional local provider reuses this selector and instruction unchanged. Local daily/editor request schemas 5/6 add the literal selected provider, model identifier and thinking-off preference. Projection version 8 supersedes version 7 for the account provider choice; successful source usage and replay semantics are unchanged. Provider choice syncs through events, while server addresses and credentials remain device-local. See [LM Studio setup](LM_STUDIO_SETUP.md).
+The implemented optional local provider reuses this selector and instruction unchanged. Local daily/editor request schemas 5/6 add the literal selected provider, model identifier and thinking-off preference. Projection version 8 supersedes version 7 for the account provider choice; successful source usage and replay semantics are unchanged. Provider choice syncs through events. Connections are device-local by default; explicit account token sync can restore a bound server/model/token from private mutable settings, separate from source events. See [LM Studio setup](LM_STUDIO_SETUP.md).
 
 ## Inspect and manage prompt feedback (2026-10-28)
 

@@ -235,4 +235,10 @@ Each action has a full-page screenshot comparison with no masks, `maxDiffPixels:
 
 Static-page prepainting stops one whole pixel below the clamped scroll maximum so glass layers retain a whole-pixel raster origin. The final screenshot continues to capture every document row, and the user's actual scroll position is restored. The 102-question backup import allows three minutes for its individual acknowledged appends on hosted runners; it must still finish all 102 before capture, without test retries or relaxed image comparison.
 
-The dynamic AI-settings page rounds its intrinsic height to the nearest CSS pixel, keeping its scroll boundary integral without changing text, blur or card styling. Its existing walkthrough images remain the comparison baselines. Workbook inputs enter the durable outbox together; transaction reads remain protected by the original atomic preconditions.
+The dynamic AI-settings page and its direct content surfaces round their intrinsic heights to the nearest CSS pixel, keeping the scroll boundary and moving card origins integral without changing text, blur or card styling. New credential controls have reviewed, regenerated Settings baselines. Workbook inputs enter the durable outbox together; transaction reads remain protected by the original atomic preconditions.
+
+## Optional account model credentials
+
+[029-account-token](tests/e2e/029-account-token/README.md) and its desktop companion cover explicit token saving, an independent device restoring the bound server/model/token, authenticated discovery without inference, token clearing when the destination changes, account deletion propagating to connected tabs, and reload after forgetting. All credentials and servers are fictional. Each action is followed by an unmasked full-page screenshot comparison at zero pixel tolerance, with checks beneath its image. Dedicated credential viewport jobs keep this coverage separate from the longer model/feedback scenarios.
+
+Static walkthroughs retain numeric viewport/document and direct-surface geometry as test-report attachments. They contain no input values or journal/credential text and do not change the page. These diagnostics help distinguish a layout change from a compositor difference when a strict comparison fails.

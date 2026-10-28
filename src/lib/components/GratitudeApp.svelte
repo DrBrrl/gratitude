@@ -25,9 +25,20 @@
   import {BackupRefiller} from '../ai/backup-refiller';
   import ModelSettings from './ModelSettings.svelte';
   import PromptFeedback from './PromptFeedback.svelte';
-  import {defaultConnection,readConnection,clearConnectionToken,localGenerator,type ModelConnection} from '$lib/ai/lm-studio';
+  import {defaultConnection,readConnection,saveConnection,wasAccountConnection,clearConnectionToken,localGenerator,type ModelConnection} from '$lib/ai/lm-studio';
   let modelConnection=$state<ModelConnection>(defaultConnection());
   let modelConnectionError=$state('');
+  import {ModelCredentialStore,type CredentialStatus} from '../firebase/model-credential';
+  let credentialStore:ModelCredentialStore|null=null;
+  let credentialStatus=$state<CredentialStatus>({ready:false,saved:false,error:''});
+  async function saveAccountToken(connection:ModelConnection){
+    if(!credentialStore||!navigator.onLine)throw new Error('Connect and sign in to save a token.');
+    await credentialStore.save(connection);
+  }
+  async function forgetAccountToken(){
+    if(!credentialStore||!navigator.onLine)throw new Error('Connect and sign in to forget a token.');
+    await credentialStore.forget();
+  }
   let refillMessage=$state('');
   async function selectBackup(id:string){
     if(!repository||!resolvePrompt(view.state,id))return;
@@ -549,6 +560,7 @@
       if (client) {
         stopAuth = onAuthStateChanged(client.auth, (next) => {
           const current = ++session;refiller.reset();refillMessage='';
+          credentialStore?.stop();credentialStore=null;credentialStatus={ready:false,saved:false,error:''};
           repository?.stop(); repository = null;
           chooseInitialPage = true;
           aiBusy = false; generatingPrompt = false; aiMessage = ''; feedbackOpen = false; feedbackText = ''; choices = { enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' };
@@ -561,6 +573,18 @@
           view = { state: emptyProjection(), pending: null, status: '', error: '', ready: false };
           initialized = true;
           if (next && client) {
+            const scope=`${client.projectId}:${base}:${next.uid}`;
+            let restoredAccountToken=false;
+            try{restoredAccountToken=wasAccountConnection(scope);}catch{}
+            credentialStore=new ModelCredentialStore(client.db,next.uid,(saved,status)=>{
+              if(session!==current)return;
+              credentialStatus=status;
+              try{
+                if(saved){modelConnection={...saved,provider:modelConnection.provider};saveConnection(scope,modelConnection,localStorage,sessionStorage,true);refiller.reset();}
+                else if(saved===null){modelConnection={...modelConnection,token:''};clearConnectionToken(scope);}
+              }catch{modelConnectionError='Could not keep the model token in this tab. Account sync remains available.';}
+            },restoredAccountToken);
+            credentialStore.start();
             repository = new JournalRepository(client, next.uid, (value) => {
               if (session === current) receiveView(value);
             });
@@ -571,9 +595,9 @@
       } else initialized = true;
     } catch { initialized = true; error = 'Sign-in is unavailable. Please try again later.'; }
     const online = () => {refiller.reset();void repository?.syncBackups();void repository?.syncPromptResult().catch(()=>{});void repository?.retry();};
-    const refillTimer=setInterval(()=>{const refill=refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting,online:navigator.onLine,visible:document.visibilityState==='visible',busy:busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state);refillMessage=refiller.status;void refill.then(()=>{refillMessage=refiller.status;});},3000);
+    const refillTimer=setInterval(()=>{const refill=refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting&&(view.state.ai.choices.backupProvider!=='lm-studio'||!!modelConnection.token||credentialStatus.ready),online:navigator.onLine,visible:document.visibilityState==='visible',busy:busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state);refillMessage=refiller.status;void refill.then(()=>{refillMessage=refiller.status;});},3000);
     window.addEventListener('online', online);
-    return () => { session++; stopAuth(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
+    return () => { session++; stopAuth(); credentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
   });
   async function signIn() {
     if (uiReview) { await openReview(); return; }
@@ -767,7 +791,7 @@
         {#if uiReview}<details class="review-tools glass"><summary>UI review</summary><p class="hint">Fictional journal on this browser only.</p><button class="outline" onclick={() => resetReview?.()}>Restore sample journal</button><button class="text-button" onclick={() => resetReview?.(true)}>Show empty journal</button></details>{/if}
       {:else if settingsPage === 'ai'}
         <h1 class="page-heading">AI settings</h1>
-        <ModelSettings connection={activeConnection} scope={modelScope} disabled={aiBusy||generatingPrompt||!!view.aiResultPending||uiReview} initialError={modelConnectionError} onchange={async connection=>{if(!repository)throw new Error('Open your journal first.');await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:3,payload:{...view.state.ai.choices,backupEnabled:view.state.ai.choices.backupEnabled??false,backupProvider:view.state.ai.choices.backupProvider??'lm-studio',previousEventId:view.state.ai.control.lastEventId,provider:connection.provider}});modelConnection=connection;modelConnectionError='';}} />
+        <ModelSettings credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={aiBusy||generatingPrompt||!!view.aiResultPending||uiReview} initialError={modelConnectionError} onchange={async connection=>{if(!repository)throw new Error('Open your journal first.');await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:3,payload:{...view.state.ai.choices,backupEnabled:view.state.ai.choices.backupEnabled??false,backupProvider:view.state.ai.choices.backupProvider??'lm-studio',previousEventId:view.state.ai.control.lastEventId,provider:connection.provider}});modelConnection=connection;modelConnectionError='';}} />
         <p class="hint">Ask {providerName} for a gentle gratitude question. Prompt context is sent when you request a question or enable automatic backup refills.</p>
         {#if !aiAvailable || uiReview}<p class="hint">Live AI is available only on a configured Firebase site.</p>{/if}
         <section class="glass preferences">
@@ -783,7 +807,7 @@
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
         <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {providerName} processing for each photo.</p><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
         {#if repository}<BackupPrompts {view} {repository} email={user.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups} />
-        {#if view.state.ai.choices.backupProvider==='lm-studio' && accountProvider!=='lm-studio'}<details class="backup-connection"><summary>Local backup connection</summary><ModelSettings connection={localBackupConnection} scope={modelScope} connectionOnly disabled={aiBusy||uiReview} onchange={async connection=>{modelConnection=connection;modelConnectionError='';refiller.reset();}} /></details>{/if}
+        {#if view.state.ai.choices.backupProvider==='lm-studio' && accountProvider!=='lm-studio'}<details class="backup-connection"><summary>Local backup connection</summary><ModelSettings credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={localBackupConnection} scope={modelScope} connectionOnly disabled={aiBusy||uiReview} onchange={async connection=>{modelConnection=connection;modelConnectionError='';refiller.reset();}} /></details>{/if}
         {#if refillStatus}<p class="hint" role="status">{refillStatus}</p>{#if backups.length<BACKUP_MINIMUM}<button class="outline" onclick={()=>{refiller.reset();refillMessage='';}}>Retry backup refill</button>{/if}{/if}{/if}
       {:else if settingsPage === 'import'}
         <h1 class="page-heading">Import journal</h1>
@@ -825,6 +849,8 @@
 <style>
   /* Keep the dynamic settings document on a whole-pixel scroll boundary. */
   .aiSettings { height: calc-size(auto, round(nearest, size, 1px)); }
+  /* Each moving surface also needs an integral origin, not just the scroll boundary. */
+  .aiSettings > :global(:not(nav)) { height: calc-size(auto, round(nearest, size, 1px)); }
   .calendar-cache-note{display:block;font-size:.7rem;font-weight:400;color:#b4bdca;margin-top:5px}
   .date-heading{font:600 1rem/1.5 Arial,Helvetica,sans-serif;color:#c1c7d1;margin:0 0 12px}.day-back{margin-top:12px}.calendar-summary{font:600 .94rem/1.5 Arial,Helvetica,sans-serif;color:#d4d9e1}.draft-choice button{margin-top:12px}
   :global(html) { color-scheme: dark; background: #0c0d10; }

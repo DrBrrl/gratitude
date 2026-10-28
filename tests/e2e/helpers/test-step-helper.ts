@@ -46,6 +46,18 @@ export class TestStepHelper {
       // Let the browser composite glass/backdrop layers at the capture origin.
       // The scroll position can update before those layers finish repainting.
       await capturePage.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+      if (this.options.paintStaticPage) {
+        const layout = await capturePage.evaluate(() => ({
+          viewport: { width: innerWidth, height: innerHeight, scrollX, scrollY },
+          document: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight },
+          surfaces: Array.from(document.querySelector('main')?.children ?? []).map(node => {
+            const rect = node.getBoundingClientRect();
+            return { tag: node.tagName, classes: node.className, x: rect.x, y: rect.y + scrollY, width: rect.width, height: rect.height };
+          })
+        }));
+        // Numeric geometry only, never input values or journal/credential text.
+        await this.info.attach(`${id}-layout`, { body: JSON.stringify(layout), contentType: 'application/json' });
+      }
       try {
         await expect(capturePage).toHaveScreenshot(filename, {
           timeout: 30_000, // Slow CI needs time for two stable full-page renders; pixel tolerance stays zero.
