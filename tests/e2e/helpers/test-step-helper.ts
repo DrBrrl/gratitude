@@ -30,7 +30,10 @@ export class TestStepHelper {
         // fold. Visit every viewport to paint those layers before full-page capture.
         // Never enable this for an infinite scroller: scrolling can load new content.
         await capturePage.evaluate(async () => {
-          const bottom = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+          // Stay below the clamped maximum: its fractional scroll origin can
+          // leave glass layers rasterized on a different subpixel grid. The
+          // final screenshot still captures the entire document, including its last row.
+          const bottom = Math.max(0, document.documentElement.scrollHeight - innerHeight - 1);
           for (let y = 0; y <= bottom; y += innerHeight) {
             window.scrollTo({ left: 0, top: y, behavior: 'instant' });
             await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
