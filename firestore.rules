@@ -6,6 +6,12 @@ service cloud.firestore {
         && request.auth.token.firebase.sign_in_provider == 'google.com';
     }
     function validId(id) { return id is string && id.matches('^[a-zA-Z0-9_-]{1,80}$'); }
+    // One-time private input prepared by an account administrator. The upgraded
+    // client appends these literal questions to its canonical source stream.
+    match /users/{uid}/backupPromptImports/{id} {
+      allow read: if owns(uid);
+      allow write: if false;
+    }
     match /users/{uid}/streams/{generation} {
       function root() { return /databases/$(database)/documents/users/$(uid)/streams/$(generation); }
       function eventPath(id) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/events/$(id); }
@@ -33,7 +39,7 @@ service cloud.firestore {
         return e.type == 'ReflectionImported' ? e.payload.photoSlot == null : e.payload.text.matches('[\\s\\S]*[^\\s][\\s\\S]*');
       }
       function promptId(e) { return e.schemaVersion == 1 ? e.payload.starterId : e.payload.promptId; }
-      function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && (get(eventPath(id)).data.type in ['PromptResponseReceived', 'ImportRecordConfirmed'] || get(eventPath(id)).data.type == 'ReflectionWritten' && get(eventPath(id)).data.schemaVersion in [5, 6] && get(eventPath(id)).data.payload.promptText is string && get(eventPath(id)).data.payload.promptId == id)); }
+      function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && (get(eventPath(id)).data.type in ['PromptResponseReceived', 'ImportRecordConfirmed', 'BackupPromptImported'] || get(eventPath(id)).data.type == 'ReflectionWritten' && get(eventPath(id)).data.schemaVersion in [5, 6] && get(eventPath(id)).data.payload.promptText is string && get(eventPath(id)).data.payload.promptId == id)); }
       function unchangedEntryDate(e) {
         let previous = exists(pointerPath(e.payload.entryId)) ? get(eventPath(get(pointerPath(e.payload.entryId)).data.lastEventId)).data : e;
         return e.schemaVersion == 6 || (e.schemaVersion in [3, 4, 5]
@@ -85,13 +91,14 @@ service cloud.firestore {
       function validLocal(p) { return p.provider == 'lm-studio' && p.thinking == false && p.model is string && p.model.matches('^[a-zA-Z0-9][a-zA-Z0-9_.:/@+-]{0,79}$'); }
       function validRequest(p, before, schema) {
         let choices = get(eventPath(before.choicesId)).data.payload;
-        let mixed = schema in [3,4,5,6];
+        let mixed = schema in [3,4,5,6,7,8];
         let editor = schema in [2,4,6];
-        let local = schema in [5,6];
-        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'].concat(editor ? ['entryId', 'entryRevision'] : []).concat(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []).concat(local ? ['provider','model','thinking'] : []))
+        let local = schema in [5,6,8];
+        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'].concat(editor ? ['entryId', 'entryRevision'] : []).concat(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []).concat(local ? ['provider','model','thinking'] : []).concat(schema in [7,8] ? ['purpose'] : []))
+          && (!(schema in [7,8]) || p.purpose == 'backup' && choices.get('backupEnabled',false) == true && (before.requestId == null || request.time > get(eventPath(before.requestId)).data.recordedAt + duration.value(180,'s')))
           && (!local || validLocal(p)) && (!(editor) || validId(p.entryId) && p.entryRevision is int && p.entryRevision == nextRevision(p.entryId))
           && p.choicesId == before.choicesId && choices.enabled == true
-          && choices.get('provider','gemini') == (local ? 'lm-studio' : 'gemini') && validDay(p.day)
+          && (schema in [7,8] ? choices.get('backupProvider','lm-studio') : choices.get('provider','gemini')) == (local ? 'lm-studio' : 'gemini') && validDay(p.day)
           && p.templateVersion in ['gratitude-v1', 'gratitude-v2'] && p.contextMode in ['generic', 'personal']
           && (!(mixed) || p.selectorVersion == 'mixed-v1' && p.timeZone is string && p.timeZone.size() <= 100 && p.timeZone.matches('^[A-Za-z_+-]+(/[A-Za-z0-9_+-]+)*$') && p.selectionSeed is string && p.selectionSeed.matches('^[a-f0-9]{32}$'))
           && (mixed ? p.entryRefs is map && p.entryRefs.size() <= 20 && validRefMap(p.entryRefs) : p.entryRefs is list && p.entryRefs.size() <= 5 && validRefs(p.entryRefs)) && p.feedbackIds is list && p.feedbackIds.size() <= 20
@@ -104,13 +111,13 @@ service cloud.firestore {
         let before = aiBefore();
         let after = getAfter(aiPath()).data;
         let result = e.type in ['PromptResponseReceived', 'AIRequestFailed'];
-        return (e.schemaVersion == 1 || e.type == 'AIChoicesConfirmed' && e.schemaVersion == 2 || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4,5,6]) && after.lastEventId == e.eventId
+        return (e.schemaVersion == 1 || e.type == 'AIChoicesConfirmed' && e.schemaVersion in [2,3] || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4,5,6,7,8]) && after.lastEventId == e.eventId
           && after.choicesId == (e.type == 'AIChoicesConfirmed' ? e.eventId : before.choicesId)
           && after.requestId == (e.type == 'PromptRequested' ? e.eventId : e.type == 'PromptFeedbackSubmitted' ? before.requestId : null)
           && (result ? validId(p.requestId) && p.requestId == before.requestId : p.previousEventId == before.lastEventId)
           && (
-            (e.type == 'AIChoicesConfirmed' && p.keys().hasOnly(['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance'].concat(e.schemaVersion == 2 ? ['provider'] : []))
-              && (e.schemaVersion != 2 || p.provider in ['gemini','lm-studio'])
+            (e.type == 'AIChoicesConfirmed' && p.keys().hasOnly(['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance'].concat(e.schemaVersion in [2,3] ? ['provider'] : []).concat(e.schemaVersion == 3 ? ['backupEnabled','backupProvider'] : []))
+              && (!(e.schemaVersion in [2,3]) || p.provider in ['gemini','lm-studio']) && (e.schemaVersion != 3 || p.backupEnabled is bool && p.backupProvider in ['gemini','lm-studio'])
               && p.enabled is bool && p.useJournal is bool && p.useFeedback is bool && text(p.guidance, 500))
             || (e.type == 'PromptRequested' && validRequest(p, before, e.schemaVersion))
             || (e.type == 'PromptResponseReceived' && p.keys().hasOnly(['requestId', 'text', 'model', 'finishReason'])
@@ -123,6 +130,14 @@ service cloud.firestore {
           );
       }
 
+      function backupPath(id) {return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/backups/$(id);}
+      function validBackup(e) {
+        let p=e.payload;
+        let id=e.type == 'BackupPromptImported' ? e.eventId : p.promptId;
+        return e.schemaVersion == 1 && getAfter(backupPath(id)).data.lastEventId == e.eventId &&
+          (e.type == 'BackupPromptImported' ? p.keys().hasAll(['text']) && p.keys().hasOnly(['text']) && e.eventId.matches('^bp_[a-f0-9]{64}$') && text(p.text,600) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+          : e.type == 'BackupPromptRemoved' && p.keys().hasAll(['promptId']) && p.keys().hasOnly(['promptId']) && validId(p.promptId) && (exists(backupPath(p.promptId)) || get(eventPath(p.promptId)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.promptId)).data.payload.requestId)).data.schemaVersion in [7,8]));
+      }
       function photoPath(entryId, slot) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/photos/$(entryId + '_' + string(slot)); }
       function photoBefore(entryId, slot) { let pointer = get(photoPath(entryId, slot)); return pointer == null ? null : get(eventPath(pointer.data.lastEventId)).data; }
       function activePhoto(entryId, slot) { let event = photoBefore(entryId, slot); return event != null && event.type != 'PhotoRemoved'; }
@@ -194,7 +209,7 @@ service cloud.firestore {
           && request.resource.data.eventId == eventId && request.resource.data.recordedAt == request.time
           && request.resource.data.sequence == nextSequence()
           && getAfter(root()).data.sequence == request.resource.data.sequence && getAfter(root()).data.lastEventId == eventId
-          && (request.resource.data.type in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(request.resource.data) : request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
+          && (request.resource.data.type in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(request.resource.data) : request.resource.data.type in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(request.resource.data) : request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
         allow update, delete: if false;
       }
       match /ai/{id} {
@@ -203,6 +218,12 @@ service cloud.firestore {
           && request.resource.data.keys().hasOnly(['lastEventId', 'choicesId', 'requestId'])
           && validId(request.resource.data.lastEventId) && !exists(eventPath(request.resource.data.lastEventId))
           && getAfter(eventPath(request.resource.data.lastEventId)).data.type in ['AIChoicesConfirmed', 'PromptRequested', 'PromptResponseReceived', 'AIRequestFailed', 'PromptFeedbackSubmitted', 'StarterPromptChosen'];
+        allow delete: if false;
+      }
+      match /backups/{id} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && generation == 'v1' && validId(id) && request.resource.data.keys().hasAll(['lastEventId']) && request.resource.data.keys().hasOnly(['lastEventId']) && !exists(eventPath(request.resource.data.lastEventId))
+          && (getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'BackupPromptImported' && id == request.resource.data.lastEventId || getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'BackupPromptRemoved' && getAfter(eventPath(request.resource.data.lastEventId)).data.payload.promptId == id);
         allow delete: if false;
       }
       match /photos/{photoKey} {

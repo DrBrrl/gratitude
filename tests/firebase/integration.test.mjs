@@ -596,3 +596,34 @@ test('twenty-source requests fit Rules budgets with full feedback, reject malfor
   assert.equal(state.photos.e0_0.summary,'A local model described a yellow mug.');
   assert.deepEqual(replay(log.slice(20),replay(log.slice(0,20))),state);
 });
+
+test('backup prompts are private, idempotent source events, with independent provider consent and cross-device refill claims',async()=>{
+  const {importedBackup,availableBackups}=await import('../../src/lib/backup-prompts.ts');
+  const {makeRequest}=await import('../../src/lib/ai/context.ts');
+  const a=await device('backup-owner@example.test','backup-owner'),b=await device('backup-owner@example.test','backup-second');
+  const choices={eventId:'backup-choices',type:'AIChoicesConfirmed',schemaVersion:3,payload:{previousEventId:null,enabled:true,useJournal:false,useFeedback:false,guidance:'',provider:'gemini',backupEnabled:true,backupProvider:'lm-studio'}};
+  await a.append(choices);
+  const imported=await importedBackup('Which fictional sound brought a smile?');
+  await Promise.all([a.append(imported),b.append(imported)]);
+  let state=replay(await events(b));assert.equal(availableBackups(state).length,1);
+  const target={provider:'lm-studio',model:'google/gemma-4-31b',thinking:false};
+  const request=makeRequest(state,'2026-10-01','personal','backup-request',undefined,undefined,target,true);
+  const claims=await Promise.allSettled([a.append(request),b.append({...request,eventId:'competing-backup'})]);
+  assert.equal(claims.filter(r=>r.status==='fulfilled').length,1);
+  state=replay(await events(a));const winner=state.ai.control.requestId;
+  await assert.rejects(b.append(makeRequest(state,'2026-10-01','personal','during-lease',undefined,undefined,target,true)),/being generated|permission-denied/);
+  await a.append({eventId:`${winner}_response`,type:'PromptResponseReceived',schemaVersion:1,payload:{requestId:winner,text:'Which fictional kindness is worth remembering?',model:target.model,finishReason:'STOP'}});
+  state=replay(await events(b));assert.equal(availableBackups(state).length,2);assert.deepEqual(state.ai.days,{});assert.equal(state.ai.choices.provider,'gemini');
+  await b.append({eventId:'remove-generated',type:'BackupPromptRemoved',schemaVersion:1,payload:{promptId:`${winner}_response`}});
+  await a.append({eventId:'save-imported-backup',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:'backup-reflection',expectedRevision:0,text:'A fictional bird outside.',promptId:imported.eventId,promptText:null,entryAt:null,photoSlot:null}});
+  state=replay(await events(a));assert.equal(availableBackups(state).length,0);assert.equal(state.entries[0].prompt,imported.payload.text);
+  await a.append({...choices,eventId:'backup-off',payload:{...choices.payload,previousEventId:state.ai.control.lastEventId,backupEnabled:false}});
+  state=replay(await events(a));assert.throws(()=>makeRequest(state,'2026-10-01','personal','off',undefined,undefined,target,true),/Enable backup/);
+  const outsider=environment.authenticatedContext('backup-outsider',{firebase:{sign_in_provider:'google.com'}}).firestore();
+  await assertFails(getDocs(collection(outsider,`users/${a.uid}/streams/v1/backups`)));
+  await environment.withSecurityRulesDisabled(async context=>{await setDoc(doc(context.firestore(),`users/${a.uid}/backupPromptImports/${imported.eventId}`),{text:imported.payload.text});});
+  await assertSucceeds(getDocs(collection(a.db,`users/${a.uid}/backupPromptImports`)));
+  await assertFails(getDocs(collection(outsider,`users/${a.uid}/backupPromptImports`)));
+  await assertFails(setDoc(doc(a.db,`users/${a.uid}/backupPromptImports/forged`),{text:'Not an administrative import.'}));
+  const log=await events(a);for(const cut of [0,2,5,log.length])assert.deepEqual(replay(log.slice(cut),replay(log.slice(0,cut))),state);
+});
