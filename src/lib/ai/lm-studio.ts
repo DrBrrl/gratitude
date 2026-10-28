@@ -65,19 +65,25 @@ export function localGenerator(connection:ModelConnection):GeneratePrompt {
   return Object.assign((context:string)=>generateLocal(captured,SYSTEM_PROMPT,context,600),{target:{provider:'lm-studio' as const,model:captured.model,thinking:false as const}});
 }
 
-// Scope destinations to this signed-in account and deployment; never put a token in Firestore.
+// Scope device preferences and tab credentials to the signed-in account/deployment.
+// Optional account sync lives separately in ModelCredentialStore.
 const key=(scope:string)=>`gratitude:model:${scope}`;
+const accountKey=(scope:string)=>`gratitude:model-account:${scope}`;
+export function wasAccountConnection(scope:string,secrets:Storage=sessionStorage){return !!secrets.getItem(accountKey(scope))&&!!secrets.getItem(key(scope));}
 export function readConnection(scope:string,storage:Storage=localStorage,secrets:Storage=sessionStorage):ModelConnection {
   const saved=JSON.parse(storage.getItem(key(scope))??'null');
   return saved?validateConnection({...saved,token:secrets.getItem(key(scope))??''}):defaultConnection();
 }
-export function saveConnection(scope:string,input:ModelConnection,storage:Storage=localStorage,secrets:Storage=sessionStorage) {
+export function saveConnection(scope:string,input:ModelConnection,storage:Storage=localStorage,secrets:Storage=sessionStorage,fromAccount=false) {
   const connection=validateConnection(input),{token,...preferences}=connection;
+  const previous=secrets.getItem(key(scope));
   storage.setItem(key(scope),JSON.stringify(preferences));
   if(token) secrets.setItem(key(scope),token);else secrets.removeItem(key(scope));
+  if(fromAccount&&token)secrets.setItem(accountKey(scope),connection.baseUrl);
+  else if(previous!==token||secrets.getItem(accountKey(scope))!==connection.baseUrl||!token)secrets.removeItem(accountKey(scope));
   return connection;
 }
-export function clearConnectionToken(scope:string,secrets:Storage=sessionStorage) {secrets.removeItem(key(scope));}
+export function clearConnectionToken(scope:string,secrets:Storage=sessionStorage) {secrets.removeItem(key(scope));secrets.removeItem(accountKey(scope));}
 
 export function localPhotoGenerator(input:ModelConnection,read:()=>Promise<Blob>):GenerateSummary {
  const connection=validateConnection(input);

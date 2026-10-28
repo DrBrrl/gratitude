@@ -12,6 +12,22 @@ service cloud.firestore {
       allow read: if owns(uid);
       allow write: if false;
     }
+    // Revocable credentials are mutable and separate from journal events/exports.
+    match /users/{uid}/privateSettings/lmStudio {
+      allow get, delete: if owns(uid);
+      allow list: if false;
+      allow create, update: if owns(uid)
+        && request.resource.data.keys().hasAll(['schemaVersion','baseUrl','model','token','updatedAt'])
+        && request.resource.data.keys().hasOnly(['schemaVersion','baseUrl','model','token','updatedAt'])
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.token is string && request.resource.data.token.size() > 0
+        && request.resource.data.token.size() <= 4096 && !request.resource.data.token.matches('[\\s\\S]*[\\r\\n][\\s\\S]*')
+        && request.resource.data.baseUrl is string && request.resource.data.baseUrl.size() <= 2048
+        && request.resource.data.baseUrl.matches('^(https://[^/?#@\\s]+|http://(127\\.0\\.0\\.1|localhost|\\[::1\\])(:[0-9]{1,5})?)$')
+        && request.resource.data.model is string
+        && request.resource.data.model.matches('^[a-zA-Z0-9][a-zA-Z0-9_.:/@+-]{0,79}$');
+    }
     match /users/{uid}/streams/{generation} {
       function root() { return /databases/$(database)/documents/users/$(uid)/streams/$(generation); }
       function eventPath(id) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/events/$(id); }

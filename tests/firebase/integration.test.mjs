@@ -4,7 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator, collection, getDocs, query, orderBy, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator, collection, getDocs, query, orderBy, doc, setDoc, getDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { ModelCredentialStore, validateSavedConnection } from '../../src/lib/firebase/model-credential.ts';
 import { appendReflection, decodeEvent } from '../../src/lib/firebase/append.ts';
 import { ref, uploadBytes } from 'firebase/storage';
 import { uploadPhoto } from '../../src/lib/photos.ts';
@@ -626,4 +627,51 @@ test('backup prompts are private, idempotent source events, with independent pro
   await assertFails(getDocs(collection(outsider,`users/${a.uid}/backupPromptImports`)));
   await assertFails(setDoc(doc(a.db,`users/${a.uid}/backupPromptImports/forged`),{text:'Not an administrative import.'}));
   const log=await events(a);for(const cut of [0,2,5,log.length])assert.deepEqual(replay(log.slice(cut),replay(log.slice(0,cut))),state);
+});
+
+
+test('optional model credentials sync privately outside events, bind the server and propagate deletion',async()=>{
+  const first=await device('credential@example.test','credential-first');
+  const second=await device('credential@example.test','credential-second');
+  const stranger=await device('credential-other@example.test','credential-other');
+  const path=`users/${first.uid}/privateSettings/lmStudio`;
+  const received=[];
+  const reader=new ModelCredentialStore(second.db,second.uid,(value,status)=>received.push({value,status}));
+  const writer=new ModelCredentialStore(first.db,first.uid,()=>{});
+  reader.start();
+  const wait=async predicate=>{const end=Date.now()+15000;while(!predicate()){if(Date.now()>end)throw new Error('Credential sync did not complete');await new Promise(resolve=>setTimeout(resolve,20));}};
+  try{
+    await wait(()=>received.some(item=>item.status.ready));
+    assert.equal(received.at(-1).value,undefined);
+    const connection={provider:'lm-studio',baseUrl:'https://fictional-model.example.test',model:'google/gemma-4-31b',token:'fictional-account-token'};
+    assert.throws(()=>validateSavedConnection({...connection,baseUrl:'http://192.168.1.2:8080'}),/HTTPS/);
+    assert.throws(()=>validateSavedConnection({...connection,token:''}),/token/);
+    await writer.save(connection);
+    await wait(()=>received.some(item=>item.value?.token===connection.token));
+    assert.deepEqual(received.at(-1).value,{baseUrl:connection.baseUrl,model:connection.model,token:connection.token});
+    assert.equal((await getDoc(doc(second.db,path))).get('token'),connection.token);
+    assert.equal((await events(first)).length,0);
+    await assertFails(getDoc(doc(stranger.db,path)));
+    await assertFails(deleteDoc(doc(stranger.db,path)));
+    await assertFails(getDocs(collection(first.db,`users/${first.uid}/privateSettings`)));
+    const good={schemaVersion:1,baseUrl:connection.baseUrl,model:connection.model,token:connection.token,updatedAt:serverTimestamp()};
+    await assertFails(setDoc(doc(first.db,path),{...good,extra:'unexpected'}));
+    await assertFails(setDoc(doc(first.db,path),{...good,token:'bad\ntoken'}));
+    await assertFails(setDoc(doc(first.db,path),{...good,token:'x'.repeat(4097)}));
+    await assertFails(setDoc(doc(first.db,path),{...good,baseUrl:'http://192.168.1.2:8080'}));
+    await assertFails(setDoc(doc(first.db,path),{...good,baseUrl:'https://example.test/path'}));
+    await assertFails(setDoc(doc(first.db,path),{...good,updatedAt:new Date(0)}));
+    await writer.save({...connection,token:'fictional-replacement-token'});
+    await wait(()=>received.at(-1)?.value?.token==='fictional-replacement-token');
+    await writer.forget();
+    await wait(()=>received.at(-1)?.value===null);
+    assert.equal(received.at(-1).status.saved,false);
+    assert.equal((await getDoc(doc(second.db,path))).exists(),false);
+    // A tab that reloaded while disconnected must clear its formerly synced
+    // token when the first authoritative snapshot says the record was deleted.
+    let resumedValue='waiting';
+    const resumed=new ModelCredentialStore(second.db,second.uid,value=>{resumedValue=value;},true);
+    try{resumed.start();await wait(()=>resumedValue===null);}finally{resumed.stop();}
+    assert.equal((await events(first)).length,0);
+  }finally{reader.stop();writer.stop();}
 });

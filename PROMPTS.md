@@ -926,3 +926,9 @@ The follow-up adding the PR-preview destination also contains a private applicat
 ```text
 (question for you while you're working on the backup prompts - Is it unsafe to get the app to remember the LM Studio API token? I ask because getting that token onto various devices will be annoying and i'd like to avoid that if possible - surely it can be securely saved to the user's information?)
 ```
+
+## 2026-10-28 — Sync LM Studio token across devices
+
+```text
+Wonderful, i don't want to overload you, but let's also look at the implementation of the token being saved to the user's account so it is available across devices. And can you recommend some settings for the token in LM Studio to make it as safe as possible?
+```
