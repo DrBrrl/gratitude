@@ -56,8 +56,9 @@ export function parseLocalResponse(data:any,max:number) {
 export async function generateLocal(input:ModelConnection,system:string,content:unknown,max:number,fetcher:typeof fetch=fetch) {
   const connection=validateConnection(input),capabilities=await probeLocalModel(connection,fetcher);
   if(Array.isArray(content)&&!capabilities.vision) throw new Error('The selected local model does not support photos. You can attach the photo without AI or write its summary.');
+  // Native discovery calls non-thinking 'off'; chat/completions calls it 'none'.
   const payload={model:connection.model,messages:[{role:'system',content:system},{role:'user',content}],stream:false,max_tokens:max===600?512:768,
-    ...(capabilities.supportsThinking?{chat_template_kwargs:{enable_thinking:false}}:{}),...(capabilities.reasoningOff?{reasoning_effort:'off'}:{})};
+    ...(capabilities.supportsThinking?{chat_template_kwargs:{enable_thinking:false}}:{}),...(capabilities.reasoningOff?{reasoning_effort:'none'}:{})};
   return parseLocalResponse(await request(connection,'/v1/chat/completions',payload,fetcher),max);
 }
 export function localGenerator(connection:ModelConnection):GeneratePrompt {
