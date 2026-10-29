@@ -14,6 +14,7 @@ Viewport: mobile-chromium.
 
 - [x] The landing document returns HTTP 200
 - [x] The page identifies itself as Gratitude
+- [x] The install manifest preserves this deployment’s scope and transparent star-and-heart icons
 - [x] Calendar account restoration finishes before the page is captured
 - [x] The signed-out calendar is empty, greyed out and disabled, with its sign-in notice visible
 - [x] The main heading is visible
