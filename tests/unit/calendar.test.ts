@@ -21,6 +21,16 @@ test('logical dates, creation colours, photo-only entries and viewer zones are r
  assert.equal(indexCalendarDays([{...a,entryAt:undefined}],'UTC').has('2026-10-01'),true);
  assert.equal(summarizeStretches(index,'2025-12-31').total,0);assert.equal(cellFor(index,'2026-01-01','2025-12-31').entries.length,0);
 });
+test('a browsed week uses the actual present day for future and today flags',()=>{
+ const index=indexCalendarDays([entry('2026-09-20'),entry('2026-10-05')],'UTC');
+ const previous=weekCells(index,'2026-09-24','2026-10-01');
+ assert.equal(previous[0].day,'2026-09-20');assert.equal(previous[0].entries.length,1);
+ assert.ok(previous.every(cell=>!cell.future&&!cell.today));
+ const future=weekCells(index,'2026-10-08','2026-10-01');
+ assert.equal(future[0].day,'2026-10-04');assert.ok(future.every(cell=>cell.future&&!cell.today&&!cell.entries.length));
+ const present=weekCells(index,'2026-09-27','2026-10-01');
+ assert.equal(present.filter(cell=>cell.today)[0].day,'2026-10-01');
+});
 test('Sunday weeks cross month/year and leap/DST days use civil adjacency',()=>{
  assert.equal(weekCells(new Map(),'2026-10-01')[0].day,'2026-09-27');assert.equal(weekCells(new Map(),'2026-10-04')[0].day,'2026-10-04');
  assert.equal(weekCells(new Map(),'2027-01-01')[0].day,'2026-12-27');
@@ -48,4 +58,6 @@ test('navigation context rejects other accounts, malformed dates and unsafe iden
  assert.equal(readCalendarFlow({...flow,trail:[{kind:'entry',id:'bad"selector'}]},flow.owner),null);
  assert.equal(readCalendarFlow({...flow,trail:[{...flow.trail[0],day:'2026-02-30'}]},flow.owner),null);
  assert.equal(readCalendarFlow({...flow,root:{...flow.root,anchor:{month:'2026-09',offset:9999}}},flow.owner),null);
+ assert.equal(readCalendarFlow({...flow,root:{...flow.root,weekDay:'2026-02-30'}},flow.owner),null);
+ assert.equal(readCalendarFlow({...flow,root:{...flow.root,weekDay:'2026-09-24'}},flow.owner)?.root.weekDay,'2026-09-24');
 });

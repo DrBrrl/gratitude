@@ -30,9 +30,9 @@ export function summarizeStretches(index: DayIndex, today: DayKey) {
   return {current,longest,latest:length,total:days.length,latestDay:last||null};
 }
 export function cellFor(index: DayIndex, day: DayKey, today: DayKey): CalendarCell {return {day,number:Number(day.slice(-2)),future:day>today,today:day===today,entries:day>today?[]:index.get(day)??[]};}
-export function weekCells(index: DayIndex,today: DayKey) {
-  const weekday=civilDate(today).getUTCDay();
-  return Array.from({length:7},(_,i)=>cellFor(index,shiftDay(today,i-weekday),today));
+export function weekCells(index: DayIndex,anchor: DayKey,today: DayKey=anchor) {
+  const weekday=civilDate(anchor).getUTCDay();
+  return Array.from({length:7},(_,i)=>cellFor(index,shiftDay(anchor,i-weekday),today));
 }
 export function monthCells(index: DayIndex, month: string,today: DayKey): (CalendarCell|null)[] {
   const first=civilDate(`${month}-01`), offset=first.getUTCDay();
@@ -40,5 +40,7 @@ export function monthCells(index: DayIndex, month: string,today: DayKey): (Calen
   return Array.from({length:42},(_,i)=>i<offset || i>=offset+end.getUTCDate()?null:cellFor(index,`${month}-${String(i-offset+1).padStart(2,'0')}`,today));
 }
 export function dateEntries(index:DayIndex,day:DayKey) {return chronologicalEntries(index.get(day)??[]);}
-export function dayLabel(day: DayKey) {return new Intl.DateTimeFormat('en-AU',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(civilDate(day));}
-export function monthLabel(month:string) {return new Intl.DateTimeFormat('en-AU',{timeZone:'UTC',month:'long',year:'numeric'}).format(civilDate(`${month}-01`));}
+const dayFormat=new Intl.DateTimeFormat('en-AU',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const monthFormat=new Intl.DateTimeFormat('en-AU',{timeZone:'UTC',month:'long',year:'numeric'});
+export function dayLabel(day: DayKey) {return dayFormat.format(civilDate(day));}
+export function monthLabel(month:string) {return monthFormat.format(civilDate(`${month}-01`));}
