@@ -30,12 +30,12 @@
   });
 </script>
 
-<span class="calendar-photo" bind:this={element} aria-hidden="true" data-state={url ? 'ready' : failed ? 'unavailable' : visible ? 'loading' : 'idle'}>
+<span class="calendar-photo" class:ready={!!url} bind:this={element} aria-hidden="true" data-state={url ? 'ready' : failed ? 'unavailable' : visible ? 'loading' : 'idle'}>
   {#if url}<img src={url} alt="" onerror={() => { url = ''; failed = true; }} />{/if}
 </span>
 
 <style>
-  .calendar-photo { position: absolute; inset: 0; overflow: hidden; border-radius: 50%; pointer-events: none; background: #555d6860; }
-  img { display: block; width: 100%; height: 100%; object-fit: cover; filter: blur(.4px) saturate(.75); }
-  .calendar-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, #e9eef650, #121a24a0); }
+  .calendar-photo { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; background: linear-gradient(135deg, #e9eef650, #121a24a0), #555d6860; }
+  .ready { background: none; }
+  img { display: block; width: 100%; height: 100%; object-fit: cover; }
 </style>

@@ -4,7 +4,7 @@ import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
 import { doc, writeBatch, Timestamp, type Firestore } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 import { TestStepHelper } from '../helpers/test-step-helper';
-import { startJournal, seedHistory, FIXTURE_TIME, navigate, expectSynced } from '../helpers/journal-session';
+import { startJournal, seedHistory, FIXTURE_TIME, navigate, expectSynced, expectDecodedPhotos } from '../helpers/journal-session';
 import { uidFor } from '../helpers/import-fixture';
 import { appendReflection } from '../../../src/lib/firebase/append';
 import { replay, photoKey, type PhotoAction } from '../../../src/lib/domain';
@@ -102,6 +102,7 @@ test('private photo dates share fogged thumbnails across all calendars and disca
     await steps.action('multiple', 'Keep the usual date-click behaviour for a photo date', () => page.locator('.calendar-scroll [data-day="2026-09-27"]').click(), async () => {
       await expect(page.locator('.date-heading')).toContainText('27 September 2026');
       await expect(page.locator('article.card')).toHaveCount(2);
+      await expectDecodedPhotos(page, 2);
       await expect(photo(week, '2026-09-27')).toBeVisible();
     });
     await navigate(page, steps, 'settings', 'Settings');
