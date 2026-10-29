@@ -195,3 +195,57 @@ Viewport: desktop-chromium.
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to Today before opening the landing calendar
+
+![Return to Today before opening the landing calendar](./screenshots/021-landing-today-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the landing page from Today with a large history
+
+![Open the landing page from Today with a large history](./screenshots/022-landing-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The existing signed-in projection supplies one month of date buttons
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Choose a historical month without reloading the journal
+
+![Choose a historical month without reloading the journal](./screenshots/023-landing-chooser-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Enter January
+
+![Enter January](./screenshots/024-landing-month-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Enter the year of the earliest saved reflections
+
+![Enter the year of the earliest saved reflections](./screenshots/025-landing-year-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Show the saved rings from the complete historical projection
+
+![Show the saved rings from the complete historical projection](./screenshots/026-landing-apply-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)

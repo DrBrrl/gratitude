@@ -87,7 +87,7 @@
 
 <style>
   .landing-calendar { --calendar-highlight: #ffdf48; padding: 12px 8px 14px; border: 1px solid #f4d35e80; border-radius: 16px; background: linear-gradient(120deg,#494e5533,#13171bd9); backdrop-filter: blur(18px); }
-  header { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 4px 6px; margin-bottom: 12px; }
+  header { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 4px 6px; margin-bottom: 12px; }
   h2 { margin: 0; min-width: 0; font: 600 1.06rem/1.4 Arial,Helvetica,sans-serif; color: #f4d35e; }
   button, input { font: inherit; color: inherit; min-height: 32px; border: 1px solid #f4d35e80; border-radius: 8px; background: #d3d8df12; padding: 3px 5px; }
   button { cursor: pointer; }

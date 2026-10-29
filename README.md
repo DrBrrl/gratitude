@@ -57,6 +57,12 @@ Signed-in sessions start on Today until a reflection has been saved for the loca
 
 The reviewed interface is covered by mobile and desktop E2E walkthroughs, including paragraph writing, card expansion, search, independent drafts, Settings and export. Each action compares a full-page screenshot with zero pixel tolerance and no masking. Use the normal app and emulator workflows to validate changes before publication; `dev:ui` remains available for quick visual iteration.
 
+Long journals initially render twenty cards and load twenty more as you scroll. Search still covers the complete local projection, including photo summaries, and returning from an entry retains the loaded range. The Sunday-first week strips support horizontal swipes/scroll gestures and left/right arrow keys, keeping future dates disabled. Your calendar shows current, longest and most recent streaks, the total reflection count and distinct gratitude days.
+
+The landing page is anchored from the top: changing between shorter and taller months extends the calendar downward without recentering the title or month controls. The arrows remain top-aligned when a month name wraps on narrow screens.
+
+The favicon and install icons share the yellow four-point star with a small heart rotated −45° on a transparent background. The install manifest keeps each deployment’s scope separate and opens the journal. Regenerate PNG sizes from the vector with `nix develop -c node scripts/render-app-icons.mjs`.
+
 ## Firebase development
 
 Use the Node 24 Nix shell for the app and Firebase emulators (Java is included):
