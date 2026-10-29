@@ -84,17 +84,23 @@ export async function seedHistory(page: Page, entries: { text: string; recordedA
   try {
     await environment.withSecurityRulesDisabled(async context => {
       const db = context.firestore();
-      const batch = writeBatch(db);
       const root = `users/${uid}/streams/v1`;
-      entries.forEach((entry, index) => {
+      // Each entry writes an event and its conflict pointer. Keep large fictional
+      // histories below Firestore's 500-write batch limit.
+      for (let offset = 0; offset < entries.length; offset += 200) {
+        const batch = writeBatch(db);
+        entries.slice(offset, offset + 200).forEach((entry, localIndex) => {
+        const index = offset + localIndex;
         const id = `fixture-${index + 1}`;
         batch.set(doc(db, `${root}/events/${id}`), { eventId: id, type: 'ReflectionWritten', schemaVersion: 1,
           sequence: index + 1, recordedAt: Timestamp.fromDate(new Date(entry.recordedAt)),
           payload: { entryId: id, text: entry.text, expectedRevision: 0, starterId: STARTER_ID } });
         batch.set(doc(db, `${root}/entries/${id}`), { lastEventId: id });
-      });
-      batch.set(doc(db, root), { sequence: entries.length, lastEventId: `fixture-${entries.length}` });
-      await batch.commit();
+        });
+        const count = Math.min(entries.length, offset + 200);
+        batch.set(doc(db, root), { sequence: count, lastEventId: `fixture-${count}` });
+        await batch.commit();
+      }
     });
   } finally { await environment.cleanup(); }
 }

@@ -2,6 +2,7 @@
   import ReflectionText from './ReflectionText.svelte';
   import Icon from './Icon.svelte';
   import { reflectionPreview } from '$lib/reflection-preview';
+  import { cardDateTime } from '$lib/journal';
 
   let { text, query, entryId, entryAt, expanded, onexpand, oncollapse, onopen }: {
     text: string; query: string; entryId: string; entryAt: string; expanded: boolean;
@@ -11,13 +12,7 @@
   let paragraph = $state<HTMLParagraphElement>();
   let preview = $state('');
   let overflowing = $state(false);
-  const dateLabel = $derived.by(() => {
-    const date = new Date(entryAt);
-    const pad = (value: number) => String(value).padStart(2, '0');
-    const weekday = new Intl.DateTimeFormat('en-AU', { weekday: 'short' }).format(date);
-    const month = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
-    return `${weekday} ${pad(date.getDate())} ${month} ${date.getFullYear()}, ${date.getHours() % 12 || 12}:${pad(date.getMinutes())} ${date.getHours() < 12 ? 'AM' : 'PM'}`;
-  });
+  const dateLabel = $derived(cardDateTime(entryAt));
 
   $effect(() => {
     const container = space;
@@ -25,11 +20,17 @@
     const fullText = text;
     if (!container || !source || expanded) return;
     // Count actual wrapped lines per paragraph; paragraph margins are not text lines.
-    const measure = () => {
+    let measuredWidth = -1;
+    const measure = (force = false) => {
+      const width = source.clientWidth;
+      // Updating a preview changes its height, which also notifies the observer.
+      // Only wrapping width or newly loaded fonts require another measurement.
+      if (!force && width === measuredWidth) return;
+      measuredWidth = width;
       const probe = source.cloneNode(false) as HTMLParagraphElement;
       probe.setAttribute('aria-hidden', 'true');
       Object.assign(probe.style, { position: 'absolute', visibility: 'hidden',
-        pointerEvents: 'none', width: `${source.clientWidth}px` });
+        pointerEvents: 'none', width: `${width}px` });
       container.append(probe);
       // Match ReflectionText's paragraph layout when measuring full and truncated text.
       const setProbeText = (value: string) => {
@@ -53,11 +54,12 @@
         overflowing = result.truncated;
       } finally { probe.remove(); }
     };
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(() => measure());
     observer.observe(container);
-    document.fonts.addEventListener('loadingdone', measure);
+    const fontsChanged = () => measure(true);
+    document.fonts.addEventListener('loadingdone', fontsChanged);
     measure();
-    return () => { observer.disconnect(); document.fonts.removeEventListener('loadingdone', measure); };
+    return () => { observer.disconnect(); document.fonts.removeEventListener('loadingdone', fontsChanged); };
   });
 </script>
 

@@ -3,6 +3,7 @@
   let { text, query = '' }: { text: string; query?: string } = $props();
   const parts = $derived.by(() => {
     const words = normalized(query).trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return [{ text, match: false }];
     const chars = Array.from(text);
     const flags = chars.map(() => false);
     let folded = ''; const map: number[] = [];
