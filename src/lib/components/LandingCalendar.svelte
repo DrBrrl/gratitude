@@ -4,14 +4,16 @@
   import type { CalendarAnchor } from '$lib/calendar-navigation';
   import CalendarDay from './CalendarDay.svelte';
   import Icon from './Icon.svelte';
+  import type { CalendarPhotos } from '$lib/calendar-photos';
 
-  let { index, today, anchor, onanchor, onchoose, disabled=false }: {
+  let { index, today, anchor, onanchor, onchoose, disabled=false, photos=null }: {
     index: DayIndex;
     today: string;
     anchor: CalendarAnchor;
     onanchor: (anchor: CalendarAnchor) => void;
     onchoose: (day: string) => void;
     disabled?: boolean;
+    photos?: CalendarPhotos | null;
   } = $props();
   let choosingMonth = $state(false);
   let monthInput = $state<HTMLInputElement>();
@@ -82,7 +84,7 @@
     </div>
   </header>
   <div class="weekdays" aria-hidden="true">{#each ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as day}<span>{day}</span>{/each}</div>
-  <div class="month-dates">{#each monthCells(index, anchor.month, today) as cell, i (i)}{#if cell}<CalendarDay {cell} {onchoose} {disabled} />{:else}<span></span>{/if}{/each}</div>
+  <div class="month-dates">{#each monthCells(index, anchor.month, today) as cell, i (i)}{#if cell}<CalendarDay {cell} {onchoose} {disabled} {photos} />{:else}<span></span>{/if}{/each}</div>
 </section>
 
 <style>

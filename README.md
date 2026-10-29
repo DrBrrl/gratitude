@@ -59,7 +59,9 @@ The reviewed interface is covered by mobile and desktop E2E walkthroughs, includ
 
 Long journals initially render twenty cards and load twenty more as you scroll. Search still covers the complete local projection, including photo summaries, and returning from an entry retains the loaded range. The Sunday-first week strips support horizontal swipes/scroll gestures and left/right arrow keys, keeping future dates disabled. Your calendar shows current, longest and most recent streaks, the total reflection count and distinct gratitude days.
 
-The landing page is anchored from the top: changing between shorter and taller months extends the calendar downward without recentering the title or month controls. The arrows remain top-aligned when a month name wraps on narrow screens.
+The landing page is anchored from the top, with an extra wordmark-capital's height of breathing room: changing between shorter and taller months extends the calendar downward without recentering the title or month controls. The arrows remain top-aligned when a month name wraps on narrow screens.
+
+Dates with photos show a softened thumbnail inside their entry-coloured circle, behind a clear white number, in the landing month, week strips and scrolling calendar. The most recent dated reflection with photos supplies its first remaining photo. Thumbnails load near the visible area, share a bounded in-memory cache while signed in, and are cleared on sign-out. Missing or offline images keep the date readable and usable; the signed-out calendar never displays private photos.
 
 The favicon and install icons share the yellow four-point star with a small heart rotated −45° on a transparent background. The install manifest keeps each deployment’s scope separate and opens the journal. Regenerate PNG sizes from the vector with `nix develop -c node scripts/render-app-icons.mjs`.
 

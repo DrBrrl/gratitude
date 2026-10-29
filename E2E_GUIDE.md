@@ -113,6 +113,8 @@ Scenario `031-large-journal` seeds 701 fictional raw events, checks the twenty-c
 
 Scenario `033-landing-calendar-layout` uses a tall desktop and a narrow, tall mobile screen to compare the title and arrow-control coordinates across four-, five- and six-week months and the editable chooser. Calendar height may change downward; the controls stay anchored. Scenario 031 also exercises Today-to-landing navigation and checks that historical month rings still use the full 701-entry projection.
 
+Scenario `034-calendar-photos` uses fictional private attachments to check fogged photo circles in all three calendars, the landing offset, newest-dated-entry/first-live-slot selection, shared authenticated downloads, lazy offscreen loading, unavailable files, cross-device removal, reload, normal date navigation and sign-out isolation. Unit tests additionally cover date/timezone changes, removed and unsaved photos, cache eviction, failed reads and disposal during an in-flight request. The shared screenshot helper waits for visible calendar thumbnails to finish their real download and image decoding (or reach an unavailable state); it never replaces or hides them. CI includes 034 in the photos suite for both viewports. Walkthroughs retain full-page, unmasked, zero-pixel comparisons with checks below each image.
+
 `002-firebase-journal` uses Auth, Firestore and Storage emulators with fictional accounts. It exercises the Google popup, reflection save, a second independent signed-in browser, warm reload, full projection rebuild and sign-out. Its generated mobile and desktop READMEs embed full-page screenshot baselines above the checks.
 
 ```sh
@@ -152,7 +154,7 @@ All rendered content, including dates, is compared without masks or screenshot-o
 
 The tests intercept the exact Firebase AI Logic Gemini Developer API HTTP endpoint. They assert provider-call counts and submitted fictional context; they never make live inference requests. The application has no production response stub. Rules tests exercise duplicate/concurrent device claims, stale consent, changed prompt identity and forged atomic writes. Shared synchronization assertions also reject visible journal error alerts, so screenshot review cannot quietly accept a failed recovery.
 
-CI splits journal, drafts, AI, photo, editor, import, calendar and calendar-edit scenarios into sixteen viewport/suite jobs, with isolated emulators and serial workers in each. All sixteen jobs, import-scale and the build must pass before publication. This keeps the expanded coverage within the existing job budgets without relaxing screenshot comparisons.
+CI splits journal, drafts, AI, local AI, backups, credentials, photo, editor, import, calendar and calendar-edit scenarios into twenty-two viewport/suite jobs, with isolated emulators and serial workers in each. All twenty-two jobs, import-scale and the build must pass before publication. This keeps the expanded coverage within the existing job budgets without relaxing screenshot comparisons.
 
 [`009-generic-ai`](tests/e2e/009-generic-ai/README.md) builds with `VITE_AI_DATA_MODE=generic` and runs with `E2E_AI_GENERIC=true`. It verifies the optional generic privacy configuration: unavailable personal sharing controls and a fixed generic instruction even when the account has saved reflections. The AI CI jobs run this second build after the personal-context fixtures; both configurations must pass.
 

@@ -58,6 +58,15 @@ export class TestStepHelper {
         // Numeric geometry only, never input values or journal/credential text.
         await this.info.attach(`${id}-layout`, { body: JSON.stringify(layout), contentType: 'application/json' });
       }
+      // Visible calendar photos are authenticated, asynchronous content. Await
+      // their real download/decoding (or unavailable state), never hide them.
+      await expect.poll(() => capturePage.locator('.calendar-photo').evaluateAll(async nodes => {
+        if (nodes.some(node => node.getAttribute('data-state') === 'loading')) return false;
+        const images = nodes.flatMap(node => [...node.querySelectorAll('img')]);
+        if (images.some(image => !image.complete || !image.naturalWidth)) return false;
+        try { await Promise.all(images.map(image => image.decode())); return true; }
+        catch { return false; }
+      }), { timeout: 15_000 }).toBe(true);
       try {
         await expect(capturePage).toHaveScreenshot(filename, {
           timeout: 30_000, // Slow CI needs time for two stable full-page renders; pixel tolerance stays zero.
