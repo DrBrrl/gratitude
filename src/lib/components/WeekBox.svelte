@@ -2,7 +2,8 @@
   import { onMount } from 'svelte';
   import { weekCells,summarizeStretches,civilDate,shiftDay,validDay,type DayIndex } from '$lib/calendar';
   import CalendarDay from './CalendarDay.svelte';
-  let {index,today,activeDay=$bindable<string|null>(null),ready=true,cached=false,onopen,onchoose}:{index:DayIndex;today:string;activeDay?:string|null;ready?:boolean;cached?:boolean;onopen:(day:string)=>void;onchoose:(day:string)=>void}=$props();
+  import type {CalendarPhotos} from '$lib/calendar-photos';
+  let {index,today,activeDay=$bindable<string|null>(null),ready=true,cached=false,onopen,onchoose,photos=null}:{index:DayIndex;today:string;activeDay?:string|null;ready?:boolean;cached?:boolean;onopen:(day:string)=>void;onchoose:(day:string)=>void;photos?:CalendarPhotos|null}=$props();
   const cells=$derived(weekCells(index,activeDay??today,today));const streak=$derived(summarizeStretches(index,today));
   const currentWeek=$derived(cells.some(cell=>cell.day===today));
   const range=$derived.by(()=>{const format=new Intl.DateTimeFormat('en-AU',{timeZone:'UTC',day:'numeric',month:'short',...(cells[0].day.slice(0,4)!==cells[6].day.slice(0,4)?{year:'numeric'}:{})});return `${format.format(civilDate(cells[0].day))} – ${format.format(civilDate(cells[6].day))}`;});
@@ -48,7 +49,7 @@
     <small aria-live="polite">{currentWeek?'This week':'Week'} · {range}</small>
   </button>
   {#if ready}<div class="weekdays" aria-hidden="true">{#each ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as day}<span>{day}</span>{/each}</div>
-    <div class="dates">{#each cells as cell (cell.day)}<CalendarDay {cell} {onchoose} />{/each}</div>
+    <div class="dates">{#each cells as cell (cell.day)}<CalendarDay {cell} {onchoose} {photos} />{/each}</div>
     {#if cached}<p class="cache-note">Saved on this device · waiting to sync</p>{/if}
   {/if}
 </section>

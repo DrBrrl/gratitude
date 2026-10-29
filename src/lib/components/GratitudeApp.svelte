@@ -10,6 +10,8 @@
   import LandingCalendar from './LandingCalendar.svelte';
   import SignedOutCalendar from './SignedOutCalendar.svelte';
   import { indexCalendarDays, summarizeStretches, validDay, dayLabel } from '$lib/calendar';
+  import { indexCalendarPhotos, type CalendarPhotos } from '$lib/calendar-photos';
+  import { PhotoThumbnailCache } from '$lib/photo-thumbnails';
   import { readCalendarFlow, type CalendarFlow, type CalendarFrame, type CalendarAnchor } from '$lib/calendar-navigation';
   let { landing=false }: {landing?:boolean}=$props();
   import ImportPanel from '$lib/components/ImportPanel.svelte';
@@ -90,6 +92,7 @@
     } catch { initialized = true; error = 'Could not open the local UI review fixture.'; }
   }
   let client = $state.raw<FirebaseClient | null>(null);
+  let calendarThumbnailCache = $state.raw<PhotoThumbnailCache | null>(null);
   let repository = $state.raw<JournalStore | null>(null);
   let user = $state<Pick<User, 'uid' | 'email'> | null>(null);
   const modelScope=$derived(client&&user?`${client.projectId}:${base}:${user.uid}`:'');
@@ -284,6 +287,8 @@
   let zone = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
   let weekDay = $state<string | null>(null);
   const dayIndex = $derived(indexCalendarDays(view.state.entries, zone));
+  const photoDays = $derived(indexCalendarPhotos(dayIndex, Object.values(view.state.photos)));
+  const calendarPhotos = $derived<CalendarPhotos | null>(calendarThumbnailCache ? { days: photoDays, cache: calendarThumbnailCache } : null);
   const stretches = $derived(summarizeStretches(dayIndex, today));
   let homeAnchor = $state<CalendarAnchor>({month:localDay(new Date()).slice(0,7),offset:0});
   let flow = $state.raw<CalendarFlow|null>(null);
@@ -579,6 +584,7 @@
       if (client) {
         stopAuth = onAuthStateChanged(client.auth, (next) => {
           const current = ++session;refiller.reset();refillMessage='';dailyPromptError=null;weekDay=null;journalLimits={};
+          calendarThumbnailCache?.dispose();calendarThumbnailCache=null;
           credentialStore?.stop();credentialStore=null;credentialStatus={ready:false,saved:false,error:''};
           repository?.stop(); repository = null;
           chooseInitialPage = true;
@@ -592,6 +598,8 @@
           view = { state: emptyProjection(), pending: null, status: '', error: '', ready: false };
           initialized = true;
           if (next && client) {
+            const photoClient=client,photoOwner=next.uid;
+            calendarThumbnailCache=new PhotoThumbnailCache(id=>navigator.onLine?readPhoto(photoClient,photoOwner,id):Promise.reject(new Error('Photo unavailable offline')));
             const scope=`${client.projectId}:${base}:${next.uid}`;
             let restoredAccountToken=false;
             try{restoredAccountToken=wasAccountConnection(scope);}catch{}
@@ -616,7 +624,7 @@
     const online = () => {refiller.reset();void repository?.syncBackups();void repository?.syncPromptResult().catch(()=>{});void repository?.retry();};
     const refillTimer=setInterval(()=>{const refill=refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting&&(view.state.ai.choices.backupProvider!=='lm-studio'||!!modelConnection.token||credentialStatus.ready),online:navigator.onLine,visible:document.visibilityState==='visible',busy:busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state);refillMessage=refiller.status;void refill.then(()=>{refillMessage=refiller.status;});},3000);
     window.addEventListener('online', online);
-    return () => { session++; stopAuth(); credentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
+    return () => { session++; stopAuth(); calendarThumbnailCache?.dispose(); credentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
   });
   async function signIn() {
     if (uiReview) { await openReview(); return; }
@@ -685,7 +693,7 @@
 {#if landing}
   <WelcomePage signedIn={!!user}>
     {#snippet calendar()}
-      {#if user && view.ready}<LandingCalendar index={dayIndex} {today} anchor={homeAnchor} onanchor={rememberAnchor} onchoose={selectDate} />{#if view.status!=='Synced'}<p class="hint">Saved on this device · waiting to sync</p>{/if}
+      {#if user && view.ready}<LandingCalendar index={dayIndex} {today} anchor={homeAnchor} onanchor={rememberAnchor} onchoose={selectDate} photos={calendarPhotos} />{#if view.status!=='Synced'}<p class="hint">Saved on this device · waiting to sync</p>{/if}
       {:else if !initialized || user}<p role="status">Opening your calendar…</p>{:else}<SignedOutCalendar {today} />{/if}
     {/snippet}
   </WelcomePage>
@@ -702,7 +710,7 @@
       <button class="back" onclick={backFlow}><Icon name="back" />{flow && flow.trail.length>1?'Journal':flow?.root.tab==='today'?'Today':'Journal'}</button>
       <h1 class="page-heading">Your calendar</h1>
       <CalendarStats streak={stretches} entries={view.state.entries.length} cached={view.status!=='Synced'} />
-      <GratitudeCalendar index={dayIndex} {today} anchor={frame.anchor} onanchor={rememberAnchor} onchoose={selectDate} />
+      <GratitudeCalendar index={dayIndex} {today} anchor={frame.anchor} onanchor={rememberAnchor} onchoose={selectDate} photos={calendarPhotos} />
     {:else if tab === 'today'}
       {#if writing}
         <button class="back" onclick={returnFromEditor} disabled={busy}><Icon name="back" />{editorOrigin.label}</button>
@@ -743,7 +751,7 @@
         <div class="saved-actions"><button class="primary" onclick={done}>Done</button><button class="outline" onclick={() => edit(savedEntry)}>Edit reflection</button></div>
       {:else}
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
-        <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} />
+        <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} photos={calendarPhotos} />
         <h1 class="today-heading">Reflection time</h1>
         {#if view.ready}
           <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID ? 'Starter prompt' : currentResponse ? 'AI prompt' : 'Your prompt'}</span><h2>{currentPrompt}</h2></section>
@@ -778,7 +786,7 @@
       {:else}
         <h1 class="page-heading">Your journal</h1>
         {#if dateFilter}<button class="back day-back" onclick={backFlow}><Icon name="back" />{flow?.trail.at(-2)?.kind==='calendar'?'Calendar':flow?.root.tab==='home'?'Home':flow?.root.tab==='today'?'Today':'Journal'}</button><h2 class="date-heading">{dayLabel(dateFilter)}</h2>{/if}
-        <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} />
+        <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} photos={calendarPhotos} />
         <button class="outline new-entry" onclick={newEntry} disabled={busy || !view.ready || !draftLoaded || !!view.pending}>New entry</button>
         <div class="search glass"><Icon name="search" /><input id="search" type="search" aria-label="Search reflections" bind:value={query} placeholder="Search reflections" />{#if query}<button class="icon-button" aria-label="Clear search" onclick={() => query = ''}><Icon name="close" /></button>{/if}</div>
         {#if query || view.status !== 'Synced'}<p class="result-count" aria-live="polite">{results.length} {results.length === 1 ? 'reflection' : 'reflections'}{view.status !== 'Synced' ? ' on this device' : ''}</p>{/if}

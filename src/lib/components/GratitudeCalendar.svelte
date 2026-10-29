@@ -2,8 +2,9 @@
  import {onMount,tick,untrack} from 'svelte';
  import {monthOrdinal,monthFromOrdinal,validMonth,monthLabel,monthCells,type DayIndex} from '$lib/calendar';
  import CalendarDay from './CalendarDay.svelte';
+ import type {CalendarPhotos} from '$lib/calendar-photos';
  export type CalendarAnchor={month:string;offset:number};
- let {index,today,anchor,onanchor,onchoose}:{index:DayIndex;today:string;anchor:CalendarAnchor;onanchor:(anchor:CalendarAnchor)=>void;onchoose:(day:string)=>void}=$props();
+ let {index,today,anchor,onanchor,onchoose,photos=null}:{index:DayIndex;today:string;anchor:CalendarAnchor;onanchor:(anchor:CalendarAnchor)=>void;onchoose:(day:string)=>void;photos?:CalendarPhotos|null}=$props();
  const HEIGHT=368,MAX=9999*12;
  let scroller:HTMLDivElement;
  let start=$state(untrack(()=>Math.max(0,monthOrdinal(anchor.month)-2)));
@@ -39,7 +40,7 @@
  {#each months as month (month)}
   <section class="calendar-month" aria-label={monthLabel(month)} data-month={month}>
    <h2>{monthLabel(month)}</h2><div class="weekdays" aria-hidden="true">{#each ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as day}<span>{day}</span>{/each}</div>
-   <div class="month-dates">{#each monthCells(index,month,today) as cell,i (i)}{#if cell}<CalendarDay {cell} {onchoose} />{:else}<span></span>{/if}{/each}</div>
+   <div class="month-dates">{#each monthCells(index,month,today) as cell,i (i)}{#if cell}<CalendarDay {cell} {onchoose} {photos} />{:else}<span></span>{/if}{/each}</div>
   </section>
  {/each}
 </div>

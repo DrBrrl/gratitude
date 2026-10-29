@@ -79,7 +79,7 @@ jobs:
           - suite: editor
             scenarios: tests/e2e/01[34]-
           - suite: photos
-            scenarios: tests/e2e/01[12]-photo
+            scenarios: tests/e2e/(01[12]-photo|034-)
           - suite: ai
             scenarios: tests/e2e/(00[7-8]|024-)
           - suite: backups
