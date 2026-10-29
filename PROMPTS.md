@@ -956,3 +956,59 @@ But no prompt was generated and nothing came through to the app!
 ```text
 button turned into "find another request" - no error message
 ```
+
+## 2026-10-29 — Diagnose phone access to the local model
+
+```text
+I've started using it and i love it! A few things need our attention however. I tried to access the local LLM from my phone, which is on the same tailscale network as my computer, but i couldn't get it to work. Can we look at that together please?
+```
+
+## 2026-10-29 — Phone connection symptoms
+
+```text
+"could not reach lm studio, check the server address" etc - i'm on Firefox
+```
+
+```text
+serve is enabled!
+```
+
+## 2026-10-29 — Private HTTPS route enabled
+
+The user supplied terminal output confirming that the requested administrator command started Tailscale Serve. Terminal output and the private tailnet address are excluded from this public instruction log.
+
+## 2026-10-29 — Phone reaches the authenticated LM Studio endpoint
+
+```text
+{
+  "error": {
+    "type": "invalid_request",
+    "code": "invalid_api_key",
+    "message": "An LM Studio API token is required to make requests to this server, but none was provided using the Authorization header using the 'Bearer' scheme (i.e., 'Authorization: Bearer $LM_API_TOKEN'). Learn more at: https://lmstudio.ai/docs/developer/core/authentication."
+  }
+} from my phone
+```
+
+## 2026-10-29 — Improve navigation performance with a large journal
+
+```text
+It works!!! Yaaaaaay. Okay, on to the next thing. :) I noticed that some of the pages take a very long time to load. Journal is one, which could be because i have 701 gratitude entries saved in there... But the main settings pages also takes ages to load. Can we look at ways to improve our performance speeds?
+```
+
+## 2026-10-29 — Choose incremental journal scrolling
+
+```text
+Automatically load more as I scroll
+```
+
+## 2026-10-29 — Calendar statistics and a star-and-heart app icon
+
+```text
+Another small cute thing - on the your calendar page, i would love a few lines showing streaks, and maybe have them formatted nicely. The lines would be Current streak: xxx days of gratitude in a row (Longest streak: xxx days) \n Total entries: xxx days of gratitude \n Most recent streak: xxx days of gratitude in a row (maybe more later, but that would be nice for now). Additionally, i would love an app icon that is just the very cute little yellow four-point star with a small yellow heart rotated to -45 degrees in the bottom right corner - transparent background.
+```
+
+## 2026-10-29 — Move the week strip one week per gesture
+
+```text
+And ooooone more cute thing - the little 7-day gratitude calendar that shows up in a few places - i would like scrolling left or right on it to take you to the next or previous week please! (not a continuous scroll)
+```

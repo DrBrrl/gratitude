@@ -25,6 +25,7 @@
   import {BackupRefiller} from '../ai/backup-refiller';
   import ModelSettings from './ModelSettings.svelte';
   import PromptFeedback from './PromptFeedback.svelte';
+  import MoreReflections from './MoreReflections.svelte';
   import {defaultConnection,readConnection,saveConnection,wasAccountConnection,clearConnectionToken,localGenerator,type ModelConnection} from '$lib/ai/lm-studio';
   let modelConnection=$state<ModelConnection>(defaultConnection());
   let modelConnectionError=$state('');
@@ -76,7 +77,7 @@
       chooseInitialPage = true;
       const opened = new ReviewRepository((value) => { if (session === reviewSession) receiveView(value); });
       repository = opened; user = reviewUser; configured = true; initialized = true;
-      writing = false; savedId = null; settingsPage = 'menu';
+      writing = false; savedId = null; settingsPage = 'menu';journalLimits={};
       draftLoaded = false; draftRestored = false;
       resetReview = async (empty = false) => {
         await opened.reset(empty);
@@ -98,7 +99,9 @@
   let error = $state('');
   let text = $state('');
   let editing = $state<Entry | null>(null);
-  let view = $state<JournalView>({ state: emptyProjection(), pending: null, status: '', error: '', ready: false });
+  // The repository replaces immutable projections. Avoid creating thousands of
+  // reactive proxies for historical records which the UI never mutates.
+  let view = $state.raw<JournalView>({ state: emptyProjection(), pending: null, status: '', error: '', ready: false });
   const backups=$derived(availableBackups(view.state,view.backupRemoved,view.pending&&'promptId' in view.pending.payload?view.pending.payload.promptId:undefined));
   const refillStatus=$derived(!view.state.ai.choices.enabled||!view.state.ai.choices.backupEnabled?'':backups.length>=BACKUP_MINIMUM?`${backups.length} backups ready.`:refillMessage||'Ready to refill while this app is open and connected.');
   const accountProvider=$derived(view.state.ai.choices.provider);
@@ -142,6 +145,16 @@
   let journalScroll = 0;
   const selected = $derived(view.state.entries.find((entry) => entry.id === selectedId));
   const results = $derived(searchEntries(dateFilter ? view.state.entries.filter(entry=>localDay(entryTimestamp(entry))===dateFilter) : view.state.entries, query, Object.values(view.state.photos)));
+  // Keep each search/day's loaded range when returning from an entry or calendar.
+  // Counts are session UI state, separate from the complete replayable projection.
+  const JOURNAL_BATCH = 20;
+  let journalLimits = $state.raw<Record<string, number>>({});
+  const journalRange = $derived(JSON.stringify([user?.uid, dateFilter, query]));
+  const journalLimit = $derived(journalLimits[journalRange] ?? JOURNAL_BATCH);
+  const visibleResults = $derived(results.slice(0, journalLimit));
+  function showOlderReflections() {
+    journalLimits = { ...journalLimits, [journalRange]: journalLimit + JOURNAL_BATCH };
+  }
   let currentInstant = $state(new Date());
   const today = $derived(localDay(currentInstant));
   let todayDraft = $state<Action | null>(null);
@@ -563,7 +576,7 @@
       client = createFirebaseClient(); configured = !!client;
       if (client) {
         stopAuth = onAuthStateChanged(client.auth, (next) => {
-          const current = ++session;refiller.reset();refillMessage='';dailyPromptError=null;
+          const current = ++session;refiller.reset();refillMessage='';dailyPromptError=null;journalLimits={};
           credentialStore?.stop();credentialStore=null;credentialStatus={ready:false,saved:false,error:''};
           repository?.stop(); repository = null;
           chooseInitialPage = true;
@@ -771,7 +784,7 @@
         {:else if view.ready && view.state.entries.length === 0}<section class="glass empty"><Icon name="journal" size={44} /><h2>Your story starts small.</h2><p>A moment, a kindness, a little light.<br />Your reflections will find a home here.</p><button class="primary" onclick={() => navigate('today')}>Write your first reflection</button></section>
         {:else if results.length === 0}<section class="glass empty"><Icon name="search" size={40} /><h2>No matching reflections</h2><p>Try another word or return to your full journal.</p><button class="outline" onclick={() => query = ''}>Clear search</button></section>{/if}
         <div class="entries">
-          {#each results as entry (entry.id)}
+          {#each visibleResults as entry (entry.id)}
             <article class="tinted card" class:expanded={expandedEntries.has(entry.id)} style:--entry-colour={entryColour(entry, zone)}>
               <h2>Prompt</h2><p class="entry-prompt prompt-preview"><HighlightedText text={entry.prompt} {query} /></p>
               {#if client && entryPhotos(view.state, entry.id).length}
@@ -782,6 +795,7 @@
             </article>
           {/each}
         </div>
+        {#if results.length > JOURNAL_BATCH}<MoreReflections shown={visibleResults.length} total={results.length} onmore={showOlderReflections} />{/if}
       {/if}
     {:else}
       {#if settingsPage !== 'menu'}<button class="back" onclick={() => openSettings('menu')}><Icon name="back" />Settings</button>{/if}

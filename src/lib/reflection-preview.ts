@@ -1,7 +1,8 @@
+const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 /** Fit plain reflection text to a measured line budget without changing stored text. */
 export function reflectionPreview(text: string, fits: (value: string) => boolean) {
   if (fits(text)) return { text, truncated: false };
-  const characters = [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)].map(part => part.segment);
+  const characters = [...graphemes.segment(text)].map(part => part.segment);
   const prefix = (end: number) => characters.slice(0, end).join('').trimEnd();
   const sentenceEnded = (value: string) => /[.!?…]["'”’»\])}]*$/u.test(value);
   function longest(suffix: string) {

@@ -27,6 +27,24 @@ export function todayReflection(entries: Entry[], day: string) {
 export function normalized(value: string) { return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('en'); }
 export function searchEntries(entries: Entry[], query: string, photos: Photo[] = []) {
   const words = normalized(query).trim().split(/\s+/).filter(Boolean);
-  return chronologicalEntries(entries).filter((entry) => words.every((word) => normalized(`${entry.prompt} ${entry.text} ${photos.filter(photo => photo.entryId === entry.id && !photo.removed).map(photo => photo.summary).join(' ')}`).includes(word)));
+  const ordered = chronologicalEntries(entries);
+  if (!words.length) return ordered;
+  const summaries = new Map<string, string[]>();
+  for (const photo of photos) {
+    if (photo.removed) continue;
+    const list = summaries.get(photo.entryId) ?? [];
+    list.push(photo.summary); summaries.set(photo.entryId, list);
+  }
+  return ordered.filter(entry => {
+    const haystack = normalized(`${entry.prompt} ${entry.text} ${(summaries.get(entry.id) ?? []).join(' ')}`);
+    return words.every(word => haystack.includes(word));
+  });
+}
+const cardWeekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const cardMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export function cardDateTime(value: string) {
+  const date = new Date(value);
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${cardWeekdays[date.getDay()]} ${pad(date.getDate())} ${cardMonths[date.getMonth()]} ${date.getFullYear()}, ${date.getHours() % 12 || 12}:${pad(date.getMinutes())} ${date.getHours() < 12 ? 'AM' : 'PM'}`;
 }
 export function dateLabel(value: string) { return new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(value)); }
