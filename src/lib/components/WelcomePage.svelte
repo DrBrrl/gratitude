@@ -31,7 +31,8 @@
     min-height: 100svh;
     display: grid;
     place-items: start center;
-    padding: max(64px, env(safe-area-inset-top)) 24px max(32px, env(safe-area-inset-bottom));
+    /* About one wordmark capital G, scaling with the responsive heading. */
+    padding: calc(max(64px, env(safe-area-inset-top)) + clamp(2.2rem, 8vw, 3.6rem)) 24px max(32px, env(safe-area-inset-bottom));
   }
   main { width: min(100%, 540px); }
   .eyebrow { color: #f4d35e; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; }

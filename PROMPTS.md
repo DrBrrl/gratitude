@@ -1030,3 +1030,9 @@ Hmmm, i tried to reproduce the issue and it didn't seem to work, which i guess i
 ```text
 On the main landing page, when scrolling side-to-side in the calendar months, the page jumps around when the month size changes :) can we get it so that the box extends downwards rather than all the content being centered on the page so that the < > buttons are always in the same place?
 ```
+
+## 2026-10-29 — Lower the landing page and preview photos in calendar dates
+
+```text
+I would like, on the main page, for everything to be lowered by about the height of the letter G in gratitude! I would also like for days that have pictures to look a little different in the calendars (the month one on the main page, the 7-day ones, and the infinite scroll calendar) - i would love a small version of the image in the circle, probably a little fogged over so that the number can still stand out really nicely! Can we give that a try too?
+```
