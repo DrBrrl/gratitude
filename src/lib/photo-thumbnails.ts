@@ -8,8 +8,16 @@ async function renderThumbnail(blob: Blob) {
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Thumbnail rendering unavailable');
     const scale = Math.max(96 / bitmap.width, 96 / bitmap.height);
+    // Render the finished circle once, on integral pixels. Date cells only
+    // paint this small transparent asset, without nested clipping/filter layers.
+    context.beginPath(); context.arc(48, 48, 48, 0, Math.PI * 2); context.clip();
+    context.filter = 'blur(1.25px) saturate(0.75)';
     context.drawImage(bitmap, (96 - bitmap.width * scale) / 2, (96 - bitmap.height * scale) / 2, bitmap.width * scale, bitmap.height * scale);
-    const small = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('Thumbnail rendering unavailable')), 'image/jpeg', .8));
+    context.filter = 'none';
+    const fog = context.createLinearGradient(0, 0, 96, 96);
+    fog.addColorStop(0, '#e9eef650'); fog.addColorStop(1, '#121a24a0');
+    context.fillStyle = fog; context.fillRect(0, 0, 96, 96);
+    const small = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('Thumbnail rendering unavailable')), 'image/png'));
     return URL.createObjectURL(small);
   } finally { bitmap.close(); }
 }

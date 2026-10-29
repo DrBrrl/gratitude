@@ -52,7 +52,12 @@ test('week gestures move one week at a time and calendar statistics count days s
   await steps.action('wheel', 'Use one horizontal scroll gesture to visit next week', async () => {
     const bounds = (await box.boundingBox())!;
     await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + 55);
-    await page.mouse.wheel(80, 0); await page.mouse.wheel(60, 0); await page.mouse.wheel(30, 0);
+    // Keep the gesture's momentum in the same browser event turn. Separate
+    // automation round-trips can exceed the product's 200ms idle boundary.
+    await box.evaluate(node => node.addEventListener('wheel', () => {
+      for (const deltaX of [60, 30]) node.dispatchEvent(new WheelEvent('wheel', { deltaX, deltaY: 0, bubbles: true, cancelable: true }));
+    }, { once: true }));
+    await page.mouse.wheel(80, 0);
   }, async () => {
     await expect(firstDay()).toHaveAttribute('data-day', '2026-10-04');
     expect(await box.locator('[data-day]').evaluateAll(nodes => nodes.length === 7 && nodes.every(node => (node as HTMLButtonElement).disabled))).toBe(true);
