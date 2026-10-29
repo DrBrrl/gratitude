@@ -10,6 +10,28 @@ test('the landing page serves', async ({ page }, testInfo) => {
   await steps.step('landing-serves', 'A visitor can open Gratitude', [
     { description: 'The landing document returns HTTP 200', check: async () => { expect(response?.status()).toBe(200); } },
     { description: 'The page identifies itself as Gratitude', check: async () => { await expect(page).toHaveTitle('Gratitude'); } },
+    { description: 'The install manifest preserves this deployment’s scope and transparent star-and-heart icons', check: async () => {
+      const manifestPath = await page.locator('link[rel="manifest"]').getAttribute('href');
+      const response = await page.request.get(new URL(manifestPath!, page.url()).href);
+      expect(response.ok()).toBe(true);
+      const manifest = await response.json();
+      const scope = new URL('./', page.url()).pathname;
+      expect(manifest.name).toBe('Gratitude'); expect(manifest.scope).toBe(scope);
+      expect(manifest.start_url).toBe(`${scope}journal/`);
+      expect(manifest.icons.map((icon: { sizes: string }) => icon.sizes)).toEqual(['192x192', '512x512']);
+      for (const icon of manifest.icons) {
+        const pixels = await page.evaluate(async (url: string) => {
+          const image = new Image(); image.src = url; await image.decode();
+          const canvas = document.createElement('canvas'); canvas.width = image.width; canvas.height = image.height;
+          const context = canvas.getContext('2d')!; context.drawImage(image, 0, 0);
+          const pixel = (x: number, y: number) => Array.from(context.getImageData(x, y, 1, 1).data);
+          return { width: image.width, height: image.height, corner: pixel(0, 0), star: pixel(Math.round(image.width * 28 / 64), Math.round(image.height * 28 / 64)), heart: pixel(Math.round(image.width * 48 / 64), Math.round(image.height * 48 / 64)) };
+        }, new URL(icon.src, page.url()).href);
+        expect(`${pixels.width}x${pixels.height}`).toBe(icon.sizes);
+        expect(pixels.corner[3]).toBe(0);
+        expect(pixels.star).toEqual([244, 211, 94, 255]); expect(pixels.heart).toEqual(pixels.star);
+      }
+    } },
     { description: 'Calendar account restoration finishes before the page is captured', check: async () => { await expect(page.getByText('Opening your calendar…', { exact: true })).toHaveCount(0, { timeout: 15_000 }); } },
     { description: 'The signed-out calendar is empty, greyed out and disabled, with its sign-in notice visible', check: async () => {
       const preview=page.getByRole('region',{name:'Calendar sign-in preview'});
