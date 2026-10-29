@@ -5,6 +5,7 @@
   import { goto, pushState, replaceState } from '$app/navigation';
   import WelcomePage from './WelcomePage.svelte';
   import WeekBox from './WeekBox.svelte';
+  import CalendarStats from './CalendarStats.svelte';
   import GratitudeCalendar from './GratitudeCalendar.svelte';
   import LandingCalendar from './LandingCalendar.svelte';
   import SignedOutCalendar from './SignedOutCalendar.svelte';
@@ -77,7 +78,7 @@
       chooseInitialPage = true;
       const opened = new ReviewRepository((value) => { if (session === reviewSession) receiveView(value); });
       repository = opened; user = reviewUser; configured = true; initialized = true;
-      writing = false; savedId = null; settingsPage = 'menu';journalLimits={};
+      writing = false; savedId = null; settingsPage = 'menu';weekDay=null;journalLimits={};
       draftLoaded = false; draftRestored = false;
       resetReview = async (empty = false) => {
         await opened.reset(empty);
@@ -281,6 +282,7 @@
   }
 
   let zone = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  let weekDay = $state<string | null>(null);
   const dayIndex = $derived(indexCalendarDays(view.state.entries, zone));
   const stretches = $derived(summarizeStretches(dayIndex, today));
   let homeAnchor = $state<CalendarAnchor>({month:localDay(new Date()).slice(0,7),offset:0});
@@ -301,7 +303,7 @@
     else (replace?replaceState:pushState)(`${base}${landing?'/':'/journal/'}${next.trail.length?'?calendar=1':''}`,state);
   }
   function rootFlow():CalendarFlow {
-    return {owner:navOwner,root:{tab:landing?'home':tab==='today'?'today':'journal',query,expanded:[...expandedEntries],scroll:window.scrollY,anchor:{...homeAnchor}},trail:[]};
+    return {owner:navOwner,root:{tab:landing?'home':tab==='today'?'today':'journal',query,expanded:[...expandedEntries],scroll:window.scrollY,anchor:{...homeAnchor},weekDay},trail:[]};
   }
   async function appendFrame(next:CalendarFrame,focusDay?:string) {
     let current=flow;
@@ -313,7 +315,7 @@
     replaceState('',{...page.state,calendar:current});
     await writeFlow({...current,trail:[...current.trail,next]});
   }
-  async function openCalendar() {chooseInitialPage=false;await appendFrame({kind:'calendar',anchor:{month:today.slice(0,7),offset:0}});}
+  async function openCalendar(day=today) {chooseInitialPage=false;await appendFrame({kind:'calendar',anchor:{month:day.slice(0,7),offset:0}});}
   function rememberAnchor(anchor:CalendarAnchor) {
     if(landing){homeAnchor=anchor;const next:CalendarFlow={owner:navOwner,root:{...(flow && !flow.trail.length?flow.root:rootFlow().root),tab:'home',anchor},trail:[]};appliedFlow=JSON.stringify(next);rememberFlow(next);replaceState('',{...page.state,calendar:next});return;}
     if(frame?.kind!=='calendar' || !flow)return;
@@ -337,7 +339,7 @@
     if(dayFrame?.kind==='day')dateFilter=dayFrame.day;
     query=dayFrame?.kind==='day'?dayFrame.query:'';
     if(!last){
-      flow=null;homeAnchor=next.root.anchor;dateFilter=null;query=next.root.query;expandedEntries=new Set(next.root.expanded);
+      flow=null;homeAnchor=next.root.anchor;dateFilter=null;query=next.root.query;expandedEntries=new Set(next.root.expanded);weekDay=next.root.weekDay??null;
       tab=next.root.tab==='home'?'today':next.root.tab;
       if(next.root.tab==='home' && !landing)await goto(`${base}/`,{state:{...page.state,calendar:next},noScroll:true});
       await tick();window.scrollTo(0,next.root.scroll);document.querySelector<HTMLElement>(`[data-day="${next.root.focusDay??today}"]`)?.focus({preventScroll:true});
@@ -576,7 +578,7 @@
       client = createFirebaseClient(); configured = !!client;
       if (client) {
         stopAuth = onAuthStateChanged(client.auth, (next) => {
-          const current = ++session;refiller.reset();refillMessage='';dailyPromptError=null;journalLimits={};
+          const current = ++session;refiller.reset();refillMessage='';dailyPromptError=null;weekDay=null;journalLimits={};
           credentialStore?.stop();credentialStore=null;credentialStatus={ready:false,saved:false,error:''};
           repository?.stop(); repository = null;
           chooseInitialPage = true;
@@ -688,7 +690,7 @@
     {/snippet}
   </WelcomePage>
 {:else}
-<main class:composing={writing} class:aiSettings={tab==='settings'&&settingsPage==='ai'}>
+<main class:composing={writing} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:calendarView={calendarShown}>
   {#if !initialized}
     <p role="status" class="loading">Opening Gratitude…</p>
   {:else if !configured}
@@ -699,7 +701,7 @@
     {#if calendarShown && frame?.kind==='calendar'}
       <button class="back" onclick={backFlow}><Icon name="back" />{flow && flow.trail.length>1?'Journal':flow?.root.tab==='today'?'Today':'Journal'}</button>
       <h1 class="page-heading">Your calendar</h1>
-      <p class="calendar-summary">{stretches.current} {stretches.current===1?'day':'days'} of gratitude in a row{#if view.status!=='Synced'}<small class="calendar-cache-note">Saved on this device · waiting to sync</small>{/if}</p>
+      <CalendarStats streak={stretches} entries={view.state.entries.length} cached={view.status!=='Synced'} />
       <GratitudeCalendar index={dayIndex} {today} anchor={frame.anchor} onanchor={rememberAnchor} onchoose={selectDate} />
     {:else if tab === 'today'}
       {#if writing}
@@ -741,7 +743,7 @@
         <div class="saved-actions"><button class="primary" onclick={done}>Done</button><button class="outline" onclick={() => edit(savedEntry)}>Edit reflection</button></div>
       {:else}
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
-        <WeekBox index={dayIndex} {today} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} />
+        <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} />
         <h1 class="today-heading">Reflection time</h1>
         {#if view.ready}
           <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID ? 'Starter prompt' : currentResponse ? 'AI prompt' : 'Your prompt'}</span><h2>{currentPrompt}</h2></section>
@@ -776,7 +778,7 @@
       {:else}
         <h1 class="page-heading">Your journal</h1>
         {#if dateFilter}<button class="back day-back" onclick={backFlow}><Icon name="back" />{flow?.trail.at(-2)?.kind==='calendar'?'Calendar':flow?.root.tab==='home'?'Home':flow?.root.tab==='today'?'Today':'Journal'}</button><h2 class="date-heading">{dayLabel(dateFilter)}</h2>{/if}
-        <WeekBox index={dayIndex} {today} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} />
+        <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} />
         <button class="outline new-entry" onclick={newEntry} disabled={busy || !view.ready || !draftLoaded || !!view.pending}>New entry</button>
         <div class="search glass"><Icon name="search" /><input id="search" type="search" aria-label="Search reflections" bind:value={query} placeholder="Search reflections" />{#if query}<button class="icon-button" aria-label="Clear search" onclick={() => query = ''}><Icon name="close" /></button>{/if}</div>
         {#if query || view.status !== 'Synced'}<p class="result-count" aria-live="polite">{results.length} {results.length === 1 ? 'reflection' : 'reflections'}{view.status !== 'Synced' ? ' on this device' : ''}</p>{/if}
@@ -870,8 +872,11 @@
   .aiSettings { height: calc-size(auto, round(nearest, size, 1px)); }
   /* Each moving surface also needs an integral origin, not just the scroll boundary. */
   .aiSettings > :global(:not(nav)) { height: calc-size(auto, round(nearest, size, 1px)); }
-  .calendar-cache-note{display:block;font-size:.7rem;font-weight:400;color:#b4bdca;margin-top:5px}
-  .date-heading{font:600 1rem/1.5 Arial,Helvetica,sans-serif;color:#c1c7d1;margin:0 0 12px}.day-back{margin-top:12px}.calendar-summary{font:600 .94rem/1.5 Arial,Helvetica,sans-serif;color:#d4d9e1}.draft-choice button{margin-top:12px}
+  /* Keep the nested month scroller on integral origins after cache/reload and
+     scroll restoration. Its own explicit viewport height must stay intact. */
+  .calendarView { height: calc-size(auto, round(nearest, size, 1px)); }
+  .calendarView > :global(h1), .calendarView > :global(.back), .calendarView > :global(.calendar-summary), .calendarView > :global(.calendar-tools) { height: calc-size(auto, round(nearest, size, 1px)); }
+  .date-heading{font:600 1rem/1.5 Arial,Helvetica,sans-serif;color:#c1c7d1;margin:0 0 12px}.day-back{margin-top:12px}.draft-choice button{margin-top:12px}
   :global(html) { color-scheme: dark; background: #0c0d10; }
   :global(body) { margin: 0; color: #f4f5fa; font-family: Arial, Helvetica, sans-serif; font-size: 16px; }
   :global(*) { box-sizing: border-box; }
