@@ -1012,3 +1012,21 @@ Another small cute thing - on the your calendar page, i would love a few lines s
 ```text
 And ooooone more cute thing - the little 7-day gratitude calendar that shows up in a few places - i would like scrolling left or right on it to take you to the next or previous week please! (not a continuous scroll)
 ```
+
+## 2026-10-29 — Investigate Today-to-landing navigation
+
+```text
+(i've just noticed that it seems to take a long time to go to the langing page from the today page - is it the scrolling calendar/rendering the circles that is making that take a while?)
+```
+
+## 2026-10-29 — Clarify the intermittent landing transition
+
+```text
+Hmmm, i tried to reproduce the issue and it didn't seem to work, which i guess is a good thing. It was stuck on the "today" page for about 5 seconds and it was on my computer!
+```
+
+## 2026-10-29 — Anchor landing month controls while the calendar changes height
+
+```text
+On the main landing page, when scrolling side-to-side in the calendar months, the page jumps around when the month size changes :) can we get it so that the box extends downwards rather than all the content being centered on the page so that the < > buttons are always in the same place?
+```

@@ -30,7 +30,7 @@
     font-family: system-ui, sans-serif;
     min-height: 100svh;
     display: grid;
-    place-items: center;
+    place-items: start center;
     padding: max(64px, env(safe-area-inset-top)) 24px max(32px, env(safe-area-inset-bottom));
   }
   main { width: min(100%, 540px); }

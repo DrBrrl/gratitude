@@ -80,6 +80,28 @@ test('large journals load incrementally while search, Settings and cached recove
     await expect(cards).toHaveCount(20);
     await expect(page.locator('.more-reflections')).toContainText('Showing 20 of 701 reflections');
   });
+  await steps.action('landing-today', 'Return to Today before opening the landing calendar', () => nav('Today').click(), async () => {
+    await expect(page.getByRole('heading', { name: 'Reflection time' })).toBeVisible();
+  });
+  await steps.action('landing', 'Open the landing page from Today with a large history', () => timed('Landing from Today', () => page.locator('.today-header a.brand').click()), async () => {
+    await expect(page.locator('.landing-calendar')).toHaveAttribute('data-anchor', '2026-10');
+    await expect(page.locator('.landing-calendar [data-day]')).toHaveCount(31);
+    await expect(page.getByText('Opening your calendar…', { exact: true })).toHaveCount(0);
+  }, 'The existing signed-in projection supplies one month of date buttons');
+  await steps.action('landing-chooser', 'Choose a historical month without reloading the journal', () => page.getByRole('button', { name: 'Choose month, October 2026', exact: true }).click(), async () => {
+    await expect(page.getByLabel('Month', { exact: true })).toBeFocused();
+  });
+  await steps.action('landing-month', 'Enter January', () => page.getByLabel('Month', { exact: true }).fill('January'), async () => {
+    await expect(page.getByLabel('Month', { exact: true })).toHaveValue('January');
+  });
+  await steps.action('landing-year', 'Enter the year of the earliest saved reflections', () => page.getByLabel('Year', { exact: true }).fill('2024'), async () => {
+    await expect(page.getByLabel('Year', { exact: true })).toHaveValue('2024');
+  });
+  await steps.action('landing-apply', 'Show the saved rings from the complete historical projection', () => page.getByLabel('Year', { exact: true }).press('Enter'), async () => {
+    await expect(page.locator('.landing-calendar')).toHaveAttribute('data-anchor', '2024-01');
+    await expect(page.locator('.landing-calendar .filled')).toHaveCount(31);
+    await expect(page.getByRole('button', { name: 'Choose month, January 2024', exact: true })).toBeFocused();
+  });
   await info.attach('navigation-timings', { body: JSON.stringify(timings, null, 2), contentType: 'application/json' });
   steps.generateDocs('Responsive navigation through 701 reflections', 'Fictional raw events create a large journal. Twenty cards mount initially; scrolling adds twenty. Search covers the full history, entry navigation retains the loaded range, Settings stays independent, and a cached reload restores every entry. Timing observations are attached to the test report without hardware-dependent pass/fail limits. Every user action has an unmasked full-page screenshot comparison with zero pixel tolerance.');
 });

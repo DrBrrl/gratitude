@@ -109,6 +109,10 @@ The 37-step draft-recovery walkthrough has a 240-second total budget for hosted 
 
 ## Firebase foundation scenario
 
+Scenario `031-large-journal` seeds 701 fictional raw events, checks the twenty-card initial render and automatic twenty-card scroll batches, searches an entry outside those batches, visits Settings, restores entry focus/range and reloads the cached projection. Navigation timings are attached to its report as observations; structural bounds and functional assertions establish correctness without hardware-specific time limits. Scenario `032-week-navigation` exercises real mobile touch gestures, desktop dragging, horizontal-wheel momentum, keyboard navigation, historical-date selection and calendar statistics with multiple entries on one day. Both retain unmasked full-page screenshots after each user action and the standard zero-pixel comparison rule. The landing scenario also verifies deployment-scoped install metadata and alpha transparency in both icon sizes.
+
+Scenario `033-landing-calendar-layout` uses a tall desktop and a narrow, tall mobile screen to compare the title and arrow-control coordinates across four-, five- and six-week months and the editable chooser. Calendar height may change downward; the controls stay anchored. Scenario 031 also exercises Today-to-landing navigation and checks that historical month rings still use the full 701-entry projection.
+
 `002-firebase-journal` uses Auth, Firestore and Storage emulators with fictional accounts. It exercises the Google popup, reflection save, a second independent signed-in browser, warm reload, full projection rebuild and sign-out. Its generated mobile and desktop READMEs embed full-page screenshot baselines above the checks.
 
 ```sh
