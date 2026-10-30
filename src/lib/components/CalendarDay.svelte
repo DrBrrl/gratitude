@@ -15,7 +15,7 @@
   button{position:relative;display:grid;place-items:center;min-width:0;width:100%;height:46px;padding:0;border:0;background:transparent;color:#e8eaf0;font:inherit;cursor:pointer;border-radius:9px;}
   .number{display:grid;place-items:center;width:34px;height:34px;border:2px solid transparent;border-radius:50%;font-size:.9rem;}
   .hasPhoto .number{position:relative;}
-  .day-number{position:relative;color:#fff;font-weight:700;text-shadow:0 1px 3px #000,0 0 4px #000b;}
+  .day-number{position:relative;color:#fff;text-shadow:0 1px 3px #000,0 0 4px #000b;}
   .filled .number{border-color:var(--day-colour);box-shadow:0 0 8px color-mix(in srgb,var(--day-colour) 28%,transparent);}
   .future{color:#727782;cursor:default;} small{position:absolute;right:0;bottom:2px;font-size:.6rem;background:#22262e;color:#e3e5e9;border-radius:6px;padding:0 3px;line-height:12px;}
   button:disabled{cursor:default;}
