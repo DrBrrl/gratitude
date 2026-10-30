@@ -1060,3 +1060,9 @@ I love the sound of it. Just before i send you off on that journey, i have one f
 ```text
 Glorious 🥰 I'm ready for us to start looking at friends adding and hugs! Do we need usernames too?
 ```
+
+## 2026-10-31 — Include searchable usernames for finding friends
+
+```text
+Searchable username is a pretty good idea for ease of finding people!
+```

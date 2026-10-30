@@ -4,22 +4,30 @@ This is a proposal for review. Friends, shared daily status, display names, invi
 
 ## Names and finding friends
 
-Unique usernames are optional. Gratitude already uses a Firebase Authentication UID for each account and for access to its private journal. Friend relationships should use that identity too; changing a visible name must not change relationships or ownership.
+The user has chosen searchable usernames as a way to find friends. Gratitude already uses a Firebase Authentication UID for each account and for access to its private journal. Friend relationships should use that identity too; changing a username or visible name must not change relationships or journal ownership.
+
+Distinguish three things:
+
+- **Username:** a unique searchable handle such as `@jamie`, with case-insensitive matching. Availability and claiming must be checked atomically so two accounts cannot claim the same handle. Character/length rules, rename frequency and old-name reuse still need specification.
+- **Display name:** an editable label such as “Jamie”, shown alongside the handle so people can check whom they are adding. Display names need not be unique.
+- **Account identity:** the existing UID, used internally for relationships and access checks. A username is never a login credential or permission check.
 
 Proposed starting experience:
 
-- When enabling Friends, choose an editable display name such as “Jamie”. Names need not be unique. Show what will be shared before confirming; do not automatically expose the Google account’s full name, email address or photo.
-- Add someone using a private invitation link, with a copyable invitation code as an alternative. The code represents an invitation, not a permanent public account identifier.
-- Invitations expire and can be revoked. Opening a link does not grant access or create a friendship by itself. Both people explicitly confirm the connection, with an opportunity for the inviter to check who is joining before any daily status is shared.
-- Existing friends see the chosen name. There is no public user directory or email search in this proposal.
+1. When enabling Friends, choose a display name and an available username. Show exactly what will be discoverable before confirming. Do not automatically expose the Google account’s full name, email address or photo.
+2. Open Add a friend and search for a username. Start with case-insensitive exact-handle lookup, accepting input with or without `@`; partial-name suggestions are an open UX choice.
+3. Show the matching username and chosen display name, then send a friend request. Finding an account or sending a request grants no access to its journal or daily status.
+4. The recipient checks the sender’s name and handle and accepts or declines. Only accepted friends can exchange hugs, subject to their preferences. Sharing daily status requires separate consent.
 
-A unique searchable handle, such as `@jamie`, can be added if that discovery experience is wanted. It would need availability checks, name reservation and a decision about who can find an account. It should remain separate from account identity and authentication.
+A searchable profile exposes only the chosen handle and display name to signed-in people looking it up. Do not offer a browsable public directory or email search. Exact username lookups can still be guessed: discoverable handles and names are not secrets. The lookup surface needs abuse limits and a clear explanation of discoverability.
 
-Firebase documents UID, display name and email as separate user properties: [Manage users](https://firebase.google.com/docs/auth/web/manage-users). This proposal uses the existing UID and a deliberately chosen friend-facing name; it does not make Google profile details public.
+Private invitation links and copyable invitation codes remain a possible additional convenience, not a requirement for finding someone. If included, invitations expire, can be revoked, and require explicit confirmation before connecting or sharing status.
+
+Firebase documents UID, display name and email as separate user properties: [Manage users](https://firebase.google.com/docs/auth/web/manage-users). The friend-facing profile and username index must remain separate from private journal records. Username/profile selections are user actions; normalized lookup keys and availability/ownership indexes are projections or coordination records, not computed values inserted into source events. Removing or renaming a handle must never transfer an existing friendship to the account that later claims it.
 
 ## A small Friends space
 
-Propose a Friends entry in the existing Settings menu initially, without changing the bottom navigation. It contains pending invitations, accepted friends and a hug inbox. The exact placement and visual design remain open for review.
+Propose a Friends entry in the existing Settings menu initially, without changing the bottom navigation. It contains the chosen name/username, Add a friend, incoming/outgoing requests, accepted friends and a hug inbox. The exact placement and visual design remain open for review.
 
 Each friend card shows their chosen name, an optional daily status and a Send a hug action. A simple acknowledgement confirms a hug was sent; delivery does not imply the recipient has seen it.
 
@@ -39,6 +47,6 @@ Record hugs durably for the in-app inbox. Optional device push needs a trusted s
 
 ## Suggested first implementation slice
 
-Start with choosing a friend-facing name, issuing/revoking an invitation, confirming a friendship, and sending/receiving a hug in the app. Add the consent-controlled daily status and optional device notifications as separately reviewable slices. Each working feature needs permission tests and mobile/desktop action-by-action E2E screenshots under the existing zero-pixel, no-masking contract.
+Start with choosing a friend-facing name and unique username, finding an account by its handle, sending/accepting/declining a friend request, and sending/receiving a hug in the app. Add the consent-controlled daily status and optional device notifications as separately reviewable slices. Each working feature needs permission tests and mobile/desktop action-by-action E2E screenshots under the existing zero-pixel, no-masking contract.
 
 This ordering is a proposal, not a commitment to omit status or notifications from the completed feature. The user’s intended feature includes both gentle daily-status sharing and hugs that can notify their recipient.
