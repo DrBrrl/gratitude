@@ -5,8 +5,8 @@ test('the published build exposes configured Google sign-in', async ({ page }) =
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('./journal/');
-  await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeVisible();
-  await expect(page.locator('section.glass')).toHaveCSS('backdrop-filter', 'blur(18px)');
+  await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible();
+  await expect(page.locator('.signin-message')).toHaveCSS('backdrop-filter', 'blur(12px)');
   await expect(page.getByText('Account sign-in is not available on this site yet.')).toHaveCount(0);
   expect(errors).toEqual([]);
 });

@@ -1048,3 +1048,9 @@ I notice that the photo day has a bold date number! Let's either remove the bold
 ```text
 Thank youuu, that's much better! I'll commit that now. I had the thought that it ight be nice to have the option to add your friends and nudge them to be grateful in a day if they haven't done it... :D What i your thinking on that? Is it a massive and difficult structural change that doesn't make sense? I'm not looking for a social media situaiton with sharing of entries, just the status of whether they were grateful or not on a day and the ability to send them a hug that would notify them... If it's not feasible for the web-app version, we can just note this as a future thing!
 ```
+
+## 2026-10-30 — Show the public landing page on every signed-out route
+
+```text
+I love the sound of it. Just before i send you off on that journey, i have one final small request - before logging in, every page (e.g. /journal or /settings) should show the main page with the greyed out calendar :)
+```

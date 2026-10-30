@@ -884,3 +884,15 @@ Proposed feature boundaries:
 - Prefer manually sent encouragement initially, with mute/block/unfriend controls, quiet hours and a recipient-controlled nudge limit. Hugs can be useful even when the recipient has already reflected; accepting friendship need not require sharing daily status.
 
 Assessment: feasible as a moderate addition to the web app. Shared-data permissions and notification delivery are the main new work. A first design could cover accepted friendships, consent, status freshness and an inbox, followed by a small real-device push check before committing to delivery behaviour. Browser/SDK compatibility, notification-provider choice, retention and exact sharing defaults remain design questions. Application code and deployed infrastructure are unchanged.
+
+## 2026-10-30 — A shared landing page before authentication
+
+Confirmed: the old `/journal/` sign-in surface differed from the root landing page, and Settings was only an internal tab without a direct route. The persistent layout now renders the same public welcome page and independent empty, disabled calendar whenever no account is signed in. Auth restoration finishes before the calendar’s sign-in controls appear. Sign-out disposes the owner’s thumbnail cache and removes private views before displaying that preview.
+
+Google sign-in now opens directly from the landing links, in the original click gesture before navigation. The explicit footer destination is Journal; a direct Settings visit can resume Settings after account restoration. Cancellation keeps the public landing available with a retry message. Missing Firebase configuration is reported upon a sign-in attempt without replacing the shared landing page.
+
+Root, Journal and Settings remain prerendered so their direct links work on both production and PR previews without changing static-host routing. The authentication gate lives in the shared app component that renders the application’s screens. Arbitrary nonexistent URLs retain the hosting platform’s normal 404 behaviour.
+
+Evidence: new 035 emulator walkthrough covers root, Journal, Settings, a Journal sign-in link and reload, popup cancellation/retry, restored Settings access, and private-content removal on sign-out. Both sign-in entry points remain covered by 022. Existing screenshot contracts remain unmasked with zero pixel tolerance. All 32 mobile and 31 desktop shared initial sign-in baselines were byte-identical before this change; their replacement landing captures also match the independently rendered root and journal landing captures byte-for-byte. Shared expected images were updated consistently; the complete CI matrix compares each action independently. The future friends/hugs proposal above remains unimplemented.
+
+Local verification: the new 035 walkthrough passes in both viewports as an ordinary comparison run against the CI preview base path. Svelte reports zero errors/warnings; all 70 unit tests and five deployment tests pass, and workflow lint passes. Existing journey comparisons and the full hosted matrix provide the remaining regression checks.

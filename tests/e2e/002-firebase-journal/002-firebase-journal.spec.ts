@@ -14,7 +14,7 @@ test('Google sign-in, private saving, a second device and cached recovery', asyn
     await secondContext.route(/https:\/\/(unpkg\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//, route => route.abort());
     const second = await secondContext.newPage(); steps.setPage(second);
     await second.clock.setFixedTime(new Date(FIXTURE_TIME));
-    await steps.action('second-device', 'Open Gratitude on another device', () => second.goto('./journal/'), async () => { await expect(second.getByRole('button', { name: 'Continue with Google' })).toBeVisible(); });
+    await steps.action('second-device', 'Open Gratitude on another device', () => second.goto('./journal/'), async () => { await expect(second.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible(); });
     await signIn(second, info, steps, 'foundation', true, 'Journal');
     await navigate(second, steps, 'second-journal', 'Journal');
     await expect(second.locator('article')).toHaveCount(1);
@@ -49,6 +49,6 @@ test('Google sign-in, private saving, a second device and cached recovery', asyn
   await steps.action('confirm-save', 'Check that the reflection was updated without duplication', () => page.getByRole('navigation').getByRole('button', { name: 'Journal', exact: true }).click(), async () => { await expect(page.locator('article')).toHaveCount(1); await expect(page.locator('article')).toContainText('A friend checked in today.'); });
   await navigate(page, steps, 'settings-account', 'Settings');
   await steps.action('account', 'Open account settings', () => page.getByRole('button', { name: /^Your account/ }).click(), async () => { await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible(); });
-  await steps.action('sign-out', 'Sign out and hide the private journal', () => page.getByRole('button', { name: 'Sign out' }).click(), async () => { await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeVisible(); await expect(page.locator('article')).toHaveCount(0); });
+  await steps.action('sign-out', 'Sign out and hide the private journal', () => page.getByRole('button', { name: 'Sign out' }).click(), async () => { await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible(); await expect(page.locator('article')).toHaveCount(0); });
   steps.generateDocs('Private journal, synchronization and recovery', 'Every navigation, click and text-entry action has a screenshot, including the Google emulator popup and second device. Fixed browser and emulator clocks keep all rendered dates visible and exactly comparable.');
 });

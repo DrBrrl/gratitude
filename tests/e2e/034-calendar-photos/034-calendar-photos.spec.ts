@@ -110,10 +110,10 @@ test('private photo dates share fogged thumbnails across all calendars and disca
       await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
     });
     await steps.action('signout', 'End the owner’s photo session', () => page.getByRole('button', { name: 'Sign out', exact: true }).click(), async () => {
-      await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible();
       await expect(page.locator('.calendar-photo')).toHaveCount(0);
     });
-    await steps.action('signedout-home', 'Keep the signed-out preview free of private images', () => page.locator('a.brand').click(), async () => {
+    await steps.action('signedout-home', 'Keep the signed-out preview free of private images', () => page.goto('./'), async () => {
       await expect(page.locator('.signed-out-calendar')).toBeVisible();
       await expect(page.locator('.calendar-photo')).toHaveCount(0);
       expect(await page.evaluate(async () => (await Promise.all((await caches.keys()).map(async key => (await (await caches.open(key)).keys()).map(request => request.url)))).flat().every(url => !url.includes('19199') && !url.startsWith('blob:')))).toBe(true);
