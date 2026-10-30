@@ -1036,3 +1036,9 @@ On the main landing page, when scrolling side-to-side in the calendar months, th
 ```text
 I would like, on the main page, for everything to be lowered by about the height of the letter G in gratitude! I would also like for days that have pictures to look a little different in the calendars (the month one on the main page, the 7-day ones, and the infinite scroll calendar) - i would love a small version of the image in the circle, probably a little fogged over so that the number can still stand out really nicely! Can we give that a try too?
 ```
+
+## 2026-10-30 — Consistent calendar date weight
+
+```text
+I notice that the photo day has a bold date number! Let's either remove the bold or make all filled-in days be bold
+```
