@@ -12,7 +12,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] Sign-in is available and the production build preserves the frosted glass blur
+- [x] The shared landing page shows its empty calendar and frosted sign-in notice
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose Google sign-in

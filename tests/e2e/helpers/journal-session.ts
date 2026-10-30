@@ -31,15 +31,15 @@ export async function startJournal(page: Page, info: TestInfo, steps: TestStepHe
   await page.request.delete('http://127.0.0.1:19099/emulator/v1/projects/demo-gratitude/accounts');
   await page.context().route(/https:\/\/(unpkg\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//, (route) => route.abort());
   await steps.action('open', 'Open Gratitude', () => page.goto('./journal/'), async () => {
-    await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeVisible();
-    await expect(page.locator('section.glass')).toHaveCSS('backdrop-filter', 'blur(18px)');
-  }, 'Sign-in is available and the production build preserves the frosted glass blur');
+    await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible();
+    await expect(page.locator('.signin-message')).toHaveCSS('backdrop-filter', 'blur(12px)');
+  }, 'The shared landing page shows its empty calendar and frosted sign-in notice');
   await signIn(page, info, steps, name);
 }
-export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, name: string, existing = false, landing: 'Today' | 'Journal' = 'Today', requestedJournal = false) {
+export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, name: string, existing = false, landing: 'Today' | 'Journal' = 'Today', requestedJournal = false, trigger?: () => Promise<unknown>) {
   const email = `${name}-${info.project.name}@example.test`;
   const opened = page.waitForEvent('popup');
-  await page.getByRole('button', { name: 'Continue with Google' }).click();
+  await (trigger ? trigger() : page.getByRole('link', { name: 'Sign in', exact: true }).click());
   const popup = await opened;
   await popup.waitForLoadState('domcontentloaded');
   await steps.step('google-popup', 'Choose Google sign-in', [{ description: 'The Google emulator account chooser opens', check: async () => { await expect(popup.getByRole('button', { name: 'Add new account' })).toBeVisible(); } }], popup);

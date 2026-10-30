@@ -15,18 +15,9 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Use Sign in in the calendar overlay
-
-![Use Sign in in the calendar overlay](./screenshots/001-overlay-signin-desktop-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/002-google-popup-desktop-chromium.png)
+![Choose Google sign-in](./screenshots/001-google-popup-desktop-chromium.png)
 
 **Verifications:**
 
@@ -35,7 +26,7 @@ Viewport: desktop-chromium.
 
 ## Add a fictional Google account
 
-![Add a fictional Google account](./screenshots/003-new-account-desktop-chromium.png)
+![Add a fictional Google account](./screenshots/002-new-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -44,7 +35,7 @@ Viewport: desktop-chromium.
 
 ## Enter the fictional email address
 
-![Enter the fictional email address](./screenshots/004-email-desktop-chromium.png)
+![Enter the fictional email address](./screenshots/003-email-desktop-chromium.png)
 
 **Verifications:**
 
@@ -53,7 +44,7 @@ Viewport: desktop-chromium.
 
 ## Enter a display name
 
-![Enter a display name](./screenshots/005-name-desktop-chromium.png)
+![Enter a display name](./screenshots/004-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -62,7 +53,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal after sign-in from the landing page
 
-![Open Journal after sign-in from the landing page](./screenshots/006-signed-in-desktop-chromium.png)
+![Open Journal after sign-in from the landing page](./screenshots/005-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +63,7 @@ Viewport: desktop-chromium.
 
 ## Complete sign-in directly into Journal even with no saved entries
 
-![Complete sign-in directly into Journal even with no saved entries](./screenshots/007-journal-destination-desktop-chromium.png)
+![Complete sign-in directly into Journal even with no saved entries](./screenshots/006-journal-destination-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +72,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/008-settings-desktop-chromium.png)
+![Open Settings](./screenshots/007-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open the signed-in account
 
-![Open the signed-in account](./screenshots/009-account-desktop-chromium.png)
+![Open the signed-in account](./screenshots/008-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Sign out before checking the footer entry point
 
-![Sign out before checking the footer entry point](./screenshots/010-signout-desktop-chromium.png)
+![Sign out before checking the footer entry point](./screenshots/009-signout-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,16 +99,7 @@ Viewport: desktop-chromium.
 
 ## Return to the signed-out landing page
 
-![Return to the signed-out landing page](./screenshots/011-signedout-home-desktop-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Use Sign in and open your journal in the footer
-
-![Use Sign in and open your journal in the footer](./screenshots/012-footer-signin-desktop-chromium.png)
+![Return to the signed-out landing page](./screenshots/010-signedout-home-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/013-google-popup-desktop-chromium.png)
+![Choose Google sign-in](./screenshots/011-google-popup-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal after sign-in from the landing page
 
-![Open Journal after sign-in from the landing page](./screenshots/014-signed-in-desktop-chromium.png)
+![Open Journal after sign-in from the landing page](./screenshots/012-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -145,7 +127,7 @@ Viewport: desktop-chromium.
 
 ## Open Today after signing in
 
-![Open Today after signing in](./screenshots/015-today-desktop-chromium.png)
+![Open Today after signing in](./screenshots/013-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -154,7 +136,7 @@ Viewport: desktop-chromium.
 
 ## Keep the ordinary footer and interactive calendar after sign-in
 
-![Keep the ordinary footer and interactive calendar after sign-in](./screenshots/016-signedin-home-desktop-chromium.png)
+![Keep the ordinary footer and interactive calendar after sign-in](./screenshots/014-signedin-home-desktop-chromium.png)
 
 **Verifications:**
 

@@ -1,6 +1,12 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  let { calendar, signedIn=false }: { calendar?: Snippet; signedIn?: boolean } = $props();
+  let { calendar, signedIn=false, onsignin, signInDisabled=false, message='' }: { calendar?: Snippet; signedIn?: boolean; onsignin?: () => void; signInDisabled?: boolean; message?: string } = $props();
+  function requestSignIn(event: MouseEvent) {
+    if (signedIn || !onsignin) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (!signInDisabled) onsignin();
+  }
   import { base } from '$app/paths';
 </script>
 <svelte:head>
@@ -20,8 +26,9 @@
       <p class="gentle-note">A small moment is enough.</p>
     </section>{/if}
     <footer>
-      <a href={`${base}/journal/${signedIn?'':'?afterSignIn=journal'}`}>{signedIn?'Open your journal':'Sign in and open your journal'} <span aria-hidden="true">→</span></a>
+      <a onclick={requestSignIn} aria-disabled={!signedIn && signInDisabled ? true : undefined} href={`${base}/journal/${signedIn?'':'?afterSignIn=journal'}`}>{signedIn?'Open your journal':'Sign in and open your journal'} <span aria-hidden="true">→</span></a>
     </footer>
+    {#if message}<p class="signin-status" role="alert">{message}</p>{/if}
   </main>
 </div>
 
@@ -47,5 +54,6 @@
   @media(max-width:360px){ .page { padding-left:2px; padding-right:2px; } }
   footer { display: flex; flex-wrap: wrap; gap: 16px 24px; justify-content: space-between; margin-top: 32px; color: #c6c4bd; font-size: 0.8rem; }
   a { color: #f4d35e; text-underline-offset: 4px; min-height: 44px; display: inline-flex; gap: 6px; align-items: flex-start; }
+  .signin-status { color: #dce0e7; font-size: .9rem; line-height: 1.6; }
   a:focus-visible { outline: 2px solid #f4d35e; outline-offset: 6px; border-radius: 2px; }
 </style>

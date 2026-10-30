@@ -87,7 +87,7 @@ test('LM Studio prompts and photos use explicit local credentials and replay wit
    const other=await otherContext.newPage();steps.setPage(other);await other.clock.setFixedTime(new Date(FIXTURE_TIME));
    await other.route('http://127.0.0.1:8080/**',localRoute);
    await other.route(AI_ENDPOINT,async route=>{cloud++;await route.fulfill({status:503,body:'{}'});});
-   await steps.action('other-device','Open the same account on a device without local credentials',()=>other.goto('./journal/'),async()=>{await expect(other.getByRole('button',{name:'Continue with Google',exact:true})).toBeVisible();});
+   await steps.action('other-device','Open the same account on a device without local credentials',()=>other.goto('./journal/'),async()=>{await expect(other.getByRole('link',{name:'Sign in',exact:true})).toBeVisible();});
    await signIn(other,info,steps,'local-lm',true);
    await steps.action('other-no-fallback','Keep the shared local provider when this device has no API token',()=>other.getByRole('button',{name:'Another prompt',exact:true}).click(),async()=>{await expect(other.getByText('LM Studio needs a valid API token. Enter it in AI settings on this device.',{exact:true})).toBeVisible();expect(submissions).toHaveLength(4);expect(cloud).toBe(0);});
    await aiSettings(other,steps,'other-connection');

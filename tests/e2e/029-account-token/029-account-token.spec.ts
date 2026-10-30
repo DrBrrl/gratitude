@@ -26,7 +26,7 @@ test('an optional account token restores its bound connection across devices and
  const other=await context.newPage();
  try{
   await other.clock.setFixedTime(new Date(FIXTURE_TIME));await other.route(`${SERVER}/**`,routeModel);steps.setPage(other);
-  await steps.action('new-device','Open Gratitude on an independent browser device',()=>other.goto('./journal/'),async()=>{await expect(other.getByRole('button',{name:'Continue with Google',exact:true})).toBeVisible();});
+  await steps.action('new-device','Open Gratitude on an independent browser device',()=>other.goto('./journal/'),async()=>{await expect(other.getByRole('link',{name:'Sign in',exact:true})).toBeVisible();});
   await signIn(other,info,steps,'account-token',true);
   await aiSettings(other,steps,'restored');
   await steps.step('restored-connection','Restore the exact bound connection without entering the token again',[{description:'The signed-in owner receives the saved HTTPS address, model and password-field token without inference',check:async()=>{await expect(other.getByLabel('LM Studio server URL')).toHaveValue(SERVER);await expect(other.getByLabel('Model API identifier')).toHaveValue(MODEL);await expect(other.getByLabel('LM Studio API token')).toHaveValue(TOKEN);expect(discoveries).toBe(0);}}]);

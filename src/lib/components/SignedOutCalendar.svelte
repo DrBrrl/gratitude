@@ -3,7 +3,13 @@
   import LandingCalendar from './LandingCalendar.svelte';
   import { base } from '$app/paths';
 
-  let { today }: { today: string } = $props();
+  let { today, onsignin, signInDisabled=false }: { today: string; onsignin?: () => void; signInDisabled?: boolean } = $props();
+  function requestSignIn(event: MouseEvent) {
+    if (!onsignin) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (!signInDisabled) onsignin();
+  }
   // This preview always has its own empty index, independent of account history.
   const emptyIndex: DayIndex = new Map();
 </script>
@@ -12,7 +18,7 @@
   <div class="calendar-preview">
     <LandingCalendar index={emptyIndex} {today} anchor={{month:today.slice(0,7),offset:0}} onanchor={()=>{}} onchoose={()=>{}} disabled />
   </div>
-  <p class="signin-message" id="calendar-signin-message"><a href={`${base}/journal/?afterSignIn=journal`}>Sign in</a> to see your gratitude calendar.</p>
+  <p class="signin-message" id="calendar-signin-message"><a onclick={requestSignIn} aria-disabled={signInDisabled ? true : undefined} href={`${base}/journal/?afterSignIn=journal`}>Sign in</a> to see your gratitude calendar.</p>
 </section>
 
 <style>

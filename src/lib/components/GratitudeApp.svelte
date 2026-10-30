@@ -125,6 +125,7 @@
   let draftWrite = 0;
   let tab = $state<'today' | 'journal' | 'settings'>('today');
   let chooseInitialPage = true;
+  let signInDestination: 'journal' | null = null;
   function receiveView(value: JournalView) {
     if(value.state.ai.days[today]!==view.state.ai.days[today])dailyPromptError=null;
     view = value;
@@ -132,8 +133,9 @@
     // not interrupt writing or an explicitly selected tab.
     if (chooseInitialPage && value.ready && value.status === 'Synced') {
       chooseInitialPage = false;
-      const requestedJournal = page.url.searchParams.get('afterSignIn') === 'journal';
-      tab = requestedJournal || todayReflection(value.state.entries, today).entry ? 'journal' : 'today';
+      const requestedJournal = signInDestination === 'journal' || page.url.searchParams.get('afterSignIn') === 'journal';
+      signInDestination = null;
+      tab = requestedJournal ? 'journal' : page.route.id === '/settings' ? 'settings' : todayReflection(value.state.entries, today).entry ? 'journal' : 'today';
       if (requestedJournal) {
         const destination = new URL(page.url);
         destination.searchParams.delete('afterSignIn');
@@ -583,7 +585,7 @@
       client = createFirebaseClient(); configured = !!client;
       if (client) {
         stopAuth = onAuthStateChanged(client.auth, (next) => {
-          const current = ++session;refiller.reset();refillMessage='';dailyPromptError=null;weekDay=null;journalLimits={};
+          const current = ++session;if(!next)signInDestination=null;refiller.reset();refillMessage='';dailyPromptError=null;weekDay=null;journalLimits={};
           calendarThumbnailCache?.dispose();calendarThumbnailCache=null;
           credentialStore?.stop();credentialStore=null;credentialStatus={ready:false,saved:false,error:''};
           repository?.stop(); repository = null;
@@ -626,13 +628,19 @@
     window.addEventListener('online', online);
     return () => { session++; stopAuth(); calendarThumbnailCache?.dispose(); credentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
   });
-  async function signIn() {
-    if (uiReview) { await openReview(); return; }
-    if (!client) return;
+  async function signIn(journal = landing) {
+    if (!initialized || busy) return;
+    if (!configured) { error = 'Account sign-in is not available on this site yet.'; return; }
+    signInDestination = journal ? 'journal' : null;
     busy = true; error = '';
-    try { await googleSignIn(client); }
-    catch { error = 'Sign-in was not completed. You can try again.'; }
-    finally { busy = false; }
+    try {
+      // Open the popup in the click gesture, before any asynchronous navigation.
+      const authentication = uiReview ? openReview() : googleSignIn(client!);
+      await Promise.all([authentication, landing || journal ? goto(`${base}/journal/`) : Promise.resolve()]);
+    } catch {
+      signInDestination = null;
+      error = 'Sign-in was not completed. You can try again.';
+    } finally { busy = false; }
   }
   async function leave() {
     if (uiReview) {
@@ -689,22 +697,18 @@
   }
 </script>
 
-<svelte:head><title>{landing?'Gratitude':'Your journal · Gratitude'}</title>{#if !landing}<meta name="robots" content="noindex" />{/if}</svelte:head>
-{#if landing}
-  <WelcomePage signedIn={!!user}>
+<svelte:head><title>{landing || !user?'Gratitude':'Your journal · Gratitude'}</title>{#if !landing}<meta name="robots" content="noindex" />{/if}</svelte:head>
+{#if landing || !user}
+  <WelcomePage signedIn={!!user} onsignin={() => signIn(true)} signInDisabled={!initialized || busy} message={error}>
     {#snippet calendar()}
       {#if user && view.ready}<LandingCalendar index={dayIndex} {today} anchor={homeAnchor} onanchor={rememberAnchor} onchoose={selectDate} photos={calendarPhotos} />{#if view.status!=='Synced'}<p class="hint">Saved on this device · waiting to sync</p>{/if}
-      {:else if !initialized || user}<p role="status">Opening your calendar…</p>{:else}<SignedOutCalendar {today} />{/if}
+      {:else if !initialized || user}<p role="status">Opening your calendar…</p>{:else}<SignedOutCalendar {today} onsignin={() => signIn()} signInDisabled={busy} />{/if}
     {/snippet}
   </WelcomePage>
 {:else}
 <main class:composing={writing} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:calendarView={calendarShown}>
   {#if !initialized}
     <p role="status" class="loading">Opening Gratitude…</p>
-  {:else if !configured}
-    <a class="brand" href={`${base}/`}>Gratitude</a><h1>Your private space</h1><section class="glass"><p>Account sign-in is not available on this site yet.</p></section>
-  {:else if !user}
-    <a class="brand" href={`${base}/`}>Gratitude</a><div class="welcome"><h1>A little space<br />for gratitude.</h1><p>Notice the small things.<br />Keep them close.</p><section class="glass"><h2>Your moments. Yours to keep.</h2><p>Sign in to keep your reflections together across your devices.</p><button class="primary" onclick={signIn} disabled={busy}>Continue with Google</button></section></div>
   {:else}
     {#if calendarShown && frame?.kind==='calendar'}
       <button class="back" onclick={backFlow}><Icon name="back" />{flow && flow.trail.length>1?'Journal':flow?.root.tab==='today'?'Today':'Journal'}</button>
@@ -1020,10 +1024,6 @@
   nav button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 30%; min-height: 59px; padding: 4px; font-size: .85rem; color: #cbd0de; }
   nav button[aria-current] { color: var(--yellow); }
   nav button[aria-current]::after { content: ''; position: absolute; bottom: -7px; height: 3px; width: 28px; background: var(--yellow); border-radius: 4px; }
-  .welcome { padding-top: 30px; }
-  .welcome h1 { font-size: 3rem; }
-  .welcome > p { color: #c5cad2; font-size: 1.15rem; }
-  .welcome section { margin-top: 40px; }
   dialog { width: min(390px, calc(100vw - 40px)); padding: 26px; color: inherit; background: linear-gradient(130deg, #333738ed, #14181af5); border: 1px solid #b6bec980; border-radius: 24px; backdrop-filter: blur(24px); }
   dialog::backdrop { background: #02040599; }
   dialog .outline { margin-top: 14px; }
