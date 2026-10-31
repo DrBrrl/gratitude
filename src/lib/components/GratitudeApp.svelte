@@ -3,6 +3,7 @@
   import { onMount, tick, untrack } from 'svelte';
   import { page } from '$app/state';
   import { goto, pushState, replaceState } from '$app/navigation';
+  import Friends from './Friends.svelte';
   import WelcomePage from './WelcomePage.svelte';
   import WeekBox from './WeekBox.svelte';
   import CalendarStats from './CalendarStats.svelte';
@@ -443,7 +444,7 @@
   import PhotoPanel from '$lib/components/PhotoPanel.svelte';
   import PhotoImage from '$lib/components/PhotoImage.svelte';
   import Icon from '$lib/components/Icon.svelte';
-  let settingsPage = $state<'menu' | 'ai' | 'export' | 'privacy' | 'account' | 'import'>('menu');
+  let settingsPage = $state<'menu' | 'ai' | 'export' | 'privacy' | 'account' | 'import' | 'friends'>('menu');
   let exportFormat = $state<'markdown' | 'json'>('markdown');
   let showPromptInfo = $state(false);
   let editorOrigin = $state<{ tab: typeof tab; selectedId: string | null; savedId: string | null; label: string; scroll: number }>({ tab: 'today', selectedId: null, savedId: null, label: 'Today', scroll: 0 });
@@ -856,11 +857,13 @@
         <button class="primary" onclick={() => prepareExport(exportFormat)} disabled={exporting || !!view.pending}>{exporting ? 'Preparing…' : 'Prepare export'}</button>
         {#if preparedFile}<div class="ready glass" role="status"><span class="ready-icon"><Icon name="check" /></span>Export ready</div><button class="outline download" onclick={downloadPrepared}><Icon name="download" />Download {exportFormat === 'markdown' ? 'Markdown' : 'JSON'}{preparedFile.type === 'application/zip' ? ' ZIP' : ''}</button>{:else if exportStatus}<p aria-live="polite">{exportStatus}</p>{/if}
         <p class="hint export-warning">This file contains your private reflections.</p>
+      {:else if settingsPage === 'friends'}
+        {#if client && !uiReview}<Friends {client} uid={user.uid} />{:else}<h1 class="page-heading">Friends &amp; hugs</h1><p>Friends are available when signed in to a Firebase journal.</p>{/if}
       {:else if settingsPage === 'privacy'}
         <h1>Privacy & data</h1><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device. Daily AI prompt sharing starts off disabled in AI settings. Photo summaries are a separate choice for each photo.</p><button class="outline" onclick={() => openSettings('export')}>Export your journal</button></section>
         <section class="glass"><h2>Journal recovery</h2><p class="muted">Rebuild this device’s view from your saved account history.</p><button class="outline" onclick={() => repository?.rebuild().catch(() => error = 'Could not rebuild. Please reload and try again.')} disabled={busy}>Rebuild local view</button></section>
       {:else}
-        <h1>Your account</h1><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
+        <h1>Your account</h1><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline account-friends" onclick={() => openSettings('friends')}>Friends &amp; hugs</button><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
       {/if}
     {/if}
     {#if view.aiResultPending && (writing || tab !== 'today' || savedEntry)}<section class="glass photo-recovery"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
@@ -1017,6 +1020,7 @@
   .ready { display: flex; align-items: center; gap: 18px; padding: 18px; margin: 18px 0; border-color: #73c59590; background: #254e3670; }
   .ready-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #7ccd9625; }
   .download { color: var(--yellow); }
+  .account-friends { margin-bottom: 12px; }
   .account-email { overflow-wrap: anywhere; margin: 20px 0 12px; }
   .muted { color: #bdc4ce; }
   .sync-status { margin: 24px 0 0; font-size: .85rem; color: #d2cfbb; }
