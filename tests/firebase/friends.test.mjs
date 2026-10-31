@@ -46,6 +46,9 @@ test('requests, hugs, read receipts and revocation are enforced independently of
   forged.set(doc(a, `friendPairs/${pair}/events/forged-accept`),{eventId:'forged-accept',type:'FriendRequestAccepted',actorUid:'friends-alice',targetUid:'friends-bob',schemaVersion:1,sequence:pending.sequence+1,recordedAt:serverTimestamp(),payload:{previousEventId:pending.lastEventId}});
   await assertFails(forged.commit());
   await appendFriendAction(b, 'friends-bob', command('accept', 'FriendRequestAccepted', 'friends-alice'));
+  // Acceptance grants social contact, never access to a journal or credentials.
+  await assertFails(getDocs(collection(b, 'users/friends-alice/streams/v1/events')));
+  await assertFails(getDoc(doc(b, 'users/friends-alice/privateSettings/lmStudio')));
   await appendFriendAction(b, 'friends-bob', command('pause', 'HugPreferencesChosen', 'friends-alice', { allowHugs: false }));
   await assert.rejects(appendFriendAction(a, 'friends-alice', command('paused-hug', 'HugSent', 'friends-bob')));
   await appendFriendAction(b, 'friends-bob', command('resume', 'HugPreferencesChosen', 'friends-alice', { allowHugs: true }));
