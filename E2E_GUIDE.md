@@ -260,3 +260,13 @@ The interrupted-response scenario in 008 keeps response confirmations unavailabl
 ## Signed-out routing
 
 [035-signed-out-routing](tests/e2e/035-signed-out-routing/README.md) and its desktop companion cover direct root, Journal, Settings and Journal sign-in links, reload, cancellation and retry of Google sign-in, restored account access to Settings, and immediate removal of private content on sign-out. All signed-out routes show the same empty, disabled landing calendar. Google authentication opens directly from the landing links; 022 covers both entry points. Each action has an unmasked screenshot comparison with `maxDiffPixels: 0` and `threshold: 0`, and generated checks below its image.
+
+## Friends and hugs
+
+The dedicated Friends viewport jobs cover [036-friend-profile](tests/e2e/036-friend-profile/README.md), [037-friend-requests](tests/e2e/037-friend-requests/README.md), [038-hugs](tests/e2e/038-hugs/README.md) and [039-request-controls](tests/e2e/039-request-controls/README.md), plus their desktop companions. They use fictional Google accounts in separate browser contexts and exercise real Firestore Rules. Profile choice, availability conflicts, discovery opt-out, cached restoration, source replay, request acceptance, private-journal separation, blocking/unblocking, hug delivery/read state and recipient preferences are documented action by action.
+
+Every click, input, preference change and device switch is followed by an unmasked full-page screenshot comparison with `maxDiffPixels: 0` and `threshold: 0`; checks appear beneath each generated image. Firebase test files run serially so the existing integration suite’s database reset cannot race the social tests. Unit reducers additionally compare complete replay with cached-tail application; backend tests bypass client validation to verify acceptance/cooldown/projection protections.
+
+Social fixtures clear only the disposable `demo-gratitude` Firestore emulator before starting. This also releases fixture handle reservations, so a repeated run can use the same deterministic usernames after Auth accounts are reset. No production/preview data is cleared.
+
+The Google sign-in helper allows fifteen seconds for the popup to open, matching the existing authentication restoration budget. Firebase Auth loads its Google bootstrap script even when using the local Auth emulator; traces from a slow network showed the inherited two-second popup wait expiring before that script responded. This bounded wait adds no retries and does not change screenshot capture or pixel tolerances.

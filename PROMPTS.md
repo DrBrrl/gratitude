@@ -1054,3 +1054,45 @@ Thank youuu, that's much better! I'll commit that now. I had the thought that it
 ```text
 I love the sound of it. Just before i send you off on that journey, i have one final small request - before logging in, every page (e.g. /journal or /settings) should show the main page with the greyed out calendar :)
 ```
+
+## 2026-10-31 — Begin friends and hugs design; consider usernames
+
+```text
+Glorious 🥰 I'm ready for us to start looking at friends adding and hugs! Do we need usernames too?
+```
+
+## 2026-10-31 — Include searchable usernames for finding friends
+
+```text
+Searchable username is a pretty good idea for ease of finding people!
+```
+
+## 2026-10-31 — Start friends and hugs implementation
+
+```text
+Yay! Can we start implementation?
+```
+
+## 2026-10-31 — Friends and hugs copy edits
+
+```text
+Wonderful start! Copy edits: "A little encouragement, shared with care. Your journal stays private." - change to "You can encourage your friends to practice gratitude by sending them a hug!" | Change "People can find your chosen name using this username." to "People can find you by searching for your @*username*" | "Your friend’s username" should be "Find your friend by searching for their @*username*!" | "A friend’s encouragement can start with a hello." should be "No friends yet. Add some to get started!" | "Your hugs ♡" should be Your hugs 💛" | "A little space for the hugs that find you." should be "Your friends hugs will show up here!"
+```
+
+## 2026-10-31 — Name the account Settings option for friends and hugs
+
+```text
+Let's also change the "Your account" on the settings page to "Your account, friends, and hugs"
+```
+
+## 2026-10-31 — Check and rerun a failed PR check
+
+```text
+Looks like one of the checks didn't pass! How can i get them to try again?
+```
+
+## 2026-10-31 — Correct the possessive in the hugs empty state
+
+```text
+"Your friends hugs will show up here!" shoot, that should be "Your friends' hugs will show up here!" Sorry!
+```
