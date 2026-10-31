@@ -18,7 +18,7 @@ export async function createProfile(page: Page, steps: TestStepHelper, name: str
   await steps.action(`${prefix}profile-save`,'Save the opt-in friends profile',()=>page.getByRole('button',{name:'Save friends profile',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name,exact:true})).toBeVisible({timeout:15_000});await expect(page.getByText(`@${username.trim().toLowerCase().replace(/^@/,'')}`,{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Edit friends profile',exact:true})).toBeEnabled();});
 }
 export async function findFriend(page: Page, steps: TestStepHelper, username: string, name: string, prefix = '') {
-  await steps.action(`${prefix}search-name`,'Enter a friend’s username',()=>page.getByRole('textbox',{name:'Your friend’s username',exact:true}).fill(username),async()=>{await expect(page.getByRole('textbox',{name:'Your friend’s username',exact:true})).toHaveValue(username);});
+  await steps.action(`${prefix}search-name`,'Enter a friend’s username',()=>page.getByRole('textbox',{name:'Find your friend by searching for their @username!',exact:true}).fill(username),async()=>{await expect(page.getByRole('textbox',{name:'Find your friend by searching for their @username!',exact:true})).toHaveValue(username);});
   await steps.action(`${prefix}find`,'Find the chosen profile by username',()=>page.getByRole('button',{name:'Find friend',exact:true}).click(),async()=>{await expect(page.getByRole('region',{name:'Add a friend',exact:true}).getByRole('heading',{name,exact:true})).toBeVisible({timeout:15_000});});
 }
 export async function secondFriend(page: Page, info: TestInfo, steps: TestStepHelper, account: string) {

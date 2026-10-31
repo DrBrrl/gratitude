@@ -38,7 +38,8 @@ export async function startJournal(page: Page, info: TestInfo, steps: TestStepHe
 }
 export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, name: string, existing = false, landing: 'Today' | 'Journal' = 'Today', requestedJournal = false, trigger?: () => Promise<unknown>) {
   const email = `${name}-${info.project.name}@example.test`;
-  const opened = page.waitForEvent('popup');
+  // Firebase Auth loads Google's popup bootstrap before opening the emulator UI.
+  const opened = page.waitForEvent('popup', { timeout: 15_000 });
   await (trigger ? trigger() : page.getByRole('link', { name: 'Sign in', exact: true }).click());
   const popup = await opened;
   await popup.waitForLoadState('domcontentloaded');

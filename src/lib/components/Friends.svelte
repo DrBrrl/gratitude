@@ -61,7 +61,7 @@
 
 <div class="friends-space">
   <h1>Friends & hugs</h1>
-  <p class="intro">A little encouragement, shared with care. Your journal stays private.</p>
+  <p class="intro">You can encourage your friends to practice gratitude by sending them a hug!</p>
   {#if !view.ready}<p role="status">Opening your friends…</p>{:else}
     {#if !view.synced}<p class="connection" role="status">Saved on this device. Connect to refresh friends and send hugs.</p>{/if}
     <section class="glass" aria-label="Your friends profile">
@@ -78,14 +78,14 @@
         </form>
       {:else}
         <div class="profile-heading"><Icon name="account" size={28} /><div><h2>{view.profile.displayName}</h2><p>@{view.profile.username}</p></div></div>
-        <p class="hint">{view.profile.discoverable?'People can find your chosen name using this username.':'Your profile is hidden from new username searches.'}</p>
+        <p class="hint">{#if view.profile.discoverable}People can find you by searching for your @<em>username</em>{:else}Your profile is hidden from new username searches.{/if}</p>
         <button class="outline" onclick={() => {username=view.profile.username;displayName=view.profile.displayName;discoverable=view.profile.discoverable;editingProfile=true;}}>Edit friends profile</button>
       {/if}
     </section>
     {#if view.profile.sequence}
       <section class="glass" aria-label="Add a friend">
         <h2>Add a friend</h2>
-        <form onsubmit={event => {event.preventDefault();void findFriend();}}><label for="friend-search">Your friend’s username</label><div class="search-row"><input id="friend-search" bind:value={search} oninput={() => {found=null;searched=false;}} placeholder="@username" autocapitalize="none" autocomplete="off" spellcheck="false" disabled={disabled} /><button class="outline" disabled={disabled || !usernameKey(search)}>Find friend</button></div></form>
+        <form onsubmit={event => {event.preventDefault();void findFriend();}}><label for="friend-search">Find your friend by searching for their @<em>username</em>!</label><div class="search-row"><input id="friend-search" bind:value={search} oninput={() => {found=null;searched=false;}} placeholder="@username" autocapitalize="none" autocomplete="off" spellcheck="false" disabled={disabled} /><button class="outline" disabled={disabled || !usernameKey(search)}>Find friend</button></div></form>
         {#if searched && !found}<p class="hint search-result" role="status">No profile found for that username.</p>{/if}
         {#if found}<div class="result search-result"><h3>{found.displayName}</h3><p>@{found.username}</p>
           {#if found.uid===uid}<p class="hint">That’s you!</p>
@@ -101,14 +101,14 @@
       </section>
       {#if incoming.length}<section aria-label="Incoming friend requests"><h2>Friend requests</h2>{#each incoming as [id,p] (id)}<article class="glass"><h3>{name(peer(p))}</h3><p class="hint">{handle(peer(p))} would like to connect.</p><div class="actions"><button class="primary" onclick={() => act('FriendRequestAccepted',peer(p))} disabled={disabled}>Accept request from {name(peer(p))}</button><button class="outline" onclick={() => act('FriendRequestDeclined',peer(p))} disabled={disabled}>Decline request</button><button class="quiet" onclick={() => act('FriendBlocked',peer(p))} disabled={disabled}>Block {name(peer(p))}</button></div></article>{/each}</section>{/if}
       {#if outgoing.length}<section aria-label="Sent friend requests"><h2>Requests you sent</h2>{#each outgoing as [id,p] (id)}<article class="glass"><h3>{name(peer(p))}</h3><p class="hint">{handle(peer(p))} · waiting for a reply</p><button class="outline" onclick={() => act('FriendRequestCancelled',peer(p))} disabled={disabled}>Cancel request to {name(peer(p))}</button></article>{/each}</section>{/if}
-      <section aria-label="Your friends"><h2>Your friends</h2>{#if !friends.length}<p class="hint">A friend’s encouragement can start with a hello.</p>{/if}
+      <section aria-label="Your friends"><h2>Your friends</h2>{#if !friends.length}<p class="hint">No friends yet. Add some to get started!</p>{/if}
         {#each friends as [id,p] (id)}<article class="glass friend-card"><div class="profile-heading"><Icon name="heart" size={24} /><div><h3>{name(peer(p))}</h3><p class="hint">{handle(peer(p))}</p></div></div>
           <button class="primary" onclick={() => act('HugSent',peer(p))} disabled={disabled || !canHug(p,uid,Date.now())}>Send a hug to {name(peer(p))}</button>
           <p class="hint">{(uid===p.members[0]?p.hugsB:p.hugsA)?'One gentle hug per friend every 24 hours.':'Your friend has paused incoming hugs.'}</p>
           <details><summary>Manage friendship with {name(peer(p))}</summary><div class="actions manage"><button class="outline" onclick={() => act('HugPreferencesChosen',peer(p),{allowHugs:!(uid===p.members[0]?p.hugsA:p.hugsB)})} disabled={disabled}>{(uid===p.members[0]?p.hugsA:p.hugsB)?'Pause hugs from':'Allow hugs from'} {name(peer(p))}</button><button class="outline" onclick={() => act('FriendRemoved',peer(p))} disabled={disabled}>Remove {name(peer(p))} as a friend</button><button class="quiet" onclick={() => act('FriendBlocked',peer(p))} disabled={disabled}>Block {name(peer(p))}</button></div></details>
         </article>{/each}
       </section>
-      <section aria-label="Hug inbox"><h2>Your hugs <span aria-hidden="true">♡</span></h2>{#if !inbox.length}<p class="hint">A little space for the hugs that find you.</p>{/if}
+      <section aria-label="Hug inbox"><h2>Your hugs <span class="hug-heart" aria-hidden="true"><Icon name="heart" size={22} filled /></span></h2>{#if !inbox.length}<p class="hint">Your friends hugs will show up here!</p>{/if}
         {#each inbox as hug (hug.id)}<article class="glass hug" class:unread={!hug.read}><p><strong>{name(hug.from)}</strong> sent you a hug.</p><time datetime={hug.at}>{date(hug.at)}</time>{#if !hug.read}<button class="outline" onclick={() => act('HugRead',hug.from,{hugId:hug.id,pairId:hug.pairId})} disabled={disabled}>Mark hug from {name(hug.from)} as read</button>{:else}<p class="hint">Read, and kept with care.</p>{/if}</article>{/each}
       </section>
       {#if blocked.length}<section aria-label="Blocked people"><h2>Blocked people</h2>{#each blocked as [id,p] (id)}<article class="glass"><h3>{name(peer(p))}</h3><p class="hint">Unblocking does not restore the friendship.</p><button class="outline" onclick={() => act('FriendUnblocked',peer(p))} disabled={disabled}>Unblock {name(peer(p))}</button></article>{/each}</section>{/if}
@@ -125,6 +125,7 @@
   .friends-space :is(section,article,div,h1,h2,h3,p,form,label,time,details,summary) { height:calc-size(auto,round(nearest,size,1px)); }
   h1 { font:600 2.4rem/1.15 Georgia,'Times New Roman',serif;letter-spacing:-.035em;margin:24px 0; }
   .profile-heading > div {min-width:0} h2,h3,.profile-heading p {overflow-wrap:anywhere} button {max-width:100%;overflow-wrap:anywhere}
+  .hug-heart {color:#ffdf48;display:inline-flex;vertical-align:-.14em;}
   h2 {font:600 1.35rem/1.35 Georgia,serif;margin:0 0 14px;} h3 {font-size:1.05rem;margin:0 0 6px;}
   p {line-height:1.55;margin:0 0 14px;} .intro,.hint,time {color:#bfc5ce;} .intro{margin-bottom:24px}.hint,time {font-size:.85rem;line-height:1.6;}
   section {margin:0 0 24px;} .glass {background:linear-gradient(130deg,#333738c9,#11171cc9);border:1px solid #b6bec94d;border-radius:22px;padding:20px;backdrop-filter:blur(18px);margin-bottom:18px;}

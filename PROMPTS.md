@@ -1072,3 +1072,15 @@ Searchable username is a pretty good idea for ease of finding people!
 ```text
 Yay! Can we start implementation?
 ```
+
+## 2026-10-31 — Friends and hugs copy edits
+
+```text
+Wonderful start! Copy edits: "A little encouragement, shared with care. Your journal stays private." - change to "You can encourage your friends to practice gratitude by sending them a hug!" | Change "People can find your chosen name using this username." to "People can find you by searching for your @*username*" | "Your friend’s username" should be "Find your friend by searching for their @*username*!" | "A friend’s encouragement can start with a hello." should be "No friends yet. Add some to get started!" | "Your hugs ♡" should be Your hugs 💛" | "A little space for the hugs that find you." should be "Your friends hugs will show up here!"
+```
+
+## 2026-10-31 — Name the account Settings option for friends and hugs
+
+```text
+Let's also change the "Your account" on the settings page to "Your account, friends, and hugs"
+```

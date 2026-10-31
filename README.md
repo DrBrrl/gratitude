@@ -172,7 +172,7 @@ Signed-out visits to any app page show the public landing page with the empty, d
 
 ## Friends and hugs
 
-Open **Settings → Your account → Friends & hugs** on a configured Firebase site. Choose a display name and a unique username, then find someone by their full username and send a request. Usernames ignore case and accept an optional leading `@`; they use 3–24 ASCII letters, digits or underscores, starting with a letter. Display names are editable and need not be unique. Saving explicitly chooses what will be discoverable; Google names, emails, account photos and journal contents are not published.
+Open **Settings → Your account, friends, and hugs → Friends & hugs** on a configured Firebase site. Choose a display name and a unique username, then find someone by their full username and send a request. Usernames ignore case and accept an optional leading `@`; they use 3–24 ASCII letters, digits or underscores, starting with a letter. Display names are editable and need not be unique. Saving explicitly chooses what will be discoverable; Google names, emails, account photos and journal contents are not published.
 
 Only accepted friends can send hugs. Hugs arrive in the Friends inbox while that page is open and remain saved for later visits. Recipients can privately mark them as read, pause hugs from a friend, remove a friend or block someone, including directly from search. Sending is limited to one hug per friend per 24 hours; declining or cancelling a request prevents another request to that person for 24 hours. Unblocking does not restore a friendship. You can hide your profile from new searches or change your username without moving existing relationships to a different account.
 
