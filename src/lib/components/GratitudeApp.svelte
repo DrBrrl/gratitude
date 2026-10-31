@@ -817,7 +817,7 @@
       {#if settingsPage === 'menu'}
         <h1 class="page-heading">Settings</h1>
         <div class="settings-menu">
-          {#each [{ id: 'ai', icon: 'sparkles', title: 'AI settings', subtitle: 'Answers, memory and sharing' }, { id: 'export', icon: 'file', title: 'Export journal', subtitle: 'Markdown or JSON' }, { id: 'import', icon: 'file', title: 'Import journal', subtitle: 'ZIP export, photos and dates' }, { id: 'privacy', icon: 'shield', title: 'Privacy & data', subtitle: 'Your journal, your control' }, { id: 'account', icon: 'account', title: 'Your account', subtitle: user.email ?? 'Signed in' }] as item}
+          {#each [{ id: 'ai', icon: 'sparkles', title: 'AI settings', subtitle: 'Answers, memory and sharing' }, { id: 'export', icon: 'file', title: 'Export journal', subtitle: 'Markdown or JSON' }, { id: 'import', icon: 'file', title: 'Import journal', subtitle: 'ZIP export, photos and dates' }, { id: 'privacy', icon: 'shield', title: 'Privacy & data', subtitle: 'Your journal, your control' }, { id: 'account', icon: 'account', title: 'Your account, friends, and hugs', subtitle: user.email ?? 'Signed in' }] as item}
             <button class="glass settings-row" onclick={() => openSettings(item.id as typeof settingsPage)}><span class="row-icon" class:yellow={item.id === 'ai'}><Icon name={item.icon} size={30} /></span><span class="row-copy"><strong>{item.title}</strong><span>{item.subtitle}</span></span><Icon name="next" size={20} /></button>
           {/each}
         </div>

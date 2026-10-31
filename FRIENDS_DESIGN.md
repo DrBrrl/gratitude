@@ -27,7 +27,7 @@ Firebase documents UID, display name and email as separate user properties: [Man
 
 ## A small Friends space
 
-The first slice opens through Settings → Your account → Friends & hugs, without changing the bottom navigation. It contains the chosen name/username, Add a friend, incoming/outgoing requests, accepted friends and a hug inbox. The placement and visual design can be reviewed with the working preview.
+The first slice opens through Settings → Your account, friends, and hugs → Friends & hugs, without changing the bottom navigation. It contains the chosen name/username, Add a friend, incoming/outgoing requests, accepted friends and a hug inbox. The placement and visual design can be reviewed with the working preview.
 
 Each friend card shows the chosen name/handle and a Send a hug action. Daily status is not implemented yet. A simple acknowledgement confirms a hug was sent; delivery does not imply the recipient has seen it.
 
