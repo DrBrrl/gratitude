@@ -950,3 +950,9 @@ Visual review found that the pinned DejaVu test fonts lack the yellow-heart emoj
 During the copy refresh, ten desktop cases failed at the same two-second popup wait, before reaching their edited screens. Traces showed an unfinished `apis.google.com/js/api.js` request: the Firebase Auth popup bootstrap still has an external dependency when using the local emulator. The helper now explicitly allows fifteen seconds for the popup, consistent with the documented authentication budget. No retries or screenshot relaxations were introduced; the affected cases are rerun after this change.
 
 Copy-review validation: all 58 affected viewport walkthroughs completed baseline generation after the popup-wait correction, including both generic-AI cases. All 316 changed PNGs were reviewed; changes are confined to Friends screens and Settings-menu captures. The profile scenario then passed ordinary unmasked zero-pixel comparisons on mobile and desktop. Svelte reports zero errors and warnings.
+
+## 2026-10-31 — Retry the desktop Friends check
+
+Hosted run `41166609986` passed the other 25 checks, but the desktop Friends job exhausted its 20-minute job budget. Profile, requests and hugs passed normally; request controls was still running when GitHub cancelled the job. The log shows no screenshot/assertion failure before cancellation. A targeted rerun of that job and its dependent publication has been queued on the same commit. If the timing recurs, splitting the four Friends walkthroughs into smaller CI groups is a proposed fix; screenshot limits and per-action captures must remain intact.
+
+Follow-up: hosted run `41166609986` completed successfully on attempt 3 at the same `35a1c52` commit. The retry recovered the timed-out check without changing screenshot tolerances or application code.
