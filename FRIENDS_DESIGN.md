@@ -1,6 +1,6 @@
 # Friends and hugs — first design sketch
 
-This is a proposal for review. Friends, shared daily status, display names, invitations and hugs are not implemented.
+The first implementation on this branch includes opt-in profiles, searchable usernames, requests, accepted friendships and a durable in-app hug inbox. Shared daily status, invitation links and device push remain design work. The following distinguishes the implemented first slice from those proposals.
 
 ## Names and finding friends
 
@@ -8,14 +8,14 @@ The user has chosen searchable usernames as a way to find friends. Gratitude alr
 
 Distinguish three things:
 
-- **Username:** a unique searchable handle such as `@jamie`, with case-insensitive matching. Availability and claiming must be checked atomically so two accounts cannot claim the same handle. Character/length rules, rename frequency and old-name reuse still need specification.
+- **Username:** a unique searchable handle such as `@jamie`, with case-insensitive matching. Availability and claiming must be checked atomically so two accounts cannot claim the same handle. Handles use 3–24 ASCII letters, digits or underscores, starting with a letter. Renaming atomically releases the old handle; relationships stay attached to UIDs. A rename-frequency policy remains open.
 - **Display name:** an editable label such as “Jamie”, shown alongside the handle so people can check whom they are adding. Display names need not be unique.
 - **Account identity:** the existing UID, used internally for relationships and access checks. A username is never a login credential or permission check.
 
 Proposed starting experience:
 
 1. When enabling Friends, choose a display name and an available username. Show exactly what will be discoverable before confirming. Do not automatically expose the Google account’s full name, email address or photo.
-2. Open Add a friend and search for a username. Start with case-insensitive exact-handle lookup, accepting input with or without `@`; partial-name suggestions are an open UX choice.
+2. Open Add a friend and search for a username. The first slice uses case-insensitive exact-handle lookup, accepting input with or without `@`; partial-name suggestions remain an open UX choice.
 3. Show the matching username and chosen display name, then send a friend request. Finding an account or sending a request grants no access to its journal or daily status.
 4. The recipient checks the sender’s name and handle and accepts or declines. Only accepted friends can exchange hugs, subject to their preferences. Sharing daily status requires separate consent.
 
@@ -27,11 +27,11 @@ Firebase documents UID, display name and email as separate user properties: [Man
 
 ## A small Friends space
 
-Propose a Friends entry in the existing Settings menu initially, without changing the bottom navigation. It contains the chosen name/username, Add a friend, incoming/outgoing requests, accepted friends and a hug inbox. The exact placement and visual design remain open for review.
+The first slice opens through Settings → Your account → Friends & hugs, without changing the bottom navigation. It contains the chosen name/username, Add a friend, incoming/outgoing requests, accepted friends and a hug inbox. The placement and visual design can be reviewed with the working preview.
 
-Each friend card shows their chosen name, an optional daily status and a Send a hug action. A simple acknowledgement confirms a hug was sent; delivery does not imply the recipient has seen it.
+Each friend card shows the chosen name/handle and a Send a hug action. Daily status is not implemented yet. A simple acknowledgement confirms a hug was sent; delivery does not imply the recipient has seen it.
 
-Sharing today’s reflection status is a separate opt-in choice, not an automatic consequence of accepting friendship. A person can receive hugs without sharing whether they have written. Share only whether a saved reflection exists for the displayed local date, never its prompt, text, photos, AI summaries, entry count or writing time.
+Proposed next slice: sharing today’s reflection status is a separate opt-in choice, not an automatic consequence of accepting friendship. A person can receive hugs without sharing whether they have written. Share only whether a saved reflection exists for the displayed local date, never its prompt, text, photos, AI summaries, entry count or writing time.
 
 Use the sharing person’s chosen timezone and display the date so that friends in different timezones can understand “today”. Entry dates, including imports, backfills and date edits, determine the status. The exact timezone-setting behaviour still needs design. Stale or unavailable information is labelled accordingly, rather than interpreted as a missed reflection.
 
@@ -45,8 +45,23 @@ Shared reads must be restricted to accepted friends with the relevant current co
 
 Record hugs durably for the in-app inbox. Optional device push needs a trusted sender outside the public SPA, private device registrations and duplicate-safe processing. Replaying events must not send old hugs again. The service choice, notification preferences, revocation behaviour and real-device delivery tests remain implementation-design work; no infrastructure has been provisioned.
 
-## Suggested first implementation slice
+## Implemented storage and recovery
 
-Start with choosing a friend-facing name and unique username, finding an account by its handle, sending/accepting/declining a friend request, and sending/receiving a hug in the app. Add the consent-controlled daily status and optional device notifications as separately reviewable slices. Each working feature needs permission tests and mobile/desktop action-by-action E2E screenshots under the existing zero-pixel, no-masking contract.
+| Record | Purpose and access |
+| --- | --- |
+| `friendProfiles/{uid}/events/{id}` | Immutable literal profile choices; owner-only history. |
+| `friendProfiles/{uid}` | Derived current name, handle, discovery choice and source cursor. Discoverable to authenticated lookup or to the owner/current unblocked connection. |
+| `friendUsernames/{key}` | Atomic normalized handle reservation, separate from private journal data. Collection listing is denied. |
+| `friendPairs/{id}/events/{id}` | Immutable request, acceptance, cancellation, decline, removal, blocking, hug-preference, send and read actions. Only the two participants read the history. |
+| `friendPairs/{id}` | Validated relationship projection and source cursor; membership-filtered reads, no public directory. |
+| `friendLinks/{uid}/peers/{otherUid}` | Immutable reciprocal coordination pointers. Their atomic creation prevents concurrent requests creating duplicate relationships. |
+
+Profile updates, normalized reservations and literal source events commit atomically. Pair actions and projections also commit atomically. Security Rules check actor, recipient, source predecessor, sequence and permitted state transitions; they reject editing/deleting source events or forging projection state. Server time enforces the 24-hour hug/request limits. Recipient preference and blocking are checked again on every send.
+
+A deployment- and owner-scoped IndexedDB checkpoint caches the social projection with a digest and version. Warm opens reconcile against canonical heads and fetch only event tails. Rebuild discards the projection and replays the complete accessible source streams. No replay path sends a hug or calls an external notification service. The first UI shows the latest 20 incoming hugs; older actions remain in the canonical history. Previously viewed data cannot be remotely erased from an offline device.
+
+## Delivery and subsequent slices
+
+The first slice provides choosing a friend-facing name and unique username, finding an account by its handle, sending/accepting/declining/cancelling a friend request, and sending/receiving a hug in the app. Add the consent-controlled daily status and optional device notifications as separately reviewable slices. Each working feature needs permission tests and mobile/desktop action-by-action E2E screenshots under the existing zero-pixel, no-masking contract.
 
 This ordering is a proposal, not a commitment to omit status or notifications from the completed feature. The user’s intended feature includes both gentle daily-status sharing and hugs that can notify their recipient.

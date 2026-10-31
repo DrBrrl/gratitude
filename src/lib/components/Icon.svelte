@@ -20,6 +20,7 @@
   {:else if name === 'download'}<path d="M12 2v14m-5-5 5 5 5-5M3 16v5h18v-5"/>
   {:else if name === 'check'}<path d="m4 12 5 5L20 6"/>
   {:else if name === 'braces'}<path d="M8 2H6v7l-3 3 3 3v7h2M16 2h2v7l3 3-3 3v7h-2"/>
+  {:else if name === 'heart'}<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>
   {:else if name === 'account'}<circle cx="12" cy="7" r="4"/><path d="M3 22v-3a9 9 0 0 1 18 0v3"/>
   {/if}
 </svg>

@@ -14,6 +14,8 @@ Users choose between managed Gemini and a local LM Studio model for prompts and 
 
 Reflections are private. Users can export and delete their data and understand what information is shared with an AI service.
 
+Users find friends through chosen usernames, accept connections, optionally share daily gratitude status and send gentle hugs. They control discoverability, sharing and notifications, and can pause or end a connection. Journal contents remain private.
+
 The application supports keyboard navigation, screen readers, and readable layouts across screen sizes. Drafts are protected from accidental loss, and daily reflection remains available when AI generation is unavailable.
 
 Gratitude is free software licensed under GPLv3, with a documented, reproducible Nix development environment.
