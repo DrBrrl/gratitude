@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { collection, doc, getDoc, getDocs, query, orderBy, where, setDoc, deleteDoc, writeBatch, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { saveFriendProfile, appendFriendAction } from '../../src/lib/friends/repository.ts';
+import { saveFriendProfile, appendFriendAction, acknowledgeHug } from '../../src/lib/friends/repository.ts';
+import { applyInbox, applyReadState, emptyInbox } from '../../src/lib/friends/inbox.ts';
 import { applyPair, emptyPair } from '../../src/lib/friends/domain.ts';
 let env;
 const db = uid => env.authenticatedContext(uid, { firebase: { sign_in_provider: 'google.com' } }).firestore();
@@ -50,11 +51,17 @@ test('requests, hugs, read receipts and revocation are enforced independently of
   await appendFriendAction(b, 'friends-bob', command('resume', 'HugPreferencesChosen', 'friends-alice', { allowHugs: true }));
   await appendFriendAction(a, 'friends-alice', command('hug', 'HugSent', 'friends-bob'));
   await assert.rejects(appendFriendAction(a, 'friends-alice', command('second-hug', 'HugSent', 'friends-bob')));
-  await appendFriendAction(b, 'friends-bob', command('read', 'HugRead', 'friends-alice', { hugId: 'hug' }));
+  await acknowledgeHug(b,'friends-bob',pair,'hug','read');
+  await assertFails(getDocs(collection(a,'friendInboxes/friends-bob/events')));
+  await assertFails(getDoc(doc(a,'friendInboxes/friends-bob')));
+  await assert.rejects(acknowledgeHug(a,'friends-alice',pair,'hug','forged-own-read'));
   const log = await getDocs(query(collection(a, `friendPairs/${pair}/events`), orderBy('sequence')));
   const events = log.docs.map(d => ({ ...d.data(), recordedAt: d.get('recordedAt').toDate().toISOString() }));
   const replayed = events.reduce(applyPair, emptyPair('friends-alice', 'friends-bob'));
-  assert.equal(replayed.status, 'accepted'); assert.equal(replayed.hugs.length, 1); assert.equal(replayed.hugs[0].read, true);
+  assert.equal(replayed.status, 'accepted'); assert.equal(replayed.hugs.length, 1); assert.equal(replayed.hugs[0].read, false);
+  const readLog=await getDocs(query(collection(b,'friendInboxes/friends-bob/events'),orderBy('sequence')));
+  const privateInbox=readLog.docs.map(d=>({...d.data(),recordedAt:d.get('recordedAt').toDate().toISOString()})).reduce((state,e)=>applyInbox(state,e,'friends-bob'),emptyInbox());
+  assert.equal(applyReadState({[pair]:replayed},privateInbox,'friends-bob')[pair].hugs[0].read,true);
   // A forged head cannot reset the server-enforced cooldown or source pointer.
   const stored = (await getDoc(doc(a, `friendPairs/${pair}`))).data();
   await assertFails(setDoc(doc(a, `friendPairs/${pair}`), { ...stored, lastHugA: null }));
@@ -75,6 +82,7 @@ test('hidden profiles, anonymous discovery and pair aliases cannot be used to by
   await saveFriendProfile(a, 'hidden-a', profile('hidden_one', 'Hidden', false), 'hidden-profile');
   await saveFriendProfile(b, 'hidden-b', profile('visible_two'), 'visible-profile');
   await assertFails(getDoc(doc(b, 'friendProfiles/hidden-a')));
+  await assertFails(getDoc(doc(b, 'friendUsernames/hidden_one')));
   await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), 'friendUsernames/visible_two')));
   await assert.rejects(appendFriendAction(b, 'hidden-b', command('hidden-request', 'FriendRequestSent', 'hidden-a')));
   await assertFails(setDoc(doc(b, 'friendLinks/hidden-b/peers/hidden-a'), { pairId: 'invented' }));
@@ -109,7 +117,19 @@ test('unrelated friendship actions preserve sub-millisecond canonical timestamp 
     await batch.commit();
   });
   await appendFriendAction(b,'precision-b',command('precision-pause','HugPreferencesChosen','precision-a',{allowHugs:false}));
-  await appendFriendAction(b,'precision-b',command('precision-read','HugRead','precision-a',{hugId:'precision-hug'}));
+  await acknowledgeHug(b,'precision-b',id,'precision-hug','precision-read');
   const latest=await getDoc(doc(b,`friendPairs/${id}`));
   assert.ok(latest.get('requestedAt').isEqual(requestAt));assert.ok(latest.get('lastHugA').isEqual(hugAt));
+});
+
+
+test('blocking a discovered account needs no prior request and rejects path-like source references', async () => {
+ const a=db('first-block-a'),b=db('first-block-b');
+ await saveFriendProfile(a,'first-block-a',profile('block_first_a'),'block-profile-a');await saveFriendProfile(b,'first-block-b',profile('block_first_b'),'block-profile-b');
+ const id=await appendFriendAction(a,'first-block-a',command('block-first','FriendBlocked','first-block-b'));
+ const head=(await getDoc(doc(a,`friendPairs/${id}`))).data();assert.equal(head.status,'none');assert.equal(head.blockedA,true);
+ await assert.rejects(appendFriendAction(b,'first-block-b',command('blocked-request','FriendRequestSent','first-block-a')));
+ const forged=writeBatch(a);forged.set(doc(a,`friendPairs/${id}`),{...head,sequence:head.sequence+1,lastEventId:'path-read'});
+ forged.set(doc(a,`friendPairs/${id}/events/path-read`),{eventId:'path-read',schemaVersion:1,type:'HugRead',actorUid:'first-block-a',targetUid:'first-block-b',sequence:head.sequence+1,recordedAt:serverTimestamp(),payload:{previousEventId:head.lastEventId,hugId:'../../other/events/hug'}});
+ await assertFails(forged.commit());
 });

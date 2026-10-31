@@ -1,3 +1,4 @@
+import { applyInbox, applyReadState, emptyInbox, type InboxEvent, type InboxProjection } from './inbox.ts';
 import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, orderBy, query, runTransaction, serverTimestamp, Timestamp, where, type Firestore, type DocumentData } from 'firebase/firestore';
 import { openDB, type IDBPDatabase } from 'idb';
 import { applyPair, applyProfile, emptyPair, emptyProfile, pairHead, usernameKey, validateProfile, type PairAction, type PairEvent, type PairHead, type PairProjection, type Profile, type ProfileEvent, type ProfileInput } from './domain.ts';
@@ -18,7 +19,10 @@ export async function saveFriendProfile(db: Firestore, uid: string, input: Profi
   validateProfile(input);
   const headRef = profileRef(db, uid), eventRef = doc(db, `${headRef.path}/events/${eventId}`), nameRef = doc(db, `friendUsernames/${usernameKey(input.username)}`);
   await runTransaction(db, async tx => {
-    const [head, prior, claim] = await Promise.all([tx.get(headRef), tx.get(eventRef), tx.get(nameRef)]);
+    const [head, prior, claim] = await Promise.all([tx.get(headRef), tx.get(eventRef), tx.get(nameRef).catch(cause => {
+      if (cause?.code === 'permission-denied') throw new Error('That username is already taken. Try another.');
+      throw cause;
+    })]);
     if (prior.exists()) {
       if (!same(prior.get('payload'), input)) throw new Error('Profile action ID already used.');
       return;
@@ -34,7 +38,7 @@ export async function saveFriendProfile(db: Firestore, uid: string, input: Profi
   });
 }
 
-export type PairCommand = { eventId: string; type: PairAction['type']; targetUid: string; allowHugs?: boolean; hugId?: string };
+export type PairCommand = { eventId: string; type: PairAction['type']; targetUid: string; allowHugs?: boolean };
 export async function appendFriendAction(db: Firestore, actorUid: string, command: PairCommand) {
   if (!command.targetUid || command.targetUid === actorUid) throw new Error('Choose another person.');
   const proposedId = crypto.randomUUID();
@@ -46,27 +50,20 @@ export async function appendFriendAction(db: Firestore, actorUid: string, comman
     const [head, prior] = await Promise.all([tx.get(headRef), tx.get(eventRef)]);
     if (prior.exists()) {
       const p = prior.data();
-      if (p.type !== command.type || p.actorUid !== actorUid || p.targetUid !== command.targetUid || p.payload.allowHugs !== command.allowHugs || p.payload.hugId !== command.hugId) throw new Error('Friendship action ID already used.');
+      if (p.type !== command.type || p.actorUid !== actorUid || p.targetUid !== command.targetUid || p.payload.allowHugs !== command.allowHugs) throw new Error('Friendship action ID already used.');
       return pairId;
     }
     let before: PairProjection;
     if (head.exists()) before = { ...decodePair(head.data()), hugs: [] };
     else {
-      if (command.type !== 'FriendRequestSent') throw new Error('Send a friend request first.');
+      if (!['FriendRequestSent','FriendBlocked'].includes(command.type)) throw new Error('Send a friend request first.');
       before = emptyPair(actorUid, command.targetUid);
     }
     const payload: PairAction['payload'] = { previousEventId: before.lastEventId };
     if (command.type === 'HugPreferencesChosen') payload.allowHugs = command.allowHugs;
-    if (command.type === 'HugRead') {
-      if (!command.hugId) throw new Error('Choose a hug.');
-      const hug = await tx.get(doc(db, `${headRef.path}/events/${command.hugId}`));
-      if (!hug.exists() || hug.get('type') !== 'HugSent' || hug.get('targetUid') !== actorUid) throw new Error('Unknown incoming hug.');
-      payload.hugId = command.hugId;
-      before.hugs = [{ id: command.hugId, to: actorUid, from: command.targetUid, at: date(hug.get('recordedAt'))!, read: false }];
-    }
     const event: PairEvent = { ...command, actorUid, payload, schemaVersion: 1, sequence: before.sequence + 1, recordedAt: new Date().toISOString() };
     // Optional command arguments belong in the action payload only.
-    delete (event as Partial<PairCommand>).allowHugs; delete (event as Partial<PairCommand>).hugId;
+    delete (event as Partial<PairCommand>).allowHugs;
     const next = pairHead(applyPair(before, event));
     tx.set(eventRef, { ...event, recordedAt: serverTimestamp() });
     tx.set(headRef, { ...next,
@@ -82,8 +79,22 @@ export async function appendFriendAction(db: Firestore, actorUid: string, comman
   });
 }
 
+/** Read gestures are owner-only, never receipts in the shared pair history. */
+export async function acknowledgeHug(db: Firestore, uid: string, pairId: string, hugId: string, eventId = crypto.randomUUID()) {
+  if (![pairId,hugId,eventId].every(value => /^[a-zA-Z0-9_-]{1,80}$/.test(value))) throw new Error('Choose a valid hug.');
+  const headRef=doc(db,`friendInboxes/${uid}`), eventRef=doc(db,`${headRef.path}/events/${eventId}`);
+  await runTransaction(db,async tx=>{
+    const [head,prior,hug]=await Promise.all([tx.get(headRef),tx.get(eventRef),tx.get(doc(db,`friendPairs/${pairId}/events/${hugId}`))]);
+    if (prior.exists()) {if(prior.get('payload.pairId')!==pairId||prior.get('payload.hugId')!==hugId)throw new Error('Inbox action ID already used.');return;}
+    if(!hug.exists()||hug.get('type')!=='HugSent'||hug.get('targetUid')!==uid)throw new Error('Choose an incoming hug.');
+    const sequence=(head.get('sequence')??0)+1;
+    tx.set(eventRef,{eventId,schemaVersion:1,type:'HugRead',actorUid:uid,sequence,recordedAt:serverTimestamp(),payload:{pairId,hugId}});
+    tx.set(headRef,{sequence,lastEventId:eventId});
+  });
+}
+
 export type FriendsView = { profile: Profile; pairs: Record<string, PairProjection>; peers: Record<string, Profile>; ready: boolean; synced: boolean; error: string };
-type Checkpoint = { version: 1; uid: string; profile: Profile; pairs: Record<string, PairProjection> };
+type Checkpoint = { version: 2; uid: string; profile: Profile; pairs: Record<string, PairProjection>; inbox: InboxProjection };
 async function digest(value: unknown) { return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(value)))), n => n.toString(16).padStart(2, '0')).join(''); }
 export class FriendsRepository {
   private cache: IDBPDatabase | null = null;
@@ -92,6 +103,7 @@ export class FriendsRepository {
   private peerStops = new Map<string, () => void>();
   private chain = Promise.resolve();
   private state: FriendsView;
+  private inbox=emptyInbox();
   private db: Firestore; private uid: string; private scope: string; private notify: (view: FriendsView) => void;
   constructor(db: Firestore, uid: string, scope: string, notify: (view: FriendsView) => void) {
     this.db = db; this.uid = uid; this.scope = scope; this.notify = notify;
@@ -110,17 +122,17 @@ export class FriendsRepository {
     const cached = await this.cache.get('projection', 'checkpoint');
     if (cached) {
       const c = cached.value as Checkpoint;
-      if (c.version === 1 && c.uid === this.uid && c.profile?.uid === this.uid && c.pairs && cached.digest === await digest(c)) {
-        this.state = { ...this.state, profile: c.profile, pairs: c.pairs, ready: true }; this.emit();
+      if (c.version === 2 && c.uid === this.uid && c.profile?.uid === this.uid && c.pairs && c.inbox && cached.digest === await digest(c)) {
+        this.inbox=c.inbox; this.state = { ...this.state, profile: c.profile, pairs: c.pairs, ready: true }; this.emit();
       } else await this.cache.delete('projection', 'checkpoint');
     }
     if (this.stopped) return;
     const changed = () => { void this.enqueue(() => this.refresh()); };
     const failed = () => { if (!this.stopped) { this.state.error = 'Friends are unavailable. Reconnect to refresh.'; this.state.ready = true; this.state.synced = false; this.emit(); } };
-    this.stops = [onSnapshot(profileRef(this.db, this.uid), changed, failed), onSnapshot(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid)), changed, failed)];
+    this.stops = [onSnapshot(doc(this.db,`friendInboxes/${this.uid}`),changed,failed),onSnapshot(profileRef(this.db, this.uid), changed, failed), onSnapshot(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid)), changed, failed)];
   }
   async refresh(rebuild = false) {
-    const [profileHead, heads] = await Promise.all([getDocFromServer(profileRef(this.db, this.uid)), getDocsFromServer(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid)))]);
+    const [profileHead, heads, inboxHead] = await Promise.all([getDocFromServer(profileRef(this.db, this.uid)), getDocsFromServer(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid))), getDocFromServer(doc(this.db,`friendInboxes/${this.uid}`))]);
     if (this.stopped) return;
     let profile = rebuild ? emptyProfile(this.uid) : this.state.profile;
     const canonicalProfile = profileHead.exists() ? profileHead.data() as Profile : emptyProfile(this.uid);
@@ -141,8 +153,17 @@ export class FriendsRepository {
       pairs[head.id] = pair;
     }
     if (this.stopped) return;
-    this.state = { ...this.state, profile, pairs, ready: true, synced: true, error: '' };
-    const checkpoint: Checkpoint = { version: 1, uid: this.uid, profile, pairs };
+    let inbox=rebuild?emptyInbox():this.inbox;
+    if(inbox.sequence>(inboxHead.get('sequence')??0)||inbox.sequence===(inboxHead.get('sequence')??0)&&inbox.lastEventId!==(inboxHead.get('lastEventId')??null))inbox=emptyInbox();
+    if(inbox.sequence<(inboxHead.get('sequence')??0)){
+      const tail=await getDocsFromServer(query(collection(this.db,`friendInboxes/${this.uid}/events`),where('sequence','>',inbox.sequence),orderBy('sequence')));
+      for(const item of tail.docs)inbox=applyInbox(inbox,{...item.data(),recordedAt:date(item.get('recordedAt'))} as InboxEvent,this.uid);
+    }
+    if(this.stopped)return;
+    this.inbox=inbox;
+    const readPairs=applyReadState(pairs,inbox,this.uid);
+    this.state = { ...this.state, profile, pairs:readPairs, ready: true, synced: true, error: '' };
+    const checkpoint: Checkpoint = { version: 2, uid: this.uid, profile, pairs:readPairs, inbox };
     await this.cache?.put('projection', { value: checkpoint, digest: await digest(checkpoint) }, 'checkpoint');
     if (this.stopped) return;
     for (const peer of new Set(Object.values(pairs).flatMap(pair => pair.members.filter(uid => uid !== this.uid)))) {
@@ -156,14 +177,15 @@ export class FriendsRepository {
     }
     this.emit();
   }
-  sync() { return this.enqueue(() => this.refresh()); }
-  rebuild() { return this.enqueue(() => this.refresh(true)); }
+  async sync() { await this.enqueue(() => this.refresh()); if (!this.stopped && !this.state.synced) throw new Error(this.state.error); }
+  async rebuild() { await this.enqueue(() => this.refresh(true)); if (!this.stopped && !this.state.synced) throw new Error(this.state.error); }
   async find(input: string) {
     const key = usernameKey(input);
     if (!/^[a-z][a-z0-9_]{2,23}$/.test(key)) throw new Error('Enter a full username to find your friend.');
-    const claim = await getDocFromServer(doc(this.db, `friendUsernames/${key}`));
-    if (!claim.exists()) return null;
-    try { const profile = await getDocFromServer(profileRef(this.db, claim.get('uid'))); return profile.exists() ? profile.data() as Profile : null; }
+    try {
+      const claim = await getDocFromServer(doc(this.db, `friendUsernames/${key}`));
+      if (!claim.exists()) return null;
+      const profile = await getDocFromServer(profileRef(this.db, claim.get('uid'))); return profile.exists() ? profile.data() as Profile : null; }
     catch (cause) { if ((cause as { code?: string }).code === 'permission-denied') return null; throw cause; }
   }
   stop() { this.stopped = true; this.stops.forEach(stop => stop()); this.peerStops.forEach(stop => stop()); this.peerStops.clear(); this.state.peers = {}; this.cache?.close(); }

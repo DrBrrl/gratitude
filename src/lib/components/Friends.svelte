@@ -2,8 +2,8 @@
   import { onMount } from 'svelte';
   import { base } from '$app/paths';
   import type { FirebaseClient } from '$lib/firebase/client';
-  import { FriendsRepository, saveFriendProfile, appendFriendAction, type FriendsView } from '$lib/friends/repository';
-  import { canHug, emptyProfile, usernameKey, type PairType, type Profile } from '$lib/friends/domain';
+  import { FriendsRepository, saveFriendProfile, appendFriendAction, acknowledgeHug, type FriendsView } from '$lib/friends/repository';
+  import { canHug, emptyProfile, usernameKey, type PairType, type PairProjection, type Profile } from '$lib/friends/domain';
   import Icon from './Icon.svelte';
 
   let { client, uid }: { client: FirebaseClient; uid: string } = $props();
@@ -11,7 +11,7 @@
   let view = $state.raw<FriendsView>({ profile: emptyProfile(''), pairs: {}, peers: {}, ready: false, synced: false, error: '' });
   let username = $state(''), displayName = $state(''), discoverable = $state(true), editingProfile = $state(false), initializedForm = false;
   let search = $state(''), found = $state<Profile | null>(null), searched = $state(false), busy = $state(false), error = $state(''), notice = $state('');
-  const pairs = $derived(Object.entries(view.pairs));
+  const pairs = $derived(Object.entries(view.pairs).sort(([,a],[,b]) => name(peer(a)).localeCompare(name(peer(b))) || handle(peer(a)).localeCompare(handle(peer(b)))));
   const incoming = $derived(pairs.filter(([,p]) => p.status === 'pending' && p.requesterUid !== uid));
   const outgoing = $derived(pairs.filter(([,p]) => p.status === 'pending' && p.requesterUid === uid));
   const friends = $derived(pairs.filter(([,p]) => p.status === 'accepted'));
@@ -19,7 +19,7 @@
   const inbox = $derived(pairs.flatMap(([pairId,p]) => p.hugs.filter(h => h.to === uid).map(h => ({ ...h, pairId }))).sort((a,b) => b.at.localeCompare(a.at) || a.id.localeCompare(b.id)).slice(0,20));
   const foundPair = $derived(found ? pairs.find(([,p]) => p.members.includes(found!.uid))?.[1] : undefined);
   const disabled = $derived(busy || !view.synced);
-  function peer(pair: (typeof pairs)[number][1]) { return pair.members.find(id => id !== uid)!; }
+  function peer(pair: PairProjection) { return pair.members.find(id => id !== uid)!; }
   function name(id: string) { return view.peers[id]?.displayName || 'Friend'; }
   function handle(id: string) { return view.peers[id]?.username ? `@${view.peers[id].username}` : 'Profile unavailable'; }
   function date(at: string) { return new Intl.DateTimeFormat(undefined,{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(at)); }
@@ -29,9 +29,9 @@
       if (!initializedForm && next.ready) { initializedForm = true; username = next.profile.username; displayName = next.profile.displayName; discoverable = next.profile.sequence ? next.profile.discoverable : true; }
     });
     repository = opened;
-    void opened.start().catch(() => error = 'Friends could not be opened. Check your connection and reload.');
+    void opened.start().catch(() => {view={...view,ready:true};error='Friends could not be opened. Check your connection and reload.';});
     const offline = () => { view = { ...view, synced: false }; };
-    const online = () => { void opened.sync(); };
+    const online = () => { void opened.sync().catch(() => {}); };
     window.addEventListener('offline', offline); window.addEventListener('online', online);
     return () => { opened.stop(); repository = null; window.removeEventListener('offline', offline); window.removeEventListener('online', online); };
   });
@@ -44,8 +44,8 @@
       error = code ? code === 'permission-denied' ? 'This action is no longer available. Refresh and check the friendship or username.' : 'Could not save. Check your connection and try again.' : cause instanceof Error ? cause.message : 'Please try again.';
     } finally { busy = false; }
   }
-  function act(type: PairType, targetUid: string, extra: { allowHugs?: boolean; hugId?: string } = {}) {
-    return run(() => appendFriendAction(client.db, uid, { eventId: crypto.randomUUID(), type, targetUid, ...extra }), type === 'HugSent' ? 'A little hug, sent with care.' : type === 'HugRead' ? 'Hug marked as read.' : 'Friendship updated.');
+  function act(type: PairType | 'HugRead', targetUid: string, extra: { allowHugs?: boolean; hugId?: string; pairId?:string } = {}) {
+    return run(() => type==='HugRead'?acknowledgeHug(client.db,uid,extra.pairId!,extra.hugId!):appendFriendAction(client.db, uid, { eventId: crypto.randomUUID(), type, targetUid, ...(type==='HugPreferencesChosen'?{allowHugs:extra.allowHugs}:{}) }), type === 'HugSent' ? 'A little hug, sent with care.' : type === 'HugRead' ? 'Hug marked as read.' : 'Friendship updated.');
   }
   async function saveProfile() {
     await run(async () => { await saveFriendProfile(client.db,uid,{username,displayName,discoverable}); editingProfile=false; }, 'Your friends profile is saved.');
@@ -92,7 +92,11 @@
           {:else if foundPair?.blockedA || foundPair?.blockedB}<p class="hint">This connection is unavailable.</p>
           {:else if foundPair?.status==='accepted'}<p class="hint">You’re already friends.</p>
           {:else if foundPair?.status==='pending'}<p class="hint">A friend request is waiting below.</p>
-          {:else}<button class="outline" onclick={() => act('FriendRequestSent',found!.uid)} disabled={disabled}>Send friend request</button>{/if}
+          {:else}
+            {#if foundPair?.requestedAt && Date.now()-Date.parse(foundPair.requestedAt)<86_400_000}<p class="hint">Give your friend some space. Another request can be sent after 24 hours.</p>
+            {:else}<button class="outline" onclick={() => act('FriendRequestSent',found!.uid)} disabled={disabled}>Send friend request</button>{/if}
+            <button class="quiet" onclick={() => act('FriendBlocked',found!.uid)} disabled={disabled}>Block {found.displayName}</button>
+          {/if}
         </div>{/if}
       </section>
       {#if incoming.length}<section aria-label="Incoming friend requests"><h2>Friend requests</h2>{#each incoming as [id,p] (id)}<article class="glass"><h3>{name(peer(p))}</h3><p class="hint">{handle(peer(p))} would like to connect.</p><div class="actions"><button class="primary" onclick={() => act('FriendRequestAccepted',peer(p))} disabled={disabled}>Accept request from {name(peer(p))}</button><button class="outline" onclick={() => act('FriendRequestDeclined',peer(p))} disabled={disabled}>Decline request</button><button class="quiet" onclick={() => act('FriendBlocked',peer(p))} disabled={disabled}>Block {name(peer(p))}</button></div></article>{/each}</section>{/if}
@@ -105,7 +109,7 @@
         </article>{/each}
       </section>
       <section aria-label="Hug inbox"><h2>Your hugs <span aria-hidden="true">♡</span></h2>{#if !inbox.length}<p class="hint">A little space for the hugs that find you.</p>{/if}
-        {#each inbox as hug (hug.id)}<article class="glass hug" class:unread={!hug.read}><p><strong>{name(hug.from)}</strong> sent you a hug.</p><time datetime={hug.at}>{date(hug.at)}</time>{#if !hug.read}<button class="outline" onclick={() => act('HugRead',hug.from,{hugId:hug.id})} disabled={disabled}>Mark hug from {name(hug.from)} as read</button>{:else}<p class="hint">Read, and kept with care.</p>{/if}</article>{/each}
+        {#each inbox as hug (hug.id)}<article class="glass hug" class:unread={!hug.read}><p><strong>{name(hug.from)}</strong> sent you a hug.</p><time datetime={hug.at}>{date(hug.at)}</time>{#if !hug.read}<button class="outline" onclick={() => act('HugRead',hug.from,{hugId:hug.id,pairId:hug.pairId})} disabled={disabled}>Mark hug from {name(hug.from)} as read</button>{:else}<p class="hint">Read, and kept with care.</p>{/if}</article>{/each}
       </section>
       {#if blocked.length}<section aria-label="Blocked people"><h2>Blocked people</h2>{#each blocked as [id,p] (id)}<article class="glass"><h3>{name(peer(p))}</h3><p class="hint">Unblocking does not restore the friendship.</p><button class="outline" onclick={() => act('FriendUnblocked',peer(p))} disabled={disabled}>Unblock {name(peer(p))}</button></article>{/each}</section>{/if}
     {/if}
@@ -117,7 +121,10 @@
 
 <style>
   .friends-space { color:#f4f5fa; font-family:Arial,Helvetica,sans-serif; text-align:left; }
+  /* Integral moving surfaces keep native borders stable across full-page scrolls. */
+  .friends-space :is(section,article,div,h1,h2,h3,p,form,label,time,details,summary) { height:calc-size(auto,round(nearest,size,1px)); }
   h1 { font:600 2.4rem/1.15 Georgia,'Times New Roman',serif;letter-spacing:-.035em;margin:24px 0; }
+  .profile-heading > div {min-width:0} h2,h3,.profile-heading p {overflow-wrap:anywhere} button {max-width:100%;overflow-wrap:anywhere}
   h2 {font:600 1.35rem/1.35 Georgia,serif;margin:0 0 14px;} h3 {font-size:1.05rem;margin:0 0 6px;}
   p {line-height:1.55;margin:0 0 14px;} .intro,.hint,time {color:#bfc5ce;} .intro{margin-bottom:24px}.hint,time {font-size:.85rem;line-height:1.6;}
   section {margin:0 0 24px;} .glass {background:linear-gradient(130deg,#333738c9,#11171cc9);border:1px solid #b6bec94d;border-radius:22px;padding:20px;backdrop-filter:blur(18px);margin-bottom:18px;}

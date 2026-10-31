@@ -376,3 +376,30 @@ Viewport: mobile-chromium.
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open controls to end the friendship
+
+![Open controls to end the friendship](./screenshots/041-remove-controls-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## End the friendship without deleting received hugs
+
+![End the friendship without deleting received hugs](./screenshots/042-remove-friend-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to the other friend’s device
+
+![Return to the other friend’s device](./screenshots/043-friendship-ended-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)

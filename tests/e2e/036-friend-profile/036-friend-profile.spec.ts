@@ -1,12 +1,12 @@
 import {test,expect} from '@playwright/test';
 import {TestStepHelper} from '../helpers/test-step-helper';
 import {startJournal} from '../helpers/journal-session';
-import {openFriends,createProfile,secondFriend,findFriend} from '../helpers/friends';
+import {resetFriendsFixture,openFriends,createProfile,secondFriend,findFriend} from '../helpers/friends';
 
 test('chosen public names, unique handles and opt-out discovery survive replay without sharing journal data',async({page},info)=>{
  test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(240_000);
  const steps=new TestStepHelper(page,info,{paintStaticPage:true}); const suffix=info.project.name.startsWith('mobile')?'m':'d';const handle=`jamie_profile_${suffix}`;
- await startJournal(page,info,steps,'profile-owner');await openFriends(page,steps);await createProfile(page,steps,'Jamie',` @${handle.toUpperCase()} `);
+ await resetFriendsFixture(page);await startJournal(page,info,steps,'profile-owner');await openFriends(page,steps);await createProfile(page,steps,'Jamie',` @${handle.toUpperCase()} `);
  await steps.action('reload','Restore the cached friends profile after reload',()=>page.reload(),async()=>{await expect(page.getByRole('heading',{name:'Reflection time',exact:true})).toBeVisible({timeout:15_000});});
  await openFriends(page,steps,'restored-');
  await steps.action('rebuild','Rebuild the friends profile from its source actions',()=>page.getByRole('button',{name:'Rebuild friends view',exact:true}).click(),async()=>{await expect(page.getByText('Friends view rebuilt from saved actions.',{exact:true})).toBeVisible({timeout:15_000});await expect(page.getByRole('heading',{name:'Jamie',exact:true})).toBeVisible();});

@@ -8,6 +8,8 @@ export async function openFriends(page: Page, steps: TestStepHelper, prefix = ''
   await steps.action(`${prefix}friends`,'Open Friends and hugs',()=>page.getByRole('button',{name:'Friends & hugs',exact:true}).click(),async()=>{
     await expect(page.getByRole('heading',{name:'Friends & hugs',exact:true})).toBeVisible();await expect(page.getByText('Opening your friends…',{exact:true})).toHaveCount(0,{timeout:15_000});
     await expect(page.getByRole('button',{name:/^Save friends profile$|^Edit friends profile$/})).toBeEnabled({timeout:15_000});
+    await expect(page.locator('.friends-space .connection')).toHaveCount(0,{timeout:15_000});
+    await expect(page.getByText('Profile unavailable',{exact:true})).toHaveCount(0,{timeout:15_000});
   });
 }
 export async function createProfile(page: Page, steps: TestStepHelper, name: string, username: string, prefix = '') {
@@ -30,4 +32,11 @@ export async function secondFriend(page: Page, info: TestInfo, steps: TestStepHe
 }
 export async function switchFriend(page: Page, steps: TestStepHelper, id: string, check: ()=>Promise<void>) {
   steps.setPage(page);await steps.action(id,'Return to the other friend’s device',()=>page.bringToFront(),check);
+}
+
+/** Disposable demo data: independent runs must not retain handle reservations. */
+export async function resetFriendsFixture(page: Page) {
+  if(process.env.E2E_FIREBASE!=='true')throw new Error('Friends fixtures require the demo emulators.');
+  const result=await page.request.delete('http://127.0.0.1:18080/emulator/v1/projects/demo-gratitude/databases/(default)/documents',{timeout:30_000});
+  expect(result.ok()).toBe(true);
 }

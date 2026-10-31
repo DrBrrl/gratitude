@@ -707,7 +707,7 @@
     {/snippet}
   </WelcomePage>
 {:else}
-<main class:composing={writing} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:calendarView={calendarShown}>
+<main class:composing={writing} class:friendsSettings={tab==='settings'&&settingsPage==='friends'} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:calendarView={calendarShown}>
   {#if !initialized}
     <p role="status" class="loading">Opening Gratitude…</p>
   {:else}
@@ -884,6 +884,7 @@
 {/if}
 <style>
   /* Keep the dynamic settings document on a whole-pixel scroll boundary. */
+  .friendsSettings { height: calc-size(auto, round(nearest, size, 1px)); }
   .aiSettings { height: calc-size(auto, round(nearest, size, 1px)); }
   /* Each moving surface also needs an integral origin, not just the scroll boundary. */
   .aiSettings > :global(:not(nav)) { height: calc-size(auto, round(nearest, size, 1px)); }
