@@ -5,7 +5,7 @@ import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebas
 import { collection, doc, getDoc, getDocs, query, orderBy, where, setDoc, deleteDoc, writeBatch, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { saveFriendProfile, appendFriendAction, acknowledgeHug } from '../../src/lib/friends/repository.ts';
 import { applyInbox, applyReadState, emptyInbox } from '../../src/lib/friends/inbox.ts';
-import { applyPair, emptyPair } from '../../src/lib/friends/domain.ts';
+import { applyPair, emptyPair, pairHead } from '../../src/lib/friends/domain.ts';
 let env;
 const db = uid => env.authenticatedContext(uid, { firebase: { sign_in_provider: 'google.com' } }).firestore();
 const profile = (username, displayName = username, discoverable = true) => ({ username, displayName, discoverable });
@@ -31,7 +31,7 @@ test('atomic username claims are case insensitive; profile history is private an
   await assertFails(setDoc(doc(owner, `friendProfiles/${winner}`), { uid: winner, username: 'forged', displayName: 'Forged', discoverable: true, sequence: 99, lastEventId: 'rename' }));
 });
 
-test('requests, hugs, read receipts and revocation are enforced independently of the client; source replay reproduces state', async () => {
+test('requests, hugs, private acknowledgements and revocation are enforced independently of the client; source replay reproduces state', async () => {
   const a = db('friends-alice'), b = db('friends-bob'), outsider = db('friends-mallory');
   await saveFriendProfile(a, 'friends-alice', profile('alice_friend'), 'profile-alice'); await saveFriendProfile(b, 'friends-bob', profile('bob_friend'), 'profile-bob');
   const pair = await appendFriendAction(a, 'friends-alice', command('request', 'FriendRequestSent', 'friends-bob'));
@@ -135,4 +135,18 @@ test('blocking a discovered account needs no prior request and rejects path-like
  const forged=writeBatch(a);forged.set(doc(a,`friendPairs/${id}`),{...head,sequence:head.sequence+1,lastEventId:'path-read'});
  forged.set(doc(a,`friendPairs/${id}/events/path-read`),{eventId:'path-read',schemaVersion:1,type:'HugRead',actorUid:'first-block-a',targetUid:'first-block-b',sequence:head.sequence+1,recordedAt:serverTimestamp(),payload:{previousEventId:head.lastEventId,hugId:'../../other/events/hug'}});
  await assertFails(forged.commit());
+});
+
+test('a valid participant can choose an opaque pair ID that collides with JavaScript object inheritance', async()=>{
+ const a=db('opaque-id-a'),b=db('opaque-id-b');
+ await saveFriendProfile(a,'opaque-id-a',profile('opaque_sender'),'opaque-profile-a');await saveFriendProfile(b,'opaque-id-b',profile('opaque_recipient'),'opaque-profile-b');
+ const event={eventId:'opaque-request',schemaVersion:1,type:'FriendRequestSent',actorUid:'opaque-id-a',targetUid:'opaque-id-b',sequence:1,recordedAt:'2026-10-01T04:31:07.000Z',payload:{previousEventId:null}};
+ const head=pairHead(applyPair(emptyPair('opaque-id-a','opaque-id-b'),event));
+ const batch=writeBatch(a);
+ batch.set(doc(a,'friendPairs/constructor'),{...head,requestedAt:serverTimestamp()});
+ batch.set(doc(a,'friendPairs/constructor/events/opaque-request'),{...event,recordedAt:serverTimestamp()});
+ batch.set(doc(a,'friendLinks/opaque-id-a/peers/opaque-id-b'),{pairId:'constructor'});
+ batch.set(doc(a,'friendLinks/opaque-id-b/peers/opaque-id-a'),{pairId:'constructor'});
+ await assertSucceeds(batch.commit());
+ assert.equal((await getDoc(doc(b,'friendPairs/constructor'))).get('status'),'pending');
 });

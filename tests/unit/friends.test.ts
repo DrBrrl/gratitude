@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { applyInbox, applyReadState, emptyInbox } from '../../src/lib/friends/inbox.ts';
-import { applyPair, applyProfile, emptyPair, emptyProfile, canHug, usernameKey, type PairEvent, type PairType } from '../../src/lib/friends/domain.ts';
+import { applyPair, applyProfile, cachedPairOrEmpty, emptyPair, emptyProfile, canHug, usernameKey, type PairEvent, type PairType } from '../../src/lib/friends/domain.ts';
 const time = '2026-10-01T04:31:07.000Z';
 function event(state: ReturnType<typeof emptyPair>, type: PairType, actor = 'alice', extra = {}): PairEvent {
   return { eventId: `event-${state.sequence + 1}`, schemaVersion: 1, sequence: state.sequence + 1, type, recordedAt: time, actorUid: actor, targetUid: actor === 'alice' ? 'bob' : 'alice', payload: { previousEventId: state.lastEventId, ...extra } };
@@ -39,4 +39,21 @@ test('hug permissions, a stable 24-hour limit and independent blocking are deriv
   pair = applyPair(pair, event(pair, 'FriendBlocked')); pair = applyPair(pair, event(pair, 'FriendBlocked', 'bob')); pair = applyPair(pair, event(pair, 'FriendUnblocked'));
   assert.equal(pair.blockedB, true); assert.equal(pair.status, 'none'); assert.throws(() => applyPair(pair, event(pair, 'FriendRequestSent')));
   assert.throws(() => applyPair(pair, event(pair, 'FriendUnblocked', 'alice', { status: 'accepted' })));
+});
+
+test('opaque stream IDs survive cache misses, source replay and private read-state joins without inherited object entries', () => {
+ const initial=emptyPair('alice','bob'), request=event(initial,'FriendRequestSent'), canonical=applyPair(initial,request);
+ const streams: Record<string,typeof canonical>=Object.create(null);
+ for(const id of ['constructor','toString','__proto__']){
+  const uncached=cachedPairOrEmpty({},id,canonical);
+  assert.equal(uncached.sequence,0);
+  streams[id]=applyPair(uncached,request);
+ }
+ const restored=applyReadState(JSON.parse(JSON.stringify(streams)),emptyInbox(),'bob');
+ for(const id of Object.keys(streams)){
+  assert.equal(Object.hasOwn(restored,id),true);
+  assert.deepEqual(cachedPairOrEmpty(restored,id,canonical),canonical);
+  assert.equal(cachedPairOrEmpty(restored,id,{...canonical,lastEventId:'different-source'}).sequence,0);
+ }
+ assert.equal(Object.hasOwn({},'status'),false);
 });
