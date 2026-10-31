@@ -1084,3 +1084,15 @@ Wonderful start! Copy edits: "A little encouragement, shared with care. Your jou
 ```text
 Let's also change the "Your account" on the settings page to "Your account, friends, and hugs"
 ```
+
+## 2026-10-31 — Check and rerun a failed PR check
+
+```text
+Looks like one of the checks didn't pass! How can i get them to try again?
+```
+
+## 2026-10-31 — Correct the possessive in the hugs empty state
+
+```text
+"Your friends hugs will show up here!" shoot, that should be "Your friends' hugs will show up here!" Sorry!
+```
