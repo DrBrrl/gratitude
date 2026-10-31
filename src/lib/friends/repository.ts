@@ -1,7 +1,7 @@
 import { applyInbox, applyReadState, emptyInbox, type InboxEvent, type InboxProjection } from './inbox.ts';
 import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, orderBy, query, runTransaction, serverTimestamp, Timestamp, where, type Firestore, type DocumentData } from 'firebase/firestore';
 import { openDB, type IDBPDatabase } from 'idb';
-import { applyPair, applyProfile, emptyPair, emptyProfile, pairHead, usernameKey, validateProfile, type PairAction, type PairEvent, type PairHead, type PairProjection, type Profile, type ProfileEvent, type ProfileInput } from './domain.ts';
+import { applyPair, applyProfile, cachedPairOrEmpty, emptyPair, emptyProfile, pairHead, usernameKey, validateProfile, type PairAction, type PairEvent, type PairHead, type PairProjection, type Profile, type ProfileEvent, type ProfileInput } from './domain.ts';
 
 const profileRef = (db: Firestore, uid: string) => doc(db, `friendProfiles/${uid}`);
 const linkRef = (db: Firestore, uid: string, peer: string) => doc(db, `friendLinks/${uid}/peers/${peer}`);
@@ -107,7 +107,7 @@ export class FriendsRepository {
   private db: Firestore; private uid: string; private scope: string; private notify: (view: FriendsView) => void;
   constructor(db: Firestore, uid: string, scope: string, notify: (view: FriendsView) => void) {
     this.db = db; this.uid = uid; this.scope = scope; this.notify = notify;
-    this.state = { profile: emptyProfile(uid), pairs: {}, peers: {}, ready: false, synced: false, error: '' };
+    this.state = { profile: emptyProfile(uid), pairs: {}, peers: Object.create(null), ready: false, synced: false, error: '' };
   }
   private emit() { if (!this.stopped) this.notify({ ...this.state, pairs: { ...this.state.pairs }, peers: { ...this.state.peers } }); }
   private enqueue(task: () => Promise<void>) {
@@ -141,11 +141,10 @@ export class FriendsRepository {
       const tail = await getDocsFromServer(query(collection(this.db, `friendProfiles/${this.uid}/events`), where('sequence', '>', profile.sequence), orderBy('sequence')));
       for (const item of tail.docs) profile = applyProfile(profile, decodeProfileEvent(item.data()));
     }
-    const pairs: Record<string, PairProjection> = {};
+    const pairs: Record<string, PairProjection> = Object.create(null);
     for (const head of heads.docs) {
       const canonical = decodePair(head.data());
-      let pair = rebuild ? undefined : this.state.pairs[head.id];
-      if (!pair || pair.sequence > canonical.sequence || pair.sequence === canonical.sequence && pair.lastEventId !== canonical.lastEventId) pair = emptyPair(...canonical.members);
+      let pair = cachedPairOrEmpty(this.state.pairs,head.id,canonical,rebuild);
       if (pair.sequence < canonical.sequence) {
         const tail = await getDocsFromServer(query(collection(this.db, `${head.ref.path}/events`), where('sequence', '>', pair.sequence), orderBy('sequence')));
         for (const item of tail.docs) pair = applyPair(pair, decodePairEvent(item.data()));
@@ -188,5 +187,5 @@ export class FriendsRepository {
       const profile = await getDocFromServer(profileRef(this.db, claim.get('uid'))); return profile.exists() ? profile.data() as Profile : null; }
     catch (cause) { if ((cause as { code?: string }).code === 'permission-denied') return null; throw cause; }
   }
-  stop() { this.stopped = true; this.stops.forEach(stop => stop()); this.peerStops.forEach(stop => stop()); this.peerStops.clear(); this.state.peers = {}; this.cache?.close(); }
+  stop() { this.stopped = true; this.stops.forEach(stop => stop()); this.peerStops.forEach(stop => stop()); this.peerStops.clear(); this.state.peers = Object.create(null); this.cache?.close(); }
 }

@@ -68,3 +68,10 @@ export function applyPair(before: PairProjection, event: PairEvent): PairProject
   }
   return next;
 }
+
+/** Canonical stream IDs are opaque, including names inherited by ordinary objects. */
+export function cachedPairOrEmpty(cache: Record<string, PairProjection>, id: string, canonical: PairHead, rebuild = false): PairProjection {
+  const cached = !rebuild && Object.hasOwn(cache,id) ? cache[id] : undefined;
+  if (!cached || !Number.isSafeInteger(cached.sequence) || !Array.isArray(cached.members) || cached.members.length !== 2 || !Array.isArray(cached.hugs) || cached.members[0] !== canonical.members[0] || cached.members[1] !== canonical.members[1] || cached.sequence > canonical.sequence || cached.sequence === canonical.sequence && cached.lastEventId !== canonical.lastEventId) return emptyPair(...canonical.members);
+  return cached;
+}
