@@ -12,7 +12,7 @@ Distinguish three things:
 - **Display name:** an editable label such as “Jamie”, shown alongside the handle so people can check whom they are adding. Display names need not be unique.
 - **Account identity:** the existing UID, used internally for relationships and access checks. A username is never a login credential or permission check.
 
-Proposed starting experience:
+First-slice experience:
 
 1. When enabling Friends, choose a display name and an available username. Show exactly what will be discoverable before confirming. Do not automatically expose the Google account’s full name, email address or photo.
 2. Open Add a friend and search for a username. The first slice uses case-insensitive exact-handle lookup, accepting input with or without `@`; partial-name suggestions remain an open UX choice.
@@ -52,13 +52,14 @@ Record hugs durably for the in-app inbox. Optional device push needs a trusted s
 | `friendProfiles/{uid}/events/{id}` | Immutable literal profile choices; owner-only history. |
 | `friendProfiles/{uid}` | Derived current name, handle, discovery choice and source cursor. Discoverable to authenticated lookup or to the owner/current unblocked connection. |
 | `friendUsernames/{key}` | Atomic normalized handle reservation, separate from private journal data. Collection listing is denied. |
-| `friendPairs/{id}/events/{id}` | Immutable request, acceptance, cancellation, decline, removal, blocking, hug-preference, send and read actions. Only the two participants read the history. |
+| `friendPairs/{id}/events/{id}` | Immutable request, acceptance, cancellation, decline, removal, blocking, hug-preference, send actions. Only the two participants read the history. |
+| `friendInboxes/{uid}/events/{id}` | Private read acknowledgements containing the selected pair/hug references; owner-only, with a separate source cursor. No sender read receipts. |
 | `friendPairs/{id}` | Validated relationship projection and source cursor; membership-filtered reads, no public directory. |
 | `friendLinks/{uid}/peers/{otherUid}` | Immutable reciprocal coordination pointers. Their atomic creation prevents concurrent requests creating duplicate relationships. |
 
-Profile updates, normalized reservations and literal source events commit atomically. Pair actions and projections also commit atomically. Security Rules check actor, recipient, source predecessor, sequence and permitted state transitions; they reject editing/deleting source events or forging projection state. Server time enforces the 24-hour hug/request limits. Recipient preference and blocking are checked again on every send.
+Profile updates, normalized reservations and literal source events commit atomically. Pair actions and projections also commit atomically. Security Rules check actor, recipient, source predecessor, sequence and permitted state transitions; they reject editing/deleting source events or forging projection state. Server time enforces the 24-hour hug/request limits. Recipient preference and blocking are checked again on every send. An account can be blocked directly from discovery without first issuing a request. Hidden handle reservations do not disclose the UID to unrelated callers. Read acknowledgements live in an owner-only stream, so the sender cannot observe their timing.
 
-A deployment- and owner-scoped IndexedDB checkpoint caches the social projection with a digest and version. Warm opens reconcile against canonical heads and fetch only event tails. Rebuild discards the projection and replays the complete accessible source streams. No replay path sends a hug or calls an external notification service. The first UI shows the latest 20 incoming hugs; older actions remain in the canonical history. Previously viewed data cannot be remotely erased from an offline device.
+A deployment- and owner-scoped IndexedDB checkpoint caches the social projection with a digest and version. Warm opens reconcile against canonical heads and fetch only event tails. Rebuild discards the projection and replays the complete accessible source streams. No replay path sends a hug or calls an external notification service. The private inbox cursor and seen references are cached alongside the profile and pair projections. The first UI shows the latest 20 incoming hugs; older actions remain in the canonical history. Previously viewed data cannot be remotely erased from an offline device.
 
 ## Delivery and subsequent slices
 

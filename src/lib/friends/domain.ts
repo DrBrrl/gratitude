@@ -3,8 +3,8 @@ export const SOCIAL_VERSION = 1;
 export type ProfileInput = { username: string; displayName: string; discoverable: boolean };
 export type Profile = ProfileInput & { uid: string; sequence: number; lastEventId: string | null };
 export type ProfileEvent = { eventId: string; schemaVersion: 1; sequence: number; recordedAt: string; type: 'FriendProfileChosen'; actorUid: string; payload: ProfileInput };
-export type PairType = 'FriendRequestSent' | 'FriendRequestAccepted' | 'FriendRequestDeclined' | 'FriendRequestCancelled' | 'FriendRemoved' | 'FriendBlocked' | 'FriendUnblocked' | 'HugPreferencesChosen' | 'HugSent' | 'HugRead';
-export type PairAction = { eventId: string; type: PairType; actorUid: string; targetUid: string; payload: { previousEventId: string | null; allowHugs?: boolean; hugId?: string } };
+export type PairType = 'FriendRequestSent' | 'FriendRequestAccepted' | 'FriendRequestDeclined' | 'FriendRequestCancelled' | 'FriendRemoved' | 'FriendBlocked' | 'FriendUnblocked' | 'HugPreferencesChosen' | 'HugSent';
+export type PairAction = { eventId: string; type: PairType; actorUid: string; targetUid: string; payload: { previousEventId: string | null; allowHugs?: boolean } };
 export type PairEvent = PairAction & { schemaVersion: 1; sequence: number; recordedAt: string };
 export type PairHead = { members: [string, string]; sequence: number; lastEventId: string | null; status: 'none' | 'pending' | 'accepted'; requesterUid: string | null; blockedA: boolean; blockedB: boolean; hugsA: boolean; hugsB: boolean; requestedAt: string | null; lastHugA: string | null; lastHugB: string | null };
 export type Hug = { id: string; from: string; to: string; at: string; read: boolean };
@@ -34,7 +34,7 @@ export function canHug(pair: PairHead, actor: string, now: number) {
 export function applyPair(before: PairProjection, event: PairEvent): PairProjection {
   const p = event.payload, a = event.actorUid === before.members[0], now = Date.parse(event.recordedAt);
   if (event.schemaVersion !== 1 || event.sequence !== before.sequence + 1 || p.previousEventId !== before.lastEventId || !before.members.includes(event.actorUid) || event.targetUid !== before.members[a ? 1 : 0] || !Number.isFinite(now) || !event.eventId) throw new Error('Invalid friendship history.');
-  const keys = event.type === 'HugPreferencesChosen' ? 'allowHugs,previousEventId' : event.type === 'HugRead' ? 'hugId,previousEventId' : 'previousEventId';
+  const keys = event.type === 'HugPreferencesChosen' ? 'allowHugs,previousEventId' : 'previousEventId';
   if (Object.keys(p).sort().join(',') !== keys) throw new Error('Invalid friendship action.');
   let next = { ...before, sequence: event.sequence, lastEventId: event.eventId };
   const connected = !before.blockedA && !before.blockedB;
@@ -64,9 +64,6 @@ export function applyPair(before: PairProjection, event: PairEvent): PairProject
     case 'HugSent':
       if (!canHug(before, event.actorUid, now)) throw new Error('Hugs are paused, or you have already sent a hug in the past 24 hours.');
       next = { ...next, [a ? 'lastHugA' : 'lastHugB']: event.recordedAt, hugs: [...before.hugs, { id: event.eventId, from: event.actorUid, to: event.targetUid, at: event.recordedAt, read: false }] }; break;
-    case 'HugRead':
-      if (!before.hugs.some(hug => hug.id === p.hugId && hug.to === event.actorUid)) throw new Error('Unknown incoming hug.');
-      next = { ...next, hugs: before.hugs.map(hug => hug.id === p.hugId ? { ...hug, read: true } : hug) }; break;
     default: throw new Error('Unknown friendship action.');
   }
   return next;

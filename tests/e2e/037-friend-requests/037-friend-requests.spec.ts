@@ -1,12 +1,12 @@
 import {test,expect} from '@playwright/test';
 import {TestStepHelper} from '../helpers/test-step-helper';
 import {startJournal,writeReflection} from '../helpers/journal-session';
-import {openFriends,createProfile,secondFriend,findFriend,switchFriend} from '../helpers/friends';
+import {resetFriendsFixture,openFriends,createProfile,secondFriend,findFriend,switchFriend} from '../helpers/friends';
 
 test('people find chosen usernames and explicitly accept before becoming friends; blocking ends the connection',async({page},info)=>{
  test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(300_000);
  const steps=new TestStepHelper(page,info,{paintStaticPage:true});const suffix=info.project.name.startsWith('mobile')?'m':'d';
- await startJournal(page,info,steps,'requests-alice');await writeReflection(page,steps,'A private reflection that stays only in Alice’s journal.','private');await openFriends(page,steps);await createProfile(page,steps,'Alice',`alice_requests_${suffix}`);
+ await resetFriendsFixture(page);await startJournal(page,info,steps,'requests-alice');await writeReflection(page,steps,'A private reflection that stays only in Alice’s journal.','private');await openFriends(page,steps);await createProfile(page,steps,'Alice',`alice_requests_${suffix}`);
  const {other,context}=await secondFriend(page,info,steps,'requests-bob');
  try{
   await openFriends(other,steps,'bob-');await createProfile(other,steps,'Bob',`bob_requests_${suffix}`,'bob-');

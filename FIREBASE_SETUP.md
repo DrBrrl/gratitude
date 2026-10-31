@@ -127,3 +127,11 @@ Compatible Firestore Rules were deployed to both `gratitude-drbrrl-dev` and `gra
 Projection version 9 rebuilds older disposable checkpoints from the event stream without inference. Older clients must refresh before reading the new event versions. Saved responses remain immutable. The frontend is published through the normal preview/main pipeline. See [LM Studio setup](LM_STUDIO_SETUP.md) for browser connection and private HTTPS instructions; local addresses and API tokens never enter Firebase events.
 
 Optional **Account token sync** uses a mutable owner-only `users/{uid}/privateSettings/lmStudio` record for a bounded token, its HTTPS (or loopback) origin, model and server update timestamp. The exact-document Rules allow only a Google-authenticated owner and deny collection listing; the journal event schemas do not accept credentials. Both projects have the compatible Rules deployed. See [credential handling and revocation](LM_STUDIO_SETUP.md) for the account-storage tradeoff and cross-device setup.
+
+## Friends and hugs (2026-10-31)
+
+Compatible additive Firestore Rules are deployed to both `gratitude-drbrrl-dev` and `gratitude-drbrrl`. The existing private journal, credential and Storage permissions are unchanged. Social source/projection data uses separate `friendProfiles`, `friendUsernames`, `friendPairs`, `friendLinks` and owner-only `friendInboxes` namespaces. Authenticated exact lookup is opt-in; profile and username directory listing is denied. Accepted friendship never grants access to a private journal.
+
+Profile reservations and pair/source transitions use atomic browser transactions validated by Rules. Reciprocal immutable links prevent duplicate relationships, server time enforces request/hug limits, and read acknowledgements remain private to their recipient. Existing single-field indexes support the queries; no new Firebase project, resource, secret, Cloud Function or billing change is needed. Old clients continue using the private journal schema. The social feature appears after the new frontend is deployed.
+
+The separate projects retain separate usernames, relationships and inboxes: review both people on the same PR preview. Device push and daily-status sharing are not deployed by this change. See [FRIENDS_DESIGN.md](FRIENDS_DESIGN.md) for those subsequent slices.

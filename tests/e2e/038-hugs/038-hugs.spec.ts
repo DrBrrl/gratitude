@@ -1,12 +1,12 @@
 import {test,expect} from '@playwright/test';
 import {TestStepHelper} from '../helpers/test-step-helper';
 import {startJournal} from '../helpers/journal-session';
-import {openFriends,createProfile,secondFriend,findFriend,switchFriend} from '../helpers/friends';
+import {resetFriendsFixture,openFriends,createProfile,secondFriend,findFriend,switchFriend} from '../helpers/friends';
 
 test('accepted friends receive durable hugs with recipient controls, a cooldown and replay-safe read state',async({page},info)=>{
  test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(300_000);
  const steps=new TestStepHelper(page,info,{paintStaticPage:true});const suffix=info.project.name.startsWith('mobile')?'m':'d';
- await startJournal(page,info,steps,'hugs-alice');await openFriends(page,steps);await createProfile(page,steps,'Alice',`alice_hugs_${suffix}`);
+ await resetFriendsFixture(page);await startJournal(page,info,steps,'hugs-alice');await openFriends(page,steps);await createProfile(page,steps,'Alice',`alice_hugs_${suffix}`);
  const {other,context}=await secondFriend(page,info,steps,'hugs-bob');
  try{
   await openFriends(other,steps,'bob-');await createProfile(other,steps,'Bob',`bob_hugs_${suffix}`,'bob-');
@@ -24,6 +24,9 @@ test('accepted friends receive durable hugs with recipient controls, a cooldown 
   await openFriends(other,steps,'restored-');
   await steps.step('durable-hug','Restore the one received hug and its read state',[{description:'Cached recovery and server tail replay preserve exactly one acknowledged hug',check:async()=>{await expect(other.getByRole('region',{name:'Hug inbox'}).locator('.hug')).toHaveCount(1);await expect(other.getByRole('region',{name:'Hug inbox'}).locator('.unread')).toHaveCount(0);}}]);
   await switchFriend(page,steps,'paused-on-sender',async()=>{await expect(page.getByText('Your friend has paused incoming hugs.',{exact:true})).toBeVisible({timeout:15_000});await expect(page.getByRole('button',{name:'Send a hug to Bob',exact:true})).toBeDisabled();});
+  await steps.action('remove-controls','Open controls to end the friendship',()=>page.getByText('Manage friendship with Bob',{exact:true}).click(),async()=>{await expect(page.getByRole('button',{name:'Remove Bob as a friend',exact:true})).toBeVisible();});
+  await steps.action('remove-friend','End the friendship without deleting received hugs',()=>page.getByRole('button',{name:'Remove Bob as a friend',exact:true}).click(),async()=>{await expect(page.getByRole('region',{name:'Your friends',exact:true}).locator('.friend-card')).toHaveCount(0,{timeout:15_000});});
+  await switchFriend(other,steps,'friendship-ended',async()=>{await expect(other.getByRole('region',{name:'Your friends',exact:true}).locator('.friend-card')).toHaveCount(0,{timeout:15_000});await expect(other.getByRole('region',{name:'Hug inbox'}).locator('.hug')).toHaveCount(1);await expect(other.getByRole('region',{name:'Hug inbox'}).locator('.unread')).toHaveCount(0);});
  }finally{await context.close();}
  steps.generateDocs('Send and keep a gentle hug','Accepted friends exchange durable in-app hugs. The recipient can mark a hug as read or pause incoming hugs; one sender cannot send another to the same friend within 24 hours. Cached recovery and complete replay preserve the inbox without redelivering old gestures. Device push is outside this first slice. Every action has an unmasked zero-pixel screenshot with checks beneath its image.');
 });

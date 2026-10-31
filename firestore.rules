@@ -282,6 +282,7 @@ service cloud.firestore {
     function socialProfile(uid) { return /databases/$(database)/documents/friendProfiles/$(uid); }
     function socialPair(id) { return /databases/$(database)/documents/friendPairs/$(id); }
     function socialLink(uid, peer) { return /databases/$(database)/documents/friendLinks/$(uid)/peers/$(peer); }
+    function socialUid(value) { return value is string && value.matches('^[^/]{1,128}$') && !(value in ['.','..']); }
     function socialName(value) { return value.trim().lower().replace('^@', ''); }
     function socialRelated(uid) {
       let link = socialLink(request.auth.uid, uid);
@@ -289,7 +290,7 @@ service cloud.firestore {
         && !get(socialPair(get(link).data.pairId)).data.blockedA && !get(socialPair(get(link).data.pairId)).data.blockedB;
     }
     function socialProfileEvent(uid, e, id) {
-      return e.keys().hasOnly(['eventId','schemaVersion','sequence','recordedAt','type','actorUid','payload'])
+      return validId(id) && e.keys().hasOnly(['eventId','schemaVersion','sequence','recordedAt','type','actorUid','payload'])
         && e.eventId == id && e.actorUid == uid && e.schemaVersion == 1 && e.type == 'FriendProfileChosen' && e.recordedAt == request.time
         && e.payload.keys().hasOnly(['username','displayName','discoverable'])
         && e.payload.username is string && e.payload.username.size() <= 30 && socialName(e.payload.username).matches('^[a-z][a-z0-9_]{2,23}$')
@@ -302,7 +303,7 @@ service cloud.firestore {
       function validProfileProjection(uid) {
         let n = request.resource.data;
         let event = /databases/$(database)/documents/friendProfiles/$(uid)/events/$(n.lastEventId);
-        let e = getAfter(event).data;
+        let e = validId(n.lastEventId) ? getAfter(event).data : {};
         return n.keys().hasOnly(['uid','username','displayName','discoverable','sequence','lastEventId'])
           && n.uid == uid && n.sequence == (resource == null ? 1 : resource.data.sequence + 1)
           && !exists(event) && socialProfileEvent(uid,e,n.lastEventId) && e.sequence == n.sequence
@@ -319,7 +320,8 @@ service cloud.firestore {
       }
     }
     match /friendUsernames/{name} {
-      allow get: if socialSignedIn();
+      allow get: if socialSignedIn() && (resource == null || resource.data.uid == request.auth.uid
+        || get(socialProfile(resource.data.uid)).data.discoverable || socialRelated(resource.data.uid));
       allow list: if false;
       function newProfile(uid) {
         let n = getAfter(socialProfile(uid)).data;
@@ -368,7 +370,6 @@ service cloud.firestore {
         || e.type == 'HugSent' && free && b.status == 'accepted' && (a ? b.hugsB : b.hugsA)
           && ((a ? b.lastHugA : b.lastHugB) == null || request.time >= (a ? b.lastHugA : b.lastHugB) + duration.value(24,'h'))
           && n.diff(b).affectedKeys().hasOnly(common.concat([a ? 'lastHugA' : 'lastHugB'])) && (a ? n.lastHugA : n.lastHugB) == request.time
-        || e.type == 'HugRead' && n.diff(b).affectedKeys().hasOnly(common)
       );
     }
     match /friendPairs/{pairId} {
@@ -379,12 +380,13 @@ service cloud.firestore {
       function validPairProjection() {
         let n = request.resource.data;
         let event = /databases/$(database)/documents/friendPairs/$(pairId)/events/$(n.lastEventId);
-        let e = getAfter(event).data;
+        let e = validId(n.lastEventId) ? getAfter(event).data : {};
         let b = resource == null ? socialInitial(n.members) : resource.data;
-        return n.keys().hasOnly(b.keys()) && n.members == b.members && n.members is list && n.members.size() == 2 && n.members[0] != n.members[1]
+        return validId(pairId) && n.keys().hasOnly(b.keys()) && n.members == b.members && n.members is list && n.members.size() == 2 && n.members[0] != n.members[1] && socialUid(n.members[0]) && socialUid(n.members[1])
           && e.actorUid == request.auth.uid && e.targetUid == n.members[e.actorUid == n.members[0] ? 1 : 0] && request.auth.uid in n.members
           && n.sequence == b.sequence + 1 && e.sequence == n.sequence && !exists(event)
-          && (resource != null || e.type == 'FriendRequestSent' && n.members == [e.actorUid,e.targetUid])
+          && (resource != null || e.type in ['FriendRequestSent','FriendBlocked'] && n.members == [e.actorUid,e.targetUid]
+            && exists(socialProfile(e.actorUid)) && exists(socialProfile(e.targetUid)))
           && getAfter(socialLink(n.members[0],n.members[1])).data.pairId == pairId
           && getAfter(socialLink(n.members[1],n.members[0])).data.pairId == pairId
           && socialTransition(e,b,n);
@@ -399,14 +401,40 @@ service cloud.firestore {
           let n = getAfter(socialPair(pairId)).data;
           let before = exists(socialPair(pairId)) ? get(socialPair(pairId)).data : socialInitial(n.members);
           let p = e.payload;
-          let hug = e.type == 'HugRead' ? get(/databases/$(database)/documents/friendPairs/$(pairId)/events/$(p.hugId)).data : {};
-          return e.keys().hasOnly(['eventId','schemaVersion','sequence','recordedAt','type','actorUid','targetUid','payload'])
+          return validId(id) && e.keys().hasOnly(['eventId','schemaVersion','sequence','recordedAt','type','actorUid','targetUid','payload'])
             && e.eventId == id && e.schemaVersion == 1 && e.actorUid == request.auth.uid && e.recordedAt == request.time
             && request.auth.uid in n.members && e.targetUid == n.members[e.actorUid == n.members[0] ? 1 : 0]
             && e.sequence == before.sequence + 1 && n.lastEventId == id && n.sequence == e.sequence
             && p.previousEventId == before.lastEventId
-            && p.keys().hasOnly(['previousEventId'].concat(e.type == 'HugPreferencesChosen' ? ['allowHugs'] : e.type == 'HugRead' ? ['hugId'] : []))
-            && (e.type != 'HugRead' || hug.type == 'HugSent' && hug.targetUid == e.actorUid);
+            && p.keys().hasOnly(['previousEventId'].concat(e.type == 'HugPreferencesChosen' ? ['allowHugs'] : []));
+        }
+      }
+    }
+    // Reading a hug is a private recipient action, never a shared read receipt.
+    match /friendInboxes/{uid} {
+      allow read: if owns(uid);
+      allow delete: if false;
+      allow create, update: if owns(uid) && validInboxHead();
+      function validInboxHead() {
+        let n=request.resource.data;
+        let source=/databases/$(database)/documents/friendInboxes/$(uid)/events/$(n.lastEventId);
+        return n.keys().hasOnly(['sequence','lastEventId']) && validId(n.lastEventId) && !exists(source)
+          && n.sequence==(resource==null?1:resource.data.sequence+1) && getAfter(source).data.sequence==n.sequence;
+      }
+      match /events/{id} {
+        allow read: if owns(uid);
+        allow update, delete: if false;
+        allow create: if owns(uid) && validInboxEvent();
+        function validInboxEvent() {
+          let e=request.resource.data;
+          let p=e.payload;
+          let head=/databases/$(database)/documents/friendInboxes/$(uid);
+          let hug=validId(p.pairId)&&validId(p.hugId)?get(/databases/$(database)/documents/friendPairs/$(p.pairId)/events/$(p.hugId)).data:{};
+          return validId(id) && e.keys().hasOnly(['eventId','schemaVersion','type','actorUid','sequence','recordedAt','payload'])
+            && e.eventId==id && e.schemaVersion==1 && e.type=='HugRead' && e.actorUid==uid && e.recordedAt==request.time
+            && p.keys().hasOnly(['pairId','hugId']) && hug.type=='HugSent' && hug.targetUid==uid
+            && e.sequence==(exists(head)?get(head).data.sequence+1:1)
+            && getAfter(head).data.lastEventId==id && getAfter(head).data.sequence==e.sequence;
         }
       }
     }

@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { applyInbox, applyReadState, emptyInbox } from '../../src/lib/friends/inbox.ts';
 import { applyPair, applyProfile, emptyPair, emptyProfile, canHug, usernameKey, type PairEvent, type PairType } from '../../src/lib/friends/domain.ts';
 const time = '2026-10-01T04:31:07.000Z';
 function event(state: ReturnType<typeof emptyPair>, type: PairType, actor = 'alice', extra = {}): PairEvent {
@@ -30,8 +31,11 @@ test('hug permissions, a stable 24-hour limit and independent blocking are deriv
   assert.equal(canHug(pair, 'alice', Date.parse(time)), false); assert.throws(() => applyPair(pair, event(pair, 'HugSent')));
   pair = applyPair(pair, event(pair, 'HugPreferencesChosen', 'bob', { allowHugs: true })); pair = applyPair(pair, event(pair, 'HugSent'));
   assert.equal(canHug(pair, 'alice', Date.parse(time) + 86_399_999), false); assert.equal(canHug(pair, 'alice', Date.parse(time) + 86_400_000), true);
-  assert.throws(() => applyPair(pair, event(pair, 'HugRead', 'alice', { hugId: pair.hugs[0].id })));
-  pair = applyPair(pair, event(pair, 'HugRead', 'bob', { hugId: pair.hugs[0].id })); assert.equal(pair.hugs[0].read, true);
+  const read={eventId:'private-read',schemaVersion:1 as const,type:'HugRead' as const,actorUid:'bob',sequence:1,recordedAt:time,payload:{pairId:'pair',hugId:pair.hugs[0].id}};
+  assert.throws(()=>applyInbox(emptyInbox(),read,'alice'));
+  const inbox=applyInbox(emptyInbox(),read,'bob');
+  assert.equal(applyReadState({pair},inbox,'bob').pair.hugs[0].read,true);
+  assert.equal(pair.hugs[0].read,false);
   pair = applyPair(pair, event(pair, 'FriendBlocked')); pair = applyPair(pair, event(pair, 'FriendBlocked', 'bob')); pair = applyPair(pair, event(pair, 'FriendUnblocked'));
   assert.equal(pair.blockedB, true); assert.equal(pair.status, 'none'); assert.throws(() => applyPair(pair, event(pair, 'FriendRequestSent')));
   assert.throws(() => applyPair(pair, event(pair, 'FriendUnblocked', 'alice', { status: 'accepted' })));
