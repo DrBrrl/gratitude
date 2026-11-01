@@ -54,11 +54,26 @@ test('generate and write prompts for additional entries and edits without changi
   await context.setOffline(true);
   await respond(held!, 'What did you appreciate about the sky?');
   await steps.step('received-offline', 'Retain an already-received question offline without replacing manual text', [{ description: 'The received output waits for sync and the manual question remains selected', check: async () => { await expect(page.getByRole('button', { name: 'Sync received prompt', exact: true })).toBeVisible(); await expect(page.getByRole('button', { name: 'Edit prompt text', exact: true })).toHaveText(LATER); expect(requests).toBe(3); } }]);
-  await context.setOffline(false);
-  await steps.action('reload-result', 'Reload without repeating the AI request', () => page.reload(), async () => { await expectSynced(page); await expect(page.getByRole('button', { name: 'Sync received prompt', exact: true })).toBeVisible(); expect(requests).toBe(3); });
+  // As in scenario 008, keep confirmation unavailable through reconnect/reload.
+  // Otherwise auto-sync can win the race and reveal an already-confirmed option.
+  const commitEndpoint = (url: URL) => url.origin === 'http://127.0.0.1:18080' && url.pathname === '/v1/projects/demo-gratitude/databases/(default)/documents:commit';
+  let blockedConfirmations = 0;
+  const rejectConfirmation = async (route: Route) => {
+    const body = route.request().postDataJSON();
+    if (body.writes?.some((write: any) => write.update?.fields?.type?.stringValue === 'PromptResponseReceived')) {
+      blockedConfirmations++;
+      await route.fulfill({ status: 503, json: { error: { code: 503, status: 'UNAVAILABLE', message: 'Synthetic response-confirmation outage' } } });
+    } else await route.continue();
+  };
+  await context.route(commitEndpoint, rejectConfirmation);
+  await steps.action('reload-result', 'Reload without repeating the AI request', async () => {
+    await context.setOffline(false);
+    await expect.poll(() => blockedConfirmations).toBeGreaterThan(0);
+    await page.reload();
+  }, async () => { await expectSynced(page); await expect(page.getByRole('button', { name: 'Sync received prompt', exact: true })).toBeVisible(); expect(requests).toBe(3); });
   await steps.action('resume-manual', 'Resume the durable manual question in the saved-entry draft', () => page.locator('article.card').filter({ hasText: MANUAL }).getByRole('button', { name: 'View entry', exact: true }).click(), async () => { await expect(page.locator('.detail .entry-prompt')).toHaveText(MANUAL); });
-  await steps.action('resume-editor', 'Open the saved entry’s independent local draft', () => page.getByRole('button', { name: 'Edit reflection', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Edit prompt text', exact: true })).toHaveText(LATER); });
-  await steps.action('sync-result', 'Sync the received AI output without another model call', () => page.getByRole('button', { name: 'Sync received prompt', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Sync received prompt', exact: true })).toHaveCount(0); await expect(page.getByRole('complementary', { name: 'Generated prompt option' })).toContainText('What did you appreciate about the sky?'); await expect(page.getByRole('button', { name: 'Edit prompt text', exact: true })).toHaveText(LATER); expect(requests).toBe(3); });
+  await steps.action('resume-editor', 'Open the saved entry’s independent local draft', () => page.getByRole('button', { name: 'Edit reflection', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Edit prompt text', exact: true })).toHaveText(LATER); await expect(page.getByRole('complementary', { name: 'Generated prompt option' })).toHaveCount(0); });
+  await steps.action('sync-result', 'Sync the received AI output without another model call', async () => { await page.getByRole('button', { name: 'Sync received prompt', exact: true }).click(); await context.unroute(commitEndpoint, rejectConfirmation); }, async () => { await expect(page.getByRole('button', { name: 'Sync received prompt', exact: true })).toHaveCount(0); await expect(page.getByRole('complementary', { name: 'Generated prompt option' })).toContainText('What did you appreciate about the sky?'); await expect(page.getByRole('button', { name: 'Edit prompt text', exact: true })).toHaveText(LATER); expect(requests).toBe(3); });
   await steps.action('reject-option', 'Keep the manual question instead of the late AI option', () => page.getByRole('button', { name: 'Keep current prompt', exact: true }).click(), async () => { await expect(page.getByRole('complementary', { name: 'Generated prompt option' })).toHaveCount(0); });
   await steps.action('final-save', 'Save the retained manual question', () => page.getByRole('button', { name: 'Save changes', exact: true }).click(), async () => { await expect(page.locator('.saved-card .entry-prompt')).toHaveText(LATER); await expectSynced(page); });
   await steps.action('final-done', 'Finish editing and return to the journal', () => page.getByRole('button', { name: 'Done', exact: true }).click(), async () => { await expect(page.locator('article.card')).toHaveCount(2); });
