@@ -1,15 +1,29 @@
 <script lang="ts">
-  import {defaultConnection,saveConnection,probeLocalModel,type ModelConnection,type LocalCapabilities} from '$lib/ai/lm-studio';
+  import {defaultConnection,saveConnection,discoverLocalModels,selectedLocalCapabilities,type ModelConnection,type LocalCapabilities,type LocalModelInfo} from '$lib/ai/lm-studio';
   import type {CredentialStatus} from '../firebase/model-credential';
   let {credentialStatus={ready:false,saved:false,error:''},onsavetoken,onforgettoken,connection,scope,disabled=false,connectionOnly=false,initialError='',onchange}:{credentialStatus?:CredentialStatus;onsavetoken?:(connection:ModelConnection)=>Promise<void>;onforgettoken?:()=>Promise<void>;connection:ModelConnection;scope:string;disabled?:boolean;connectionOnly?:boolean;initialError?:string;onchange:(connection:ModelConnection)=>Promise<void>}=$props();
   let draft=$state<ModelConnection>(defaultConnection()),busy=$state(false),message=$state(''),failed=$state(false),capabilities=$state<LocalCapabilities|null>(null);
-  $effect(()=>{draft={...connection};capabilities=null;});
+  let models=$state<LocalModelInfo[]>([]),manualModel=$state(false),discoveredFor=$state('');
+  const connectionKey=(value:ModelConnection)=>JSON.stringify([scope,value.provider,value.baseUrl,value.token]);
+  const showPicker=$derived(!manualModel&&discoveredFor===connectionKey(draft)&&models.length>0&&(models.length>1||!models.some(item=>item.id===draft.model)));
+  $effect(()=>{draft={...connection};capabilities=null;models=[];discoveredFor='';manualModel=false;});
   $effect(()=>{if(initialError){message=initialError;failed=true;}});
   async function testConnection() {
     busy=true;message='';failed=false;
-    try {capabilities=await probeLocalModel($state.snapshot(draft));message=`Connected to LM Studio. ${capabilities.loaded?'Model loaded.':'Model available; the first request may load it.'} ${capabilities.vision?'Photo summaries supported.':'Text prompts only.'}${capabilities.contextLength?` Loaded context: ${capabilities.contextLength.toLocaleString('en-AU')} tokens.`:''}`;}
-    catch(error){failed=true;capabilities=null;message=error instanceof Error?error.message:'Could not connect to LM Studio.';}
+    models=[];discoveredFor='';manualModel=false;
+    const captured=$state.snapshot(draft),key=connectionKey(captured),capturedScope=scope;
+    try {
+      const discovered=await discoverLocalModels(captured);
+      if(scope!==capturedScope||connectionKey(draft)!==key) return;
+      models=discovered;discoveredFor=key;
+      describeModel();
+    }
+    catch(error){if(scope===capturedScope&&connectionKey(draft)===key){failed=true;capabilities=null;message=error instanceof Error?error.message:'Could not connect to LM Studio.';}}
     finally{busy=false;}
+  }
+  function describeModel(){
+    try{capabilities=selectedLocalCapabilities(models,draft.model);failed=false;message=`Connected to LM Studio. ${capabilities.loaded?'Model loaded.':'Model available; the first request may load it.'} ${capabilities.vision?'Photo summaries supported.':'Text prompts only.'}${capabilities.contextLength?` Loaded context: ${capabilities.contextLength.toLocaleString('en-AU')} tokens.`:''}`;}
+    catch(error){failed=true;capabilities=null;message=error instanceof Error?error.message:'Choose an available model.';}
   }
   async function rememberToken(){
     busy=true;failed=false;message='';
@@ -39,12 +53,20 @@
   </select>{/if}
   {#if draft.provider==='lm-studio'}
     <label for="local-server">LM Studio server URL</label>
-    <input id="local-server" type="url" bind:value={draft.baseUrl} oninput={()=>{draft.token='';capabilities=null;}} disabled={disabled||busy} placeholder="http://127.0.0.1:8080" autocomplete="off" />
+    <input id="local-server" type="url" bind:value={draft.baseUrl} oninput={()=>{draft.token='';capabilities=null;models=[];message='';}} disabled={disabled||busy} placeholder="http://127.0.0.1:8080" autocomplete="off" />
     <p class="hint">On your phone, use your computer’s reachable HTTPS or LAN address. Localhost refers to the device running this browser.</p>
     <label for="local-model">Model API identifier</label>
-    <input id="local-model" bind:value={draft.model} disabled={disabled||busy} autocomplete="off" spellcheck="false" />
+    {#if showPicker}
+      <select id="local-model" value={draft.model} disabled={disabled||busy} onchange={(event)=>{const id=event.currentTarget.value;if(!id){manualModel=true;message='';capabilities=null;}else{draft.model=id;describeModel();}}}>
+        {#if !models.some(item=>item.id===draft.model)}<option value={draft.model} disabled>{draft.model} · not available</option>{/if}
+        {#each models as model (model.id)}<option value={model.id} disabled={!!model.error}>{model.id} · {model.error?'thinking off unavailable':model.loaded?'loaded':'available'}</option>{/each}
+        <option value="">Enter an identifier manually…</option>
+      </select>
+    {:else}
+      <input id="local-model" bind:value={draft.model} oninput={()=>{capabilities=null;message='';}} disabled={disabled||busy} autocomplete="off" spellcheck="false" />
+    {/if}
     <label for="local-token">LM Studio API token</label>
-    <input id="local-token" type="password" bind:value={draft.token} disabled={disabled||busy} autocomplete="off" />
+    <input id="local-token" type="password" bind:value={draft.token} oninput={()=>{models=[];capabilities=null;message='';}} disabled={disabled||busy} autocomplete="off" />
     <p class="hint">By default the token stays in this browser tab. Account token sync can restore it on your other devices, together with its server address and model.</p>
     <details class="token-sync"><summary>Account token sync</summary>
       <p class="hint">Optional: save this connection in your private account settings. Firebase project administrators and this app can access the token. It stays out of journal events and exports. Use a dedicated token with MCP permissions denied.</p>
