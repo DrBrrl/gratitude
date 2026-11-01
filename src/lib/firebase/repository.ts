@@ -4,7 +4,7 @@ import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, order
 import { appendReflection, decodeEvent } from './append';
 import { openDB, type IDBPDatabase } from 'idb';
 import { base } from '$app/paths';
-import { applyEvent, emptyProjection, replay, GENERATION, PROJECTION_VERSION, type Action, type AIAction, type ResponseAction, type Projection, type PhotoAction, type ImportAction, type BackupAction, photoKey } from '../domain';
+import { applyEvent, emptyProjection, replay, GENERATION, PROJECTION_VERSION, type Action, type AIAction, type ResponseAction, type Projection, type PhotoAction, type ImportAction, type BackupAction, photoKey, photoProvider } from '../domain';
 import type { FirebaseClient } from './client';
 import { makeRequest, buildContext, type GeneratePrompt } from '../ai/context';
 
@@ -304,13 +304,13 @@ export class JournalRepository {
 
   async requestPhotoSummary(entryId: string, slot: number, generate: GenerateSummary) {
     const key = photoKey(entryId, slot);
-    if((generate.target?.provider??'gemini')!==this.state.ai.choices.provider) throw new Error('AI provider changed. Review your model settings.');
+    if((generate.target?.provider??'gemini')!==photoProvider(this.state.ai.choices)) throw new Error('AI provider changed. Review your model settings.');
     if (this.photoRequests.has(key)) return;
     const photo = this.state.photos[key];
     if (!photo || photo.removed) throw new Error('This photo is no longer attached.');
     if (Object.values(this.photoResults).some(action => action.payload.entryId === entryId && action.payload.slot === slot)) throw new Error('Sync the received summary first.');
     const eventId=crypto.randomUUID(),payload={entryId,slot,photoId:photo.photoId,previousEventId:photo.lastEventId};
-    const request: PhotoAction = generate.target ? {eventId,type:'PhotoSummaryRequested',schemaVersion:2,payload:{...payload,...generate.target}} : {eventId,type:'PhotoSummaryRequested',schemaVersion:1,payload};
+    const request: PhotoAction = this.state.ai.choices.photoProvider!==undefined ? {eventId,type:'PhotoSummaryRequested',schemaVersion:3,payload:{...payload,choicesId:this.state.ai.control.choicesId!,provider:generate.target?.provider??'gemini',model:generate.target?.model??null,thinking:false}} : generate.target ? {eventId,type:'PhotoSummaryRequested',schemaVersion:2,payload:{...payload,...generate.target}} : {eventId,type:'PhotoSummaryRequested',schemaVersion:1,payload};
     this.photoRequests.add(key); this.emit();
     try {
       const result = await this.commitAI(request);
@@ -320,7 +320,7 @@ export class JournalRepository {
       const aiControl=await getDocFromServer(doc(this.client.db,`users/${this.uid}/streams/${GENERATION}/ai/control`));
       const choicesId=aiControl.get('choicesId');
       const choices=choicesId?await getDocFromServer(doc(this.client.db,`users/${this.uid}/streams/${GENERATION}/events/${choicesId}`)):null;
-      if((choices?.get('payload.provider')??'gemini')!==(generate.target?.provider??'gemini')) throw new Error('AI provider changed. Review your model settings.');
+      if(photoProvider({provider:choices?.get('payload.provider')??'gemini',photoProvider:choices?.get('payload.photoProvider')} as Parameters<typeof photoProvider>[0])!==(generate.target?.provider??'gemini') || request.schemaVersion===3 && choicesId!==request.payload.choicesId) throw new Error('AI provider changed. Review your model settings.');
       let output;
       try { output = await generate(); }
       catch (cause) {
@@ -332,6 +332,7 @@ export class JournalRepository {
         return;
       }
       if (this.stopped) return;
+      if(request.schemaVersion===3&&this.state.ai.control.choicesId!==request.payload.choicesId) throw new Error('Photo model settings changed. The late summary was discarded.');
       const response: PhotoAction = { eventId: `${request.eventId}_response`, type: 'PhotoSummaryResponseReceived', schemaVersion: 1,
         payload: { entryId, slot, photoId: photo.photoId, previousEventId: request.eventId, ...output } };
       this.photoResults[request.eventId] = response;
@@ -344,7 +345,7 @@ export class JournalRepository {
     if (!action) return;
     try { await this.commitAI(action); }
     catch (cause) {
-      if (!(cause instanceof Error) || !cause.message.includes('photo changed on another device')) throw cause;
+      if (!(cause instanceof Error) || !cause.message.includes('photo changed on another device')&&!cause.message.includes('Photo model settings changed')) throw cause;
       // A manual correction, removal or newer request wins; never overwrite it.
     }
     delete this.photoResults[requestId];

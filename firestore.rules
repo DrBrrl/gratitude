@@ -13,10 +13,10 @@ service cloud.firestore {
       allow write: if false;
     }
     // Revocable credentials are mutable and separate from journal events/exports.
-    match /users/{uid}/privateSettings/lmStudio {
-      allow get, delete: if owns(uid);
+    match /users/{uid}/privateSettings/{connection} {
+      allow get, delete: if owns(uid) && connection in ['lmStudio','lmStudioPhotos'];
       allow list: if false;
-      allow create, update: if owns(uid)
+      allow create, update: if owns(uid) && connection in ['lmStudio','lmStudioPhotos']
         && request.resource.data.keys().hasAll(['schemaVersion','baseUrl','model','token','updatedAt'])
         && request.resource.data.keys().hasOnly(['schemaVersion','baseUrl','model','token','updatedAt'])
         && request.resource.data.schemaVersion == 1
@@ -127,14 +127,14 @@ service cloud.firestore {
         let before = aiBefore();
         let after = getAfter(aiPath()).data;
         let result = e.type in ['PromptResponseReceived', 'AIRequestFailed'];
-        return (e.schemaVersion == 1 || e.type == 'AIChoicesConfirmed' && e.schemaVersion in [2,3] || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4,5,6,7,8]) && after.lastEventId == e.eventId
+        return (e.schemaVersion == 1 || e.type == 'AIChoicesConfirmed' && e.schemaVersion in [2,3,4] || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4,5,6,7,8]) && after.lastEventId == e.eventId
           && after.choicesId == (e.type == 'AIChoicesConfirmed' ? e.eventId : before.choicesId)
           && after.requestId == (e.type == 'PromptRequested' ? e.eventId : e.type == 'PromptFeedbackSubmitted' ? before.requestId : null)
           && (result ? validId(p.requestId) && p.requestId == before.requestId : p.previousEventId == before.lastEventId)
           && (
-            (e.type == 'AIChoicesConfirmed' && p.keys().hasOnly(['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance'].concat(e.schemaVersion in [2,3] ? ['provider'] : []).concat(e.schemaVersion == 3 ? ['backupEnabled','backupProvider'] : []))
-              && (!(e.schemaVersion in [2,3]) || p.provider in ['gemini','lm-studio']) && (e.schemaVersion != 3 || p.backupEnabled is bool && p.backupProvider in ['gemini','lm-studio'])
-              && p.enabled is bool && p.useJournal is bool && p.useFeedback is bool && text(p.guidance, 500))
+            (e.type == 'AIChoicesConfirmed' && p.keys().hasOnly(['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance'].concat(e.schemaVersion in [2,3,4] ? ['provider'] : []).concat(e.schemaVersion in [3,4] ? ['backupEnabled','backupProvider'] : []).concat(e.schemaVersion == 4 ? ['photoProvider'] : []))
+              && (!(e.schemaVersion in [2,3,4]) || p.provider in ['gemini','lm-studio']) && (!(e.schemaVersion in [3,4]) || p.backupEnabled is bool && p.backupProvider in ['gemini','lm-studio'])
+              && (e.schemaVersion != 4 || p.photoProvider in ['prompt','gemini','lm-studio']) && p.enabled is bool && p.useJournal is bool && p.useFeedback is bool && text(p.guidance, 500))
             || (e.type == 'PromptRequested' && validRequest(p, before, e.schemaVersion))
             || (e.type == 'PromptResponseReceived' && p.keys().hasOnly(['requestId', 'text', 'model', 'finishReason'])
               && e.eventId == p.requestId + '_response' && text(p.text, 600) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
@@ -158,14 +158,14 @@ service cloud.firestore {
       function photoBefore(entryId, slot) { let pointer = get(photoPath(entryId, slot)); return pointer == null ? null : get(eventPath(pointer.data.lastEventId)).data; }
       function activePhoto(entryId, slot) { let event = photoBefore(entryId, slot); return event != null && event.type != 'PhotoRemoved'; }
       function otherPhoto(entryId, slot) { return (slot != 0 && activePhoto(entryId, 0)) || (slot != 1 && activePhoto(entryId, 1)) || (slot != 2 && activePhoto(entryId, 2)) || (slot != 3 && activePhoto(entryId, 3)); }
-      function currentProvider() { let control=aiBefore(); return control.choicesId == null ? 'gemini' : get(eventPath(control.choicesId)).data.payload.get('provider','gemini'); }
+      function currentProvider() { let control=aiBefore(); let choices=control.choicesId == null ? {} : get(eventPath(control.choicesId)).data.payload; let photo=choices.get('photoProvider','prompt'); return photo == 'prompt' ? choices.get('provider','gemini') : photo; }
       function validPhoto(e) {
         let p = e.payload;
         let old = photoBefore(p.entryId, p.slot);
-        let extras = e.type == 'PhotoSummaryRequested' && e.schemaVersion == 2 ? ['provider','model','thinking'] : e.type == 'PhotoSummaryEdited' ? ['text'] : e.type == 'PhotoSummaryResponseReceived' ? ['text', 'model', 'finishReason'] : e.type == 'PhotoSummaryFailed' ? ['reason'] : [];
-        return (e.schemaVersion == 1 || e.type == 'PhotoSummaryRequested' && e.schemaVersion == 2 && validLocal(p)) && validId(p.entryId) && validId(p.photoId) && p.slot is int && p.slot >= 0 && p.slot < 4
+        let extras = e.type == 'PhotoSummaryRequested' && e.schemaVersion in [2,3] ? ['provider','model','thinking'].concat(e.schemaVersion == 3 ? ['choicesId'] : []) : e.type == 'PhotoSummaryEdited' ? ['text'] : e.type == 'PhotoSummaryResponseReceived' ? ['text', 'model', 'finishReason'] : e.type == 'PhotoSummaryFailed' ? ['reason'] : [];
+        return (e.schemaVersion == 1 || e.type == 'PhotoSummaryRequested' && e.schemaVersion == 2 && validLocal(p) || e.type == 'PhotoSummaryRequested' && e.schemaVersion == 3 && validId(p.choicesId) && p.choicesId == aiBefore().choicesId && (validLocal(p) || p.provider == 'gemini' && p.model == null && p.thinking == false)) && validId(p.entryId) && validId(p.photoId) && p.slot is int && p.slot >= 0 && p.slot < 4
           && p.keys().hasOnly(['entryId', 'slot', 'photoId', 'previousEventId'].concat(extras))
-          && (e.type != 'PhotoSummaryRequested' || currentProvider() == (e.schemaVersion == 2 ? 'lm-studio' : 'gemini'))
+          && (e.type != 'PhotoSummaryRequested' || currentProvider() == (e.schemaVersion == 1 ? 'gemini' : p.provider))
           && p.previousEventId == (old == null ? null : old.eventId)
           && getAfter(photoPath(p.entryId, p.slot)).data.lastEventId == e.eventId
           && (e.type == 'PhotoAttached' ? old == null || old.type == 'PhotoRemoved'
@@ -173,7 +173,7 @@ service cloud.firestore {
           && (e.type == 'PhotoAttached' || e.type == 'PhotoSummaryRequested'
             || (e.type == 'PhotoRemoved' && (!exists(pointerPath(p.entryId)) || entryHasText(p.entryId) || otherPhoto(p.entryId, p.slot)))
             || (e.type == 'PhotoSummaryEdited' && text(p.text, 1000))
-            || (e.type == 'PhotoSummaryResponseReceived' && old.type == 'PhotoSummaryRequested' && e.eventId == p.previousEventId + '_response'
+            || (e.type == 'PhotoSummaryResponseReceived' && old.type == 'PhotoSummaryRequested' && (old.schemaVersion != 3 || old.payload.choicesId == aiBefore().choicesId) && e.eventId == p.previousEventId + '_response'
               && text(p.text, 1000) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*') && text(p.model, 100) && p.model.size() > 0 && p.finishReason == 'STOP')
             || (e.type == 'PhotoSummaryFailed' && old.type == 'PhotoSummaryRequested' && e.eventId == p.previousEventId + '_failure' && p.reason in ['unavailable', 'blocked', 'invalid-response']));
       }

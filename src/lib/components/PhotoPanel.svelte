@@ -8,12 +8,12 @@
   import { aiAvailable as geminiAvailable, summarizePhoto, personalContextAvailable as geminiPersonal } from '$lib/ai/gemini';
   import PhotoImage from './PhotoImage.svelte';
   import HighlightedText from './HighlightedText.svelte';
-  let { client, repository, view, uid, entryId, ensureEntry, query = '', disabled = false, draft = false, onbusy = () => {}, colour, connection=defaultConnection() }: {
-    connection?:ModelConnection; client: FirebaseClient; repository: JournalStore; view: JournalView; uid: string; entryId: string | null;
+  let { client, repository, view, uid, entryId, ensureEntry, query = '', disabled = false, draft = false, onbusy = () => {}, colour, connection=defaultConnection(), connectionError='' }: {
+    connection?:ModelConnection;connectionError?:string; client: FirebaseClient; repository: JournalStore; view: JournalView; uid: string; entryId: string | null;
     ensureEntry?: () => Promise<string>; query?: string; disabled?: boolean; draft?: boolean; onbusy?: (busy: boolean) => void; colour?: string;
   } = $props();
   const local=$derived(connection.provider==='lm-studio');
-  const aiAvailable=$derived(local||geminiAvailable);
+  const aiAvailable=$derived(!connectionError&&(local||geminiAvailable));
   const personalContextAvailable=$derived(local||geminiPersonal);
   let active = true;
   onDestroy(() => { active = false; });
@@ -148,7 +148,7 @@
     {#if draft && photos.length}<p class="hint">Photos are saved to your account. Save this reflection to include them in your journal.</p>{/if}
   {/if}
 
-  {#if message}<p class="hint" role="alert">{message}</p>{/if}
+  {#if message||connectionError}<p class="hint" role="alert">{message||connectionError}</p>{/if}
 </section>
 <style>
   .photos { margin: 18px 0; text-align: left; }

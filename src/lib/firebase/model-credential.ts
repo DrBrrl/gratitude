@@ -15,10 +15,10 @@ export class ModelCredentialStore {
   private reference;
   private changed: Changed;
 
-  constructor(db: Firestore, uid: string, changed: Changed, restored = false) {
+  constructor(db: Firestore, uid: string, changed: Changed, restored = false, purpose:'prompts'|'photos'='prompts') {
     this.restored = restored;
     this.changed = changed;
-    this.reference = doc(db, `users/${uid}/privateSettings/lmStudio`);
+    this.reference = doc(db, `users/${uid}/privateSettings/${purpose==='photos'?'lmStudioPhotos':'lmStudio'}`);
   }
 
   start() {

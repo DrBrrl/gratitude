@@ -10,7 +10,7 @@ Users see Sunday-first current-week summaries on Today and Journal, with their s
 
 Reflections share a smooth 28-day rainbow cycle based on their local dates, with yellow on an anchor Sunday and the same shade every four weeks. Cards, drafts and calendar circles agree; imported and backfilled entries fit their historical dates.
 
-Users choose between managed Gemini and a local LM Studio model for prompts and photo summaries. Their provider choice follows their account, and each device holds its own connection credentials.
+Users choose AI services and models for reflection prompts, photo descriptions and backup generation, using a shared connection or independent connections. They connect models on their own computers and cloud services with their own API keys. Their choices follow their account, and they control whether connection credentials sync across devices.
 
 Reflections are private. Users can export and delete their data and understand what information is shared with an AI service.
 

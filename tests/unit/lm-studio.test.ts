@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {defaultConnection,validateConnection,serverOrigin,discoverLocalModels,selectedLocalCapabilities,probeLocalModel,generateLocal,localGenerator,parseLocalResponse,readConnection,saveConnection,wasAccountConnection,clearConnectionToken,DEFAULT_LOCAL_MODEL,type ModelConnection} from '../../src/lib/ai/lm-studio.ts';
+import {defaultConnection,photoConnectionScope,validateConnection,serverOrigin,discoverLocalModels,selectedLocalCapabilities,probeLocalModel,generateLocal,localGenerator,parseLocalResponse,readConnection,saveConnection,wasAccountConnection,clearConnectionToken,DEFAULT_LOCAL_MODEL,type ModelConnection} from '../../src/lib/ai/lm-studio.ts';
 import {makeRequest,buildContext,SYSTEM_PROMPT} from '../../src/lib/ai/context.ts';
 import {replay,parseAction,STARTER_ID,type SourceAction,type JournalEvent} from '../../src/lib/domain.ts';
 
@@ -163,4 +163,10 @@ test('account-token provenance survives reloads but never follows another token 
  saveConnection('account',connection,preferences,secrets,true);
  clearConnectionToken('account',secrets);
  assert.equal(wasAccountConnection('account',secrets),false);
+});
+
+test('photo device slots cannot collide with prompt account IDs or deployments',()=>{
+ assert.notEqual(photoConnectionScope('project:/app:account'),'project:/app:account:photos');
+ assert.notEqual(photoConnectionScope('project:/app:account'),photoConnectionScope('project:/other:account'));
+ const preferences=storage(),secrets=storage();saveConnection('project:/app:account',connection,preferences,secrets);saveConnection(photoConnectionScope('project:/app:account'),{...connection,token:'fictional-photo'},preferences,secrets);assert.equal(readConnection('project:/app:account',preferences,secrets).token,connection.token);assert.equal(readConnection(photoConnectionScope('project:/app:account'),preferences,secrets).token,'fictional-photo');
 });
