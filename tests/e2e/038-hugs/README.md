@@ -61,27 +61,9 @@ Viewport: mobile-chromium.
 - [x] The bottom navigation retains its 24px backdrop blur in the production build
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Open Settings
-
-![Open Settings](./screenshots/006-settings-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open account settings
-
-![Open account settings](./screenshots/007-account-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/008-friends-mobile-chromium.png)
+![Open Friends and hugs](./screenshots/006-friends-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +72,7 @@ Viewport: mobile-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/009-display-name-mobile-chromium.png)
+![Choose a friend-facing display name](./screenshots/007-display-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/010-username-mobile-chromium.png)
+![Choose a searchable username](./screenshots/008-username-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/011-profile-save-mobile-chromium.png)
+![Save the opt-in friends profile](./screenshots/009-profile-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Open a separate signed-out browser
 
-![Open a separate signed-out browser](./screenshots/012-other-device-mobile-chromium.png)
+![Open a separate signed-out browser](./screenshots/010-other-device-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/013-google-popup-mobile-chromium.png)
+![Choose Google sign-in](./screenshots/011-google-popup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Add a fictional Google account
 
-![Add a fictional Google account](./screenshots/014-new-account-mobile-chromium.png)
+![Add a fictional Google account](./screenshots/012-new-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Enter the fictional email address
 
-![Enter the fictional email address](./screenshots/015-email-mobile-chromium.png)
+![Enter the fictional email address](./screenshots/013-email-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Enter a display name
 
-![Enter a display name](./screenshots/016-name-mobile-chromium.png)
+![Enter a display name](./screenshots/014-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/017-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/015-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -170,27 +152,9 @@ Viewport: mobile-chromium.
 - [x] The bottom navigation retains its 24px backdrop blur in the production build
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Open Settings
-
-![Open Settings](./screenshots/018-bob-settings-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open account settings
-
-![Open account settings](./screenshots/019-bob-account-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/020-bob-friends-mobile-chromium.png)
+![Open Friends and hugs](./screenshots/016-bob-friends-mobile-chromium.png)
 
 **Verifications:**
 
@@ -199,7 +163,7 @@ Viewport: mobile-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/021-bob-display-name-mobile-chromium.png)
+![Choose a friend-facing display name](./screenshots/017-bob-display-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -208,7 +172,7 @@ Viewport: mobile-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/022-bob-username-mobile-chromium.png)
+![Choose a searchable username](./screenshots/018-bob-username-mobile-chromium.png)
 
 **Verifications:**
 
@@ -217,7 +181,7 @@ Viewport: mobile-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/023-bob-profile-save-mobile-chromium.png)
+![Save the opt-in friends profile](./screenshots/019-bob-profile-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -226,7 +190,7 @@ Viewport: mobile-chromium.
 
 ## Enter a friend’s username
 
-![Enter a friend’s username](./screenshots/024-search-name-mobile-chromium.png)
+![Enter a friend’s username](./screenshots/020-search-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -235,7 +199,7 @@ Viewport: mobile-chromium.
 
 ## Find the chosen profile by username
 
-![Find the chosen profile by username](./screenshots/025-find-mobile-chromium.png)
+![Find the chosen profile by username](./screenshots/021-find-mobile-chromium.png)
 
 **Verifications:**
 
@@ -244,7 +208,7 @@ Viewport: mobile-chromium.
 
 ## Ask Alice to connect
 
-![Ask Alice to connect](./screenshots/026-request-mobile-chromium.png)
+![Ask Alice to connect](./screenshots/022-request-mobile-chromium.png)
 
 **Verifications:**
 
@@ -253,7 +217,7 @@ Viewport: mobile-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/027-alice-request-mobile-chromium.png)
+![Return to the other friend’s device](./screenshots/023-alice-request-mobile-chromium.png)
 
 **Verifications:**
 
@@ -262,7 +226,7 @@ Viewport: mobile-chromium.
 
 ## Accept Bob as a friend
 
-![Accept Bob as a friend](./screenshots/028-accept-mobile-chromium.png)
+![Accept Bob as a friend](./screenshots/024-accept-mobile-chromium.png)
 
 **Verifications:**
 
@@ -271,7 +235,7 @@ Viewport: mobile-chromium.
 
 ## Send a little hug to Bob
 
-![Send a little hug to Bob](./screenshots/029-send-hug-mobile-chromium.png)
+![Send a little hug to Bob](./screenshots/025-send-hug-mobile-chromium.png)
 
 **Verifications:**
 
@@ -280,7 +244,7 @@ Viewport: mobile-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/030-bob-hug-mobile-chromium.png)
+![Return to the other friend’s device](./screenshots/026-bob-hug-mobile-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +253,7 @@ Viewport: mobile-chromium.
 
 ## Acknowledge the received hug
 
-![Acknowledge the received hug](./screenshots/031-read-hug-mobile-chromium.png)
+![Acknowledge the received hug](./screenshots/027-read-hug-mobile-chromium.png)
 
 **Verifications:**
 
@@ -298,7 +262,7 @@ Viewport: mobile-chromium.
 
 ## Open hug preferences
 
-![Open hug preferences](./screenshots/032-manage-mobile-chromium.png)
+![Open hug preferences](./screenshots/028-manage-mobile-chromium.png)
 
 **Verifications:**
 
@@ -307,7 +271,7 @@ Viewport: mobile-chromium.
 
 ## Pause hugs from this friend
 
-![Pause hugs from this friend](./screenshots/033-pause-mobile-chromium.png)
+![Pause hugs from this friend](./screenshots/029-pause-mobile-chromium.png)
 
 **Verifications:**
 
@@ -316,7 +280,7 @@ Viewport: mobile-chromium.
 
 ## Replay the complete friendship source without redelivering a hug
 
-![Replay the complete friendship source without redelivering a hug](./screenshots/034-rebuild-mobile-chromium.png)
+![Replay the complete friendship source without redelivering a hug](./screenshots/030-rebuild-mobile-chromium.png)
 
 **Verifications:**
 
@@ -325,25 +289,7 @@ Viewport: mobile-chromium.
 
 ## Reload after receiving a hug
 
-![Reload after receiving a hug](./screenshots/035-reload-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open Settings
-
-![Open Settings](./screenshots/036-restored-settings-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open account settings
-
-![Open account settings](./screenshots/037-restored-account-mobile-chromium.png)
+![Reload after receiving a hug](./screenshots/031-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -352,7 +298,7 @@ Viewport: mobile-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/038-restored-friends-mobile-chromium.png)
+![Open Friends and hugs](./screenshots/032-restored-friends-mobile-chromium.png)
 
 **Verifications:**
 
@@ -361,7 +307,7 @@ Viewport: mobile-chromium.
 
 ## Restore the one received hug and its read state
 
-![Restore the one received hug and its read state](./screenshots/039-durable-hug-mobile-chromium.png)
+![Restore the one received hug and its read state](./screenshots/033-durable-hug-mobile-chromium.png)
 
 **Verifications:**
 
@@ -370,7 +316,7 @@ Viewport: mobile-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/040-paused-on-sender-mobile-chromium.png)
+![Return to the other friend’s device](./screenshots/034-paused-on-sender-mobile-chromium.png)
 
 **Verifications:**
 
@@ -379,7 +325,7 @@ Viewport: mobile-chromium.
 
 ## Open controls to end the friendship
 
-![Open controls to end the friendship](./screenshots/041-remove-controls-mobile-chromium.png)
+![Open controls to end the friendship](./screenshots/035-remove-controls-mobile-chromium.png)
 
 **Verifications:**
 
@@ -388,7 +334,7 @@ Viewport: mobile-chromium.
 
 ## End the friendship without deleting received hugs
 
-![End the friendship without deleting received hugs](./screenshots/042-remove-friend-mobile-chromium.png)
+![End the friendship without deleting received hugs](./screenshots/036-remove-friend-mobile-chromium.png)
 
 **Verifications:**
 
@@ -397,7 +343,7 @@ Viewport: mobile-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/043-friendship-ended-mobile-chromium.png)
+![Return to the other friend’s device](./screenshots/037-friendship-ended-mobile-chromium.png)
 
 **Verifications:**
 

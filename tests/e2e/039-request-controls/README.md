@@ -61,27 +61,9 @@ Viewport: mobile-chromium.
 - [x] The bottom navigation retains its 24px backdrop blur in the production build
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Open Settings
-
-![Open Settings](./screenshots/006-settings-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open account settings
-
-![Open account settings](./screenshots/007-account-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/008-friends-mobile-chromium.png)
+![Open Friends and hugs](./screenshots/006-friends-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +72,7 @@ Viewport: mobile-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/009-display-name-mobile-chromium.png)
+![Choose a friend-facing display name](./screenshots/007-display-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/010-username-mobile-chromium.png)
+![Choose a searchable username](./screenshots/008-username-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/011-profile-save-mobile-chromium.png)
+![Save the opt-in friends profile](./screenshots/009-profile-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Open a separate signed-out browser
 
-![Open a separate signed-out browser](./screenshots/012-other-device-mobile-chromium.png)
+![Open a separate signed-out browser](./screenshots/010-other-device-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/013-google-popup-mobile-chromium.png)
+![Choose Google sign-in](./screenshots/011-google-popup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Add a fictional Google account
 
-![Add a fictional Google account](./screenshots/014-new-account-mobile-chromium.png)
+![Add a fictional Google account](./screenshots/012-new-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Enter the fictional email address
 
-![Enter the fictional email address](./screenshots/015-email-mobile-chromium.png)
+![Enter the fictional email address](./screenshots/013-email-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Enter a display name
 
-![Enter a display name](./screenshots/016-name-mobile-chromium.png)
+![Enter a display name](./screenshots/014-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/017-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/015-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -170,27 +152,9 @@ Viewport: mobile-chromium.
 - [x] The bottom navigation retains its 24px backdrop blur in the production build
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Open Settings
-
-![Open Settings](./screenshots/018-bob-settings-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open account settings
-
-![Open account settings](./screenshots/019-bob-account-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/020-bob-friends-mobile-chromium.png)
+![Open Friends and hugs](./screenshots/016-bob-friends-mobile-chromium.png)
 
 **Verifications:**
 
@@ -199,7 +163,7 @@ Viewport: mobile-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/021-bob-display-name-mobile-chromium.png)
+![Choose a friend-facing display name](./screenshots/017-bob-display-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -208,7 +172,7 @@ Viewport: mobile-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/022-bob-username-mobile-chromium.png)
+![Choose a searchable username](./screenshots/018-bob-username-mobile-chromium.png)
 
 **Verifications:**
 
@@ -217,7 +181,7 @@ Viewport: mobile-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/023-bob-profile-save-mobile-chromium.png)
+![Save the opt-in friends profile](./screenshots/019-bob-profile-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -226,7 +190,7 @@ Viewport: mobile-chromium.
 
 ## Enter a friend’s username
 
-![Enter a friend’s username](./screenshots/024-bob-search-name-mobile-chromium.png)
+![Enter a friend’s username](./screenshots/020-bob-search-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -235,7 +199,7 @@ Viewport: mobile-chromium.
 
 ## Find the chosen profile by username
 
-![Find the chosen profile by username](./screenshots/025-bob-find-mobile-chromium.png)
+![Find the chosen profile by username](./screenshots/021-bob-find-mobile-chromium.png)
 
 **Verifications:**
 
@@ -244,7 +208,7 @@ Viewport: mobile-chromium.
 
 ## Send a request to Alice
 
-![Send a request to Alice](./screenshots/026-bob-request-mobile-chromium.png)
+![Send a request to Alice](./screenshots/022-bob-request-mobile-chromium.png)
 
 **Verifications:**
 
@@ -253,7 +217,7 @@ Viewport: mobile-chromium.
 
 ## Cancel a request that has not been accepted
 
-![Cancel a request that has not been accepted](./screenshots/027-cancel-mobile-chromium.png)
+![Cancel a request that has not been accepted](./screenshots/023-cancel-mobile-chromium.png)
 
 **Verifications:**
 
@@ -262,7 +226,7 @@ Viewport: mobile-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/028-cancelled-recipient-mobile-chromium.png)
+![Return to the other friend’s device](./screenshots/024-cancelled-recipient-mobile-chromium.png)
 
 **Verifications:**
 
@@ -271,7 +235,7 @@ Viewport: mobile-chromium.
 
 ## Open a separate signed-out browser
 
-![Open a separate signed-out browser](./screenshots/029-other-device-mobile-chromium.png)
+![Open a separate signed-out browser](./screenshots/025-other-device-mobile-chromium.png)
 
 **Verifications:**
 
@@ -280,7 +244,7 @@ Viewport: mobile-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/030-google-popup-mobile-chromium.png)
+![Choose Google sign-in](./screenshots/026-google-popup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +253,7 @@ Viewport: mobile-chromium.
 
 ## Add a fictional Google account
 
-![Add a fictional Google account](./screenshots/031-new-account-mobile-chromium.png)
+![Add a fictional Google account](./screenshots/027-new-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -298,7 +262,7 @@ Viewport: mobile-chromium.
 
 ## Enter the fictional email address
 
-![Enter the fictional email address](./screenshots/032-email-mobile-chromium.png)
+![Enter the fictional email address](./screenshots/028-email-mobile-chromium.png)
 
 **Verifications:**
 
@@ -307,7 +271,7 @@ Viewport: mobile-chromium.
 
 ## Enter a display name
 
-![Enter a display name](./screenshots/033-name-mobile-chromium.png)
+![Enter a display name](./screenshots/029-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -316,7 +280,7 @@ Viewport: mobile-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/034-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/030-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -324,27 +288,9 @@ Viewport: mobile-chromium.
 - [x] The bottom navigation retains its 24px backdrop blur in the production build
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Open Settings
-
-![Open Settings](./screenshots/035-charlie-settings-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open account settings
-
-![Open account settings](./screenshots/036-charlie-account-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/037-charlie-friends-mobile-chromium.png)
+![Open Friends and hugs](./screenshots/031-charlie-friends-mobile-chromium.png)
 
 **Verifications:**
 
@@ -353,7 +299,7 @@ Viewport: mobile-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/038-charlie-display-name-mobile-chromium.png)
+![Choose a friend-facing display name](./screenshots/032-charlie-display-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -362,7 +308,7 @@ Viewport: mobile-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/039-charlie-username-mobile-chromium.png)
+![Choose a searchable username](./screenshots/033-charlie-username-mobile-chromium.png)
 
 **Verifications:**
 
@@ -371,7 +317,7 @@ Viewport: mobile-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/040-charlie-profile-save-mobile-chromium.png)
+![Save the opt-in friends profile](./screenshots/034-charlie-profile-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -380,7 +326,7 @@ Viewport: mobile-chromium.
 
 ## Enter a friend’s username
 
-![Enter a friend’s username](./screenshots/041-charlie-search-name-mobile-chromium.png)
+![Enter a friend’s username](./screenshots/035-charlie-search-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -389,7 +335,7 @@ Viewport: mobile-chromium.
 
 ## Find the chosen profile by username
 
-![Find the chosen profile by username](./screenshots/042-charlie-find-mobile-chromium.png)
+![Find the chosen profile by username](./screenshots/036-charlie-find-mobile-chromium.png)
 
 **Verifications:**
 
@@ -398,7 +344,7 @@ Viewport: mobile-chromium.
 
 ## Send an independent request to Alice
 
-![Send an independent request to Alice](./screenshots/043-charlie-request-mobile-chromium.png)
+![Send an independent request to Alice](./screenshots/037-charlie-request-mobile-chromium.png)
 
 **Verifications:**
 
@@ -407,7 +353,7 @@ Viewport: mobile-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/044-decline-recipient-mobile-chromium.png)
+![Return to the other friend’s device](./screenshots/038-decline-recipient-mobile-chromium.png)
 
 **Verifications:**
 
@@ -416,7 +362,7 @@ Viewport: mobile-chromium.
 
 ## Decline without creating a friendship
 
-![Decline without creating a friendship](./screenshots/045-decline-mobile-chromium.png)
+![Decline without creating a friendship](./screenshots/039-decline-mobile-chromium.png)
 
 **Verifications:**
 
@@ -425,7 +371,7 @@ Viewport: mobile-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/046-declined-sender-mobile-chromium.png)
+![Return to the other friend’s device](./screenshots/040-declined-sender-mobile-chromium.png)
 
 **Verifications:**
 
@@ -434,7 +380,7 @@ Viewport: mobile-chromium.
 
 ## Enter a friend’s username
 
-![Enter a friend’s username](./screenshots/047-block-search-name-mobile-chromium.png)
+![Enter a friend’s username](./screenshots/041-block-search-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -443,7 +389,7 @@ Viewport: mobile-chromium.
 
 ## Find the chosen profile by username
 
-![Find the chosen profile by username](./screenshots/048-block-find-mobile-chromium.png)
+![Find the chosen profile by username](./screenshots/042-block-find-mobile-chromium.png)
 
 **Verifications:**
 
@@ -452,7 +398,7 @@ Viewport: mobile-chromium.
 
 ## Block a discovered account without sending a friend request
 
-![Block a discovered account without sending a friend request](./screenshots/049-block-first-mobile-chromium.png)
+![Block a discovered account without sending a friend request](./screenshots/043-block-first-mobile-chromium.png)
 
 **Verifications:**
 
@@ -461,7 +407,7 @@ Viewport: mobile-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/050-no-request-on-block-mobile-chromium.png)
+![Return to the other friend’s device](./screenshots/044-no-request-on-block-mobile-chromium.png)
 
 **Verifications:**
 

@@ -46,7 +46,7 @@ test('every signed-out route uses the public landing calendar and sign-in remain
     await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
     await expect(page.getByRole('region', { name: 'Calendar sign-in preview' })).toHaveCount(0);
   });
-  await steps.action('account', 'Open account settings', () => page.getByRole('button', { name: /^Your account/ }).click({ timeout: 15_000 }), async () => {
+  await steps.action('account', 'Open account settings', () => page.getByRole('button', { name: /^Account/ }).click({ timeout: 15_000 }), async () => {
     await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
   });
   await steps.action('signout', 'Sign out directly onto the public landing calendar', () => page.getByRole('button', { name: 'Sign out', exact: true }).click(), async () => {

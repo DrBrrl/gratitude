@@ -1096,3 +1096,9 @@ Looks like one of the checks didn't pass! How can i get them to try again?
 ```text
 "Your friends hugs will show up here!" shoot, that should be "Your friends' hugs will show up here!" Sorry!
 ```
+
+## 2026-11-01 — Add a Friends and hugs navigation tab and resolve the failing check
+
+```text
+Hmmmmm one of those checks is just refusing to pass! I thought it might be nice to add aa tab for friends and hugs too, anywway... Shall we give that a go? And the account settings can maybe revert to "account" with friends and hugs stuff all in the new tab (between journal and settings)
+```

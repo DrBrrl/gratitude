@@ -124,7 +124,7 @@
   let discardDialog = $state<HTMLDialogElement>();
   $effect(() => { if (discardOpen) discardDialog?.showModal(); else discardDialog?.close(); });
   let draftWrite = 0;
-  let tab = $state<'today' | 'journal' | 'settings'>('today');
+  let tab = $state<'today' | 'journal' | 'friends' | 'settings'>('today');
   let chooseInitialPage = true;
   let signInDestination: 'journal' | null = null;
   function receiveView(value: JournalView) {
@@ -444,12 +444,12 @@
   import PhotoPanel from '$lib/components/PhotoPanel.svelte';
   import PhotoImage from '$lib/components/PhotoImage.svelte';
   import Icon from '$lib/components/Icon.svelte';
-  let settingsPage = $state<'menu' | 'ai' | 'export' | 'privacy' | 'account' | 'import' | 'friends'>('menu');
+  let settingsPage = $state<'menu' | 'ai' | 'export' | 'privacy' | 'account' | 'import'>('menu');
   let exportFormat = $state<'markdown' | 'json'>('markdown');
   let showPromptInfo = $state(false);
   let editorOrigin = $state<{ tab: typeof tab; selectedId: string | null; savedId: string | null; label: string; scroll: number }>({ tab: 'today', selectedId: null, savedId: null, label: 'Today', scroll: 0 });
   function rememberEditorOrigin() {
-    editorOrigin = { tab, selectedId, savedId, label: tab === 'journal' ? 'Journal' : tab === 'settings' ? 'Settings' : savedId ? 'Saved reflection' : 'Today', scroll: window.scrollY };
+    editorOrigin = { tab, selectedId, savedId, label: tab === 'journal' ? 'Journal' : tab === 'friends' ? 'Friends & hugs' : tab === 'settings' ? 'Settings' : savedId ? 'Saved reflection' : 'Today', scroll: window.scrollY };
   }
   async function returnFromEditor() {
     if(flow){backFlow();return;}
@@ -707,7 +707,7 @@
     {/snippet}
   </WelcomePage>
 {:else}
-<main class:composing={writing} class:friendsSettings={tab==='settings'&&settingsPage==='friends'} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:calendarView={calendarShown}>
+<main class:composing={writing} class:friendsPage={tab==='friends'} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:calendarView={calendarShown}>
   {#if !initialized}
     <p role="status" class="loading">Opening Gratitude…</p>
   {:else}
@@ -812,12 +812,14 @@
         </div>
         {#if results.length > JOURNAL_BATCH}<MoreReflections shown={visibleResults.length} total={results.length} onmore={showOlderReflections} />{/if}
       {/if}
+    {:else if tab === 'friends'}
+      {#if client && !uiReview}<Friends {client} uid={user.uid} />{:else}<h1 class="page-heading">Friends &amp; hugs</h1><p>Friends are available when signed in to a Firebase journal.</p>{/if}
     {:else}
       {#if settingsPage !== 'menu'}<button class="back" onclick={() => openSettings('menu')}><Icon name="back" />Settings</button>{/if}
       {#if settingsPage === 'menu'}
         <h1 class="page-heading">Settings</h1>
         <div class="settings-menu">
-          {#each [{ id: 'ai', icon: 'sparkles', title: 'AI settings', subtitle: 'Answers, memory and sharing' }, { id: 'export', icon: 'file', title: 'Export journal', subtitle: 'Markdown or JSON' }, { id: 'import', icon: 'file', title: 'Import journal', subtitle: 'ZIP export, photos and dates' }, { id: 'privacy', icon: 'shield', title: 'Privacy & data', subtitle: 'Your journal, your control' }, { id: 'account', icon: 'account', title: 'Your account, friends, and hugs', subtitle: user.email ?? 'Signed in' }] as item}
+          {#each [{ id: 'ai', icon: 'sparkles', title: 'AI settings', subtitle: 'Answers, memory and sharing' }, { id: 'export', icon: 'file', title: 'Export journal', subtitle: 'Markdown or JSON' }, { id: 'import', icon: 'file', title: 'Import journal', subtitle: 'ZIP export, photos and dates' }, { id: 'privacy', icon: 'shield', title: 'Privacy & data', subtitle: 'Your journal, your control' }, { id: 'account', icon: 'account', title: 'Account', subtitle: user.email ?? 'Signed in' }] as item}
             <button class="glass settings-row" onclick={() => openSettings(item.id as typeof settingsPage)}><span class="row-icon" class:yellow={item.id === 'ai'}><Icon name={item.icon} size={30} /></span><span class="row-copy"><strong>{item.title}</strong><span>{item.subtitle}</span></span><Icon name="next" size={20} /></button>
           {/each}
         </div>
@@ -857,13 +859,11 @@
         <button class="primary" onclick={() => prepareExport(exportFormat)} disabled={exporting || !!view.pending}>{exporting ? 'Preparing…' : 'Prepare export'}</button>
         {#if preparedFile}<div class="ready glass" role="status"><span class="ready-icon"><Icon name="check" /></span>Export ready</div><button class="outline download" onclick={downloadPrepared}><Icon name="download" />Download {exportFormat === 'markdown' ? 'Markdown' : 'JSON'}{preparedFile.type === 'application/zip' ? ' ZIP' : ''}</button>{:else if exportStatus}<p aria-live="polite">{exportStatus}</p>{/if}
         <p class="hint export-warning">This file contains your private reflections.</p>
-      {:else if settingsPage === 'friends'}
-        {#if client && !uiReview}<Friends {client} uid={user.uid} />{:else}<h1 class="page-heading">Friends &amp; hugs</h1><p>Friends are available when signed in to a Firebase journal.</p>{/if}
       {:else if settingsPage === 'privacy'}
         <h1>Privacy & data</h1><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device. Daily AI prompt sharing starts off disabled in AI settings. Photo summaries are a separate choice for each photo.</p><button class="outline" onclick={() => openSettings('export')}>Export your journal</button></section>
         <section class="glass"><h2>Journal recovery</h2><p class="muted">Rebuild this device’s view from your saved account history.</p><button class="outline" onclick={() => repository?.rebuild().catch(() => error = 'Could not rebuild. Please reload and try again.')} disabled={busy}>Rebuild local view</button></section>
       {:else}
-        <h1>Your account</h1><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline account-friends" onclick={() => openSettings('friends')}>Friends &amp; hugs</button><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
+        <h1>Account</h1><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
       {/if}
     {/if}
     {#if view.aiResultPending && (writing || tab !== 'today' || savedEntry)}<section class="glass photo-recovery"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
@@ -877,14 +877,14 @@
     {/key}
     {#if view.status !== 'Synced'}<p class="sync-status" role="status">{view.status}</p>{/if}
     <dialog bind:this={discardDialog} oncancel={event => { if (busy) event.preventDefault(); }} onclose={() => discardOpen = false} aria-labelledby="discard-title"><h2 id="discard-title">Discard this draft?</h2><p>Your saved reflections will remain in your journal.</p><button class="primary" onclick={() => discardOpen = false} disabled={busy}>Keep writing</button><button class="outline" onclick={discardDraft} disabled={busy}>Discard draft permanently</button></dialog>
-    {#if !writing}<nav class="glass" aria-label="Journal navigation">{#each [{ id: 'today', label: 'Today' }, { id: 'journal', label: 'Journal' }, { id: 'settings', label: 'Settings' }] as item}<button aria-current={tab === item.id ? 'page' : undefined} onclick={() => navigate(item.id as typeof tab)}><Icon name={item.id} size={28} filled={tab === item.id} /><span>{item.label}</span></button>{/each}</nav>{/if}
+    {#if !writing}<nav class="glass" aria-label="Journal navigation">{#each [{ id: 'today', label: 'Today' }, { id: 'journal', label: 'Journal' }, { id: 'friends', label: 'Friends' }, { id: 'settings', label: 'Settings' }] as item}<button aria-label={item.id === 'friends' ? 'Friends & hugs' : undefined} aria-current={tab === item.id ? 'page' : undefined} onclick={() => navigate(item.id as typeof tab)}><Icon name={item.id === 'friends' ? 'heart' : item.id} size={28} filled={tab === item.id} /><span>{item.label}</span></button>{/each}</nav>{/if}
   {/if}
   {#if error || view.error}<p role="alert">{error || view.error}</p>{/if}
 </main>
 {/if}
 <style>
   /* Keep the dynamic settings document on a whole-pixel scroll boundary. */
-  .friendsSettings { height: calc-size(auto, round(nearest, size, 1px)); }
+  .friendsPage { height: calc-size(auto, round(nearest, size, 1px)); }
   .aiSettings { height: calc-size(auto, round(nearest, size, 1px)); }
   /* Each moving surface also needs an integral origin, not just the scroll boundary. */
   .aiSettings > :global(:not(nav)) { height: calc-size(auto, round(nearest, size, 1px)); }
@@ -1021,12 +1021,11 @@
   .ready { display: flex; align-items: center; gap: 18px; padding: 18px; margin: 18px 0; border-color: #73c59590; background: #254e3670; }
   .ready-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #7ccd9625; }
   .download { color: var(--yellow); }
-  .account-friends { margin-bottom: 12px; }
   .account-email { overflow-wrap: anywhere; margin: 20px 0 12px; }
   .muted { color: #bdc4ce; }
   .sync-status { margin: 24px 0 0; font-size: .85rem; color: #d2cfbb; }
   nav.glass { position: fixed; z-index: 10; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 480px); display: flex; justify-content: space-around; border-radius: 24px 24px 0 0 !important; padding: 12px 8px max(12px, env(safe-area-inset-bottom)); background: linear-gradient(120deg, #34383bf2, #161a1cf5, #474342eb) !important; -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); }
-  nav button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 30%; min-height: 59px; padding: 4px; font-size: .85rem; color: #cbd0de; }
+  nav button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; min-width: 0; width: 25%; min-height: 59px; padding: 4px; font-size: .85rem; color: #cbd0de; }
   nav button[aria-current] { color: var(--yellow); }
   nav button[aria-current]::after { content: ''; position: absolute; bottom: -7px; height: 3px; width: 28px; background: var(--yellow); border-radius: 4px; }
   dialog { width: min(390px, calc(100vw - 40px)); padding: 26px; color: inherit; background: linear-gradient(130deg, #333738ed, #14181af5); border: 1px solid #b6bec980; border-radius: 24px; backdrop-filter: blur(24px); }

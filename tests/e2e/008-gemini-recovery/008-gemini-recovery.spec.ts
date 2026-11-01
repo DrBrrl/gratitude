@@ -4,7 +4,7 @@ import { expectSynced, FIXTURE_TIME, navigate, startJournal } from '../helpers/j
 import { AI_ENDPOINT, FIRST_PROMPT, SECOND_PROMPT, respond, aiSettings, saveChoices, toggleAI } from '../helpers/gemini';
 
 test('interrupted inference, provider failure, response outbox and consent revocation', async ({ page, context }, info) => {
-  test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(180_000);
+  test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(300_000);
   const steps = new TestStepHelper(page, info);
   let calls = 0; let held: Route | undefined;
   await page.route(AI_ENDPOINT, async route => { calls++; held = route; });

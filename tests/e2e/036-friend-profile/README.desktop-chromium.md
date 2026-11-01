@@ -61,27 +61,9 @@ Viewport: desktop-chromium.
 - [x] The bottom navigation retains its 24px backdrop blur in the production build
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Open Settings
-
-![Open Settings](./screenshots/006-settings-desktop-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open account settings
-
-![Open account settings](./screenshots/007-account-desktop-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/008-friends-desktop-chromium.png)
+![Open Friends and hugs](./screenshots/006-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +72,7 @@ Viewport: desktop-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/009-display-name-desktop-chromium.png)
+![Choose a friend-facing display name](./screenshots/007-display-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/010-username-desktop-chromium.png)
+![Choose a searchable username](./screenshots/008-username-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +90,34 @@ Viewport: desktop-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/011-profile-save-desktop-chromium.png)
+![Save the opt-in friends profile](./screenshots/009-profile-save-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Settings
+
+![Open Settings](./screenshots/010-account-menu-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep account controls separate from the Friends tab
+
+![Keep account controls separate from the Friends tab](./screenshots/011-account-only-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Friends and hugs
+
+![Open Friends and hugs](./screenshots/012-from-account-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,25 +126,7 @@ Viewport: desktop-chromium.
 
 ## Restore the cached friends profile after reload
 
-![Restore the cached friends profile after reload](./screenshots/012-reload-desktop-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open Settings
-
-![Open Settings](./screenshots/013-restored-settings-desktop-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open account settings
-
-![Open account settings](./screenshots/014-restored-account-desktop-chromium.png)
+![Restore the cached friends profile after reload](./screenshots/013-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/015-restored-friends-desktop-chromium.png)
+![Open Friends and hugs](./screenshots/014-restored-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Rebuild the friends profile from its source actions
 
-![Rebuild the friends profile from its source actions](./screenshots/016-rebuild-desktop-chromium.png)
+![Rebuild the friends profile from its source actions](./screenshots/015-rebuild-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Edit the chosen profile
 
-![Edit the chosen profile](./screenshots/017-edit-desktop-chromium.png)
+![Edit the chosen profile](./screenshots/016-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Opt out of new username discovery
 
-![Opt out of new username discovery](./screenshots/018-hide-desktop-chromium.png)
+![Opt out of new username discovery](./screenshots/017-hide-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Save the discovery preference
 
-![Save the discovery preference](./screenshots/019-save-hidden-desktop-chromium.png)
+![Save the discovery preference](./screenshots/018-save-hidden-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Open a separate signed-out browser
 
-![Open a separate signed-out browser](./screenshots/020-other-device-desktop-chromium.png)
+![Open a separate signed-out browser](./screenshots/019-other-device-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/021-google-popup-desktop-chromium.png)
+![Choose Google sign-in](./screenshots/020-google-popup-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Add a fictional Google account
 
-![Add a fictional Google account](./screenshots/022-new-account-desktop-chromium.png)
+![Add a fictional Google account](./screenshots/021-new-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Enter the fictional email address
 
-![Enter the fictional email address](./screenshots/023-email-desktop-chromium.png)
+![Enter the fictional email address](./screenshots/022-email-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Enter a display name
 
-![Enter a display name](./screenshots/024-name-desktop-chromium.png)
+![Enter a display name](./screenshots/023-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/025-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/024-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -242,27 +233,9 @@ Viewport: desktop-chromium.
 - [x] The bottom navigation retains its 24px backdrop blur in the production build
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Open Settings
-
-![Open Settings](./screenshots/026-other-settings-desktop-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open account settings
-
-![Open account settings](./screenshots/027-other-account-desktop-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/028-other-friends-desktop-chromium.png)
+![Open Friends and hugs](./screenshots/025-other-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -271,7 +244,7 @@ Viewport: desktop-chromium.
 
 ## Choose a second person’s display name
 
-![Choose a second person’s display name](./screenshots/029-other-name-desktop-chromium.png)
+![Choose a second person’s display name](./screenshots/026-other-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -280,7 +253,7 @@ Viewport: desktop-chromium.
 
 ## Try the same username on another account
 
-![Try the same username on another account](./screenshots/030-taken-name-desktop-chromium.png)
+![Try the same username on another account](./screenshots/027-taken-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +262,7 @@ Viewport: desktop-chromium.
 
 ## Reject a username that already belongs to someone else
 
-![Reject a username that already belongs to someone else](./screenshots/031-taken-rejected-desktop-chromium.png)
+![Reject a username that already belongs to someone else](./screenshots/028-taken-rejected-desktop-chromium.png)
 
 **Verifications:**
 
@@ -298,7 +271,7 @@ Viewport: desktop-chromium.
 
 ## Choose an available username instead
 
-![Choose an available username instead](./screenshots/032-available-name-desktop-chromium.png)
+![Choose an available username instead](./screenshots/029-available-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -307,7 +280,7 @@ Viewport: desktop-chromium.
 
 ## Save the other person’s own profile
 
-![Save the other person’s own profile](./screenshots/033-other-save-desktop-chromium.png)
+![Save the other person’s own profile](./screenshots/030-other-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -316,7 +289,7 @@ Viewport: desktop-chromium.
 
 ## Enter the hidden username
 
-![Enter the hidden username](./screenshots/034-hidden-search-desktop-chromium.png)
+![Enter the hidden username](./screenshots/031-hidden-search-desktop-chromium.png)
 
 **Verifications:**
 
@@ -325,7 +298,7 @@ Viewport: desktop-chromium.
 
 ## Keep a hidden profile out of username discovery
 
-![Keep a hidden profile out of username discovery](./screenshots/035-hidden-result-desktop-chromium.png)
+![Keep a hidden profile out of username discovery](./screenshots/032-hidden-result-desktop-chromium.png)
 
 **Verifications:**
 
