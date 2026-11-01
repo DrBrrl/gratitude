@@ -238,7 +238,7 @@
     try {
       if (!draft) await persistDraft();
       if (!draft || !draftStatus.startsWith('Draft saved')) throw new Error('Save this draft on your device before requesting a prompt.');
-      await active.requestPrompt(localDay(editorEntryAt), personalContextAvailable ? 'personal' : 'generic', promptGenerator(), draft.payload.entryId);
+      await active.requestPrompt(localDay(editorEntryAt), personalContextAvailable ? 'personal' : 'generic', promptGenerator(), draft.payload.entryId,false,promptCandidate?.eventId??(view.state.ai.responses[editorPromptId]?editorPromptId:undefined));
     } catch (cause) { if (repository === active) aiMessage = cause instanceof Error ? cause.message : 'Could not request a prompt.'; }
     finally { if (repository === active) generatingPrompt = false; }
   }
@@ -273,7 +273,7 @@
     if (!active || !client) return;
     const requestedDay=today;
     generatingPrompt = true; aiMessage = '';dailyPromptError=null;
-    try { await active.requestPrompt(requestedDay, personalContextAvailable ? 'personal' : 'generic', promptGenerator()); }
+    try { await active.requestPrompt(requestedDay, personalContextAvailable ? 'personal' : 'generic', promptGenerator(),undefined,false,currentResponse?.eventId); }
     catch (cause) { if (repository === active) dailyPromptError={day:requestedDay,text:cause instanceof Error ? cause.message : 'Could not request a prompt.'}; }
     finally { if (repository === active) generatingPrompt = false; }
   }

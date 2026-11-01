@@ -4,7 +4,7 @@ import { SELECTOR_VERSION, validSelection } from './ai/selection.ts';
 import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 11;
+export const PROJECTION_VERSION = 12;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
@@ -25,14 +25,16 @@ export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & LegacyAICh
 type RequestPayload = Previous & { choicesId: string; day: string; templateVersion: PromptTemplateVersion;
   contextMode: 'generic' | 'personal'; feedbackIds: string[] };
 type LegacyRequestPayload = RequestPayload & { entryRefs: { entryId: string; revision: number }[] };
-type SelectorPayload = RequestPayload & { entryRefs: Record<string, string>; selectorVersion: typeof SELECTOR_VERSION; timeZone: string; selectionSeed: string };
+type SelectorPayload = RequestPayload & { entryRefs: Record<string, string>; selectorVersion: typeof SELECTOR_VERSION | 'mixed-v2'; timeZone: string; selectionSeed: string };
 export type RequestAction = Envelope<'PromptRequested', LegacyRequestPayload> | Envelope<'PromptRequested', LegacyRequestPayload & { entryId: string; entryRevision: number }, 2>
   | Envelope<'PromptRequested', SelectorPayload, 3> | Envelope<'PromptRequested', SelectorPayload & { entryId: string; entryRevision: number }, 4>
   | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget, 5> | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget & { entryId: string; entryRevision: number }, 6>
-  | Envelope<'PromptRequested', SelectorPayload & {purpose:'backup'}, 7> | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget & {purpose:'backup'}, 8>;
-export function isEditorRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 2 | 4 | 6}> { return request.schemaVersion === 2 || request.schemaVersion === 4 || request.schemaVersion === 6; }
-export function isMixedRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 3 | 4 | 5 | 6 | 7 | 8}> { return request.schemaVersion >= 3; }
-export function isLocalRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion:5|6|8}> { return request.schemaVersion===5 || request.schemaVersion===6 || request.schemaVersion===8; }
+  | Envelope<'PromptRequested', SelectorPayload & {purpose:'backup'}, 7> | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget & {purpose:'backup'}, 8>
+  | Envelope<'PromptRequested', SelectorPayload & {differentFromPromptId:string},9> | Envelope<'PromptRequested', SelectorPayload & {differentFromPromptId:string;entryId:string;entryRevision:number},10>
+  | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget & {differentFromPromptId:string},11> | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget & {differentFromPromptId:string;entryId:string;entryRevision:number},12>;
+export function isEditorRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 2 | 4 | 6 | 10 | 12}> { return request.schemaVersion === 2 || request.schemaVersion === 4 || request.schemaVersion === 6 || request.schemaVersion===10 || request.schemaVersion===12; }
+export function isMixedRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12}> { return request.schemaVersion >= 3; }
+export function isLocalRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion:5|6|8|11|12}> { return request.schemaVersion===5 || request.schemaVersion===6 || request.schemaVersion===8 || request.schemaVersion===11 || request.schemaVersion===12; }
 export function isBackupRequest(request: RequestAction) { return request.schemaVersion===7 || request.schemaVersion===8; }
 /** New wire maps enforce unique IDs and use canonical positive-decimal revision strings. */
 export function requestEntryRefs(request: RequestAction): {entryId:string;revision:number}[] {
@@ -66,7 +68,7 @@ export type JournalEvent = SourceAction & { sequence: number; recordedAt: string
 /** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 11; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 12; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     requestedAt: Record<string,string>; usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
@@ -110,7 +112,7 @@ export function parseAction(input: unknown): SourceAction {
       || (v.schemaVersion === 5 || v.schemaVersion === 6) && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.promptText === null || p.promptId === v.eventId && string(p.promptText, 600)) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4)
       || v.schemaVersion === 4 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4))
       && id(p.entryId) && string(p.text, 10_000, (v.schemaVersion === 4 || v.schemaVersion === 5 || v.schemaVersion === 6)) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
-  } else if (v.schemaVersion === 1 || [2,3,4,5,6,7,8].includes(v.schemaVersion as number) && v.type === 'PromptRequested' || [2,3].includes(v.schemaVersion as number) && v.type==='PhotoSummaryRequested' || [2,3,4].includes(v.schemaVersion as number) && v.type==='AIChoicesConfirmed') {
+  } else if (v.schemaVersion === 1 || [2,3,4,5,6,7,8,9,10,11,12].includes(v.schemaVersion as number) && v.type === 'PromptRequested' || [2,3].includes(v.schemaVersion as number) && v.type==='PhotoSummaryRequested' || [2,3,4].includes(v.schemaVersion as number) && v.type==='AIChoicesConfirmed') {
     const previous = p.previousEventId === null || id(p.previousEventId);
     const day = typeof p.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.day) && !isNaN(Date.parse(p.day));
     switch (v.type) {
@@ -127,14 +129,15 @@ export function parseAction(input: unknown): SourceAction {
         && (Number(v.schemaVersion)<2 || ['gemini','lm-studio'].includes(String(p.provider))) && (Number(v.schemaVersion)<3 || typeof p.backupEnabled==='boolean' && ['gemini','lm-studio'].includes(String(p.backupProvider))) && (v.schemaVersion!==4 || ['prompt','gemini','lm-studio'].includes(String(p.photoProvider)))
         && typeof p.enabled === 'boolean' && typeof p.useJournal === 'boolean' && typeof p.useFeedback === 'boolean' && string(p.guidance, 500, true); break;
       case 'PromptRequested': {
-        const mixed = [3,4,5,6,7,8].includes(v.schemaVersion as number);
-        const local = v.schemaVersion===5 || v.schemaVersion===6 || v.schemaVersion===8;
-        const editor = v.schemaVersion === 2 || v.schemaVersion === 4 || v.schemaVersion===6;
-        valid = keys(p, ['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(editor ? ['entryId', 'entryRevision'] : []), ...(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []), ...(local ? ['provider','model','thinking'] : []),...([7,8].includes(v.schemaVersion as number)?['purpose']:[])])
+        const mixed = [3,4,5,6,7,8,9,10,11,12].includes(v.schemaVersion as number);
+        const local = v.schemaVersion===5 || v.schemaVersion===6 || v.schemaVersion===8 || v.schemaVersion===11 || v.schemaVersion===12;
+        const editor = v.schemaVersion === 2 || v.schemaVersion === 4 || v.schemaVersion===6 || v.schemaVersion===10 || v.schemaVersion===12;
+        valid = keys(p, ['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(editor ? ['entryId', 'entryRevision'] : []), ...(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []), ...(local ? ['provider','model','thinking'] : []),...([7,8].includes(v.schemaVersion as number)?['purpose']:[]),...(Number(v.schemaVersion)>=9?['differentFromPromptId']:[])])
+          && (Number(v.schemaVersion)<9 || id(p.differentFromPromptId))
           && (![7,8].includes(v.schemaVersion as number) || p.purpose==='backup')
           && (!local || validLocalTarget(p))
           && (!editor || id(p.entryId) && Number.isSafeInteger(p.entryRevision) && Number(p.entryRevision) >= 0) && previous
-          && (!mixed || p.selectorVersion === SELECTOR_VERSION && validSelection(p as unknown as Parameters<typeof validSelection>[0]))
+          && (!mixed || p.selectorVersion === (Number(v.schemaVersion)>=9?'mixed-v2':SELECTOR_VERSION) && validSelection(p as unknown as Parameters<typeof validSelection>[0]))
           && id(p.choicesId) && day && ['gratitude-v1', TEMPLATE_VERSION].includes(String(p.templateVersion)) && ['generic', 'personal'].includes(String(p.contextMode))
           && (mixed ? !!p.entryRefs && typeof p.entryRefs === 'object' && !Array.isArray(p.entryRefs) && Object.keys(p.entryRefs).length <= 20
             && Object.entries(p.entryRefs).every(([key,value])=>id(key) && typeof value === 'string' && /^[1-9][0-9]{0,14}$/.test(value) && Number.isSafeInteger(Number(value)))
@@ -221,6 +224,7 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
     }
     case 'PromptRequested': {
       const p = action.payload, refs = requestEntryRefs(action);
+      if('differentFromPromptId' in p&&!state.ai.responses[p.differentFromPromptId])throw new Error('Previous generated prompt is unavailable.');
       if (isEditorRequest(action) && (state.entries.find(entry => entry.id === action.payload.entryId)?.revision ?? 0) !== action.payload.entryRevision) throw new Error('This reflection changed before the prompt request.');
       if ((isLocalRequest(action)?'lm-studio':'gemini')!==(isBackupRequest(action)?ai.choices.backupProvider:ai.choices.provider)) throw new Error('AI provider changed. Review your model settings.');
       if (isBackupRequest(action) && !ai.choices.backupEnabled) throw new Error('Backup generation is disabled.');

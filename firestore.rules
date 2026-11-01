@@ -107,16 +107,17 @@ service cloud.firestore {
       function validLocal(p) { return p.provider == 'lm-studio' && p.thinking == false && p.model is string && p.model.matches('^[a-zA-Z0-9][a-zA-Z0-9_.:/@+-]{0,79}$'); }
       function validRequest(p, before, schema) {
         let choices = get(eventPath(before.choicesId)).data.payload;
-        let mixed = schema in [3,4,5,6,7,8];
-        let editor = schema in [2,4,6];
-        let local = schema in [5,6,8];
-        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'].concat(editor ? ['entryId', 'entryRevision'] : []).concat(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []).concat(local ? ['provider','model','thinking'] : []).concat(schema in [7,8] ? ['purpose'] : []))
+        let mixed = schema in [3,4,5,6,7,8,9,10,11,12];
+        let editor = schema in [2,4,6,10,12];
+        let local = schema in [5,6,8,11,12];
+        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'].concat(editor ? ['entryId', 'entryRevision'] : []).concat(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []).concat(local ? ['provider','model','thinking'] : []).concat(schema in [7,8] ? ['purpose'] : []).concat(schema >= 9 ? ['differentFromPromptId'] : []))
+          && (schema < 9 || validId(p.differentFromPromptId) && get(eventPath(p.differentFromPromptId)).data.type == 'PromptResponseReceived')
           && (!(schema in [7,8]) || p.purpose == 'backup' && choices.get('backupEnabled',false) == true && (before.requestId == null || request.time > get(eventPath(before.requestId)).data.recordedAt + duration.value(180,'s')))
           && (!local || validLocal(p)) && (!(editor) || validId(p.entryId) && p.entryRevision is int && p.entryRevision == nextRevision(p.entryId))
           && p.choicesId == before.choicesId && choices.enabled == true
           && (schema in [7,8] ? choices.get('backupProvider','lm-studio') : choices.get('provider','gemini')) == (local ? 'lm-studio' : 'gemini') && validDay(p.day)
           && p.templateVersion in ['gratitude-v1', 'gratitude-v2'] && p.contextMode in ['generic', 'personal']
-          && (!(mixed) || p.selectorVersion == 'mixed-v1' && p.timeZone is string && p.timeZone.size() <= 100 && p.timeZone.matches('^[A-Za-z_+-]+(/[A-Za-z0-9_+-]+)*$') && p.selectionSeed is string && p.selectionSeed.matches('^[a-f0-9]{32}$'))
+          && (!(mixed) || p.selectorVersion == (schema >= 9 ? 'mixed-v2' : 'mixed-v1') && p.timeZone is string && p.timeZone.size() <= 100 && p.timeZone.matches('^[A-Za-z_+-]+(/[A-Za-z0-9_+-]+)*$') && p.selectionSeed is string && p.selectionSeed.matches('^[a-f0-9]{32}$'))
           && (mixed ? p.entryRefs is map && p.entryRefs.size() <= 20 && validRefMap(p.entryRefs) : p.entryRefs is list && p.entryRefs.size() <= 5 && validRefs(p.entryRefs)) && p.feedbackIds is list && p.feedbackIds.size() <= 20
           && (p.feedbackIds.size() == 0 || p.feedbackIds.toSet().size() == p.feedbackIds.size() && validFeedbackIds(p.feedbackIds))
           && (p.contextMode != 'generic' || (p.entryRefs.size() == 0 && p.feedbackIds.size() == 0))
@@ -127,7 +128,7 @@ service cloud.firestore {
         let before = aiBefore();
         let after = getAfter(aiPath()).data;
         let result = e.type in ['PromptResponseReceived', 'AIRequestFailed'];
-        return (e.schemaVersion == 1 || e.type == 'AIChoicesConfirmed' && e.schemaVersion in [2,3,4] || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4,5,6,7,8]) && after.lastEventId == e.eventId
+        return (e.schemaVersion == 1 || e.type == 'AIChoicesConfirmed' && e.schemaVersion in [2,3,4] || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4,5,6,7,8,9,10,11,12]) && after.lastEventId == e.eventId
           && after.choicesId == (e.type == 'AIChoicesConfirmed' ? e.eventId : before.choicesId)
           && after.requestId == (e.type == 'PromptRequested' ? e.eventId : e.type == 'PromptFeedbackSubmitted' ? before.requestId : null)
           && (result ? validId(p.requestId) && p.requestId == before.requestId : p.previousEventId == before.lastEventId)

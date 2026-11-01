@@ -209,12 +209,12 @@ export class JournalRepository {
     if (this.stopped) throw new Error('This journal session has closed.');
     return result;
   }
-  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string, backup=false) {
+  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string, backup=false, differentFromPromptId?:string) {
     if (this.generating) throw new Error('A prompt is being generated. You can use a saved backup immediately.');
     if(backup && availableBackups(this.state,this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),this.pending&&'promptId' in this.pending.payload?this.pending.payload.promptId:undefined).length>=BACKUP_MINIMUM) return;
     if (this.aiResult) throw new Error('Sync the received prompt before requesting another.');
     const snapshot = this.state;
-    const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId, undefined, generate.target, backup);
+    const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId, undefined, generate.target, backup,differentFromPromptId);
     this.generating = true;
     try {
       const committed = await this.commitAI(request);

@@ -158,3 +158,38 @@ test('rediscovery prioritises never-used entries then the oldest successful resp
  assert.deepEqual(selectReflections(state,input).rediscovery.map(entry=>entry.id),['c','a','b']);
  assert.ok(state.ai.usage.a.lastSequence<state.ai.usage.b.lastSequence);
 });
+
+
+test('asking for another captures the prior generated prompt and favours fresh sources across all pools',()=>{
+ const state=history(),first=makeRequest(state,input.day,'personal','first',undefined,input);
+ const response:SourceAction={eventId:'first_response',type:'PromptResponseReceived',schemaVersion:1,payload:{requestId:'first',text:'Which quiet moment was welcome? "Literal quoted data."',model:'fixture',finishReason:'STOP'}};
+ const next=replay([{...first,sequence:state.cursor+1,recordedAt:receipt},{...response,sequence:state.cursor+2,recordedAt:receipt}],state);
+ const another=makeRequest(next,input.day,'personal','another',undefined,{...input,selectionSeed:'fedcba9876543210fedcba9876543210'},undefined,false,'first_response');
+ assert.equal(another.schemaVersion,9);assert.equal(another.payload.selectorVersion,'mixed-v2');assert.deepEqual(parseAction(another),another);
+ const context=JSON.parse(buildContext(next,another));
+ assert.equal(Object.keys(context).at(-1),'differentPromptRequest');
+ assert.equal(context.differentPromptRequest,`The user has requested a different prompt. Your new prompt's wording and topics should vary from your previously generated prompt: ${JSON.stringify(response.payload.text)}`);
+ const old=JSON.parse(buildContext(state,first)),allBefore=new Set(Object.values(old.reflections).flat().map((entry:any)=>entry.text));
+ assert.deepEqual(Object.values(context.reflections).map((items:any)=>items.length),[8,7,0,5]);
+ assert.ok(context.reflections.anniversary.every((entry:any)=>!allBefore.has(entry.text)));
+ assert.ok(context.reflections.rediscovery.every((entry:any)=>!allBefore.has(entry.text)));
+ assert.ok(context.reflections.recent.some((entry:any)=>!allBefore.has(entry.text)));
+ assert.deepEqual(buildContext(next,another),buildContext(next,another));
+ const full=replay([{...another,sequence:next.cursor+1,recordedAt:receipt}],next);
+ assert.deepEqual(full.ai.requests.another,another);
+ const noSharing={...next,ai:{...next.ai,choices:{...next.ai.choices,useJournal:false,useFeedback:false}}};
+ const privateRequest=makeRequest(noSharing,input.day,'personal','no-sharing',undefined,input,undefined,false,'first_response');
+ assert.deepEqual(privateRequest.payload.entryRefs,{});assert.deepEqual(Object.values(JSON.parse(buildContext(noSharing,privateRequest)).reflections).flat(),[]);
+ const generic=makeRequest(next,input.day,'generic','generic-another',undefined,input,undefined,false,'first_response');
+ assert.deepEqual(generic.payload.entryRefs,{});assert.ok(JSON.parse(buildContext(next,generic)).differentPromptRequest.includes('Which quiet moment'));
+ assert.throws(()=>makeRequest(next,input.day,'personal','missing',undefined,input,undefined,false,'missing'),/unavailable/);
+ assert.throws(()=>parseAction({...another,payload:{...another.payload,selectorVersion:'mixed-v1'}}));
+ assert.throws(()=>parseAction({...another,payload:{...another.payload,differentFromPromptId:'bad id'}}));
+});
+
+test('sparse replacement samples remain unique and preserve all available history',()=>{
+ const state=replay(events([choices,write('a','2020-01-01'),write('b','2020-01-02')]));
+ const before=ids(state);
+ const after=selectedEntries(selectReflections(state,{...input,avoidEntryIds:before})).map(entry=>entry.id);
+ assert.deepEqual(new Set(after),new Set(before));assert.equal(after.length,2);
+});
