@@ -56,6 +56,8 @@ test('prompts and photos use independent computers and models, with an explicit 
  await steps.action('remember-photo','Remember the second connection independently',()=>photo.getByRole('button',{name:'Remember token in my account',exact:true}).click(),async()=>{await expect(photo.getByText('Token and server connection saved to your account.',{exact:true})).toBeVisible();await expect(main.getByLabel('LM Studio API token')).toHaveValue(PROMPT_TOKEN);});
  const context=await browser.newContext({...info.project.use,baseURL:String(info.project.use.baseURL)}),other=await context.newPage();
  try{
+  // Use the same pinned-font/CDN fixture as the first browser and other device scenarios.
+  await context.route(/https:\/\/(unpkg\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//,route=>route.abort());
   await other.clock.setFixedTime(new Date(FIXTURE_TIME));await routeServers(other);steps.setPage(other);
   await steps.action('other-device','Open another device',()=>other.goto('./journal/'),async()=>{await expect(other.getByRole('link',{name:'Sign in',exact:true})).toBeVisible();});
   await signIn(other,info,steps,'photo-model',true);await aiSettings(other,steps,'other');
