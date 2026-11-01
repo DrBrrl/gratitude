@@ -25,6 +25,8 @@ test('an optional account token restores its bound connection across devices and
  const context=await browser.newContext({...info.project.use,baseURL:String(info.project.use.baseURL)});
  const other=await context.newPage();
  try{
+  // Use the same pinned-font/CDN fixture as the first browser and other device scenarios.
+  await context.route(/https:\/\/(unpkg\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//,route=>route.abort());
   await other.clock.setFixedTime(new Date(FIXTURE_TIME));await other.route(`${SERVER}/**`,routeModel);steps.setPage(other);
   await steps.action('new-device','Open Gratitude on an independent browser device',()=>other.goto('./journal/'),async()=>{await expect(other.getByRole('link',{name:'Sign in',exact:true})).toBeVisible();});
   await signIn(other,info,steps,'account-token',true);
