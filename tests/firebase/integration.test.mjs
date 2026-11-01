@@ -712,3 +712,35 @@ test('photo-model account credentials restore independently and forgetting photo
  let restored;const reader=new ModelCredentialStore(other.db,other.uid,value=>{restored=value;},false,'photos');
  try{reader.start();const end=Date.now()+15000;while(!restored){if(Date.now()>end)throw new Error('Photo credential restoration timed out');await new Promise(resolve=>setTimeout(resolve,20));}assert.equal(restored.token,'fictional-photo-token');assert.equal(restored.model,'local/vision');await photo.forget();assert.equal((await getDoc(doc(owner.db,`users/${owner.uid}/privateSettings/lmStudio`))).get('token'),'fictional-prompt-token');assert.equal((await events(owner)).length,0);}finally{reader.stop();}
 });
+
+test('account accents sync and rebuild without touching AI control; Rules reject forged, stale and private writes', async () => {
+  const { writeBatch } = await import('firebase/firestore');
+  const a = await device('accent@example.test', 'accent-a'), b = await device('accent@example.test', 'accent-b');
+  const root = `users/${a.uid}/streams/v1`;
+  const choice = (eventId, colourIndex, previousEventId = null) => ({ eventId, type: 'AccentColourChosen', schemaVersion: 1, payload: { previousEventId, colourIndex } });
+  const first = choice('accent-first', 14);
+  await a.append(first); await b.append(first);
+  assert.deepEqual(replay(await events(b)).appearance, { colourIndex: 14, lastEventId: first.eventId });
+  assert.equal((await getDoc(doc(a.db, `${root}/ai/control`))).exists(), false);
+  const second = choice('accent-second', 4, first.eventId); await b.append(second);
+  const log = await events(a);
+  assert.deepEqual(replay(log), replay(log.slice(1), replay(log.slice(0, 1))));
+  await assert.rejects(a.append(choice('accent-stale', 0, first.eventId)), /another device/);
+  async function raw(event) {
+    const batch = writeBatch(a.db);
+    batch.set(doc(a.db, `${root}/events/${event.eventId}`), { ...event, sequence: 3, recordedAt: serverTimestamp() });
+    batch.set(doc(a.db, root), { sequence: 3, lastEventId: event.eventId });
+    batch.set(doc(a.db, `${root}/appearance/control`), { lastEventId: event.eventId });
+    return batch.commit();
+  }
+  for (const invalid of [-2, 1, 28, 2.5, '2']) await assertFails(raw(choice('accent-forged', invalid, second.eventId)));
+  await assertFails(raw(choice('accent-old', 6, first.eventId)));
+  await assertFails(raw({ ...choice('accent-extra', 6, second.eventId), payload: { previousEventId: second.eventId, colourIndex: 6, hex: '#fff' } }));
+  await assertFails(setDoc(doc(a.db, `${root}/appearance/control`), { lastEventId: second.eventId }));
+  const outsider = await device('accent-other@example.test', 'accent-other');
+  await assertFails(getDoc(doc(outsider.db, `${root}/appearance/control`)));
+  await assertFails(setDoc(doc(outsider.db, `${root}/appearance/control`), { lastEventId: 'intruder' }));
+  await assertFails(deleteDoc(doc(a.db, `${root}/events/${first.eventId}`)));
+  await a.append(choice('accent-valid', 26, second.eventId));
+  assert.equal(replay(await events(b)).appearance.colourIndex, 26);
+});

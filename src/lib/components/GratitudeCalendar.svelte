@@ -45,8 +45,8 @@
  {/each}
 </div>
 <style>
- .calendar-tools{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0;color:#bac1cd;font-size:.75rem;}button,input{font:inherit;color:inherit;min-height:44px;border:1px solid #9a9da34f;border-radius:8px;background:#d3d8df12;padding:6px 9px;}button{cursor:pointer;}label{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}input{max-width:160px;}
- .calendar-scroll{height:min(560px,calc(100svh - 390px));min-height:280px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;overflow-anchor:none;scrollbar-width:thin;scrollbar-color:#94969d66 transparent;border:1px solid #b8bdc43d;border-radius:16px;background:linear-gradient(120deg,#494e5533,#13171bd9);backdrop-filter:blur(18px);}
+ .calendar-tools{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0;color:#bac1cd;font-size:.75rem;}button,input{font:inherit;color:inherit;min-height:44px;border:1px solid var(--glass-border);border-radius:8px;background:#d3d8df12;padding:6px 9px;}button{cursor:pointer;}label{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}input{max-width:160px;}
+ .calendar-scroll{height:min(560px,calc(100svh - 390px));min-height:280px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;overflow-anchor:none;scrollbar-width:thin;scrollbar-color:var(--glass-border) transparent;border:1px solid var(--glass-border);border-radius:16px;background:linear-gradient(120deg,#494e5533,#13171bd9);backdrop-filter:blur(18px);}
  .calendar-month{height:368px;box-sizing:border-box;padding:12px 8px 14px;}h2{font:600 1.06rem/1.4 Arial,Helvetica,sans-serif;color:#e2e4eb;margin:0 6px 14px;text-align:left;}.weekdays,.month-dates{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));}.weekdays{text-align:center;font-size:.7rem;color:#a5adba;height:26px;}button:focus-visible,input:focus-visible,.calendar-scroll:focus-visible{outline:2px solid #c8cbd1;outline-offset:2px;}
 @media(max-width:360px){.calendar-month{padding-left:0;padding-right:0;}}
 </style>

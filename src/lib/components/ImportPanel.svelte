@@ -100,14 +100,14 @@
 {#if error}<p class="error" role="alert">{error}</p>{/if}
 <style>
   p {line-height:1.55;} .intro,.hint{color:#bfc5ce;} .hint{font-size:.85rem;line-height:1.5;}
-  .glass{padding:20px;margin:20px 0;background:linear-gradient(130deg,#55585b52,#191d1fc9 60%,#55514b57);border:1px solid #c2c7ca65;border-radius:16px;backdrop-filter:blur(18px);}
+  .glass{padding:20px;margin:20px 0;background:linear-gradient(130deg,#55585b52,#191d1fc9 60%,#55514b57);border:1px solid var(--glass-border);border-radius:16px;backdrop-filter:blur(18px);}
   h2{font-size:1.2rem;margin:0 0 16px;} dl{margin:0;} dl div{display:flex;justify-content:space-between;gap:12px;margin:10px 0;} dt{color:#c5cad2;} dd{margin:0;font-weight:700;}
   input,button{font:inherit;} button{cursor:pointer;color:inherit;} button:disabled{opacity:.5;cursor:default;}
-  .file-button{display:block;padding:12px;border:1px solid #bda74688;border-radius:12px;background:#d5d7dc14;color:var(--yellow);}
+  .file-button{display:block;padding:12px;border:1px solid var(--action-border);border-radius:12px;background:#d5d7dc14;color:var(--yellow);}
   .file-button input{display:block;width:100%;max-width:100%;margin-top:10px;font-size:.85rem;color:#c5cad2;}
   .confirm{display:flex;align-items:flex-start;gap:10px;margin:20px 0;overflow-wrap:anywhere;} input[type=checkbox]{accent-color:var(--yellow);margin-top:4px;flex-shrink:0;}
-  .primary,.outline{width:100%;min-height:58px;padding:13px 18px;border:1px solid #e8d478;border-radius:13px;font-size:1.08rem;}
-  .primary{background:linear-gradient(115deg,#ffe76b,#ffdc43 75%,#ffe773);color:#14140d;font-weight:600;} .outline{background:#10141850;}
+  .primary,.outline{width:100%;min-height:58px;padding:13px 18px;border:1px solid var(--action-border);border-radius:13px;font-size:1.08rem;}
+  .primary{background:linear-gradient(115deg,var(--accent-bright),var(--accent-pale) 75%,var(--accent-bright));color:#14140d;font-weight:600;} .outline{background:#10141850;}
   .forget{display:block;border:0;background:none;color:#bfc5ce;text-decoration:underline;margin:20px 0;padding:8px 0;min-height:44px;font-size:.85rem;}
   .message{color:#d5d9e1;} .error{color:#f6b3bf;} :focus-visible{outline:2px solid #bfc5ce;outline-offset:3px;}
 </style>

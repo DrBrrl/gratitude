@@ -1160,3 +1160,47 @@ With the option to use the same model please!
 ```text
 Sorry about that, computer decided it wanted to shut down! Can you please keep going?
 ```
+
+## 2026-11-01 — Favourite accent colour and growing AI guidance
+
+```text
+I have the most annoying next job ever for you, and i am so sorry in advance! See file "2026-11-01 (16:59) - Favourite colour.txt" in gratitude/docs/jamie follow-ups
+```
+
+User-authored follow-up instructions from `docs/Jamie follow-ups/2026-11-01 (16:59) - Favourite colour.txt`:
+
+```text
+I know this change will take foreeeeeeever because it impacts all the screenshots, so i am sorry about that. :')
+
+I think it would be lovely to get the yellow accent colour used more, and to have the accent colour be choosable via colour picker for each user.
+
+Colour picker: Let's get choices of colours across the full rainbow spectrum used for the gratitude cards - a choice of about 14 colours should cover the spectrum well enough i think, so let's get that sunday central yellow as the first colour, and then every second colour currently used in the journal.
+
+Wherever there are grey borders to glassy boxes that are currently grey, let's get a muted yellow colour instead - the same general shade as used everywhere, just not as crisp as the borders around the (semi?)transparent action buttons.
+
+And the yellow accents everywhere - should also be changed to the person's preferred colour. (Including in the smoke background)
+
+The colour is changable at any time via the "account" settings page.
+
+While you're at it, let's get the "What should prompts focus on or avoid? Optional" box to resize with bigger text, and make explicit the upper limit of the number of characters.
+```
+
+## 2026-11-01 — Include AI settings copy edits
+
+```text
+See 2026-11-01 (16:59) - Favourite colour.txt for some copy edits for AI settings while you are updating all the screenshots
+```
+
+Additional user-authored instructions appended to the same follow-up file:
+
+```text
+Settings copy edits while you are updating all the screenshots:
+- On your phone, use your computer’s reachable HTTPS or LAN address. Localhost refers to the device running this browser. - Change to "Use your computer’s reachable HTTPS or LAN address to access your local model on other devices."
+- Move the text "By default the token stays in this browser tab. Account token sync can restore it on your other devices, together with its server address and model." to the top of the text inside the collapsable "Account token sync". Change it to: "By default, the token is saved in this browser tab. Account token sync can make it available in other tabs and on your other devices, together with its server address and model."
+- Change "Optional: save this connection in your private account settings. Firebase project administrators and this app can access the token. It stays out of journal events and exports. Use a dedicated token with MCP permissions denied." to: "Use a dedicated token with MCP permissions denied. Firebase project administrators and this app can access the token. It stays out of journal events and exports."
+- Change "A connection is saved to your account. Forgetting removes the saved copy; revoke the token in LM Studio to disable copies on offline devices." to "A connection is saved to your account. Forgetting removes the saved copy for online devices; revoke the token in LM Studio to disable copies on offline devices."
+- Move "Enable CORS in LM Studio. An HTTPS address works across browsers for phone access; Tailscale Serve can forward it to this computer’s local server. A full twenty-reflection context may need a larger loaded context window." to right above "Model API identifier", and change it to "Enable CORS in LM Studio. An HTTPS address works across browsers and devices; Tailscale Serve can forward it to this computer’s local server."
+- Change "Thinking is off. Prompts use the same sharing choices and twenty-reflection selection. Photos go to this server only when you choose to summarize them. Your saved journal and attachments still sync through Firebase." to "Model thinking is off. Your saved journal and attachments sync through Firebase and photos only go to this server only when you choose to summarize them."
+- Change "Your saved preferences are shared when requesting a prompt. The switches optionally include up to 20 earlier reflections (anniversaries, rediscoveries and recent writing) and 20 original questions with their feedback. Entry dates determine selection; imports count by their original dates. Your configured LM Studio server processes this context to generate your prompt." to "Your saved preferences are shared when requesting a prompt. The switches above optionally include up to 20 earlier reflections (anniversaries, rediscoveries, and recent writing) and up to 20 original questions with their feedback. Entry dates determine selection; imports count by their original dates. Your configured LM Studio server processes this context to generate your prompt." Hide it under a "Prompt info" drop-down-y thing like Account token sync.
+- Change "Choose a saved prompt on Today or in your reflection, with no wait for AI. Saving a reflection uses that prompt; skipping keeps it available. Removed prompts stay out of the reserve." to "Use one of these saved prompts on Today or in your reflection, with no wait for an AI call. Saving a reflection uses that prompt; skipping keeps it available. Remove prompts by cicking "I won't use this prompt" when it is presented to you; it will be removed from the reserve."
+```

@@ -42,18 +42,18 @@
     padding: calc(max(64px, env(safe-area-inset-top)) + clamp(2.2rem, 8vw, 3.6rem)) 24px max(32px, env(safe-area-inset-bottom));
   }
   main { width: min(100%, 540px); }
-  .eyebrow { color: #f4d35e; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; }
+  .eyebrow { color: var(--accent-text); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; }
   h1 { font: 500 clamp(3rem, 11vw, 5rem)/1.15 Georgia, serif; letter-spacing: -0.05em; margin: 16px 0; }
-  h1 span { color: #f4d35e; }
+  h1 span { color: var(--accent-text); }
   .introduction { color: #c6c4bd; font-size: 1.125rem; line-height: 1.7; }
-  .reflection { margin-top: 40px; padding: clamp(24px, 6vw, 40px); background: #29232fe6; border: 1px solid #706178; border-radius: 24px; backdrop-filter: blur(16px); }
+  .reflection { margin-top: 40px; padding: clamp(24px, 6vw, 40px); background: #29232fe6; border: 1px solid var(--glass-border); border-radius: 24px; backdrop-filter: blur(16px); }
   .card-label { color: #e0d3e8; font-size: 0.875rem; margin: 0 0 24px; }
   .prompt { font: 400 clamp(1.6rem, 6vw, 2.15rem)/1.4 Georgia, serif; margin: 0; }
   .gentle-note { margin: 28px 0 0; color: #c6c4bd; font-size: 0.875rem; line-height: 1.6; }
   .welcome-calendar { margin-top: 28px; }
   @media(max-width:360px){ .page { padding-left:2px; padding-right:2px; } }
   footer { display: flex; flex-wrap: wrap; gap: 16px 24px; justify-content: space-between; margin-top: 32px; color: #c6c4bd; font-size: 0.8rem; }
-  a { color: #f4d35e; text-underline-offset: 4px; min-height: 44px; display: inline-flex; gap: 6px; align-items: flex-start; }
+  a { color: var(--accent-text); text-underline-offset: 4px; min-height: 44px; display: inline-flex; gap: 6px; align-items: flex-start; }
   .signin-status { color: #dce0e7; font-size: .9rem; line-height: 1.6; }
-  a:focus-visible { outline: 2px solid #f4d35e; outline-offset: 6px; border-radius: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 6px; border-radius: 2px; }
 </style>

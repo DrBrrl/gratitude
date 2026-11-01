@@ -4,6 +4,9 @@
   import { page } from '$app/state';
   import { goto, pushState, replaceState } from '$app/navigation';
   import Friends from './Friends.svelte';
+  import AccentPicker from './AccentPicker.svelte';
+  import { accentTheme } from '../appearance';
+  import { autoGrow } from '../auto-grow';
   import WelcomePage from './WelcomePage.svelte';
   import WeekBox from './WeekBox.svelte';
   import CalendarStats from './CalendarStats.svelte';
@@ -461,6 +464,16 @@
   import PhotoPanel from '$lib/components/PhotoPanel.svelte';
   import PhotoImage from '$lib/components/PhotoImage.svelte';
   import Icon from '$lib/components/Icon.svelte';
+  const theme = $derived(accentTheme(user ? view.state.appearance.colourIndex : 0));
+  $effect(() => {
+    document.documentElement.style.setProperty('--accent', theme.colour);
+    document.documentElement.style.setProperty('--accent-text-weight', theme.textWeight);
+    document.documentElement.style.setProperty('--smoke-rotation', theme.smokeRotation);
+  });
+  async function chooseAccent(colourIndex: number) {
+    if (!repository) throw new Error('Wait for your journal to open.');
+    await repository.commitAI({ eventId: crypto.randomUUID(), type: 'AccentColourChosen', schemaVersion: 1, payload: { previousEventId: view.state.appearance.lastEventId, colourIndex } });
+  }
   let settingsPage = $state<'menu' | 'ai' | 'export' | 'privacy' | 'account' | 'import'>('menu');
   let exportFormat = $state<'markdown' | 'json'>('markdown');
   let showPromptInfo = $state(false);
@@ -865,8 +878,9 @@
         </section>
         {#if personalContextAvailable}
           <label class="ai-label" for="ai-guidance">What should prompts focus on or avoid? <span class="hint">Optional</span></label>
-          <textarea id="ai-guidance" bind:value={choices.guidance} maxlength="500" rows="3" placeholder="For example: everyday moments; fewer questions about work"></textarea>
-          <p class="hint">Your saved preferences are shared when requesting a prompt. The switches optionally include up to 20 earlier reflections (anniversaries, rediscoveries and recent writing) and 20 original questions with their feedback. Entry dates determine selection; imports count by their original dates. {activeConnection.provider==='lm-studio'?'Your configured LM Studio server processes this context to generate your prompt.':'Google processes this context to generate your prompt.'}</p>
+          <textarea id="ai-guidance" use:autoGrow={choices.guidance} bind:value={choices.guidance} aria-describedby="ai-guidance-limit" maxlength="500" rows="3" placeholder="For example: everyday moments; fewer questions about work"></textarea>
+          <p id="ai-guidance-limit" class="hint guidance-limit">{choices.guidance.length} / 500 characters</p>
+          <details class="prompt-info"><summary>Prompt info</summary><p class="hint">Your saved preferences are shared when requesting a prompt. The switches above optionally include up to 20 earlier reflections (anniversaries, rediscoveries, and recent writing) and up to 20 original questions with their feedback. Entry dates determine selection; imports count by their original dates. {activeConnection.provider==='lm-studio'?'Your configured LM Studio server processes this context to generate your prompt.':'Google processes this context to generate your prompt.'}</p></details>
         {:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
         <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {photoConnection.provider==='lm-studio'?'LM Studio':'Gemini'} processing for each photo.</p><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
@@ -891,7 +905,7 @@
         <h1>Privacy & data</h1><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device. Daily AI prompt sharing starts off disabled in AI settings. Photo summaries are a separate choice for each photo.</p><button class="outline" onclick={() => openSettings('export')}>Export your journal</button></section>
         <section class="glass"><h2>Journal recovery</h2><p class="muted">Rebuild this device’s view from your saved account history.</p><button class="outline" onclick={() => repository?.rebuild().catch(() => error = 'Could not rebuild. Please reload and try again.')} disabled={busy}>Rebuild local view</button></section>
       {:else}
-        <h1>Account</h1><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
+        <h1>Account</h1><AccentPicker selected={view.state.appearance.colourIndex} disabled={!view.ready || busy} onchange={chooseAccent} /><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
       {/if}
     {/if}
     {#if view.aiResultPending && (writing || tab !== 'today' || savedEntry)}<section class="glass photo-recovery"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
@@ -924,7 +938,7 @@
   :global(html) { color-scheme: dark; background: #0c0d10; }
   :global(body) { margin: 0; color: #f4f5fa; font-family: Arial, Helvetica, sans-serif; font-size: 16px; }
   :global(*) { box-sizing: border-box; }
-  main { --yellow: #ffdf48; max-width: 480px; min-height: 100svh; margin: 0 auto; padding: 40px 20px 120px; background: #080b0d3d; text-align: justify; }
+  main { max-width: 480px; min-height: 100svh; margin: 0 auto; padding: 40px 20px 120px; background: #080b0d3d; text-align: justify; }
   main.composing { padding-bottom: 32px; }
   .card-photos { display: flex; gap: 8px; margin: 8px 0 12px; }
   .card-thumbnail { width: 72px; }
@@ -933,7 +947,12 @@
   .additional-response { margin-top: 14px; }
   .entry-date-label { display: block; font-size: .875rem; color: #bfc5ce; margin-bottom: 8px; }
   .entry-date-input { display: block; width: 100%; min-width: 0; color: #e1e3e8; font: inherit; padding: 12px; margin-bottom: 16px; }
-  .entry-date-input:focus { outline: none; border-color: #8b9099; }
+  .entry-date-input:focus { outline: none; border-color: var(--glass-border); }
+  #ai-guidance { overflow-y: hidden; resize: none; font-size: 1rem; line-height: 1.6; }
+  .prompt-info { margin: 0 0 20px; }
+  .prompt-info summary { color: var(--accent-text); font-size: .88rem; }
+  .prompt-info p { margin: 10px 0 0; }
+  .guidance-limit { margin: 8px 0 16px; text-align: right; }
   .date-error { color: #f6b3bf; }
   h1 { font: 600 2.4rem/1.15 Georgia, 'Times New Roman', serif; letter-spacing: -.035em; margin: 24px 0; }
   h2 { font: 400 1.5rem/1.35 Georgia, 'Times New Roman', serif; margin: 0 0 16px; }
@@ -946,24 +965,24 @@
   .today-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 42px; }
   .today-date { text-align: right; display: grid; gap: 10px; font-size: .9rem; line-height: 1.3; }
   .today-heading { margin: 0 0 14px; font: 700 2.15rem/1.15 Arial, Helvetica, sans-serif; letter-spacing: .015em; text-align: center; color: #c6c8ce; }
-  .glass { background: linear-gradient(130deg, #55585b52, #191d1fc9 60%, #55514b57); border: 1px solid #c2c7ca65; border-radius: 16px; box-shadow: inset 0 1px 0 #ffffff15, 0 8px 24px #00000020; -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  .glass { background: linear-gradient(130deg, #55585b52, #191d1fc9 60%, #55514b57); border: 1px solid var(--glass-border); border-radius: 16px; box-shadow: inset 0 1px 0 #ffffff15, 0 8px 24px #00000020; -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
   section.glass { padding: 22px; margin: 24px 0; }
   /* Keep this moving, potentially tall glass surface on its own raster origin. */
   .prompt-sources { transform: translateZ(0); }
   .photo-recovery p { line-height: 1.5; }
   .tinted { border: 1px solid color-mix(in srgb, var(--entry-colour) 86%, white); border-radius: 17px; background: linear-gradient(125deg, color-mix(in srgb, var(--entry-colour) 28%, #0e1016) 0%, color-mix(in srgb, var(--entry-colour) 14%, #090d14) 65%, color-mix(in srgb, var(--entry-colour) 24%, #0c1017) 100%); box-shadow: inset 0 0 24px color-mix(in srgb, var(--entry-colour) 22%, transparent), inset 0 1px 0 #ffffff25, 0 0 12px color-mix(in srgb, var(--entry-colour) 12%, transparent); }
   .daily-prompt { padding: 20px; margin: 0 0 22px; display: flex; flex-direction: column; gap: 12px; }
-  .badge { align-self: flex-start; color: var(--yellow); background: #7962229c; box-shadow: inset 0 1px 0 #e4c87025; border-radius: 30px; padding: 8px 13px; font-size: .85rem; }
+  .badge { align-self: flex-start; color: var(--yellow); background: color-mix(in srgb,var(--accent) 22%,#171b20); box-shadow: inset 0 1px 0 var(--accent-wash); border-radius: 30px; padding: 8px 13px; font-size: .85rem; }
   .daily-prompt h2 { font: 400 1.65rem/1.35 Georgia, serif; margin: 0; letter-spacing: -.025em; }
-  .primary, .outline { display: flex; gap: 12px; align-items: center; justify-content: center; width: 100%; min-height: 58px; padding: 13px 18px; border: 1px solid #fff09a; border-radius: 13px; font-size: 1.08rem; }
-  .primary { background: linear-gradient(115deg, #ffe76b, #ffdc43 75%, #ffe773); color: #14140d; font-weight: 600; box-shadow: inset 0 1px 0 #fff8c780, 0 3px 18px #ffd94a12; }
-  .outline { background: #10141850; border-color: #e8d478; }
+  .primary, .outline { display: flex; gap: 12px; align-items: center; justify-content: center; width: 100%; min-height: 58px; padding: 13px 18px; border: 1px solid var(--action-border); border-radius: 13px; font-size: 1.08rem; }
+  .primary { background: linear-gradient(115deg, var(--accent-bright), var(--accent-pale) 75%, var(--accent-bright)); color: #14140d; font-weight: 600; box-shadow: inset 0 1px 0 color-mix(in srgb,var(--accent-pale) 50%,transparent), 0 3px 18px var(--accent-wash); }
+  .outline { background: #10141850; border-color: var(--action-border); }
   .ai-generate { background: #d5d7dc14; }
   .text-button { color: var(--yellow); display: block; width: 100%; margin: 12px 0; padding: 12px; font-size: 1.05rem; }
   .underlined { text-decoration: underline; text-underline-offset: 4px; padding: 8px 0; }
   .today-secondary { font-size: .95rem; }
   .today-response { font-size: 1.18rem; }
-  .prompt-explanation { border-top: 1px solid #c5c8ce50; margin-top: 28px; padding-top: 12px; text-align: center; }
+  .prompt-explanation { border-top: 1px solid var(--glass-border); margin-top: 28px; padding-top: 12px; text-align: center; }
   .explanation { text-align: justify; padding: 18px; margin-top: 12px; font-size: .9rem; }
   .back { display: inline-flex; gap: 8px; align-items: center; padding: 0; margin: 0 0 12px -4px; font-size: 1rem; }
   .back + h1 { margin-top: 12px; }
@@ -978,7 +997,7 @@
   .prompt-edit-label { display: block; font-size: .85rem; font-weight: 700; margin-bottom: 8px; }
   .prompt-text { background: #ffffff06; border-color: var(--entry-colour); margin-bottom: 16px; }
   .prompt-text:focus { outline: none; border-color: var(--entry-colour); }
-  .prompt-option { border-top: 1px solid #ffffff25; padding-top: 12px; margin-bottom: 16px; }
+  .prompt-option { border-top: 1px solid var(--glass-border); padding-top: 12px; margin-bottom: 16px; }
   .prompt-option .writing-prompt { margin-bottom: 16px; }
   .prompt-hint { margin-top: -8px; }
   .draft-status { margin: 16px 0; }
@@ -991,7 +1010,7 @@
   .search > :global(svg) { flex-shrink: 0; }
   .search input { min-width: 0; width: 100%; padding: 14px 0; border: 0; background: transparent; color: inherit; }
   .search input:focus-visible { outline: none; }
-  .search:focus-within { border-color: #c3c9d3; }
+  .search:focus-within { border-color: var(--glass-border); }
   .search input::placeholder { color: #c3c9d3; }
   .search input::-webkit-search-cancel-button { display: none; }
   .icon-button { display: grid; place-items: center; padding: 0; min-width: 28px; }
@@ -1017,7 +1036,7 @@
   .settings-menu { display: grid; gap: 14px; }
   .settings-row { display: flex; text-align: left; align-items: center; gap: 14px; padding: 18px 16px; width: 100%; min-height: 94px; }
   .row-icon, .account-avatar { display: grid; place-items: center; flex-shrink: 0; width: 50px; height: 50px; border-radius: 50%; background: #cbd2d51a; }
-  .row-icon.yellow { color: var(--yellow); background: #e8d99620; }
+  .row-icon.yellow { color: var(--yellow); background: var(--accent-wash); }
   .row-copy { display: grid; gap: 6px; flex: 1; min-width: 0; }
   .row-copy strong { font-weight: 400; font-size: 1.08rem; }
   .row-copy span { color: #bac6d4; font-size: .85rem; overflow-wrap: anywhere; }
@@ -1025,21 +1044,21 @@
   .review-tools { padding: 16px; margin-top: 24px; }
   summary { cursor: pointer; min-height: 30px; }
   .preferences { padding: 6px 20px !important; }
-  .preference { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 64px; border-bottom: 1px solid #ffffff30; }
+  .preference { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 64px; border-bottom: 1px solid var(--glass-border); }
   .preference:last-child { border: 0; }
   .switch { padding: 3px; width: 46px; min-height: 27px; flex-shrink: 0; border-radius: 20px; background: #6e7378; }
   .switch span { display: block; width: 21px; height: 21px; border-radius: 50%; background: white; }
-  .switch[aria-checked=true] { background: #d7b839; }
+  .switch[aria-checked=true] { background: var(--accent); }
   .switch[aria-checked=true] span { margin-left: auto; }
   .ai-generate { margin: 14px 0; }
-  .prompt-request-error { padding: 12px 14px; border: 1px solid #e8d47866; border-radius: 12px; background: #14181ce6; color: #e8dcc4; margin: 0 0 14px; }
+  .prompt-request-error { padding: 12px 14px; border: 1px solid var(--action-border); border-radius: 12px; background: #14181ce6; color: var(--accent-soft); margin: 0 0 14px; }
   .ai-label { display: block; margin: 18px 0 10px; line-height: 1.5; }
-  textarea { width: 100%; resize: vertical; font: inherit; line-height: 1.5; color: inherit; background: #171c24b3; border: 1px solid #b9c1cb80; border-radius: 12px; padding: 12px; margin-bottom: 14px; }
-  textarea:focus-visible { outline: none; border-color: #d5d7dc; }
+  textarea { width: 100%; resize: vertical; font: inherit; line-height: 1.5; color: inherit; background: #171c24b3; border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; margin-bottom: 14px; }
+  textarea:focus-visible { outline: none; border-color: var(--action-border); }
   .explanation p:last-child { margin-bottom: 0; }
   .export-choices { border: 0; padding: 0; margin: 0; display: grid; gap: 14px; }
   .export-choice { display: flex; align-items: center; gap: 20px; padding: 22px 18px; min-height: 94px; cursor: pointer; }
-  .export-choice.chosen { border-color: var(--yellow); box-shadow: inset 0 0 18px #ffe14c15, 0 0 8px #ffe14c25; }
+  .export-choice.chosen { border-color: var(--yellow); box-shadow: inset 0 0 18px var(--accent-wash), 0 0 8px var(--accent-wash); }
   .export-choice input { accent-color: var(--yellow); width: 22px; height: 22px; margin: 0; flex-shrink: 0; }
   .export-choice span { display: grid; gap: 6px; }
   .export-choice strong { font-weight: 400; font-size: 1.1rem; }
@@ -1056,13 +1075,13 @@
   nav button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; min-width: 0; width: 25%; min-height: 59px; padding: 4px; font-size: .85rem; color: #cbd0de; }
   nav button[aria-current] { color: var(--yellow); }
   nav button[aria-current]::after { content: ''; position: absolute; bottom: -7px; height: 3px; width: 28px; background: var(--yellow); border-radius: 4px; }
-  dialog { width: min(390px, calc(100vw - 40px)); padding: 26px; color: inherit; background: linear-gradient(130deg, #333738ed, #14181af5); border: 1px solid #b6bec980; border-radius: 24px; backdrop-filter: blur(24px); }
+  dialog { width: min(390px, calc(100vw - 40px)); padding: 26px; color: inherit; background: linear-gradient(130deg, #333738ed, #14181af5); border: 1px solid var(--glass-border); border-radius: 24px; backdrop-filter: blur(24px); }
   dialog::backdrop { background: #02040599; }
   dialog .outline { margin-top: 14px; }
   [role=alert] { color: #ffd4cc; background: #471f21e8; padding: 18px; border: 1px solid #e88c8c70; border-radius: 14px; margin-top: 24px; }
   :focus-visible { outline: 2px solid var(--yellow); outline-offset: 4px; }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-  @media (min-width: 540px) { main { margin: 20px auto; min-height: calc(100svh - 40px); padding: 38px 26px 120px; border: 1px solid #c5c8c250; border-radius: 28px; box-shadow: 0 20px 80px #0008, inset 0 1px 0 #ffffff12; } nav.glass { bottom: 20px; width: 480px; border-radius: 24px !important; } }
+  @media (min-width: 540px) { main { margin: 20px auto; min-height: calc(100svh - 40px); padding: 38px 26px 120px; border: 1px solid var(--glass-border); border-radius: 28px; box-shadow: 0 20px 80px #0008, inset 0 1px 0 #ffffff12; } nav.glass { bottom: 20px; width: 480px; border-radius: 24px !important; } }
   @media (max-width: 350px) { main { padding-inline: 16px; } .today-header { gap: 8px; } .brand { font-size: 1.65rem; } .today-date { font-size: .8rem; } h1 { font-size: 2.1rem; } .today-heading { font-size: 1.8rem; } .settings-row { gap: 10px; padding: 16px 12px; } .row-icon { width: 40px; height: 40px; } .export-choice { gap: 12px; } }
   @media (prefers-reduced-transparency: reduce) { .glass, nav.glass, dialog { background: #1c2024 !important; backdrop-filter: none; } }
   @media(max-width:360px){main{padding-left:2px;padding-right:2px;}}

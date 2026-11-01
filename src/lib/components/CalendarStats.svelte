@@ -12,7 +12,7 @@
 </section>
 
 <style>
-  .calendar-summary { margin: 16px 0 20px; padding: 16px 18px; border: 1px solid #d9c44740; border-radius: 16px; background: linear-gradient(120deg, #464b5038, #12161be3 70%, #c2a55216); backdrop-filter: blur(18px); color: #c5cbd5; font: .84rem/1.65 Arial, Helvetica, sans-serif; }
+  .calendar-summary { margin: 16px 0 20px; padding: 16px 18px; border: 1px solid var(--glass-border); border-radius: 16px; background: linear-gradient(120deg, #464b5038, #12161be3 70%, var(--accent-wash)); backdrop-filter: blur(18px); color: #c5cbd5; font: .84rem/1.65 Arial, Helvetica, sans-serif; }
   p { margin: 0; }
   p + p { margin-top: 7px; }
   p > span { font-weight: 600; color: #e1e4ea; }

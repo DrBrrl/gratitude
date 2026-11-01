@@ -218,6 +218,23 @@ service cloud.firestore {
           && getAfter(importPath(p.sourceKey)).data.confirmationId == p.confirmationId && getAfter(importPath(p.sourceKey)).data.lastEventId == e.eventId
           && getAfter(pointerPath(p.entryId)).data.lastEventId == e.eventId && getAfter(pointerPath(p.entryId)).data.importId == p.confirmationId;
       }
+      function appearancePath() { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/appearance/control; }
+      function validAppearance(e) {
+        let p = e.payload;
+        return e.schemaVersion == 1 && p.keys().hasAll(['previousEventId','colourIndex'])
+          && p.keys().hasOnly(['previousEventId','colourIndex'])
+          && p.colourIndex is int && p.colourIndex in [0,2,4,6,8,10,12,14,16,18,20,22,24,26]
+          && p.previousEventId == (exists(appearancePath()) ? get(appearancePath()).data.lastEventId : null)
+          && getAfter(appearancePath()).data.lastEventId == e.eventId;
+      }
+      match /appearance/{id} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && generation == 'v1' && id == 'control'
+          && request.resource.data.keys().hasAll(['lastEventId']) && request.resource.data.keys().hasOnly(['lastEventId'])
+          && validId(request.resource.data.lastEventId) && !exists(eventPath(request.resource.data.lastEventId))
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'AccentColourChosen';
+        allow delete: if false;
+      }
       match /events/{eventId} {
         allow read: if owns(uid);
         allow create: if owns(uid) && generation == 'v1' && validId(eventId)
@@ -225,7 +242,7 @@ service cloud.firestore {
           && request.resource.data.eventId == eventId && request.resource.data.recordedAt == request.time
           && request.resource.data.sequence == nextSequence()
           && getAfter(root()).data.sequence == request.resource.data.sequence && getAfter(root()).data.lastEventId == eventId
-          && (request.resource.data.type in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(request.resource.data) : request.resource.data.type in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(request.resource.data) : request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
+          && (request.resource.data.type == 'AccentColourChosen' ? validAppearance(request.resource.data) : request.resource.data.type in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(request.resource.data) : request.resource.data.type in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(request.resource.data) : request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
         allow update, delete: if false;
       }
       match /ai/{id} {

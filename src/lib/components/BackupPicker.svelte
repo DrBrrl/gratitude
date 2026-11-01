@@ -17,8 +17,8 @@
 </aside>{/if}</div>
 {/if}
 <style>
-.glass{box-sizing:border-box;padding:22px;margin:24px 0;background:linear-gradient(130deg,#55585b52,#191d1fc9 60%,#55514b57);border:1px solid #c2c7ca65;border-radius:16px;box-shadow:inset 0 1px 0 #ffffff15,0 8px 24px #00000020;backdrop-filter:blur(18px);transform:translateZ(0)}button{border:1px solid #d9c44777;border-radius:12px;padding:.55rem .7rem;background:#11151b80;color:#edf0f5;font:inherit;font-size:.85rem;cursor:pointer;min-height:44px}button:disabled{opacity:.5;cursor:default}.text-button{border-color:transparent;background:transparent;color:#ffdf48}
+.glass{box-sizing:border-box;padding:22px;margin:24px 0;background:linear-gradient(130deg,#55585b52,#191d1fc9 60%,#55514b57);border:1px solid var(--glass-border);border-radius:16px;box-shadow:inset 0 1px 0 #ffffff15,0 8px 24px #00000020;backdrop-filter:blur(18px);transform:translateZ(0)}button{border:1px solid var(--action-border);border-radius:12px;padding:.55rem .7rem;background:#11151b80;color:#edf0f5;font:inherit;font-size:.85rem;cursor:pointer;min-height:44px}button:disabled{opacity:.5;cursor:default}.text-button{border-color:transparent;background:transparent;color:var(--accent-text)}
 @media(prefers-reduced-transparency:reduce){.glass{background:#1c2024;backdrop-filter:none}}
 
-.backup-picker{margin:12px 0}.backup-picker>button{width:100%}aside{padding:16px;margin-top:10px}.question{font-style:italic;line-height:1.6;color:#e2dcae}.actions{display:flex;gap:12px}.actions button{flex:1}.hint{color:#abb4c2;font-size:.78rem;line-height:1.6}
+.backup-picker{margin:12px 0}.backup-picker>button{width:100%}aside{padding:16px;margin-top:10px}.question{font-style:italic;line-height:1.6;color:var(--accent-soft)}.actions{display:flex;gap:12px}.actions button{flex:1}.hint{color:#abb4c2;font-size:.78rem;line-height:1.6}
 </style>

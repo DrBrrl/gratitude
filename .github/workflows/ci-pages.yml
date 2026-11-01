@@ -64,7 +64,7 @@ jobs:
       fail-fast: false
       matrix:
         project: [mobile-chromium, desktop-chromium]
-        suite: [journal, drafts, ai, ai-recovery, ai-context, local-ai, backups, credentials, model-picker, photo-model, photos, editor, import, calendar, calendar-edit, friends, friend-hugs]
+        suite: [journal, drafts, ai, ai-recovery, ai-context, local-ai, backups, credentials, model-picker, photo-model, appearance, photos, editor, import, calendar, calendar-edit, friends, friend-hugs]
         include:
           - suite: journal
             scenarios: tests/e2e/(00[1-3]|010-|031-)
@@ -94,6 +94,8 @@ jobs:
             scenarios: tests/e2e/02[78]-
           - suite: credentials
             scenarios: tests/e2e/(029-|030-)
+          - suite: appearance
+            scenarios: tests/e2e/042-
           - suite: photo-model
             scenarios: tests/e2e/041-
           - suite: model-picker

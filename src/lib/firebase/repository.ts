@@ -4,7 +4,7 @@ import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, order
 import { appendReflection, decodeEvent } from './append';
 import { openDB, type IDBPDatabase } from 'idb';
 import { base } from '$app/paths';
-import { applyEvent, emptyProjection, replay, GENERATION, PROJECTION_VERSION, type Action, type AIAction, type ResponseAction, type Projection, type PhotoAction, type ImportAction, type BackupAction, photoKey, photoProvider } from '../domain';
+import { applyEvent, emptyProjection, replay, GENERATION, PROJECTION_VERSION, type Action, type AIAction, type ResponseAction, type Projection, type PhotoAction, type ImportAction, type BackupAction, type AppearanceAction, photoKey, photoProvider } from '../domain';
 import type { FirebaseClient } from './client';
 import { makeRequest, buildContext, type GeneratePrompt } from '../ai/context';
 
@@ -64,7 +64,7 @@ export class JournalRepository {
     if (checkpoint) {
       try {
         const s = checkpoint.state;
-        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups ||
+        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
           if (!s.lastEventId) throw new Error('Invalid checkpoint anchor');
@@ -197,7 +197,7 @@ export class JournalRepository {
     await this.db.delete('outbox', 'pending');
     this.pending = null; this.error = ''; this.status = 'Pending save returned to editor'; this.emit();
   }
-  async commitAI(action: AIAction | PhotoAction | ImportAction | BackupAction) {
+  async commitAI(action: AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction) {
     if (!this.ready || this.stopped || !navigator.onLine) throw new Error('Connect and wait for your journal to sync first.');
     const result = await appendReflection(this.client.db, this.uid, action);
     // Await the confirmed projection, never invoke an AI adapter from a listener.
