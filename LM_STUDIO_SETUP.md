@@ -48,7 +48,7 @@ Use the HTTPS origin printed for that computer, such as `https://other-laptop.my
 
 If the CLI is not on PowerShell’s PATH, use `& "$env:ProgramFiles\Tailscale\tailscale.exe" serve status` and the same executable prefix for the setup command. A permission error may require an administrator PowerShell. A browser visit to the model endpoint returning “API token required” proves the route is reachable; use Gratitude’s token field for authenticated testing, not a token in the URL.
 
-The current app stores one LM Studio connection per account/device. Changing its server clears the token input; enter a token issued by the new server and choose its model before saving. **Remember token in my account** replaces the existing saved connection for other devices, so choose this deliberately. [AI_PROVIDER_DESIGN.md](AI_PROVIDER_DESIGN.md) proposes named connections for switching between computers and other services.
+The prompt connection stores one LM Studio server/model per account/device. Photos can use a separate connection, described below. Changing its server clears the token input; enter a token issued by the new server and choose its model before saving. **Remember token in my account** replaces the existing saved connection for other devices, so choose this deliberately. [AI_PROVIDER_DESIGN.md](AI_PROVIDER_DESIGN.md) proposes named connections for switching between computers and other services.
 
 ## Configure Gratitude
 
@@ -68,6 +68,18 @@ To avoid re-entering the token, expand **Account token sync** in the local model
 **Forget saved token** deletes the account record and clears restored tokens in connected tabs. An offline device or a copied token cannot be remotely erased by this action: delete the token in LM Studio to revoke it everywhere. Sign-out clears this tab's token but leaves the deliberately saved account record available for the next sign-in. Private previews and production use separate Firebase projects and do not share credentials.
 
 Firestore encryption at rest and owner-specific Rules protect stored access, but privileged Firebase project administrators and the running application can read the token. This is not end-to-end encryption. The Firebase client uses its default memory cache; credentials never enter the journal's IndexedDB checkpoint, event stream, exports, public asset cache, build configuration or repository secrets. Use a dedicated token, deny both MCP permissions, keep Require Authentication enabled, and keep the server private through Tailscale HTTPS. Delete and replace an exposed token in LM Studio. See [token controls](https://lmstudio.ai/docs/developer/core/authentication), [Firestore access conditions](https://firebase.google.com/docs/firestore/security/rules-conditions) and [encryption at rest](https://firebase.google.com/docs/firestore/enterprise/server-side-encryption).
+
+## Use another model or computer for photos
+
+Open **Settings → AI settings → Photo description model**. **Same as prompt model** is the default and reuses the prompt connection’s service, server, model and token. Choose a vision-capable prompt model if you want one model to do both jobs.
+
+Choose **Separate LM Studio connection** to give photos their own HTTPS server, token and model. Test the connection to pick a model from that server, then **Save model settings** in the **Photo model** card. The ordinary prompt connection stays unchanged. You can use different models on one computer or models on two computers. **Gemini → Save photo model** selects the managed photo service independently of the prompt provider.
+
+Each local slot has its own optional **Account token sync**. Remember the photo token in the Photo model card to restore its bound server/model/token on another device. It uses the same owner-only protection and administrator-access limitation as the prompt token, in a separate `lmStudioPhotos` record. Forgetting it leaves the prompt token intact. If you change only the model on an already remembered connection with the same server/token, saving updates the remembered model too. Changing servers clears the token and requires explicitly remembering the new bound connection.
+
+The selected photo destination appears in the attachment disclosure. Only the normalized image and visible-content instruction go there. It receives no reflection draft or personal prompt context. A text-only prompt model does not prevent a separate vision model from describing photos. A failed photo server never causes an image to be sent to the prompt server or Gemini. Choose **Same as prompt model → Save photo model** to return to sharing the prompt connection.
+
+Legacy accounts keep their existing shared behaviour. New choices and requests are recorded with provider/choices revision checks; a late summary after settings change is discarded. Reloading, synchronizing or rebuilding never repeats inference. Connection secrets stay outside events and exports.
 
 ## Request behaviour
 

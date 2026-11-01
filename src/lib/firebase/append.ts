@@ -1,6 +1,6 @@
 import { stableJSON } from '../import-source.ts';
 import { doc, getDocFromServer, runTransaction, serverTimestamp, Timestamp, type Firestore, type DocumentData } from 'firebase/firestore';
-import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, isLocalRequest, isBackupRequest, isBackupAction, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey } from '../domain.ts';
+import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, isLocalRequest, isBackupRequest, isBackupAction, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey, photoProvider } from '../domain.ts';
 import {BACKUP_LEASE_MS} from '../backup-prompts.ts';
 
 export function decodeEvent(data: DocumentData): JournalEvent {
@@ -57,7 +57,14 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
           const control=await tx.get(doc(db,`${stream.path}/ai/control`));
           const choicesId=control.get('choicesId');
           const choices=choicesId?await tx.get(doc(db,`${stream.path}/events/${choicesId}`)):null;
-          if((choices?.get('payload.provider')??'gemini')!==(action.schemaVersion===2?'lm-studio':'gemini')) throw new Error('AI provider changed. Review your model settings.');
+          if(photoProvider({provider:choices?.get('payload.provider')??'gemini',photoProvider:choices?.get('payload.photoProvider')} as Parameters<typeof photoProvider>[0])!==(action.schemaVersion===1?'gemini':action.payload.provider) || action.schemaVersion===3 && action.payload.choicesId!==choicesId) throw new Error('AI provider changed. Review your model settings.');
+        }
+        if(action.type==='PhotoSummaryResponseReceived' && latest.exists()) {
+          const original=await tx.get(doc(db,`${stream.path}/events/${latest.get('lastEventId')}`));
+          if(original.get('schemaVersion')===3) {
+            const control=await tx.get(doc(db,`${stream.path}/ai/control`));
+            if(control.get('choicesId')!==original.get('payload.choicesId')) throw new Error('Photo model settings changed. The late summary was discarded.');
+          }
         }
         if ((latest.get('lastEventId') ?? null) !== action.payload.previousEventId) throw new Error('This photo changed on another device. Reload before trying again.');
         metadata = { lastEventId: action.eventId };

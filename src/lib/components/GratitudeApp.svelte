@@ -28,13 +28,16 @@
   import {availableBackups,BACKUP_MINIMUM} from '../backup-prompts';
   import {BackupRefiller} from '../ai/backup-refiller';
   import ModelSettings from './ModelSettings.svelte';
+  import PhotoModelSettings from './PhotoModelSettings.svelte';
   import PromptFeedback from './PromptFeedback.svelte';
   import MoreReflections from './MoreReflections.svelte';
-  import {defaultConnection,readConnection,saveConnection,wasAccountConnection,clearConnectionToken,localGenerator,type ModelConnection} from '$lib/ai/lm-studio';
+  import {defaultConnection,photoConnectionScope,readConnection,saveConnection,wasAccountConnection,clearConnectionToken,localGenerator,type ModelConnection} from '$lib/ai/lm-studio';
   let modelConnection=$state<ModelConnection>(defaultConnection());
   let modelConnectionError=$state('');
+  let photoModelConnection=$state<ModelConnection>(defaultConnection()),photoConnectionError=$state('');
   import {ModelCredentialStore,type CredentialStatus} from '../firebase/model-credential';
-  let credentialStore:ModelCredentialStore|null=null;
+  let credentialStore:ModelCredentialStore|null=null,photoCredentialStore:ModelCredentialStore|null=null;
+  let photoCredentialStatus=$state<CredentialStatus>({ready:false,saved:false,error:''});
   let credentialStatus=$state<CredentialStatus>({ready:false,saved:false,error:''});
   async function saveAccountToken(connection:ModelConnection){
     if(!credentialStore||!navigator.onLine)throw new Error('Connect and sign in to save a token.');
@@ -43,6 +46,18 @@
   async function forgetAccountToken(){
     if(!credentialStore||!navigator.onLine)throw new Error('Connect and sign in to forget a token.');
     await credentialStore.forget();
+  }
+  async function savePhotoToken(connection:ModelConnection){if(!photoCredentialStore||!navigator.onLine)throw new Error('Connect and sign in first.');await photoCredentialStore.save(connection);}
+  async function forgetPhotoToken(){if(!photoCredentialStore||!navigator.onLine)throw new Error('Connect and sign in first.');await photoCredentialStore.forget();}
+  async function confirmChoices(patch:Partial<AIChoices>){
+    if(!repository)throw new Error('Open your journal first.');
+    const payload={...view.state.ai.choices,backupEnabled:view.state.ai.choices.backupEnabled??false,backupProvider:view.state.ai.choices.backupProvider??'lm-studio',...patch,previousEventId:view.state.ai.control.lastEventId};
+    if(payload.photoProvider!==undefined)await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:4,payload:{...payload,photoProvider:payload.photoProvider}});
+    else await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:3,payload});
+  }
+  async function savePhotoModel(provider:'prompt'|'gemini'|'lm-studio',connection?:ModelConnection){
+    await confirmChoices({photoProvider:provider});
+    if(connection){photoModelConnection=connection;photoConnectionError='';}
   }
   let refillMessage=$state('');
   async function selectBackup(id:string){
@@ -58,7 +73,7 @@
     }
   }
   async function removeBackup(id:string){await repository?.queueBackup({eventId:crypto.randomUUID(),type:'BackupPromptRemoved',schemaVersion:1,payload:{promptId:id}});}
-  async function configureBackups(enabled:boolean,provider:'gemini'|'lm-studio'){if(!repository)return;await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:3,payload:{...view.state.ai.choices,backupEnabled:enabled,backupProvider:provider,previousEventId:view.state.ai.control.lastEventId}});refiller.reset();refillMessage='';}
+  async function configureBackups(enabled:boolean,provider:'gemini'|'lm-studio'){if(!repository)return;await confirmChoices({backupEnabled:enabled,backupProvider:provider});refiller.reset();refillMessage='';}
   const refiller=new BackupRefiller(async()=>{
     if(!repository||!client)throw new Error('Open your journal first.');
     const provider=view.state.ai.choices.backupProvider??'lm-studio';
@@ -97,6 +112,7 @@
   let repository = $state.raw<JournalStore | null>(null);
   let user = $state<Pick<User, 'uid' | 'email'> | null>(null);
   const modelScope=$derived(client&&user?`${client.projectId}:${base}:${user.uid}`:'');
+  const photoModelScope=$derived(modelScope?photoConnectionScope(modelScope):'');
   let configured = $state(false);
   let initialized = $state(false);
   let busy = $state(false);
@@ -111,6 +127,8 @@
   const refillStatus=$derived(!view.state.ai.choices.enabled||!view.state.ai.choices.backupEnabled?'':backups.length>=BACKUP_MINIMUM?`${backups.length} backups ready.`:refillMessage||'Ready to refill while this app is open and connected.');
   const accountProvider=$derived(view.state.ai.choices.provider);
   const activeConnection=$derived({...modelConnection,provider:accountProvider});
+  const photoConnection=$derived(!view.state.ai.choices.photoProvider||view.state.ai.choices.photoProvider==='prompt'?activeConnection:{...photoModelConnection,provider:view.state.ai.choices.photoProvider});
+  const photoConnectionProblem=$derived((!view.state.ai.choices.photoProvider||view.state.ai.choices.photoProvider==='prompt')?modelConnectionError:photoConnection.provider==='lm-studio'?photoConnectionError:'');
   const localBackupConnection=$derived({...modelConnection,provider:'lm-studio' as const});
   const aiAvailable=$derived(!modelConnectionError&&(activeConnection.provider==='lm-studio'||geminiAvailable));
   const personalContextAvailable=$derived(activeConnection.provider==='lm-studio'||geminiPersonal);
@@ -235,8 +253,7 @@
     if (!repository) return;
     aiBusy = true; aiMessage = '';
     try {
-      await repository.commitAI({ eventId: crypto.randomUUID(), type: 'AIChoicesConfirmed', schemaVersion: 3,
-        payload: {backupEnabled:view.state.ai.choices.backupEnabled??false,backupProvider:view.state.ai.choices.backupProvider??'lm-studio', previousEventId: view.state.ai.control.lastEventId, enabled:choices.enabled,useJournal:choices.useJournal,useFeedback:choices.useFeedback,guidance:choices.guidance,provider:view.state.ai.choices.provider } });
+      await confirmChoices({enabled:choices.enabled,useJournal:choices.useJournal,useFeedback:choices.useFeedback,guidance:choices.guidance});
       aiMessage = 'AI choices saved.';
     } catch (cause) { aiMessage = cause instanceof Error ? cause.message : 'Could not save AI choices.'; }
     finally { aiBusy = false; }
@@ -588,15 +605,17 @@
         stopAuth = onAuthStateChanged(client.auth, (next) => {
           const current = ++session;if(!next)signInDestination=null;refiller.reset();refillMessage='';dailyPromptError=null;weekDay=null;journalLimits={};
           calendarThumbnailCache?.dispose();calendarThumbnailCache=null;
+          photoCredentialStore?.stop();photoCredentialStore=null;photoCredentialStatus={ready:false,saved:false,error:''};
           credentialStore?.stop();credentialStore=null;credentialStatus={ready:false,saved:false,error:''};
           repository?.stop(); repository = null;
           chooseInitialPage = true;
           aiBusy = false; generatingPrompt = false; aiMessage = ''; feedbackOpen = false; feedbackText = ''; choices = { enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' };
           if(user && user.uid!==next?.uid){try{sessionStorage.removeItem(navKey);}catch{}}
           flow=null;dateFilter=null;appliedFlow='';conflictDay=null;homeAnchor={month:localDay(new Date()).slice(0,7),offset:0};
-          if(user && user.uid!==next?.uid && client) {try{clearConnectionToken(`${client.projectId}:${base}:${user.uid}`);}catch{}}
-          modelConnection=defaultConnection();modelConnectionError='';
+          if(user && user.uid!==next?.uid && client) {try{clearConnectionToken(`${client.projectId}:${base}:${user.uid}`);clearConnectionToken(photoConnectionScope(`${client.projectId}:${base}:${user.uid}`));}catch{}}
+          modelConnection=defaultConnection();modelConnectionError='';photoModelConnection=defaultConnection();photoConnectionError='';
           if(next&&client) {try{modelConnection=readConnection(`${client.projectId}:${base}:${next.uid}`);}catch{modelConnection={...defaultConnection(),provider:'lm-studio'};modelConnectionError='Model settings could not be restored. Save your model connection in AI settings before generating.';}}
+          if(next&&client){try{photoModelConnection=readConnection(photoConnectionScope(`${client.projectId}:${base}:${next.uid}`));}catch{photoConnectionError='Photo model settings could not be restored. Save the photo connection again.';}}
           user = next; todayDraft = null; todayDraftDay = ''; editorDraftKey = ''; text = ''; editing = null; error = ''; draft = null; draftLoaded = false; draftRestored = false; draftStatus = ''; draftWrite++; exportStatus = ''; preparedFile = null; exporting = false; tab = 'today'; selectedId = null; query = ''; writing = false; savedId = null; settingsPage = 'menu';
           view = { state: emptyProjection(), pending: null, status: '', error: '', ready: false };
           initialized = true;
@@ -615,6 +634,14 @@
               }catch{modelConnectionError='Could not keep the model token in this tab. Account sync remains available.';}
             },restoredAccountToken);
             credentialStore.start();
+            const photoScope=photoConnectionScope(scope);
+            let restoredPhotoToken=false;try{restoredPhotoToken=wasAccountConnection(photoScope);}catch{}
+            photoCredentialStore=new ModelCredentialStore(client.db,next.uid,(saved,status)=>{
+              if(session!==current)return;photoCredentialStatus=status;
+              try{if(saved){photoModelConnection={...saved,provider:'lm-studio'};saveConnection(photoScope,photoModelConnection,localStorage,sessionStorage,true);photoConnectionError='';}else if(saved===null){photoModelConnection={...photoModelConnection,token:''};clearConnectionToken(photoScope);}}
+              catch{photoConnectionError='Could not keep the photo model token in this tab. Account sync remains available.';}
+            },restoredPhotoToken,'photos');photoCredentialStore.start();
+
             repository = new JournalRepository(client, next.uid, (value) => {
               if (session === current) receiveView(value);
             });
@@ -627,7 +654,7 @@
     const online = () => {refiller.reset();void repository?.syncBackups();void repository?.syncPromptResult().catch(()=>{});void repository?.retry();};
     const refillTimer=setInterval(()=>{const refill=refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting&&(view.state.ai.choices.backupProvider!=='lm-studio'||!!modelConnection.token||credentialStatus.ready),online:navigator.onLine,visible:document.visibilityState==='visible',busy:busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state);refillMessage=refiller.status;void refill.then(()=>{refillMessage=refiller.status;});},3000);
     window.addEventListener('online', online);
-    return () => { session++; stopAuth(); calendarThumbnailCache?.dispose(); credentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
+    return () => { session++; stopAuth(); calendarThumbnailCache?.dispose(); credentialStore?.stop();photoCredentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
   });
   async function signIn(journal = landing) {
     if (!initialized || busy) return;
@@ -742,7 +769,7 @@
           <BackupPicker prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||editingPrompt} />
           <ReflectionEditor value={text} oninput={value => void persistDraft(value)} disabled={busy || !draftRestored} />
         </section>
-        {#if client && repository}<PhotoPanel connection={activeConnection} {client} {repository} {view} uid={user.uid} entryId={draft?.payload.entryId ?? editing?.id ?? null} ensureEntry={ensurePhotoEntry} colour={editorColour} disabled={busy || !draftRestored} draft={!editing} onbusy={value => photoBusy = value} />{/if}
+        {#if client && repository}<PhotoPanel connection={photoConnection} connectionError={photoConnectionProblem} {client} {repository} {view} uid={user.uid} entryId={draft?.payload.entryId ?? editing?.id ?? null} ensureEntry={ensurePhotoEntry} colour={editorColour} disabled={busy || !draftRestored} draft={!editing} onbusy={value => photoBusy = value} />{/if}
         <p class="hint draft-status" aria-live="polite">{draftStatus || 'Drafts stay on this device until you save.'}</p>
         <button class="primary" onclick={save} disabled={busy || photoBusy || editingPrompt || !text.trim() && !entryPhotos(view.state, draft?.payload.entryId ?? editing?.id ?? '').length || !!view.pending || !!entryDateError}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Save reflection'}</button>
         {#if text || draft}<button class="text-button muted" disabled={photoBusy} onclick={() => discardOpen = true}>Discard draft</button>{/if}
@@ -752,7 +779,7 @@
           <h2>Prompt</h2><p class="entry-prompt">{savedEntry.prompt}</p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={savedEntry.text} /></p>
         </article>
-        {#if client && repository}<PhotoPanel connection={activeConnection} {client} {repository} {view} uid={user.uid} entryId={savedEntry.id} colour={entryColour(savedEntry, zone)} />{/if}
+        {#if client && repository}<PhotoPanel connection={photoConnection} connectionError={photoConnectionProblem} {client} {repository} {view} uid={user.uid} entryId={savedEntry.id} colour={entryColour(savedEntry, zone)} />{/if}
         <div class="saved-actions"><button class="primary" onclick={done}>Done</button><button class="outline" onclick={() => edit(savedEntry)}>Edit reflection</button></div>
       {:else}
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
@@ -785,7 +812,7 @@
           <time datetime={entryTimestamp(selected)}>{entryDateTime(entryTimestamp(selected))}</time>
           <h2>Prompt</h2><p class="entry-prompt"><HighlightedText text={selected.prompt} {query} /></p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={selected.text} {query} /></p>
-          {#if client && repository}<PhotoPanel connection={activeConnection} {client} {repository} {view} uid={user.uid} entryId={selected.id} {query} />{/if}
+          {#if client && repository}<PhotoPanel connection={photoConnection} connectionError={photoConnectionProblem} {client} {repository} {view} uid={user.uid} entryId={selected.id} {query} />{/if}
           <button class="entry-action card-action" onclick={() => edit(selected)} disabled={!!view.pending || busy}><Icon name="edit" size={16} />Edit reflection</button>
         </article>
       {:else}
@@ -827,7 +854,8 @@
         {#if uiReview}<details class="review-tools glass"><summary>UI review</summary><p class="hint">Fictional journal on this browser only.</p><button class="outline" onclick={() => resetReview?.()}>Restore sample journal</button><button class="text-button" onclick={() => resetReview?.(true)}>Show empty journal</button></details>{/if}
       {:else if settingsPage === 'ai'}
         <h1 class="page-heading">AI settings</h1>
-        <ModelSettings credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={aiBusy||generatingPrompt||!!view.aiResultPending||uiReview} initialError={modelConnectionError} onchange={async connection=>{if(!repository)throw new Error('Open your journal first.');await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:3,payload:{...view.state.ai.choices,backupEnabled:view.state.ai.choices.backupEnabled??false,backupProvider:view.state.ai.choices.backupProvider??'lm-studio',previousEventId:view.state.ai.control.lastEventId,provider:connection.provider}});modelConnection=connection;modelConnectionError='';}} />
+        <ModelSettings credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={aiBusy||generatingPrompt||!!view.aiResultPending||uiReview} initialError={modelConnectionError} onchange={async connection=>{if(!repository)throw new Error('Open your journal first.');await confirmChoices({provider:connection.provider});modelConnection=connection;modelConnectionError='';}} />
+        <PhotoModelSettings provider={view.state.ai.choices.photoProvider??'prompt'} connection={photoModelConnection} scope={photoModelScope} credentialStatus={photoCredentialStatus} onsavetoken={savePhotoToken} onforgettoken={forgetPhotoToken} onsave={savePhotoModel} initialError={photoConnectionError} disabled={aiBusy||photoBusy||uiReview} />
         <p class="hint">Ask {providerName} for a gentle gratitude question. Prompt context is sent when you request a question or enable automatic backup refills.</p>
         {#if !aiAvailable || uiReview}<p class="hint">Live AI is available only on a configured Firebase site.</p>{/if}
         <section class="glass preferences">
@@ -841,7 +869,7 @@
           <p class="hint">Your saved preferences are shared when requesting a prompt. The switches optionally include up to 20 earlier reflections (anniversaries, rediscoveries and recent writing) and 20 original questions with their feedback. Entry dates determine selection; imports count by their original dates. {activeConnection.provider==='lm-studio'?'Your configured LM Studio server processes this context to generate your prompt.':'Google processes this context to generate your prompt.'}</p>
         {:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
-        <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {providerName} processing for each photo.</p><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
+        <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {photoConnection.provider==='lm-studio'?'LM Studio':'Gemini'} processing for each photo.</p><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
         {#if repository}<BackupPrompts {view} {repository} email={user.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups} />
         {#if view.state.ai.choices.backupProvider==='lm-studio' && accountProvider!=='lm-studio'}<details class="backup-connection"><summary>Local backup connection</summary><ModelSettings credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={localBackupConnection} scope={modelScope} connectionOnly disabled={aiBusy||uiReview} onchange={async connection=>{modelConnection=connection;modelConnectionError='';refiller.reset();}} /></details>{/if}
         {#if refillStatus}<p class="hint" role="status">{refillStatus}</p>{#if backups.length<BACKUP_MINIMUM}<button class="outline" onclick={()=>{refiller.reset();refillMessage='';}}>Retry backup refill</button>{/if}{/if}{/if}

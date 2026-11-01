@@ -111,3 +111,6 @@ export function localPhotoGenerator(input:ModelConnection,read:()=>Promise<Blob>
    return generateLocal(connection,PHOTO_SYSTEM_PROMPT,[{type:'text',text:'Describe this photo.'},{type:'image_url',image_url:{url:`data:image/jpeg;base64,${btoa(binary)}`}}],1000);
  },{target:{provider:'lm-studio' as const,model:connection.model,thinking:false as const}});
 }
+
+/** Keep task slots distinct even when an account ID contains a delimiter. */
+export function photoConnectionScope(scope:string){return JSON.stringify(['photos',scope]);}

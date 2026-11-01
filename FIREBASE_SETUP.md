@@ -135,3 +135,11 @@ Compatible additive Firestore Rules are deployed to both `gratitude-drbrrl-dev` 
 Profile reservations and pair/source transitions use atomic browser transactions validated by Rules. Reciprocal immutable links prevent duplicate relationships, server time enforces request/hug limits, and read acknowledgements remain private to their recipient. Existing single-field indexes support the queries; no new Firebase project, resource, secret, Cloud Function or billing change is needed. Old clients continue using the private journal schema. The social feature appears after the new frontend is deployed.
 
 The separate projects retain separate usernames, relationships and inboxes: review both people on the same PR preview. Device push and daily-status sharing are not deployed by this change. See [FRIENDS_DESIGN.md](FRIENDS_DESIGN.md) for those subsequent slices.
+
+## Independent prompt and photo model connections — 2026-11-01
+
+Compatible additive Firestore Rules were deployed to `gratitude-drbrrl-dev` and `gratitude-drbrrl` after all 31 authenticated backend tests passed. Before deployment, each live source matched the reviewed base; both updated live sources were read back through the Rules API and exactly match `firestore.rules`, SHA-256 `a0c09750a8751056e535024a91831566011973974cee35d2aea05d038a21cb9d`.
+
+`AIChoicesConfirmed` schema 4 records the explicit photo choice: shared prompt connection, managed Gemini, or separate LM Studio. `PhotoSummaryRequested` schema 3 binds its provider/model to the current choices ID. Rules independently reject forged provider claims, stale choices and late responses to those requests after settings change. Legacy choices and photo requests retain their interpretation. Projection version 10 rebuilds disposable caches from events without inference; update/refresh other open clients before using the new event schemas.
+
+A second mutable owner-only `users/{uid}/privateSettings/lmStudioPhotos` document supports optional account sync of the photo server/model/token. It has the same Google-owner, bounded-field, HTTPS/loopback and no-listing restrictions as `lmStudio`. The two records are independent; no credential enters the journal stream or export. No Auth, Storage, index, billing, Cloud Function or new cloud resource was required. The frontend exposes the feature after its PR preview or merged app is deployed.

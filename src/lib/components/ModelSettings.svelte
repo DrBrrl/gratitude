@@ -1,7 +1,8 @@
 <script lang="ts">
-  import {defaultConnection,saveConnection,discoverLocalModels,selectedLocalCapabilities,type ModelConnection,type LocalCapabilities,type LocalModelInfo} from '$lib/ai/lm-studio';
+  import {defaultConnection,saveConnection,wasAccountConnection,discoverLocalModels,selectedLocalCapabilities,type ModelConnection,type LocalCapabilities,type LocalModelInfo} from '$lib/ai/lm-studio';
   import type {CredentialStatus} from '../firebase/model-credential';
-  let {credentialStatus={ready:false,saved:false,error:''},onsavetoken,onforgettoken,connection,scope,disabled=false,connectionOnly=false,initialError='',onchange}:{credentialStatus?:CredentialStatus;onsavetoken?:(connection:ModelConnection)=>Promise<void>;onforgettoken?:()=>Promise<void>;connection:ModelConnection;scope:string;disabled?:boolean;connectionOnly?:boolean;initialError?:string;onchange:(connection:ModelConnection)=>Promise<void>}=$props();
+  let {purpose='prompts',heading='AI model',regionLabel='AI model connection',saveMessage='',credentialStatus={ready:false,saved:false,error:''},onsavetoken,onforgettoken,connection,scope,disabled=false,connectionOnly=false,initialError='',onchange}:{purpose?:'prompts'|'photos';heading?:string;regionLabel?:string;saveMessage?:string;credentialStatus?:CredentialStatus;onsavetoken?:(connection:ModelConnection)=>Promise<void>;onforgettoken?:()=>Promise<void>;connection:ModelConnection;scope:string;disabled?:boolean;connectionOnly?:boolean;initialError?:string;onchange:(connection:ModelConnection)=>Promise<void>}=$props();
+  const field=$props.id();
   let draft=$state<ModelConnection>(defaultConnection()),busy=$state(false),message=$state(''),failed=$state(false),capabilities=$state<LocalCapabilities|null>(null);
   let models=$state<LocalModelInfo[]>([]),manualModel=$state(false),discoveredFor=$state('');
   const connectionKey=(value:ModelConnection)=>JSON.stringify([scope,value.provider,value.baseUrl,value.token]);
@@ -39,34 +40,34 @@
   }
   async function save() {
     busy=true;
-    try {const input=draft.provider==='gemini'?{...connection,provider:'gemini' as const}:$state.snapshot(draft);const saved=saveConnection(scope,input);await onchange(saved);failed=false;message=connectionOnly?'Local connection saved on this device.':'Provider saved to your account; connection settings saved on this device.';}
+    try {const input=draft.provider==='gemini'?{...connection,provider:'gemini' as const}:$state.snapshot(draft);const keepRemembered=credentialStatus.saved&&!!onsavetoken&&input.provider==='lm-studio'&&input.baseUrl===connection.baseUrl&&input.token===connection.token&&wasAccountConnection(scope);const saved=saveConnection(scope,input);await onchange(saved);if(keepRemembered)await onsavetoken!(saved);failed=false;message=saveMessage||(connectionOnly?'Local connection saved on this device.':'Provider saved to your account; connection settings saved on this device.');}
     catch(error){failed=true;message=error instanceof Error?error.message:'Could not save model settings on this device.';}
     finally{busy=false;}
   }
 </script>
-<section class="glass model-settings" aria-label="AI model connection">
-  <h2>AI model</h2>
+<section class="glass model-settings" aria-label={regionLabel}>
+  <h2>{heading}</h2>
   <p class="hint">Current provider: {connection.provider==='lm-studio'?'LM Studio':'Gemini'}. Provider choice syncs across devices. The connection stays on this device unless you choose account token sync.</p>
-  {#if !connectionOnly}<label for="model-provider">AI provider</label>
-  <select id="model-provider" bind:value={draft.provider} disabled={disabled||busy} onchange={()=>{message='';capabilities=null;}}>
+  {#if !connectionOnly}<label for={`${field}-model-provider`}>AI provider</label>
+  <select id={`${field}-model-provider`} bind:value={draft.provider} disabled={disabled||busy} onchange={()=>{message='';capabilities=null;}}>
     <option value="gemini">Gemini</option><option value="lm-studio">LM Studio · local model</option>
   </select>{/if}
   {#if draft.provider==='lm-studio'}
-    <label for="local-server">LM Studio server URL</label>
-    <input id="local-server" type="url" bind:value={draft.baseUrl} oninput={()=>{draft.token='';capabilities=null;models=[];message='';}} disabled={disabled||busy} placeholder="http://127.0.0.1:8080" autocomplete="off" />
+    <label for={`${field}-local-server`}>LM Studio server URL</label>
+    <input id={`${field}-local-server`} type="url" bind:value={draft.baseUrl} oninput={()=>{draft.token='';capabilities=null;models=[];message='';}} disabled={disabled||busy} placeholder="http://127.0.0.1:8080" autocomplete="off" />
     <p class="hint">On your phone, use your computer’s reachable HTTPS or LAN address. Localhost refers to the device running this browser.</p>
-    <label for="local-model">Model API identifier</label>
+    <label for={`${field}-local-model`}>Model API identifier</label>
     {#if showPicker}
-      <select id="local-model" value={draft.model} disabled={disabled||busy} onchange={(event)=>{const id=event.currentTarget.value;if(!id){manualModel=true;message='';capabilities=null;}else{draft.model=id;describeModel();}}}>
+      <select id={`${field}-local-model`} value={draft.model} disabled={disabled||busy} onchange={(event)=>{const id=event.currentTarget.value;if(!id){manualModel=true;message='';capabilities=null;}else{draft.model=id;describeModel();}}}>
         {#if !models.some(item=>item.id===draft.model)}<option value={draft.model} disabled>{draft.model} · not available</option>{/if}
         {#each models as model (model.id)}<option value={model.id} disabled={!!model.error}>{model.id} · {model.error?'thinking off unavailable':model.loaded?'loaded':'available'}</option>{/each}
         <option value="">Enter an identifier manually…</option>
       </select>
     {:else}
-      <input id="local-model" bind:value={draft.model} oninput={()=>{capabilities=null;message='';}} disabled={disabled||busy} autocomplete="off" spellcheck="false" />
+      <input id={`${field}-local-model`} bind:value={draft.model} oninput={()=>{capabilities=null;message='';}} disabled={disabled||busy} autocomplete="off" spellcheck="false" />
     {/if}
-    <label for="local-token">LM Studio API token</label>
-    <input id="local-token" type="password" bind:value={draft.token} oninput={()=>{models=[];capabilities=null;message='';}} disabled={disabled||busy} autocomplete="off" />
+    <label for={`${field}-local-token`}>LM Studio API token</label>
+    <input id={`${field}-local-token`} type="password" bind:value={draft.token} oninput={()=>{models=[];capabilities=null;message='';}} disabled={disabled||busy} autocomplete="off" />
     <p class="hint">By default the token stays in this browser tab. Account token sync can restore it on your other devices, together with its server address and model.</p>
     <details class="token-sync"><summary>Account token sync</summary>
       <p class="hint">Optional: save this connection in your private account settings. Firebase project administrators and this app can access the token. It stays out of journal events and exports. Use a dedicated token with MCP permissions denied.</p>
@@ -75,8 +76,8 @@
       {#if credentialStatus.saved}<button class="outline" type="button" onclick={forgetToken} disabled={disabled||busy}>Forget saved token</button>{/if}
       {#if credentialStatus.error}<p class="hint" role="status">{credentialStatus.error}</p>{/if}
     </details>
-    <p class="hint">Thinking is off. Prompts use the same sharing choices and twenty-reflection selection. Photos go to this server only when you choose to summarize them. Your saved journal and attachments still sync through Firebase.</p>
-    <p class="hint">Enable CORS in LM Studio. An HTTPS address works across browsers for phone access; Tailscale Serve can forward it to this computer’s local server. A full twenty-reflection context may need a larger loaded context window.</p>
+    <p class="hint">{purpose==='photos'?'Thinking is off. Only the selected photo goes to this server when you request a summary. No journal text or prompt context is sent. Your saved journal and attachments still sync through Firebase.':'Thinking is off. Prompts use the same sharing choices and twenty-reflection selection. Photo descriptions use the connection chosen in Photo description model. Your saved journal and attachments still sync through Firebase.'}</p>
+    <p class="hint">Enable CORS in LM Studio. An HTTPS address works across browsers for phone access; Tailscale Serve can forward it to this computer’s local server. {purpose==='photos'?'Choose a vision-capable model for photo descriptions.':'A full twenty-reflection context may need a larger loaded context window.'}</p>
     <button class="outline" type="button" onclick={testConnection} disabled={disabled||busy}>{busy?'Checking connection…':'Test connection'}</button>
   {:else}
     <p class="hint">Gemini uses this site’s managed Firebase AI connection.</p>

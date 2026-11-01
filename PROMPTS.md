@@ -1128,3 +1128,29 @@ Require auth is on, port is 8080, and auth and CORS are enabled
 ```text
 The other laptop is using a few models - maybe we can get a model picker to show up on the AI settings page based on the results of querying the instance of LM Studio on the models it has available!
 ```
+
+## 2026-11-01 — Confirm the second model laptop is connected
+
+```text
+All sorted and connected on Johnno! :)
+```
+
+## 2026-11-01 — Choose a model and computer separately for each AI task
+
+```text
+It's occurred to me that it might be nice to be able to specify a different model for different things as well - a model (and computer!) for prompts, and a model/computer for picture description.
+```
+
+## 2026-11-01 — Implement independent task connections in this PR
+
+Reply to the runtime/design scope question:
+
+```text
+Implement separate connections in this PR
+```
+
+## 2026-11-01 — Keep a shared-model option
+
+```text
+With the option to use the same model please!
+```

@@ -675,3 +675,40 @@ test('optional model credentials sync privately outside events, bind the server 
     assert.equal((await events(first)).length,0);
   }finally{reader.stop();writer.stop();}
 });
+
+test('independent photo choices and bound requests are enforced by replay, transactions and raw Rules',async()=>{
+ const {writeBatch}=await import('firebase/firestore');
+ const a=await device('photo-choice@example.test','photo-choice');
+ const choice=(id,previous,provider,photoProvider)=>({eventId:id,type:'AIChoicesConfirmed',schemaVersion:4,payload:{previousEventId:previous,enabled:true,useJournal:false,useFeedback:false,guidance:'',provider,photoProvider,backupEnabled:false,backupProvider:'lm-studio'}});
+ await a.append(choice('pc',null,'gemini','lm-studio'));
+ await a.append({eventId:'pa',type:'PhotoAttached',schemaVersion:1,payload:{entryId:'pe',photoId:'pp',slot:0,previousEventId:null}});
+ const request={eventId:'pr',type:'PhotoSummaryRequested',schemaVersion:3,payload:{entryId:'pe',photoId:'pp',slot:0,previousEventId:'pa',choicesId:'pc',provider:'lm-studio',model:'local/vision',thinking:false}};
+ const rawPhoto=async event=>{const root=`users/${a.uid}/streams/v1`;const head=await getDoc(doc(a.db,root));const batch=writeBatch(a.db);batch.set(doc(a.db,`${root}/events/${event.eventId}`),{...event,sequence:head.get('sequence')+1,recordedAt:serverTimestamp()});batch.set(doc(a.db,root),{sequence:head.get('sequence')+1,lastEventId:event.eventId});batch.set(doc(a.db,`${root}/photos/pe_0`),{lastEventId:event.eventId});return batch.commit();};
+ await assertFails(rawPhoto({...request,eventId:'forged-cloud',payload:{...request.payload,provider:'gemini',model:null}}));
+ await assertFails(rawPhoto({...request,eventId:'forged-revision',payload:{...request.payload,choicesId:'not-current'}}));
+ await a.append(request);
+ const response={eventId:'pr_response',type:'PhotoSummaryResponseReceived',schemaVersion:1,payload:{entryId:'pe',photoId:'pp',slot:0,previousEventId:'pr',text:'A fictional yellow mug.',model:'local/vision',finishReason:'STOP'}};
+ await a.append(choice('pc2','pc','lm-studio','gemini'));
+ await assertFails(rawPhoto(response));await assert.rejects(a.append(response),/late summary/);
+ const cloud={eventId:'pr2',type:'PhotoSummaryRequested',schemaVersion:3,payload:{...request.payload,previousEventId:'pr',choicesId:'pc2',provider:'gemini',model:null}};
+ await a.append(cloud);
+ await a.append({...response,eventId:'pr2_response',payload:{...response.payload,previousEventId:'pr2',model:'gemini-fictional'}});
+ const log=await events(a),state=replay(log);
+ assert.equal(state.ai.choices.provider,'lm-studio');assert.equal(state.ai.choices.photoProvider,'gemini');assert.equal(state.photos.pe_0.summary,response.payload.text);
+ assert.deepEqual(replay(log.slice(3),replay(log.slice(0,3))),state);
+ await a.append(choice('pc3','pc2','lm-studio','prompt'));
+ assert.equal(replay(await events(a)).ai.choices.photoProvider,'prompt');
+});
+
+test('photo-model account credentials restore independently and forgetting photos preserves the prompt token',async()=>{
+ const owner=await device('photo-credentials@example.test','photo-creds-owner');
+ const other=await device('photo-credentials@example.test','photo-creds-other');
+ const stranger=await device('photo-credentials-stranger@example.test','photo-creds-stranger');
+ const prompt=new ModelCredentialStore(owner.db,owner.uid,()=>{}),photo=new ModelCredentialStore(owner.db,owner.uid,()=>{},false,'photos');
+ const connection={provider:'lm-studio',baseUrl:'https://prompt-laptop.example.test',model:'local/text',token:'fictional-prompt-token'};
+ await prompt.save(connection);await photo.save({...connection,baseUrl:'https://photo-laptop.example.test',model:'local/vision',token:'fictional-photo-token'});
+ const path=`users/${owner.uid}/privateSettings/lmStudioPhotos`;
+ await assertFails(getDoc(doc(stranger.db,path)));await assertFails(deleteDoc(doc(stranger.db,path)));
+ let restored;const reader=new ModelCredentialStore(other.db,other.uid,value=>{restored=value;},false,'photos');
+ try{reader.start();const end=Date.now()+15000;while(!restored){if(Date.now()>end)throw new Error('Photo credential restoration timed out');await new Promise(resolve=>setTimeout(resolve,20));}assert.equal(restored.token,'fictional-photo-token');assert.equal(restored.model,'local/vision');await photo.forget();assert.equal((await getDoc(doc(owner.db,`users/${owner.uid}/privateSettings/lmStudio`))).get('token'),'fictional-prompt-token');assert.equal((await events(owner)).length,0);}finally{reader.stop();}
+});
