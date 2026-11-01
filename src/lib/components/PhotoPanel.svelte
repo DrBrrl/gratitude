@@ -152,23 +152,23 @@
 </section>
 <style>
   .photos { margin: 18px 0; text-align: left; }
-  .photo-card { margin-bottom: 16px; padding: 12px; border: 1px solid color-mix(in srgb, var(--entry-colour, #e8cb51) 30%, transparent); border-radius: 16px; background: #11151dcc; }
+  .photo-card { margin-bottom: 16px; padding: 12px; border: 1px solid color-mix(in srgb, var(--entry-colour, var(--accent-text)) 30%, transparent); border-radius: 16px; background: #11151dcc; }
   .summary-label { color: #bfc5ce; font-size: .8rem; font-weight: 700; margin: 12px 0 6px; }
   .summary { margin: 0 0 8px; white-space: pre-wrap; line-height: 1.5; font-size: .9rem; }
   .hint, .limits { font-size: .8rem; color: #bfc5ce; line-height: 1.5; margin: 8px 0; }
   .limits { text-align: center; }
   .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .actions button { min-height: 36px; padding: 6px 8px; border: 1px solid #bda74688; border-radius: 12px; line-height: 1.25; }
+  .actions button { min-height: 36px; padding: 6px 8px; border: 1px solid var(--action-border); border-radius: 12px; line-height: 1.25; }
   .actions button:last-child:nth-child(odd) { grid-column: 1 / -1; }
-  button, a { color: var(--yellow, #ffdf48); font: inherit; font-size: .85rem; }
+  button, a { color: var(--yellow, var(--accent-text)); font: inherit; font-size: .85rem; }
   button { min-height: 44px; border: 0; background: none; padding: 4px 0; cursor: pointer; }
   button:disabled { opacity: .5; cursor: default; }
-  textarea { width: 100%; font: inherit; font-size: .9rem; color: #eee; resize: vertical; border: 1px solid #737781; background: #ffffff09; border-radius: 8px; padding: 10px; }
-  textarea:focus { outline: none; border-color: var(--entry-colour, #e8cb51); }
+  textarea { width: 100%; font: inherit; font-size: .9rem; color: #eee; resize: vertical; border: 1px solid var(--glass-border); background: #ffffff09; border-radius: 8px; padding: 10px; }
+  textarea:focus { outline: none; border-color: var(--entry-colour, var(--accent-text)); }
   .selected-photo { width: 100%; max-height: 220px; object-fit: contain; border-radius: 10px; }
   .selection p { line-height: 1.5; font-size: .85rem; }
-  .attach, .add-photo { display: block; width: 100%; padding: 12px; margin-top: 14px; border: 1px solid #bda74688; border-radius: 12px; text-align: center; }
-  .add-photo { position: relative; color: var(--yellow, #ffdf48); background: #d5d7dc14; cursor: pointer; font-size: .9rem; overflow: hidden; }
+  .attach, .add-photo { display: block; width: 100%; padding: 12px; margin-top: 14px; border: 1px solid var(--action-border); border-radius: 12px; text-align: center; }
+  .add-photo { position: relative; color: var(--yellow, var(--accent-text)); background: #d5d7dc14; cursor: pointer; font-size: .9rem; overflow: hidden; }
   input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
   .disabled { opacity: .5; }
   .add-photo:focus-within, button:focus-visible, a:focus-visible { outline: 2px solid #bfc5ce; outline-offset: 3px; }

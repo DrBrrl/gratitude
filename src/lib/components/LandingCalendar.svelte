@@ -88,14 +88,14 @@
 </section>
 
 <style>
-  .landing-calendar { --calendar-highlight: #ffdf48; padding: 12px 8px 14px; border: 1px solid #f4d35e80; border-radius: 16px; background: linear-gradient(120deg,#494e5533,#13171bd9); backdrop-filter: blur(18px); }
+  .landing-calendar { --calendar-highlight: var(--accent); padding: 12px 8px 14px; border: 1px solid var(--action-border); border-radius: 16px; background: linear-gradient(120deg,#494e5533,#13171bd9); backdrop-filter: blur(18px); }
   header { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 4px 6px; margin-bottom: 12px; }
-  h2 { margin: 0; min-width: 0; font: 600 1.06rem/1.4 Arial,Helvetica,sans-serif; color: #f4d35e; }
-  button, input { font: inherit; color: inherit; min-height: 32px; border: 1px solid #f4d35e80; border-radius: 8px; background: #d3d8df12; padding: 3px 5px; }
+  h2 { margin: 0; min-width: 0; font: 600 1.06rem/1.4 Arial,Helvetica,sans-serif; color: var(--accent-text); }
+  button, input { font: inherit; color: inherit; min-height: 32px; border: 1px solid var(--action-border); border-radius: 8px; background: #d3d8df12; padding: 3px 5px; }
   button { cursor: pointer; }
   button:disabled { opacity: .35; cursor: default; }
   .month-heading { background: none; border-color: transparent; padding-inline: 5px; text-align: left; max-width: 100%; }
-  .month-controls { display: flex; gap: 4px; margin-left: auto; color: #f4d35e; font-size: .65rem; }
+  .month-controls { display: flex; gap: 4px; margin-left: auto; color: var(--accent-text); font-size: .65rem; }
   .month-controls button { height: 32px; white-space: nowrap; }
   .month-controls .arrow { display: grid; place-items: center; width: 32px; min-width: 32px; padding: 0; }
   .weekdays, .month-dates { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); }
@@ -105,6 +105,6 @@
   .month-input { width: calc(9ch + 28px); }
   .year-input { width: calc(4ch + 28px); }
   .choice-hint { font-size: .7rem; font-weight: 400; color: #bac1cd; margin: 8px 0 0; }
-  button:focus-visible, input:focus-visible { outline: 2px solid #ffdf48; outline-offset: 2px; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
   @media(max-width:360px) { .landing-calendar { padding-left: 0; padding-right: 0; } }
 </style>

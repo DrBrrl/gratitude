@@ -24,7 +24,7 @@
 <style>
   .signed-out-calendar { position: relative; }
   .calendar-preview { filter: grayscale(1); opacity: .45; }
-  .signin-message { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: min(260px,calc(100% - 40px)); margin: 0; padding: 14px 18px; border: 1px solid #c3c8d066; border-radius: 14px; background: #191e23ed; backdrop-filter: blur(12px); box-shadow: 0 8px 28px #0005; color: #dce0e7; font-size: .9rem; line-height: 1.6; text-align: center; }
-  a { color: #f4d35e; text-underline-offset: 3px; }
-  a:focus-visible { outline: 2px solid #f4d35e; outline-offset: 4px; border-radius: 2px; }
+  .signin-message { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: min(260px,calc(100% - 40px)); margin: 0; padding: 14px 18px; border: 1px solid var(--glass-border); border-radius: 14px; background: #191e23ed; backdrop-filter: blur(12px); box-shadow: 0 8px 28px #0005; color: #dce0e7; font-size: .9rem; line-height: 1.6; text-align: center; }
+  a { color: var(--accent-text); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 4px; border-radius: 2px; }
 </style>

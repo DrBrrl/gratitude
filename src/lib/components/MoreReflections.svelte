@@ -26,6 +26,6 @@
 <style>
   .more-reflections { text-align: center; padding: 16px 0; }
   p { font-size: .85rem; color: #b7bdc6; }
-  button { border: 1px solid #d9c44777; border-radius: 12px; padding: .6rem .85rem; background: #11151b80; color: #edf0f5; font: inherit; cursor: pointer; }
+  button { border: 1px solid var(--action-border); border-radius: 12px; padding: .6rem .85rem; background: #11151b80; color: #edf0f5; font: inherit; cursor: pointer; }
   button:focus-visible { outline: 2px solid var(--yellow); outline-offset: 4px; }
 </style>

@@ -4,7 +4,7 @@ import { SELECTOR_VERSION, validSelection } from './ai/selection.ts';
 import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 10;
+export const PROJECTION_VERSION = 11;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
@@ -59,17 +59,18 @@ export type ImportAction = Envelope<'ImportRecordConfirmed', ImportInput> | Enve
 export type ImportReceipt = { confirmationId: string; input: ImportInput; completedId: string | null };
 export type BackupAction = Envelope<'BackupPromptImported', {text:string}> | Envelope<'BackupPromptRemoved', {promptId:string}>;
 export function isBackupAction(action:SourceAction): action is BackupAction { return action.type==='BackupPromptImported' || action.type==='BackupPromptRemoved'; }
-export type SourceAction = Action | AIAction | PhotoAction | ImportAction | BackupAction;
+export type AppearanceAction = Envelope<'AccentColourChosen', Previous & { colourIndex: number }>;
+export type SourceAction = AppearanceAction | Action | AIAction | PhotoAction | ImportAction | BackupAction;
 export function isPhotoAction(action: SourceAction): action is PhotoAction { return action.type.startsWith('Photo'); }
 export type JournalEvent = SourceAction & { sequence: number; recordedAt: string };
 /** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 10; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 11; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     requestedAt: Record<string,string>; usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
-export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, backups: {}, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
+export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, appearance: { colourIndex: 0, lastEventId: null }, backups: {}, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
   control: emptyControl(), choices: { enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' },
   requests: {}, requestedAt:{}, responses: {}, usage: {}, days: {}, feedback: [], failure: null
 } }; }
@@ -92,7 +93,9 @@ export function parseAction(input: unknown): SourceAction {
   if (!keys(v, ['eventId', 'type', 'schemaVersion', 'payload']) || !id(v.eventId) || !v.payload || typeof v.payload !== 'object' || Array.isArray(v.payload)) throw new Error('Invalid action');
   const p = v.payload as Record<string, unknown>;
   let valid = false;
-  if (v.type==='BackupPromptImported') {
+  if (v.type === 'AccentColourChosen') {
+    valid = v.schemaVersion === 1 && keys(p, ['previousEventId', 'colourIndex']) && (p.previousEventId === null || id(p.previousEventId)) && Number.isInteger(p.colourIndex) && Number(p.colourIndex) >= 0 && Number(p.colourIndex) < 28 && Number(p.colourIndex) % 2 === 0;
+  } else if (v.type==='BackupPromptImported') {
     valid=v.schemaVersion===1 && keys(p,['text']) && string(p.text,600) && /^bp_[a-f0-9]{64}$/.test(String(v.eventId));
   } else if (v.type==='BackupPromptRemoved') {
     valid=v.schemaVersion===1 && keys(p,['promptId']) && id(p.promptId);
@@ -167,6 +170,10 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
   const action = parseAction({ eventId: event.eventId, type: event.type, schemaVersion: event.schemaVersion, payload: event.payload });
   if (event.sequence !== state.cursor + 1 || !Number.isFinite(Date.parse(event.recordedAt))) throw new Error('Incomplete or invalid event stream');
   const next = { ...state, cursor: event.sequence, lastEventId: event.eventId };
+  if (action.type === 'AccentColourChosen') {
+    if (action.payload.previousEventId !== state.appearance.lastEventId) throw new Error('Your accent colour changed on another device. Please choose again.');
+    return { ...next, appearance: { colourIndex: action.payload.colourIndex, lastEventId: action.eventId } };
+  }
   if (action.type==='BackupPromptImported') return {...next,backups:{...state.backups,[action.eventId]:{text:action.payload.text,removed:false}},prompts:{...state.prompts,[action.eventId]:action.payload.text}};
   if (action.type==='BackupPromptRemoved') {
     const old=state.backups[action.payload.promptId]; if(!old) throw new Error('Unknown backup prompt');

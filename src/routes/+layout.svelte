@@ -5,6 +5,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import inkBackground from '$lib/assets/backgrounds/charcoal-ochre-ink.png';
 	import '$lib/styles/card-actions.css';
+	import '$lib/styles/appearance.css';
 
 	let { children } = $props();
 </script>
@@ -28,6 +29,7 @@
     z-index: -1;
     pointer-events: none;
     background-color: #0c0d10;
+    filter: hue-rotate(var(--smoke-rotation));
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

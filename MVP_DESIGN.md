@@ -229,3 +229,9 @@ Personal context sends `promptFeedback` as up to twenty latest nonblank `{prompt
 ## Personalised backup prompts and previously loaded offline opens
 
 [BACKUP_PROMPTS_DESIGN.md](BACKUP_PROMPTS_DESIGN.md) adds the implemented private question reserve, a separate automatic-refill provider preference, literal workbook imports, replay-derived consumption/removal and cached offline selection. Backup requests record the same twenty-source selector and consent as an ordinary prompt; AI responses are external source events, never regenerated on replay. Projection version 9 caches the reserve alongside entries. A scope-isolated public app-shell service worker now supports a cold offline reopen after a prior online installation and local sign-in/cache; this supersedes the earlier warm-cache-only limitation. First-time sign-in, uncached devices and cloud confirmations still require a connection.
+
+## Account appearance
+
+The account’s accent is a literal `AccentColourChosen` schema-1 action with `previousEventId` and `colourIndex` (0, 2, …, 26). A separate appearance pointer protects concurrent choices without altering AI control. Projection version 11 derives the current preference and its predecessor; an empty stream defaults to anchor Sunday yellow. Cached projections and full replay produce the same preference. No computed RGB values enter the event stream.
+
+Account settings offers fourteen labelled swatches from alternate shades of the date-colour wheel. Shared CSS tokens apply the preference to accents and muted glass borders; a background-only hue rotation tints the existing smoke. Saved reflections and filled calendar rings retain their logical-date colours. A sign-out clears the displayed preference to yellow. Changes require a confirmed online append; offline views retain their cached theme.
