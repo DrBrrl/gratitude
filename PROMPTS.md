@@ -1102,3 +1102,29 @@ Looks like one of the checks didn't pass! How can i get them to try again?
 ```text
 Hmmmmm one of those checks is just refusing to pass! I thought it might be nice to add aa tab for friends and hugs too, anywway... Shall we give that a go? And the account settings can maybe revert to "account" with friends and hugs stuff all in the new tab (between journal and settings)
 ```
+
+## 2026-11-01 — Another Tailscale model laptop and a provider-connection design PR
+
+```text
+Can you help me work out what my LM Studio server URL would be for another computer on my tailscale? Would like to try running a model out of another laptop. Let me know what information you might need! Also, for a new PR, can we start thinking about adding support for other local model services? As well as the ability for people to grab their own gemini or other api key to link up to their version of the app?
+```
+
+## 2026-11-01 — Model laptop details
+
+Reply to the question about the other laptop’s operating system and Tailscale name:
+
+```text
+the other laptop is running Windows 11, and its name on Tailscale is johnno.
+```
+
+Reply to the question about LM Studio’s port, authentication and CORS:
+
+```text
+Require auth is on, port is 8080, and auth and CORS are enabled
+```
+
+## 2026-11-01 — Discover available LM Studio models in AI settings
+
+```text
+The other laptop is using a few models - maybe we can get a model picker to show up on the AI settings page based on the results of querying the instance of LM Studio on the models it has available!
+```

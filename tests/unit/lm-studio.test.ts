@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {defaultConnection,validateConnection,serverOrigin,probeLocalModel,generateLocal,localGenerator,parseLocalResponse,readConnection,saveConnection,wasAccountConnection,clearConnectionToken,DEFAULT_LOCAL_MODEL,type ModelConnection} from '../../src/lib/ai/lm-studio.ts';
+import {defaultConnection,validateConnection,serverOrigin,discoverLocalModels,selectedLocalCapabilities,probeLocalModel,generateLocal,localGenerator,parseLocalResponse,readConnection,saveConnection,wasAccountConnection,clearConnectionToken,DEFAULT_LOCAL_MODEL,type ModelConnection} from '../../src/lib/ai/lm-studio.ts';
 import {makeRequest,buildContext,SYSTEM_PROMPT} from '../../src/lib/ai/context.ts';
 import {replay,parseAction,STARTER_ID,type SourceAction,type JournalEvent} from '../../src/lib/domain.ts';
 
@@ -45,6 +45,37 @@ test('Gemma receives the exact system/context messages and both supported thinki
   const body=JSON.parse(calls[1].init.body as string);
   assert.deepEqual(body,{model:DEFAULT_LOCAL_MODEL,messages:[{role:'system',content:SYSTEM_PROMPT},{role:'user',content:context}],stream:false,max_tokens:512,chat_template_kwargs:{enable_thinking:false},reasoning_effort:'none'});
   assert.equal(calls.length,2);assert.equal(calls[1].url,'http://127.0.0.1:8080/v1/chat/completions');
+});
+test('discovery lists valid language models and loaded aliases without inference or requiring the current model to exist',async()=>{
+  const {calls,fetcher}=endpoint({models:[null,{type:'embedding',key:'embedding'},model,
+    {...model,key:'local/plain',loaded_instances:[],capabilities:{vision:false}},
+    {...model,key:'local/alias',loaded_instances:[null,{id:'running-alias',config:{context_length:8192}}]},
+    {...model,key:'invalid model',loaded_instances:[]},
+    {...model,key:'local/thinking-only',loaded_instances:[],capabilities:{reasoning:{allowed_options:['on']}}},model]});
+  const models=await discoverLocalModels({...connection,model:'unknown model identifier'},fetcher);
+  assert.deepEqual(models.map(item=>item.id),[DEFAULT_LOCAL_MODEL,'local/plain','local/alias','running-alias','local/thinking-only']);
+  assert.equal(calls.length,1);assert.equal(calls[0].init.body,undefined);
+  assert.equal(models.find(item=>item.id==='local/plain')!.loaded,false);
+  assert.equal(selectedLocalCapabilities(models,'running-alias').contextLength,8192);
+  assert.equal(selectedLocalCapabilities(models,'local/plain').vision,false);
+  assert.match(models.find(item=>item.id==='local/thinking-only')!.error!,/does not offer thinking off/);
+  assert.throws(()=>selectedLocalCapabilities(models,'local/thinking-only'),/does not offer thinking off/);
+  assert.throws(()=>selectedLocalCapabilities(models,'missing/model'),/not available/);
+});
+test('empty or malformed discovery does not reuse a previous catalogue',async()=>{
+  assert.deepEqual(await discoverLocalModels(connection,endpoint({models:[]}).fetcher),[]);
+  for(const response of [null,{}, {models:'invalid'}]) {
+    await assert.rejects(discoverLocalModels(connection,endpoint(response).fetcher),/model discovery is unavailable/);
+  }
+});
+test('a picked unloaded model and loaded instance alias are used exactly at inference',async()=>{
+  for(const id of ['local/plain','running-alias']) {
+    const {calls,fetcher}=endpoint({models:[{type:'llm',key:'local/plain',loaded_instances:id==='running-alias'?[{id:'running-alias',config:{context_length:8192}}]:[],capabilities:{vision:false}}]}, {...completion(),model:id});
+    await generateLocal({...connection,model:id},'system','context',600,fetcher);
+    const payload=JSON.parse(calls[1].init.body as string);
+    assert.equal(payload.model,id);assert.equal(payload.chat_template_kwargs,undefined);
+    assert.equal(calls.length,2);
+  }
 });
 test('non-thinking models omit thinking arguments; models that cannot switch thinking off fail before inference',async()=>{
   const plain={...model,key:'local/plain',capabilities:{vision:false}};

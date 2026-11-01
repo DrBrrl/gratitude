@@ -6,6 +6,7 @@ import {DEFAULT_LOCAL_MODEL} from './local-contract.ts';
 export {DEFAULT_LOCAL_MODEL} from './local-contract.ts';
 export type ModelConnection = { provider: 'gemini' | 'lm-studio'; baseUrl: string; model: string; token: string };
 export type LocalCapabilities = { vision: boolean; supportsThinking: boolean; reasoningOff: boolean; contextLength: number | null; loaded: boolean };
+export type LocalModelInfo = { id: string; loaded: boolean; capabilities: LocalCapabilities | null; error: string | null };
 export const defaultConnection = (): ModelConnection => ({provider:'gemini',baseUrl:'http://127.0.0.1:8080',model:DEFAULT_LOCAL_MODEL,token:''});
 export function serverOrigin(value: string) {
   let url:URL;
@@ -31,19 +32,35 @@ async function request(connection:ModelConnection,path:string,body?:unknown,fetc
   try {return await response.json();} catch {throw new Error('LM Studio returned an invalid response.');}
 }
 /** Metadata only: does not load a model, send a journal or trigger inference. */
+export async function discoverLocalModels(input:ModelConnection,fetcher:typeof fetch=fetch):Promise<LocalModelInfo[]> {
+  // Discovery needs the destination/token, not an already valid model choice.
+  const connection=validateConnection({...input,model:DEFAULT_LOCAL_MODEL});
+  const data=await request(connection,'/api/v1/models',undefined,fetcher);
+  if(!Array.isArray(data?.models)) throw new Error('LM Studio model discovery is unavailable. Use a current LM Studio version.');
+  const result=new Map<string,LocalModelInfo>();
+  for(const model of data.models) {
+    if(model?.type!=='llm') continue;
+    const instances=Array.isArray(model.loaded_instances)?model.loaded_instances.filter((item:any)=>item&&typeof item==='object'):[];
+    for(const id of [model.key,...instances.map((item:any)=>item.id)]) {
+      if(typeof id!=='string'||!/^[a-zA-Z0-9][a-zA-Z0-9_.:/@+-]{0,79}$/.test(id)||result.has(id)) continue;
+      const reasoning=model.capabilities?.reasoning,instance=instances.find((item:any)=>item.id===id)??instances[0];
+      const contextLength=instance?.config?.context_length;
+      const error=reasoning&&(!Array.isArray(reasoning.allowed_options)||!reasoning.allowed_options.includes('off'))
+        ?'This model does not offer thinking off. Choose a model that supports your non-thinking preference.':null;
+      result.set(id,{id,loaded:instances.length>0,error,capabilities:error?null:{vision:model.capabilities?.vision===true,supportsThinking:!!reasoning||model.key===DEFAULT_LOCAL_MODEL,reasoningOff:!!reasoning,loaded:instances.length>0,contextLength:Number.isSafeInteger(contextLength)&&contextLength>0?contextLength:null}});
+    }
+  }
+  return [...result.values()];
+}
+export function selectedLocalCapabilities(models:LocalModelInfo[],id:string):LocalCapabilities {
+  const model=models.find(item=>item.id===id);
+  if(!model) throw new Error('The selected model is not available in LM Studio. Check its API identifier.');
+  if(model.error) throw new Error(model.error);
+  return model.capabilities!;
+}
 export async function probeLocalModel(input:ModelConnection,fetcher:typeof fetch=fetch):Promise<LocalCapabilities> {
   const connection=validateConnection(input);
-  const data=await request(connection,'/api/v1/models',undefined,fetcher);
-  if(!Array.isArray(data.models)) throw new Error('LM Studio model discovery is unavailable. Use a current LM Studio version.');
-  const model=data.models.find((item:any)=>item.type==='llm' && (item.key===connection.model || item.loaded_instances?.some((instance:any)=>instance.id===connection.model)));
-  if(!model) throw new Error('The selected model is not available in LM Studio. Check its API identifier.');
-  const reasoning=model.capabilities?.reasoning;
-  const supportsThinking=!!reasoning || connection.model===DEFAULT_LOCAL_MODEL;
-  if(reasoning && (!Array.isArray(reasoning.allowed_options) || !reasoning.allowed_options.includes('off'))) throw new Error('This model does not offer thinking off. Choose a model that supports your non-thinking preference.');
-  const instances=Array.isArray(model.loaded_instances)?model.loaded_instances:[];
-  const instance=instances.find((item:any)=>item.id===connection.model)??instances[0];
-  const contextLength=instance?.config?.context_length;
-  return {vision:model.capabilities?.vision===true,supportsThinking,reasoningOff:!!reasoning,loaded:instances.length>0,contextLength:Number.isSafeInteger(contextLength)&&contextLength>0?contextLength:null};
+  return selectedLocalCapabilities(await discoverLocalModels(connection,fetcher),connection.model);
 }
 export function parseLocalResponse(data:any,max:number) {
   const choice=data?.choices?.[0],message=choice?.message;
