@@ -47,7 +47,9 @@ export type PairCommand = { eventId: string; type: PairAction['type']; targetUid
 export async function appendFriendAction(db: Firestore, actorUid: string, command: PairCommand) {
   if (!command.targetUid || command.targetUid === actorUid) throw new Error('Choose another person.');
   const proposedId = crypto.randomUUID();
-  const utcOffsetMinutes = command.type === 'HugSent' ? command.utcOffsetMinutes ?? -new Date().getTimezoneOffset() : undefined;
+  const observedOffset = command.type === 'HugSent' ? command.utcOffsetMinutes ?? -new Date().getTimezoneOffset() : undefined;
+  // Firestore encodes JavaScript -0 as a double; UTC must remain an integer.
+  const utcOffsetMinutes = observedOffset === 0 ? 0 : observedOffset;
   return runTransaction(db, async tx => {
     const [ownLink, peerLink] = await Promise.all([tx.get(linkRef(db, actorUid, command.targetUid)), tx.get(linkRef(db, command.targetUid, actorUid))]);
     const pairId = ownLink.exists() ? ownLink.get('pairId') as string : proposedId;

@@ -75,7 +75,8 @@ test('Rules permit a hug after local midnight within 24h and reject repeats, off
  const uid='daily-alice',peer='daily-bob',a=db(uid),b=db(peer);
  await saveFriendProfile(a,uid,profile('daily_alice'),'daily-profile-a');await saveFriendProfile(b,peer,profile('daily_bob'),'daily-profile-b');
  const id=await appendFriendAction(a,uid,command('daily-request','FriendRequestSent',peer));await appendFriendAction(b,peer,command('daily-accept','FriendRequestAccepted',uid));
- await appendFriendAction(a,uid,command('daily-first','HugSent',peer,{utcOffsetMinutes:0}));
+ await appendFriendAction(a,uid,command('daily-first','HugSent',peer,{utcOffsetMinutes:-0}));
+ assert.equal(Object.is((await getDoc(doc(a,`friendPairs/${id}/events/daily-first`))).get('payload.utcOffsetMinutes'),-0),false);
  await assert.rejects(appendFriendAction(a,uid,command('daily-first','HugSent',peer,{utcOffsetMinutes:60})));
  await assert.rejects(appendFriendAction(a,uid,command('daily-repeat','HugSent',peer,{utcOffsetMinutes:0})));
  // Seed the last real action in the immediately preceding local day, <24 hours ago.

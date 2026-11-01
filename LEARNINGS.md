@@ -1023,3 +1023,5 @@ The navigation screenshot refresh used the pinned Nix environment on a disposabl
 - Test fixture discovery: the JVM emulator clock is fixed at 2026-10-01 while Node’s real clock is not. Midnight Rules tests must anchor historical fixture actions to canonical emulator timestamps, not Node `Date.now()`.
 
 - Deployment evidence: preflight readback matched reviewed main Rules in both Firebase projects, with no pre-existing composite indexes. After deployment, both live Rules matched SHA-256 `024189d88eb3441e9bf60b4b2e4b90a8ff2a79ef6312cb5e42c61d5c1850ded4`; both substring indexes reached `READY`. No private journal migration, push server or billing change was needed.
+
+- CI caught a UTC-only serialization edge: negating `Date.getTimezoneOffset()` yields JavaScript `-0` on UTC runners. Firebase encodes negative zero as a double, so the intentionally integer-only daily-hug Rules reject it. Canonicalize zero before persistence, preserve all other observed offsets, and test an explicit negative-zero send plus the backend suite under `TZ=UTC`. This fixes input serialization without weakening Rules or screenshot comparisons.
