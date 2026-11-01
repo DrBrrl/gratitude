@@ -313,6 +313,94 @@ service cloud.firestore {
         && e.payload.username is string && e.payload.username.size() <= 30 && socialName(e.payload.username).matches('^[a-z][a-z0-9_]{2,23}$')
         && e.payload.displayName is string && e.payload.displayName.size() <= 60 && e.payload.displayName.trim().size() > 0 && e.payload.discoverable is bool;
     }
+    function socialSearch(uid) { return /databases/$(database)/documents/friendSearch/$(uid); }
+    function currentSearch(uid, n, profile) {
+      return profile.discoverable && n.uid == uid && n.username == profile.username
+        && n.displayName == profile.displayName && n.profileEventId == profile.lastEventId;
+    }
+    function socialAccepted(uid, peer) {
+      let link = socialLink(uid, peer);
+      return exists(link) && get(socialPair(get(link).data.pairId)).data.status == 'accepted'
+        && !get(socialPair(get(link).data.pairId)).data.blockedA && !get(socialPair(get(link).data.pairId)).data.blockedB;
+    }
+    function sharingPath(uid) { return /databases/$(database)/documents/friendSharing/$(uid); }
+    function gratitudePath(uid) { return /databases/$(database)/documents/friendGratitude/$(uid); }
+    function gratitudeReceipt(uid) { return /databases/$(database)/documents/users/$(uid)/privateProjections/gratitudeDays; }
+    match /friendSharing/{uid} {
+      allow get: if owns(uid) || socialSignedIn() && socialAccepted(request.auth.uid, uid);
+      allow list, delete: if false;
+      allow create, update: if owns(uid) && validSharingHead();
+      function validSharingHead() {
+        let n = request.resource.data;
+        let event = /databases/$(database)/documents/friendSharing/$(uid)/events/$(n.lastEventId);
+        let e = getAfter(event).data;
+        return n.keys().hasAll(['uid','sequence','lastEventId','enabled','timeZone']) && n.keys().hasOnly(['uid','sequence','lastEventId','enabled','timeZone'])
+          && n.uid == uid && n.sequence == (resource == null ? 1 : resource.data.sequence + 1) && validId(n.lastEventId)
+          && !exists(event) && e.sequence == n.sequence && e.payload.previousEventId == (resource == null ? null : resource.data.lastEventId)
+          && n.enabled == e.payload.enabled && n.timeZone == (n.enabled ? e.payload.timeZone : null)
+          && (n.enabled || !existsAfter(gratitudePath(uid)) && !existsAfter(gratitudeReceipt(uid)));
+      }
+      match /events/{id} {
+        allow read: if owns(uid);
+        allow update, delete: if false;
+        allow create: if owns(uid) && validId(id)
+          && request.resource.data.keys().hasAll(['eventId','schemaVersion','type','actorUid','sequence','recordedAt','payload'])
+          && request.resource.data.keys().hasOnly(['eventId','schemaVersion','type','actorUid','sequence','recordedAt','payload'])
+          && request.resource.data.eventId == id && request.resource.data.schemaVersion == 1 && request.resource.data.type == 'GratitudeSharingChosen'
+          && request.resource.data.actorUid == uid && request.resource.data.recordedAt == request.time
+          && request.resource.data.payload.keys().hasAll(['previousEventId','enabled','timeZone']) && request.resource.data.payload.keys().hasOnly(['previousEventId','enabled','timeZone'])
+          && request.resource.data.payload.enabled is bool && request.resource.data.payload.timeZone is string
+          && request.resource.data.payload.timeZone.matches('^[A-Za-z0-9_+./-]{1,100}$')
+          && getAfter(sharingPath(uid)).data.lastEventId == id && getAfter(sharingPath(uid)).data.sequence == request.resource.data.sequence;
+      }
+    }
+    match /friendGratitude/{uid} {
+      allow get: if owns(uid) || socialSignedIn() && socialAccepted(request.auth.uid, uid) && get(sharingPath(uid)).data.enabled;
+      allow list: if false;
+      allow delete: if owns(uid) && !getAfter(sharingPath(uid)).data.enabled;
+      allow create, update: if owns(uid) && validGratitudeSnapshot(uid, request.resource.data);
+    }
+    function validGratitudeSnapshot(uid,n) {
+      let share = getAfter(sharingPath(uid)).data;
+      let receipt = getAfter(gratitudeReceipt(uid)).data;
+      return n.keys().hasAll(['schemaVersion','publicationId','sharingEventId','timeZone','days'])
+        && n.keys().hasOnly(['schemaVersion','publicationId','sharingEventId','timeZone','days'])
+        && n.schemaVersion == 1 && validId(n.publicationId) && share.enabled && share.lastEventId == n.sharingEventId && share.timeZone == n.timeZone
+        && (resource == null || resource.data.publicationId != n.publicationId)
+        && receipt.publicationId == n.publicationId && receipt.sharingEventId == n.sharingEventId
+        && n.days is list && n.days.size() <= 36600 && n.days.toSet().size() == n.days.size()
+        && (n.days.size() == 0 || n.days.join(' ').split(' ') == n.days && n.days.join(' ').matches('^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])( [0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01]))*$'));
+    }
+    match /users/{uid}/privateProjections/gratitudeDays {
+      allow get: if owns(uid);
+      allow list: if false;
+      allow delete: if owns(uid) && !getAfter(sharingPath(uid)).data.enabled;
+      allow create, update: if owns(uid) && validGratitudeReceipt(uid, request.resource.data);
+    }
+    function validGratitudeReceipt(uid,n) {
+      let stream = /databases/$(database)/documents/users/$(uid)/streams/v1;
+      let snapshot = getAfter(gratitudePath(uid)).data;
+      return n.keys().hasAll(['publicationId','sharingEventId','sourceSequence','sourceEventId']) && n.keys().hasOnly(['publicationId','sharingEventId','sourceSequence','sourceEventId'])
+        && n.sourceSequence == (exists(stream) ? get(stream).data.sequence : 0) && n.sourceEventId == (exists(stream) ? get(stream).data.lastEventId : null)
+        && (resource == null || resource.data.publicationId != n.publicationId)
+        && snapshot.publicationId == n.publicationId && snapshot.sharingEventId == n.sharingEventId
+        && getAfter(sharingPath(uid)).data.enabled && getAfter(sharingPath(uid)).data.lastEventId == n.sharingEventId;
+    }
+    match /friendSearch/{uid} {
+      // Writes are tied to the current discoverable profile; profile updates must
+      // update/delete this projection atomically. Queries cannot prove cross-document joins.
+      allow get: if socialSignedIn();
+      allow list: if socialSignedIn() && request.query.limit <= 10;
+      allow create, update: if owns(uid) && request.resource.data.keys().hasAll(['uid','username','displayName','profileEventId','terms'])
+        && request.resource.data.keys().hasOnly(['uid','username','displayName','profileEventId','terms'])
+        && currentSearch(uid, request.resource.data, getAfter(socialProfile(uid)).data)
+        && request.resource.data.terms is list && request.resource.data.terms.size() >= 1 && request.resource.data.terms.size() <= 253
+        && request.resource.data.terms.toSet().size() == request.resource.data.terms.size()
+        && request.resource.data.terms.hasAll([request.resource.data.username])
+        && request.resource.data.terms.join(' ').split(' ') == request.resource.data.terms
+        && request.resource.data.terms.join(' ').matches('^[a-z0-9_]{3,24}( [a-z0-9_]{3,24})*$');
+      allow delete: if owns(uid) && !getAfter(socialProfile(uid)).data.discoverable;
+    }
     match /friendProfiles/{uid} {
       allow get: if socialSignedIn() && (request.auth.uid == uid || resource == null || resource.data.discoverable || socialRelated(uid));
       allow list, delete: if false;
@@ -324,6 +412,9 @@ service cloud.firestore {
         return n.keys().hasOnly(['uid','username','displayName','discoverable','sequence','lastEventId'])
           && n.uid == uid && n.sequence == (resource == null ? 1 : resource.data.sequence + 1)
           && !exists(event) && socialProfileEvent(uid,e,n.lastEventId) && e.sequence == n.sequence
+          && (!exists(socialSearch(uid)) || (n.discoverable
+            ? currentSearch(uid, getAfter(socialSearch(uid)).data, n)
+            : !existsAfter(socialSearch(uid))))
           && n.username == socialName(e.payload.username) && n.displayName == e.payload.displayName.trim() && n.discoverable == e.payload.discoverable
           && getAfter(/databases/$(database)/documents/friendUsernames/$(n.username)).data.uid == uid
           && (resource == null || resource.data.username == n.username || !existsAfter(/databases/$(database)/documents/friendUsernames/$(resource.data.username)));
@@ -358,7 +449,19 @@ service cloud.firestore {
         && getAfter(socialPair(request.resource.data.pairId)).data.members.toSet() == [uid,peer].toSet();
     }
     function socialInitial(members) {
-      return {'members':members,'sequence':0,'lastEventId':null,'status':'none','requesterUid':null,'blockedA':false,'blockedB':false,'hugsA':true,'hugsB':true,'requestedAt':null,'lastHugA':null,'lastHugB':null};
+      return {'members':members,'sequence':0,'lastEventId':null,'status':'none','requesterUid':null,'blockedA':false,'blockedB':false,'hugsA':true,'hugsB':true,'requestedAt':null,'lastHugA':null,'lastHugB':null,'lastHugOffsetA':null,'lastHugOffsetB':null};
+    }
+    function socialDailyHead(h) {
+      return {'members':h.members,'sequence':h.sequence,'lastEventId':h.lastEventId,'status':h.status,'requesterUid':h.requesterUid,
+        'blockedA':h.blockedA,'blockedB':h.blockedB,'hugsA':h.hugsA,'hugsB':h.hugsB,'requestedAt':h.requestedAt,
+        'lastHugA':h.lastHugA,'lastHugB':h.lastHugB,'lastHugOffsetA':h.get('lastHugOffsetA',null),'lastHugOffsetB':h.get('lastHugOffsetB',null)};
+    }
+    function socialHugDay(at, offset) { return int((at.toMillis() + offset * 60000) / 86400000); }
+    function socialDailyHug(e,b,a) {
+      let last = a ? b.lastHugA : b.lastHugB;
+      let priorOffset = a ? b.lastHugOffsetA : b.lastHugOffsetB;
+      return e.payload.utcOffsetMinutes is int && e.payload.utcOffsetMinutes >= -720 && e.payload.utcOffsetMinutes <= 840 && e.payload.utcOffsetMinutes % 15 == 0
+        && (last == null || (priorOffset == null ? request.time >= last + duration.value(24,'h') : socialHugDay(request.time,e.payload.utcOffsetMinutes) > socialHugDay(last,priorOffset)));
     }
     function socialTransition(e,b,n) {
       let a = e.actorUid == b.members[0];
@@ -385,8 +488,9 @@ service cloud.firestore {
         || e.type == 'HugPreferencesChosen' && b.status == 'accepted' && e.payload.allowHugs is bool
           && n.diff(b).affectedKeys().hasOnly(common.concat([a ? 'hugsA' : 'hugsB'])) && (a ? n.hugsA : n.hugsB) == e.payload.allowHugs
         || e.type == 'HugSent' && free && b.status == 'accepted' && (a ? b.hugsB : b.hugsA)
-          && ((a ? b.lastHugA : b.lastHugB) == null || request.time >= (a ? b.lastHugA : b.lastHugB) + duration.value(24,'h'))
-          && n.diff(b).affectedKeys().hasOnly(common.concat([a ? 'lastHugA' : 'lastHugB'])) && (a ? n.lastHugA : n.lastHugB) == request.time
+          && (e.schemaVersion == 2 ? socialDailyHug(e,b,a) : (a ? b.lastHugOffsetA : b.lastHugOffsetB) == null && ((a ? b.lastHugA : b.lastHugB) == null || request.time >= (a ? b.lastHugA : b.lastHugB) + duration.value(24,'h')))
+          && n.diff(b).affectedKeys().hasOnly(common.concat([a ? 'lastHugA' : 'lastHugB',a ? 'lastHugOffsetA' : 'lastHugOffsetB']))
+          && (a ? n.lastHugA : n.lastHugB) == request.time && (a ? n.lastHugOffsetA : n.lastHugOffsetB) == (e.schemaVersion == 2 ? e.payload.utcOffsetMinutes : null)
       );
     }
     match /friendPairs/{pairId} {
@@ -395,11 +499,11 @@ service cloud.firestore {
       allow delete: if false;
       allow create, update: if socialSignedIn() && validPairProjection();
       function validPairProjection() {
-        let n = request.resource.data;
+        let n = socialDailyHead(request.resource.data);
         let event = /databases/$(database)/documents/friendPairs/$(pairId)/events/$(n.lastEventId);
         let e = validId(n.lastEventId) ? getAfter(event).data : {};
-        let b = resource == null ? socialInitial(n.members) : resource.data;
-        return validId(pairId) && n.keys().hasOnly(b.keys()) && n.members == b.members && n.members is list && n.members.size() == 2 && n.members[0] != n.members[1] && socialUid(n.members[0]) && socialUid(n.members[1])
+        let b = resource == null ? socialInitial(n.members) : socialDailyHead(resource.data);
+        return validId(pairId) && request.resource.data.keys().hasOnly(b.keys()) && n.members == b.members && n.members is list && n.members.size() == 2 && n.members[0] != n.members[1] && socialUid(n.members[0]) && socialUid(n.members[1])
           && e.actorUid == request.auth.uid && e.targetUid == n.members[e.actorUid == n.members[0] ? 1 : 0] && request.auth.uid in n.members
           && n.sequence == b.sequence + 1 && e.sequence == n.sequence && !exists(event)
           && (resource != null || e.type in ['FriendRequestSent','FriendBlocked'] && n.members == [e.actorUid,e.targetUid]
@@ -419,11 +523,11 @@ service cloud.firestore {
           let before = exists(socialPair(pairId)) ? get(socialPair(pairId)).data : socialInitial(n.members);
           let p = e.payload;
           return validId(id) && e.keys().hasOnly(['eventId','schemaVersion','sequence','recordedAt','type','actorUid','targetUid','payload'])
-            && e.eventId == id && e.schemaVersion == 1 && e.actorUid == request.auth.uid && e.recordedAt == request.time
+            && e.eventId == id && (e.schemaVersion == 1 || e.schemaVersion == 2 && e.type == 'HugSent') && e.actorUid == request.auth.uid && e.recordedAt == request.time
             && request.auth.uid in n.members && e.targetUid == n.members[e.actorUid == n.members[0] ? 1 : 0]
             && e.sequence == before.sequence + 1 && n.lastEventId == id && n.sequence == e.sequence
             && p.previousEventId == before.lastEventId
-            && p.keys().hasOnly(['previousEventId'].concat(e.type == 'HugPreferencesChosen' ? ['allowHugs'] : []));
+            && p.keys().hasOnly(['previousEventId'].concat(e.type == 'HugPreferencesChosen' ? ['allowHugs'] : e.schemaVersion == 2 ? ['utcOffsetMinutes'] : []));
         }
       }
     }

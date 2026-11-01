@@ -1,12 +1,15 @@
+import { applySharing, emptySharing, validTimeZone, type SharingProjection, type SharingAction, type SharedGratitude } from './streaks.ts';
+import { validDay } from '../civil-date.ts';
+import { searchFragment, searchProjection, FRIEND_SEARCH_LIMIT } from './search.ts';
 import { applyInbox, applyReadState, emptyInbox, type InboxEvent, type InboxProjection } from './inbox.ts';
-import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, orderBy, query, runTransaction, serverTimestamp, Timestamp, where, type Firestore, type DocumentData } from 'firebase/firestore';
+import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, orderBy, query, runTransaction, serverTimestamp, Timestamp, where, limit, startAfter, type Firestore, type DocumentData } from 'firebase/firestore';
 import { openDB, type IDBPDatabase } from 'idb';
 import { applyPair, applyProfile, cachedPairOrEmpty, emptyPair, emptyProfile, pairHead, usernameKey, validateProfile, type PairAction, type PairEvent, type PairHead, type PairProjection, type Profile, type ProfileEvent, type ProfileInput } from './domain.ts';
 
 const profileRef = (db: Firestore, uid: string) => doc(db, `friendProfiles/${uid}`);
 const linkRef = (db: Firestore, uid: string, peer: string) => doc(db, `friendLinks/${uid}/peers/${peer}`);
 const date = (value: unknown): string | null => value instanceof Timestamp ? value.toDate().toISOString() : value === null ? null : (() => { throw new Error('Invalid friendship timestamp.'); })();
-function decodePair(value: DocumentData): PairHead { return { ...value, requestedAt: date(value.requestedAt), lastHugA: date(value.lastHugA), lastHugB: date(value.lastHugB) } as PairHead; }
+function decodePair(value: DocumentData): PairHead { return { ...value, requestedAt: date(value.requestedAt), lastHugA: date(value.lastHugA), lastHugB: date(value.lastHugB), lastHugOffsetA: value.lastHugOffsetA ?? null, lastHugOffsetB: value.lastHugOffsetB ?? null } as PairHead; }
 function decodePairEvent(value: DocumentData): PairEvent { return { ...value, recordedAt: date(value.recordedAt) } as PairEvent; }
 function decodeProfileEvent(value: DocumentData): ProfileEvent { return { ...value, recordedAt: date(value.recordedAt) } as ProfileEvent; }
 function same(a: unknown, b: unknown) {
@@ -33,15 +36,18 @@ export async function saveFriendProfile(db: Firestore, uid: string, input: Profi
     const next = applyProfile(before, event);
     tx.set(eventRef, { ...event, recordedAt: serverTimestamp() });
     tx.set(headRef, next);
+    const searchRef = doc(db, `friendSearch/${uid}`);
+    if (next.discoverable) tx.set(searchRef, searchProjection(next)); else tx.delete(searchRef);
     tx.set(nameRef, { uid });
     if (before.username && before.username !== next.username) tx.delete(doc(db, `friendUsernames/${before.username}`));
   });
 }
 
-export type PairCommand = { eventId: string; type: PairAction['type']; targetUid: string; allowHugs?: boolean };
+export type PairCommand = { eventId: string; type: PairAction['type']; targetUid: string; allowHugs?: boolean; utcOffsetMinutes?: number };
 export async function appendFriendAction(db: Firestore, actorUid: string, command: PairCommand) {
   if (!command.targetUid || command.targetUid === actorUid) throw new Error('Choose another person.');
   const proposedId = crypto.randomUUID();
+  const utcOffsetMinutes = command.type === 'HugSent' ? command.utcOffsetMinutes ?? -new Date().getTimezoneOffset() : undefined;
   return runTransaction(db, async tx => {
     const [ownLink, peerLink] = await Promise.all([tx.get(linkRef(db, actorUid, command.targetUid)), tx.get(linkRef(db, command.targetUid, actorUid))]);
     const pairId = ownLink.exists() ? ownLink.get('pairId') as string : proposedId;
@@ -50,7 +56,7 @@ export async function appendFriendAction(db: Firestore, actorUid: string, comman
     const [head, prior] = await Promise.all([tx.get(headRef), tx.get(eventRef)]);
     if (prior.exists()) {
       const p = prior.data();
-      if (p.type !== command.type || p.actorUid !== actorUid || p.targetUid !== command.targetUid || p.payload.allowHugs !== command.allowHugs) throw new Error('Friendship action ID already used.');
+      if (p.type !== command.type || p.actorUid !== actorUid || p.targetUid !== command.targetUid || p.payload.allowHugs !== command.allowHugs || p.payload.utcOffsetMinutes !== utcOffsetMinutes) throw new Error('Friendship action ID already used.');
       return pairId;
     }
     let before: PairProjection;
@@ -61,9 +67,11 @@ export async function appendFriendAction(db: Firestore, actorUid: string, comman
     }
     const payload: PairAction['payload'] = { previousEventId: before.lastEventId };
     if (command.type === 'HugPreferencesChosen') payload.allowHugs = command.allowHugs;
-    const event: PairEvent = { ...command, actorUid, payload, schemaVersion: 1, sequence: before.sequence + 1, recordedAt: new Date().toISOString() };
+    if (command.type === 'HugSent') payload.utcOffsetMinutes = utcOffsetMinutes;
+    const event: PairEvent = { ...command, actorUid, payload, schemaVersion: command.type === 'HugSent' ? 2 : 1, sequence: before.sequence + 1, recordedAt: new Date().toISOString() };
     // Optional command arguments belong in the action payload only.
     delete (event as Partial<PairCommand>).allowHugs;
+    delete (event as Partial<PairCommand>).utcOffsetMinutes;
     const next = pairHead(applyPair(before, event));
     tx.set(eventRef, { ...event, recordedAt: serverTimestamp() });
     tx.set(headRef, { ...next,
@@ -93,23 +101,26 @@ export async function acknowledgeHug(db: Firestore, uid: string, pairId: string,
   });
 }
 
-export type FriendsView = { profile: Profile; pairs: Record<string, PairProjection>; peers: Record<string, Profile>; ready: boolean; synced: boolean; error: string };
-type Checkpoint = { version: 2; uid: string; profile: Profile; pairs: Record<string, PairProjection>; inbox: InboxProjection };
+export type DiscoveredProfile = Pick<Profile, 'uid' | 'username' | 'displayName'>;
+export type FriendsView = { sharing: SharingProjection; gratitude: Record<string, SharedGratitude>; streaksLoading: boolean; profile: Profile; pairs: Record<string, PairProjection>; peers: Record<string, Profile>; ready: boolean; synced: boolean; error: string };
+type Checkpoint = { version: 3; sharing: SharingProjection; uid: string; profile: Profile; pairs: Record<string, PairProjection>; inbox: InboxProjection };
 async function digest(value: unknown) { return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(value)))), n => n.toString(16).padStart(2, '0')).join(''); }
 export class FriendsRepository {
   private cache: IDBPDatabase | null = null;
   private stopped = false;
   private stops: (() => void)[] = [];
   private peerStops = new Map<string, () => void>();
+  private gratitudeStops = new Map<string, { sharing: () => void; days?: () => void; eventId?: string }>();
+  private gratitudeLoading = new Set<string>();
   private chain = Promise.resolve();
   private state: FriendsView;
   private inbox=emptyInbox();
   private db: Firestore; private uid: string; private scope: string; private notify: (view: FriendsView) => void;
   constructor(db: Firestore, uid: string, scope: string, notify: (view: FriendsView) => void) {
     this.db = db; this.uid = uid; this.scope = scope; this.notify = notify;
-    this.state = { profile: emptyProfile(uid), pairs: {}, peers: Object.create(null), ready: false, synced: false, error: '' };
+    this.state = { sharing: emptySharing(uid), gratitude: Object.create(null), streaksLoading: false, profile: emptyProfile(uid), pairs: {}, peers: Object.create(null), ready: false, synced: false, error: '' };
   }
-  private emit() { if (!this.stopped) this.notify({ ...this.state, pairs: { ...this.state.pairs }, peers: { ...this.state.peers } }); }
+  private emit() { if (!this.stopped) this.notify({ ...this.state, streaksLoading: this.gratitudeLoading.size > 0, gratitude: { ...this.state.gratitude }, pairs: { ...this.state.pairs }, peers: { ...this.state.peers } }); }
   private enqueue(task: () => Promise<void>) {
     this.chain = this.chain.then(async () => { if (!this.stopped) await task(); }).catch(() => {
       if (!this.stopped) { this.state.error = 'Friends could not be refreshed. Reconnect and try again.'; this.state.synced = false; this.state.ready = true; this.emit(); }
@@ -122,17 +133,17 @@ export class FriendsRepository {
     const cached = await this.cache.get('projection', 'checkpoint');
     if (cached) {
       const c = cached.value as Checkpoint;
-      if (c.version === 2 && c.uid === this.uid && c.profile?.uid === this.uid && c.pairs && c.inbox && cached.digest === await digest(c)) {
-        this.inbox=c.inbox; this.state = { ...this.state, profile: c.profile, pairs: c.pairs, ready: true }; this.emit();
+      if (c.version === 3 && c.sharing?.uid === this.uid && c.uid === this.uid && c.profile?.uid === this.uid && c.pairs && c.inbox && cached.digest === await digest(c)) {
+        this.inbox=c.inbox; this.state = { ...this.state, sharing: c.sharing, profile: c.profile, pairs: c.pairs, ready: true }; this.emit();
       } else await this.cache.delete('projection', 'checkpoint');
     }
     if (this.stopped) return;
     const changed = () => { void this.enqueue(() => this.refresh()); };
     const failed = () => { if (!this.stopped) { this.state.error = 'Friends are unavailable. Reconnect to refresh.'; this.state.ready = true; this.state.synced = false; this.emit(); } };
-    this.stops = [onSnapshot(doc(this.db,`friendInboxes/${this.uid}`),changed,failed),onSnapshot(profileRef(this.db, this.uid), changed, failed), onSnapshot(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid)), changed, failed)];
+    this.stops = [onSnapshot(doc(this.db,`friendSharing/${this.uid}`),changed,failed),onSnapshot(doc(this.db,`friendInboxes/${this.uid}`),changed,failed),onSnapshot(profileRef(this.db, this.uid), changed, failed), onSnapshot(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid)), changed, failed)];
   }
   async refresh(rebuild = false) {
-    const [profileHead, heads, inboxHead] = await Promise.all([getDocFromServer(profileRef(this.db, this.uid)), getDocsFromServer(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid))), getDocFromServer(doc(this.db,`friendInboxes/${this.uid}`))]);
+    const [profileHead, heads, inboxHead, sharingHead] = await Promise.all([getDocFromServer(profileRef(this.db, this.uid)), getDocsFromServer(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid))), getDocFromServer(doc(this.db,`friendInboxes/${this.uid}`)), getDocFromServer(doc(this.db,`friendSharing/${this.uid}`))]);
     if (this.stopped) return;
     let profile = rebuild ? emptyProfile(this.uid) : this.state.profile;
     const canonicalProfile = profileHead.exists() ? profileHead.data() as Profile : emptyProfile(this.uid);
@@ -151,6 +162,15 @@ export class FriendsRepository {
       }
       pairs[head.id] = pair;
     }
+    if (!this.stopped && canonicalProfile.sequence && canonicalProfile.discoverable) {
+      const indexRef = doc(this.db, `friendSearch/${this.uid}`);
+      await runTransaction(this.db, async tx => {
+        const [index, current] = await Promise.all([tx.get(indexRef), tx.get(profileRef(this.db, this.uid))]);
+        if (this.stopped || !current.exists() || current.get('lastEventId') !== canonicalProfile.lastEventId) return;
+        const projection = searchProjection(canonicalProfile);
+        if (!index.exists() || !same(index.data(), projection)) tx.set(indexRef, projection);
+      });
+    }
     if (this.stopped) return;
     let inbox=rebuild?emptyInbox():this.inbox;
     if(inbox.sequence>(inboxHead.get('sequence')??0)||inbox.sequence===(inboxHead.get('sequence')??0)&&inbox.lastEventId!==(inboxHead.get('lastEventId')??null))inbox=emptyInbox();
@@ -159,10 +179,19 @@ export class FriendsRepository {
       for(const item of tail.docs)inbox=applyInbox(inbox,{...item.data(),recordedAt:date(item.get('recordedAt'))} as InboxEvent,this.uid);
     }
     if(this.stopped)return;
+    let sharing = rebuild ? emptySharing(this.uid) : this.state.sharing;
+    const canonicalSharing = sharingHead.exists() ? sharingHead.data() as SharingProjection : emptySharing(this.uid);
+    if (sharing.sequence > canonicalSharing.sequence || sharing.sequence === canonicalSharing.sequence && sharing.lastEventId !== canonicalSharing.lastEventId) sharing = emptySharing(this.uid);
+    if (sharing.sequence < canonicalSharing.sequence) {
+      const tail = await getDocsFromServer(query(collection(this.db, `friendSharing/${this.uid}/events`), where('sequence', '>', sharing.sequence), orderBy('sequence')));
+      for (const item of tail.docs) sharing = applySharing(sharing, { ...item.data(), recordedAt: date(item.get('recordedAt')) } as SharingAction);
+    }
+    if (this.stopped) return;
+    if (!same(sharing,canonicalSharing)) throw new Error('Gratitude sharing history does not match its source cursor.');
     this.inbox=inbox;
     const readPairs=applyReadState(pairs,inbox,this.uid);
-    this.state = { ...this.state, profile, pairs:readPairs, ready: true, synced: true, error: '' };
-    const checkpoint: Checkpoint = { version: 2, uid: this.uid, profile, pairs:readPairs, inbox };
+    this.state = { ...this.state, sharing, profile, pairs:readPairs, ready: true, synced: true, error: '' };
+    const checkpoint: Checkpoint = { version: 3, sharing, uid: this.uid, profile, pairs:readPairs, inbox };
     await this.cache?.put('projection', { value: checkpoint, digest: await digest(checkpoint) }, 'checkpoint');
     if (this.stopped) return;
     for (const peer of new Set(Object.values(pairs).flatMap(pair => pair.members.filter(uid => uid !== this.uid)))) {
@@ -174,18 +203,54 @@ export class FriendsRepository {
         this.emit();
       }, () => { delete this.state.peers[peer]; this.peerStops.delete(peer); this.emit(); }));
     }
+    this.watchGratitude(pairs);
     this.emit();
+  }
+  private watchGratitude(pairs: Record<string, PairProjection>) {
+    const accepted = new Set(Object.values(pairs).filter(pair => pair.status === 'accepted' && !pair.blockedA && !pair.blockedB).map(pair => pair.members.find(id => id !== this.uid)!));
+    for (const [peer, control] of this.gratitudeStops) if (!accepted.has(peer)) {
+      control.sharing(); control.days?.(); this.gratitudeStops.delete(peer); this.gratitudeLoading.delete(peer); delete this.state.gratitude[peer];
+    }
+    for (const peer of accepted) {
+      if (this.gratitudeStops.has(peer)) continue;
+      this.gratitudeLoading.add(peer);
+      const control: { sharing: () => void; days?: () => void; eventId?: string } = { sharing: () => {} };
+      this.gratitudeStops.set(peer, control);
+      const unavailable = () => { if (this.stopped || this.gratitudeStops.get(peer) !== control) return; this.gratitudeLoading.delete(peer); delete this.state.gratitude[peer]; this.emit(); };
+      control.sharing = onSnapshot(doc(this.db, `friendSharing/${peer}`), { includeMetadataChanges: true }, snapshot => {
+        if (this.stopped || this.gratitudeStops.get(peer) !== control || snapshot.metadata.fromCache || snapshot.metadata.hasPendingWrites) return;
+        if (!snapshot.exists() || !snapshot.get('enabled') || !validTimeZone(snapshot.get('timeZone'))) { control.days?.(); control.days=undefined; control.eventId=undefined; unavailable(); return; }
+        const eventId = snapshot.get('lastEventId') as string, zone = snapshot.get('timeZone') as string;
+        if (control.eventId === eventId) return;
+        control.days?.(); control.eventId=eventId; delete this.state.gratitude[peer]; this.gratitudeLoading.add(peer);
+        control.days = onSnapshot(doc(this.db, `friendGratitude/${peer}`), { includeMetadataChanges: true }, days => {
+          if (this.stopped || this.gratitudeStops.get(peer) !== control || control.eventId !== eventId || days.metadata.fromCache || days.metadata.hasPendingWrites) return;
+          const data = days.data() as SharedGratitude | undefined;
+          if (data?.schemaVersion === 1 && data.sharingEventId === eventId && data.timeZone === zone && Array.isArray(data.days) && data.days.length <= 36600 && data.days.every(validDay) && new Set(data.days).size === data.days.length) this.state.gratitude[peer] = data;
+          else delete this.state.gratitude[peer];
+          this.gratitudeLoading.delete(peer); this.emit();
+        }, () => { if (control.eventId === eventId) unavailable(); });
+        this.emit();
+      }, () => { control.days?.(); control.days=undefined; control.eventId=undefined; unavailable(); });
+    }
   }
   async sync() { await this.enqueue(() => this.refresh()); if (!this.stopped && !this.state.synced) throw new Error(this.state.error); }
   async rebuild() { await this.enqueue(() => this.refresh(true)); if (!this.stopped && !this.state.synced) throw new Error(this.state.error); }
-  async find(input: string) {
-    const key = usernameKey(input);
-    if (!/^[a-z][a-z0-9_]{2,23}$/.test(key)) throw new Error('Enter a full username to find your friend.');
-    try {
-      const claim = await getDocFromServer(doc(this.db, `friendUsernames/${key}`));
-      if (!claim.exists()) return null;
-      const profile = await getDocFromServer(profileRef(this.db, claim.get('uid'))); return profile.exists() ? profile.data() as Profile : null; }
-    catch (cause) { if ((cause as { code?: string }).code === 'permission-denied') return null; throw cause; }
+  async find(input: string, after?: string) {
+    const fragment = searchFragment(input);
+    const constraints = [where('terms', 'array-contains', fragment), orderBy('username'), ...(after ? [startAfter(after)] : []), limit(FRIEND_SEARCH_LIMIT)];
+    const results = await getDocsFromServer(query(collection(this.db, 'friendSearch'), ...constraints));
+    let next = results.size === FRIEND_SEARCH_LIMIT ? String(results.docs.at(-1)!.get('username')) : null;
+    const profiles: DiscoveredProfile[] = results.docs.filter(item => String(item.get('username')).includes(fragment)).map(item => ({ uid:item.get('uid'), username:item.get('username'), displayName:item.get('displayName') }));
+    // Preserve exact discovery for profiles whose owner has not opened the updated app.
+    if (!after && /^[a-z]/.test(fragment) && !profiles.some(item => item.username === fragment)) {
+      try {
+        const claim = await getDocFromServer(doc(this.db, `friendUsernames/${fragment}`));
+        if (claim.exists()) { const head = await getDocFromServer(profileRef(this.db,claim.get('uid'))); if (head.get('discoverable')) profiles.unshift({uid:head.get('uid'),username:head.get('username'),displayName:head.get('displayName')}); }
+      } catch (cause) { if ((cause as {code?:string}).code !== 'permission-denied') throw cause; }
+    }
+    if(profiles.length>FRIEND_SEARCH_LIMIT){profiles.pop();next=profiles.at(-1)!.username;}
+    return { profiles, next };
   }
-  stop() { this.stopped = true; this.stops.forEach(stop => stop()); this.peerStops.forEach(stop => stop()); this.peerStops.clear(); this.state.peers = Object.create(null); this.cache?.close(); }
+  stop() { this.stopped = true; this.stops.forEach(stop => stop()); this.peerStops.forEach(stop => stop()); this.peerStops.clear(); this.gratitudeStops.forEach(control => { control.sharing(); control.days?.(); }); this.gratitudeStops.clear(); this.gratitudeLoading.clear(); this.state.gratitude=Object.create(null); this.state.peers = Object.create(null); this.cache?.close(); }
 }

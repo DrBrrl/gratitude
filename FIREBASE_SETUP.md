@@ -149,3 +149,17 @@ A second mutable owner-only `users/{uid}/privateSettings/lmStudioPhotos` documen
 `AccentColourChosen` schema 1 records `{ previousEventId, colourIndex }`, where the index is an even integer from 0 through 26 in the existing 28-colour wheel. Its atomic append updates `streams/v1/appearance/control`, separately from AI control. Owner-only Rules enforce the fourteen choices, immutable events and a current appearance predecessor; they do not accept computed colours in the event. The additive Rules have been deployed to both preview and production.
 
 Projection version 11 derives appearance and rebuilds older disposable checkpoints from events without AI calls. Refresh other open clients before choosing an accent in an upgraded application. A new signed-in device receives the choice through replay; signed-out pages use yellow. Accent changes require a connection, while valid cached projections retain the chosen theme offline.
+
+## Community gratitude and partial username search
+
+The Friends follow-up adds `friendSearch`, `friendSharing` and `friendGratitude` namespaces plus owner-only publication receipts under `users/{uid}/privateProjections/gratitudeDays`. Deploy the reviewed Firestore Rules and `firestore.indexes.json` to each environment before publishing its new frontend:
+
+```sh
+nix develop -c npx firebase deploy --only firestore:rules,firestore:indexes --project gratitude-drbrrl-dev
+# After checking production Rules have not drifted from reviewed main:
+nix develop -c npx firebase deploy --only firestore:rules,firestore:indexes --project gratitude-drbrrl
+```
+
+Wait for the `friendSearch` composite index (`terms CONTAINS`, `username ASCENDING`) to be ready. Profile owners bootstrap their disposable substring indexes on sign-in; no private journal migration or administrative data export is needed. Exact-handle fallback preserves discovery before an owner opens the update. Once indexed, profile edits must update/delete the search projection atomically, so older open tabs need refreshing before profile edits. Legacy pair heads and source histories remain readable; schema-2 hugs add captured UTC offsets, with their daily budget checked against server time. Existing private read history is preserved even though the inbox UI is removed. Sharing is not enabled for existing users until they explicitly save the new choice. No notification server is provisioned.
+
+Verified deployment on 2026-11-01: both environments’ live Rules match the tested source (SHA-256 `024189d88eb3441e9bf60b4b2e4b90a8ff2a79ef6312cb5e42c61d5c1850ded4`), and both search composite indexes report `READY`. Before that deployment, live Rules in each environment matched reviewed main (`7475a0065940b866e4dc97dee4e7d9fadbe2b6b947d9207c002605738602f3bc`); there were no unrelated composite indexes to preserve.

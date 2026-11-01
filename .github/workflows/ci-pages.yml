@@ -69,7 +69,7 @@ jobs:
           - suite: journal
             scenarios: tests/e2e/(00[1-3]|010-|031-)
           - suite: friends
-            scenarios: tests/e2e/03[67]-
+            scenarios: tests/e2e/(03[67]-|043-)
           - suite: friend-hugs
             scenarios: tests/e2e/03[89]-
           - suite: drafts
