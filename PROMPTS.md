@@ -1239,3 +1239,39 @@ Notification behaviour:
 - I don't think we need to display hug notifications under Your hugs 💛. Instead, let's make that section "Community gratitude" and have it display your gratitude streak with your friends! So if you've both filled in your gratitude for x consecutive days, on the same days, you get a gratitude streak toghether. Completely repairable. If the streak ends, you can instead display "longest streak". Text should be "Jamie and XXXX have an XXX day gratitude streak."
 - When that section is empty, show: "Your community streaks will show up here!"
 ```
+
+## 2026-11-01 — Background hug notifications
+
+```text
+I think background push is the go!
+```
+
+## 2026-11-01 — Compact friend search controls
+
+```text
+Let's also make the find friend button thinner - the height of a usual one-line high text box, so that the find a friend text box is one-line high - it looks weird that high!
+```
+
+## 2026-11-01 — Stacked new-prompt behaviour follow-up
+
+```text
+Also i am about to go tobed - let's add one more feature when this one is all sorted out. In a new PR targeted to this most recent PR, let's implement "2026-11-01 (17:20) - "New prompt" behaviour.txt" please!
+```
+
+User-authored instructions from `docs/Jamie follow-ups/2026-11-01 (17:20) - "New prompt" behaviour.txt` (implementation follows the background-push work in a separate stacked PR):
+
+```text
+When a user requests a new prompt, i think the preiously generated prompt should be sent along with the new request with the instruction to the AI to write a prompt that differs from that prompt - appended to the end of the request. e.g.:
+"The user has requested a different prompt. Your new prompt's wording and topics should vary from your previously generated prompt: "[previously generated prompt]"
+
+The reflections to be sent to the AI for prompt construction should also change. Every "try another prompt" request should result in:
+- A new set of 5 prompts chosen from the previous fortnight
+- A new set of 8 anniversary prompts
+- A new set of 7 never/least-recently used prompts
+```
+
+## 2026-11-01 — Push notification billing question
+
+```text
+Tell me a little bit about firebase push notification billing?
+```

@@ -294,6 +294,59 @@ service cloud.firestore {
         allow delete: if false;
       }
     }
+    // Device choices are literal actions. Subscriptions and receipts stay operational.
+    function pushChoicePath(uid,device) { return /databases/$(database)/documents/users/$(uid)/pushChoices/$(device); }
+    function pushDevicePath(uid,device) { return /databases/$(database)/documents/users/$(uid)/pushDevices/$(device); }
+    match /users/{uid}/pushChoices/{device} {
+      allow get: if owns(uid);
+      allow list, delete: if false;
+      allow create, update: if owns(uid) && validId(device) && validPushChoice();
+      function validPushChoice() {
+        let n=request.resource.data;
+        let event=/databases/$(database)/documents/users/$(uid)/pushChoices/$(device)/events/$(n.lastEventId);
+        let source=getAfter(event).data;
+        return n.keys().hasAll(['sequence','lastEventId','enabled']) && n.keys().hasOnly(['sequence','lastEventId','enabled'])
+          && validId(n.lastEventId) && !exists(event) && n.sequence==(resource==null?1:resource.data.sequence+1)
+          && source.sequence==n.sequence && source.payload.previousEventId==(resource==null?null:resource.data.lastEventId)
+          && n.enabled==source.payload.enabled && (n.enabled || !existsAfter(pushDevicePath(uid,device)));
+      }
+      match /events/{id} {
+        allow read: if owns(uid);
+        allow update, delete: if false;
+        allow create: if owns(uid) && validId(device) && validId(id)
+          && request.resource.data.keys().hasAll(['eventId','schemaVersion','type','actorUid','deviceId','sequence','recordedAt','payload'])
+          && request.resource.data.keys().hasOnly(['eventId','schemaVersion','type','actorUid','deviceId','sequence','recordedAt','payload'])
+          && request.resource.data.eventId==id && request.resource.data.actorUid==uid && request.resource.data.deviceId==device
+          && request.resource.data.schemaVersion==1 && request.resource.data.type=='HugNotificationsChosen' && request.resource.data.recordedAt==request.time
+          && request.resource.data.payload.keys().hasAll(['previousEventId','enabled','reason']) && request.resource.data.payload.keys().hasOnly(['previousEventId','enabled','reason'])
+          && request.resource.data.payload.enabled is bool && request.resource.data.payload.reason in ['button','sign-out']
+          && (request.resource.data.payload.reason!='sign-out' || !request.resource.data.payload.enabled)
+          && getAfter(pushChoicePath(uid,device)).data.lastEventId==id && getAfter(pushChoicePath(uid,device)).data.sequence==request.resource.data.sequence;
+      }
+    }
+    match /users/{uid}/pushDevices/{device} {
+      allow get: if owns(uid);
+      allow list: if false;
+      allow delete: if owns(uid);
+      allow create, update: if owns(uid) && validId(device) && validPushDevice();
+      function validPushDevice() {
+        let n=request.resource.data;
+        let choice=getAfter(pushChoicePath(uid,device)).data;
+        return n.keys().hasAll(['subscription','scope','generation','publicKey','choiceEventId','choiceSequence','createdAt','updatedAt'])
+          && n.keys().hasOnly(['subscription','scope','generation','publicKey','choiceEventId','choiceSequence','createdAt','updatedAt'])
+          && choice.enabled && n.choiceEventId==choice.lastEventId && n.choiceSequence==choice.sequence && validId(n.generation)
+          && n.createdAt==(resource==null?request.time:resource.data.createdAt) && n.updatedAt==request.time
+          && n.scope is string && n.scope.size()<=256 && n.scope.matches('^(https://drbrrl[.]github[.]io/gratitude/(pr-preview/pr-[0-9]+/)?|http://(127[.]0[.]0[.]1|localhost):[0-9]{2,5}/(gratitude/pr-preview/firebase-check/)?)$')
+          && n.publicKey is string && n.publicKey.matches('^[A-Za-z0-9_-]{87}$')
+          && n.subscription.keys().hasAll(['endpoint','keys']) && n.subscription.keys().hasOnly(['endpoint','keys'])
+          && n.subscription.endpoint is string && n.subscription.endpoint.size()<=4096
+          && n.subscription.endpoint.matches('^https://(updates[.]push[.]services[.]mozilla[.]com|fcm[.]googleapis[.]com|web[.]push[.]apple[.]com)/[^#]+$')
+          && n.subscription['keys'].keys().hasAll(['p256dh','auth']) && n.subscription['keys'].keys().hasOnly(['p256dh','auth'])
+          && n.subscription['keys'].p256dh is string && n.subscription['keys'].p256dh.matches('^[A-Za-z0-9_-]{87}$')
+          && n.subscription['keys'].auth is string && n.subscription['keys'].auth.matches('^[A-Za-z0-9_-]{22}$');
+      }
+    }
+
     // Friends have separate source streams and minimal, opt-in discovery profiles.
     function socialSignedIn() { return request.auth != null && request.auth.token.firebase.sign_in_provider == 'google.com'; }
     function socialProfile(uid) { return /databases/$(database)/documents/friendProfiles/$(uid); }

@@ -14,7 +14,7 @@ with open(os.environ['GITHUB_ENV'], 'a') as output:
         if not isinstance(value, str) or not value or '\n' in value or '\r' in value:
             raise SystemExit(f'Invalid public Firebase setting: {key}')
         output.write(f'VITE_FIREBASE_{suffix}={value}\n')
-    for key, env in [('appCheckSiteKey', 'VITE_FIREBASE_APPCHECK_SITE_KEY'), ('aiDataMode', 'VITE_AI_DATA_MODE')]:
+    for key, env in [('webPushPublicKey', 'VITE_WEB_PUSH_PUBLIC_KEY'), ('appCheckSiteKey', 'VITE_FIREBASE_APPCHECK_SITE_KEY'), ('aiDataMode', 'VITE_AI_DATA_MODE')]:
         value = config.get(key, '')
         if not isinstance(value, str) or '\n' in value or '\r' in value:
             raise SystemExit(f'Invalid AI setting: {key}')

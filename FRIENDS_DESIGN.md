@@ -1,6 +1,6 @@
 # Friends, hugs and community gratitude
 
-Friends lives in the heart tab between Journal and Settings. Account controls remain in Settings. Implemented here: chosen profiles, partial username discovery, consent-based requests, one hug per local day, optional individual streak sharing and repairable community streaks. Browser notifications remain a separate delivery decision; the app currently does not request permission or deliver background push.
+Friends lives in the heart tab between Journal and Settings. Account controls remain in Settings. Implemented here: chosen profiles, partial username discovery, consent-based requests, one hug per local day, optional individual streak sharing and repairable community streaks. Background hugs use explicit per-device browser permission and a private Firebase sender; journal contents never enter a notification.
 
 ## Names and discovery
 
@@ -53,11 +53,11 @@ Only live, server-confirmed peer consent/snapshots enter the UI. Peer dates are 
 
 Profile and pair actions commit atomically with their projections; Rules reject detached/fabricated state, stale predecessors, unauthorized actors and source mutation. An owner/deployment-scoped version-3 IndexedDB checkpoint has a digest and caches own sharing, profile, pair and legacy read projections. Warm opens fetch source tails; **Rebuild friends view** replays accessible source streams. The date publication is regenerated from full private journal replay and sharing choices, with no stored streak events. Online connectivity is required for social writes; there is no social outbox.
 
-## Notifications and remaining decisions
+## Background hug notifications
 
-The prior implementation only stored in-app hugs, which explains why Firefox on Android did not show device alerts. Browser notifications need permission requested from a user gesture. Android delivery should use a service worker’s notification API. Showing an alert while Gratitude is open can use its live connection; delivery after it closes needs a trusted push sender and revocable private device registrations. A service worker alone does not create that sender.
+Friends offers per-device opt-in, requested only from an explicit button gesture. A deployment-scoped service worker displays encrypted Web Push even without an app tab. A private Firestore-triggered function checks live friendship, recipient preferences/account, canonical source history and per-device consent before sending a new hug. Delivery expires after 24 hours, has private receipts and durable client deduplication, and never runs during replay. Native notifications contain only the chosen sender name and a Friends link.
 
-Before background delivery is enabled, choose/provision its backend, define per-device opt-in, duplicate suppression and current friendship/preference checks, and test Firefox on a real Android device. Rebuilds and first synchronization must never notify old hugs. No push infrastructure or billed backend is added by this change. See [MDN’s notification guidance](https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API) and [Push API](https://developer.mozilla.org/en-US/docs/Web/API/Push_API). Private invitation links remain a possible later convenience.
+Off/sign-out clears the local gate before attempting network revocation. Permission denial has recovery instructions. Updating an existing worker preserves public immutable assets for open tabs and does not reload drafts. Production and preview devices remain scoped separately. Standard browser/OS delivery limits still apply; real Firefox/Android permission and OS tap behaviour need a device check. See [push design and operations](PUSH_NOTIFICATIONS_DESIGN.md). Private invitation links remain a possible later convenience.
 
 ## Verification
 
