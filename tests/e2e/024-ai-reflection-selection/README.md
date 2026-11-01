@@ -2,7 +2,7 @@
 
 # Twenty reflections for a personalised gratitude prompt
 
-Fictional imported and in-app entries are selected by logical date: eight balanced anniversaries, seven rediscoveries and five recent reflections. Explicit feedback, consent, a dated editor, unsaved-text exclusion, cached reload and full replay are verified at the intercepted Gemini boundary. Each user action has an unmasked full-page zero-pixel screenshot with checks beneath it.
+Fictional imported and in-app entries are selected by logical date: eight balanced anniversaries, seven rediscoveries and five recent reflections. Requests for another include the prior generated question and resample all three pools, preferring unused alternatives. Explicit feedback, consent, a dated editor, unsaved-text exclusion, cached reload and full replay are verified at the intercepted Gemini boundary. Each user action has an unmasked full-page zero-pixel screenshot with checks beneath it.
 
 Viewport: mobile-chromium.
 
@@ -193,7 +193,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] Successful-use history rotates rediscovery sources and only the saved freeform feedback enters the JSON
+- [x] All three pools are resampled, fresh anniversary/rediscovery excerpts replace previous ones, and a final JSON instruction quotes the prior generated question; explicit feedback stays intact
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Open the reflection editor

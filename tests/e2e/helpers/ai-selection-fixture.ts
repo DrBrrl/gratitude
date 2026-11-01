@@ -22,7 +22,7 @@ export async function seedSelectionHistory(page:Page) {
   function add(id:string,day:string) {
     actions.push({eventId:`w_${id}`,type:'ReflectionWritten',schemaVersion:6,payload:{entryId:id,text:`A fictional ${id} moment.`,expectedRevision:0,promptId:STARTER_ID,promptText:null,entryAt:`${day}T01:00:00.000Z`,photoSlot:null}});
   }
-  for(const year of [2021,2022,2023,2024,2025]) for(let day=28;day<=30;day++) add(`anniversary_${year}_${day}`,`${year}-09-${day}`);
+  for(const year of [2018,2019,2020,2021,2022,2023,2024,2025]) for(let day=28;day<=30;day++) add(`anniversary_${year}_${day}`,`${year}-09-${day}`);
   add('anniversary_2024_01','2024-10-01');
   for(let day=1;day<=12;day++) add(`rediscovery_${day}`,`2022-04-${String(day).padStart(2,'0')}`);
   for(let day=17;day<=30;day++) add(`recent_${day}`,`2026-09-${day}`);
