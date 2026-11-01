@@ -750,18 +750,21 @@ test('different-prompt requests bind a known AI response and retain cloud/local 
  const a=await device('different-prompt@example.test','different-prompt');
  const {makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
  const {writeBatch}=await import('firebase/firestore');
- await a.append({eventId:'choices',type:'AIChoicesConfirmed',schemaVersion:2,payload:{previousEventId:null,enabled:true,useJournal:false,useFeedback:false,guidance:'',provider:'gemini'}});
+ await a.append({eventId:'choices',type:'AIChoicesConfirmed',schemaVersion:2,payload:{previousEventId:null,enabled:true,useJournal:true,useFeedback:true,guidance:'x'.repeat(500),provider:'gemini'}});
+ let prior='choices';
+ for(let i=0;i<20;i++){await a.append({eventId:`write-${i}`,type:'ReflectionWritten',schemaVersion:6,payload:{entryId:`entry-${i}`,expectedRevision:0,text:'x'.repeat(10000),promptId:`write-${i}`,promptText:`Question ${i}?`,entryAt:'2025-04-01T00:00:00.000Z',photoSlot:null}});await a.append({eventId:`feedback-${i}`,type:'PromptFeedbackSubmitted',schemaVersion:1,payload:{previousEventId:prior,promptId:`write-${i}`,text:'y'.repeat(500)}});prior=`feedback-${i}`;}
  let state=replay(await events(a));const first=makeRequest(state,'2026-10-01','personal','first');await a.append(first);
  await a.append({eventId:'first_response',type:'PromptResponseReceived',schemaVersion:1,payload:{requestId:'first',text:'A previous fictional question?',model:'fixture',finishReason:'STOP'}});
  for(const [provider,entryId]of[['gemini',undefined],['gemini','editor'],['lm-studio',undefined],['lm-studio','editor']]){
   state=replay(await events(a));
-  if(state.ai.choices.provider!==provider){await a.append({eventId:'local-choices',type:'AIChoicesConfirmed',schemaVersion:2,payload:{previousEventId:state.ai.control.lastEventId,enabled:true,useJournal:false,useFeedback:false,guidance:'',provider}});state=replay(await events(a));}
+  if(state.ai.choices.provider!==provider){await a.append({eventId:'local-choices',type:'AIChoicesConfirmed',schemaVersion:2,payload:{previousEventId:state.ai.control.lastEventId,enabled:true,useJournal:true,useFeedback:true,guidance:'x'.repeat(500),provider}});state=replay(await events(a));}
   const id=`another-${provider}-${entryId??'today'}`,target=provider==='lm-studio'?{provider,model:'fixture-local',thinking:false}:undefined;
   const request=makeRequest(state,'2026-10-01','personal',id,entryId,undefined,target,false,'first_response');
   // Bypass the client parser to prove Rules reject an unrelated source action.
   const bad={...request,eventId:'forged-reference',payload:{...request.payload,differentFromPromptId:'choices'}};
   const root=`users/${a.uid}/streams/v1`,batch=writeBatch(a.db);
   batch.set(doc(a.db,`${root}/events/${bad.eventId}`),{...bad,sequence:state.cursor+1,recordedAt:serverTimestamp()});batch.set(doc(a.db,root),{sequence:state.cursor+1,lastEventId:bad.eventId});batch.set(doc(a.db,`${root}/ai/control`),{lastEventId:bad.eventId,choicesId:state.ai.control.choicesId,requestId:bad.eventId});await assertFails(batch.commit());
+  assert.equal(Object.keys(request.payload.entryRefs).length,20);assert.equal(request.payload.feedbackIds.length,20);
   await a.append(request);assert.ok(JSON.parse(buildContext(state,request)).differentPromptRequest.includes('A previous fictional question?'));
   await a.append({eventId:`${id}_response`,type:'PromptResponseReceived',schemaVersion:1,payload:{requestId:id,text:'A different fictional question?',model:'fixture',finishReason:'STOP'}});
  }
