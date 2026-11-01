@@ -29,12 +29,33 @@ Follow the CLI’s account setup link if Serve/HTTPS is not enabled. Use the HTT
 
 Serve is available within the tailnet. This setup uses **Serve**, rather than a public Funnel endpoint. See [Tailscale’s Serve guide](https://tailscale.com/docs/features/tailscale-serve) and [CLI reference](https://tailscale.com/docs/reference/tailscale-cli/serve). If a Serve configuration already exists, review it before replacing its route; these commands assume port 443 is available for this service.
 
+## Another model computer, including Windows 11
+
+Run Serve on the computer that runs LM Studio. Each computer has its own Tailscale DNS name and Serve configuration; enabling it on the first computer does not configure the second. On Windows 11, open PowerShell and inspect the existing service:
+
+```powershell
+tailscale serve status
+```
+
+If no existing HTTPS port-443 route needs preserving, configure the loopback server and check the exact URL:
+
+```powershell
+tailscale serve --bg --https=443 http://127.0.0.1:8080
+tailscale serve status
+```
+
+Use the HTTPS origin printed for that computer, such as `https://other-laptop.my-tailnet.ts.net`, in Gratitude. Do not append port 8080 or `/v1/chat/completions`: Serve accepts HTTPS on 443 and forwards to local port 8080. Keep LM Studio listening on loopback with authentication and CORS enabled. Both machines must be connected to the tailnet and permitted to communicate; the model laptop must stay awake with LM Studio’s server running.
+
+If the CLI is not on PowerShell’s PATH, use `& "$env:ProgramFiles\Tailscale\tailscale.exe" serve status` and the same executable prefix for the setup command. A permission error may require an administrator PowerShell. A browser visit to the model endpoint returning “API token required” proves the route is reachable; use Gratitude’s token field for authenticated testing, not a token in the URL.
+
+The current app stores one LM Studio connection per account/device. Changing its server clears the token input; enter a token issued by the new server and choose its model before saving. **Remember token in my account** replaces the existing saved connection for other devices, so choose this deliberately. [AI_PROVIDER_DESIGN.md](AI_PROVIDER_DESIGN.md) proposes named connections for switching between computers and other services.
+
 ## Configure Gratitude
 
 1. Sign in and open **Settings → AI settings**.
 2. In **AI model**, choose **LM Studio · local model**.
 3. Enter this device’s server URL, `google/gemma-4-31b` (or its actual API identifier), and the API token.
-4. Choose **Test connection**. It reports whether the model is available/loaded, supports photos, and its loaded context length.
+4. Choose **Test connection**. It reports whether the model is available/loaded, supports photos, and its loaded context length. If the server offers multiple identifiers, **Model API identifier** becomes a picker showing loaded/available models, including loaded instance aliases. Choose a model there; models without thinking-off support are disabled. An unavailable current identifier stays selected until you explicitly replace it. **Enter an identifier manually…** returns to text input; test again to refresh the picker. Metadata discovery makes no inference request.
 5. Choose **Save model settings**. This saves the provider to your account and the connection details on this device.
 6. Enable **AI prompts**, choose the journal/feedback sharing you want, optionally supply preferences, then **Save AI choices**.
 

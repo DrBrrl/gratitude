@@ -92,7 +92,7 @@ Both deployment configurations select `aiDataMode: "paid"`, and billing was veri
 
 ## Local models with LM Studio
 
-Open **Settings → AI settings → AI model**, choose **LM Studio**, enter the server URL and model identifier (`google/gemma-4-31b` by default), and put the API token in the local password field. **Test connection** discovers capabilities without inference; **Save model settings** saves the provider to your account and the connection details on this device. The token stays in the tab session by default. Optional **Account token sync → Remember token in my account** stores the bound server/model/token in private account settings for other devices; **Forget saved token** removes that copy. Credentials stay outside journal events and exports. Existing sharing switches and twenty-reflection selection apply to local prompts; vision-capable models can also summarize photos.
+Open **Settings → AI settings → AI model**, choose **LM Studio**, enter the server URL and model identifier (`google/gemma-4-31b` by default), and put the API token in the local password field. **Test connection** discovers capabilities without inference and offers a picker when the server has multiple model identifiers; **Save model settings** saves the provider to your account and the connection details on this device. The token stays in the tab session by default. Optional **Account token sync → Remember token in my account** stores the bound server/model/token in private account settings for other devices; **Forget saved token** removes that copy. Credentials stay outside journal events and exports. Existing sharing switches and twenty-reflection selection apply to local prompts; vision-capable models can also summarize photos.
 
 Provider selection syncs across devices. Each device needs a reachable server address; account token sync can restore the saved connection without re-entry. Failures never trigger a Gemini fallback. For Firefox on a phone, use a private HTTPS address such as Tailscale Serve; localhost points to the phone itself. [LM_STUDIO_SETUP.md](LM_STUDIO_SETUP.md) explains server authentication/CORS, private HTTPS, thinking-off requests, context windows and recovery. Journal and photo storage still use Firebase. Projection version 9 rebuilds older caches from recorded events without inference.
 
@@ -117,6 +117,7 @@ Streaks count saved logical entry dates in the viewing device's timezone. An unf
 ## Project records
 
 - [LM_STUDIO_SETUP.md](LM_STUDIO_SETUP.md): local model configuration, private HTTPS, credentials, provider consent and replay.
+- [AI_PROVIDER_DESIGN.md](AI_PROVIDER_DESIGN.md): proposed named connections, additional local services and personal cloud keys; the LM Studio model picker is implemented.
 - [AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md): implemented instruction and twenty-reflection selection, with a deferred curated-notes idea.
 - [IMPORT_PLAN.md](IMPORT_PLAN.md): implemented alternate ZIP import, provenance, limits and recovery contract.
 - [STREAKS_DESIGN.md](STREAKS_DESIGN.md): implemented gentle streak rules, calendar interactions, return navigation and verification.
