@@ -1,11 +1,13 @@
 import { expect, type Page, type TestInfo } from '@playwright/test';
 import { TestStepHelper } from './test-step-helper';
-import { FIXTURE_TIME, navigate, signIn } from './journal-session';
+import { FIXTURE_TIME, signIn } from './journal-session';
 
 export async function openFriends(page: Page, steps: TestStepHelper, prefix = '') {
-  await navigate(page,steps,`${prefix}settings`,'Settings');
-  await steps.action(`${prefix}account`,'Open account settings',()=>page.getByRole('button',{name:/^Your account/}).click({timeout:15_000}),async()=>{await expect(page.getByRole('button',{name:'Friends & hugs',exact:true})).toBeVisible();});
-  await steps.action(`${prefix}friends`,'Open Friends and hugs',()=>page.getByRole('button',{name:'Friends & hugs',exact:true}).click(),async()=>{
+  await steps.action(`${prefix}friends`,'Open Friends and hugs',()=>page.getByRole('navigation',{name:'Journal navigation'}).getByRole('button',{name:'Friends & hugs',exact:true}).click(),async()=>{
+    const nav=page.getByRole('navigation',{name:'Journal navigation'});
+    await expect(nav.getByRole('button')).toHaveText(['Today','Journal','Friends','Settings']);
+    await expect(nav.getByRole('button',{name:'Friends & hugs',exact:true})).toHaveAttribute('aria-current','page');
+    await expect(nav.getByRole('button',{name:'Friends & hugs',exact:true}).locator('svg path')).toHaveAttribute('fill','currentColor');
     await expect(page.getByRole('heading',{name:'Friends & hugs',exact:true})).toBeVisible();await expect(page.getByText('Opening your friends…',{exact:true})).toHaveCount(0,{timeout:15_000});
     await expect(page.getByRole('button',{name:/^Save friends profile$|^Edit friends profile$/})).toBeEnabled({timeout:15_000});
     await expect(page.locator('.friends-space .connection')).toHaveCount(0,{timeout:15_000});

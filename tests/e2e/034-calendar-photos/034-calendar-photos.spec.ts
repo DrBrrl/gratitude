@@ -106,7 +106,7 @@ test('private photo dates share fogged thumbnails across all calendars and disca
       await expect(photo(week, '2026-09-27')).toBeVisible();
     });
     await navigate(page, steps, 'settings', 'Settings');
-    await steps.action('account', 'Open account controls', () => page.getByRole('button', { name: /^Your account/ }).click(), async () => {
+    await steps.action('account', 'Open account controls', () => page.getByRole('button', { name: /^Account/ }).click(), async () => {
       await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
     });
     await steps.action('signout', 'End the owner’s photo session', () => page.getByRole('button', { name: 'Sign out', exact: true }).click(), async () => {

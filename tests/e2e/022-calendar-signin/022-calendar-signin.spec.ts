@@ -15,7 +15,7 @@ test('both signed-out landing links open authentication and then Journal',async(
  await signIn(page,info,steps,'calendar-signin',false,'Journal',true);
  await steps.step('journal-destination','Complete sign-in directly into Journal even with no saved entries',[{description:'The explicit landing-link destination is consumed and the journal is ready',check:async()=>{await expect(page.getByRole('heading',{name:'Your journal',exact:true})).toBeVisible();await expect(page).not.toHaveURL(/afterSignIn/);await expect(page.locator('article.card')).toHaveCount(0);}}]);
  await navigate(page,steps,'settings','Settings');
- await steps.action('account','Open the signed-in account',()=>page.getByRole('button',{name:/^Your account/}).click(),async()=>{await expect(page.getByRole('button',{name:'Sign out',exact:true})).toBeVisible();});
+ await steps.action('account','Open the signed-in account',()=>page.getByRole('button',{name:/^Account/}).click(),async()=>{await expect(page.getByRole('button',{name:'Sign out',exact:true})).toBeVisible();});
  await steps.action('signout','Sign out before checking the footer entry point',()=>page.getByRole('button',{name:'Sign out',exact:true}).click(),async()=>{await expect(page.getByRole('link',{name:'Sign in',exact:true})).toBeVisible();});
  await steps.action('signedout-home','Return to the signed-out landing page',()=>page.goto('./'),async()=>{await expect(page.getByRole('region',{name:'Calendar sign-in preview'})).toBeVisible();await expect(page.getByRole('link',{name:'Sign in and open your journal',exact:true})).toBeVisible();});
  await signIn(page,info,steps,'calendar-signin',true,'Journal',true,()=>page.getByRole('link',{name:'Sign in and open your journal',exact:true}).click());
