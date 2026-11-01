@@ -1275,3 +1275,9 @@ The reflections to be sent to the AI for prompt construction should also change.
 ```text
 Tell me a little bit about firebase push notification billing?
 ```
+
+## 2026-11-02 — Rebase PR 21 after merging PR 20
+
+```text
+Have merged 20! Can you resolve the conflicts for 21?
+```
