@@ -1154,3 +1154,9 @@ Implement separate connections in this PR
 ```text
 With the option to use the same model please!
 ```
+
+## 2026-11-01 — Continue after an unexpected shutdown
+
+```text
+Sorry about that, computer decided it wanted to shut down! Can you please keep going?
+```
