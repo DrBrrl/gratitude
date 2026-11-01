@@ -2,7 +2,7 @@ import type { Entry, Projection } from '../domain.ts';
 import { civilDate, dayInZone, validDay } from '../civil-date.ts';
 
 export const SELECTOR_VERSION = 'mixed-v1';
-export type SelectionInput = { day: string; timeZone: string; selectionSeed: string; entryId?: string };
+export type SelectionInput = { day: string; timeZone: string; selectionSeed: string; entryId?: string; avoidEntryIds?: readonly string[] };
 export type Selection = { anniversary: Entry[]; rediscovery: Entry[]; fallback: Entry[]; recent: Entry[] };
 export function validTimeZone(value: unknown): value is string {
   if (typeof value !== 'string' || value.length > 100 || !/^[A-Za-z_+-]+(?:\/[A-Za-z0-9_+-]+)*$/.test(value)) return false;
@@ -44,12 +44,14 @@ const compare = (a: string,b: string) => a < b ? -1 : a > b ? 1 : 0;
 export function selectReflections(state: Projection, input: SelectionInput): Selection {
   if (!validSelection(input)) throw new Error('Invalid reflection selection inputs.');
   const draw=randomSource(input.selectionSeed);
+  const avoid=new Set(input.avoidEntryIds??[]);
+  const freshness=(a:Entry,b:Entry)=>Number(avoid.has(a.id))-Number(avoid.has(b.id));
   const candidates=state.entries.filter(entry => entry.id !== input.entryId && entry.text.trim()).map(entry => ({
     entry, day: dayInZone(entry.entryAt ?? entry.recordedAt,input.timeZone)
   })).filter(item => item.day < input.day).sort((a,b)=>compare(a.day,b.day)||compare(a.entry.id,b.entry.id));
   const used=new Set<string>();
   const take=(entries: Entry[], count: number) => {
-    const result=entries.filter(entry=>!used.has(entry.id)).slice(0,count);
+    const result=entries.filter(entry=>!used.has(entry.id)).sort(freshness).slice(0,count);
     result.forEach(entry=>used.add(entry.id)); return result;
   };
   const ref=ordinal(input.day);
@@ -68,12 +70,15 @@ export function selectReflections(state: Projection, input: SelectionInput): Sel
     }
   }
   const years=shuffle([...groups.keys()].sort((a,b)=>a-b),draw);
-  for(const y of years) groups.set(y,shuffle(groups.get(y)!,draw).sort((a,b)=>a.distance-b.distance));
+  for(const y of years) groups.set(y,shuffle(groups.get(y)!,draw).sort((a,b)=>freshness(a.entry,b.entry)||a.distance-b.distance));
   const anniversary:Entry[]=[];
   while(anniversary.length<8) {
+    const freshRemaining=avoid.size>0&&[...groups.values()].some(items=>items.some(item=>!used.has(item.entry.id)&&!avoid.has(item.entry.id)));
     let found=false;
     for(const y of years) {
-      const item=groups.get(y)!.shift();
+      const queue=groups.get(y)!;
+      const index=freshRemaining?queue.findIndex(item=>!used.has(item.entry.id)&&!avoid.has(item.entry.id)):0;
+      const item=index<0?undefined:queue.splice(index,1)[0];
       if(item && !used.has(item.entry.id)) {anniversary.push(item.entry);used.add(item.entry.id);found=true;}
       if(anniversary.length===8) break;
     }

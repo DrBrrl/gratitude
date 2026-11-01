@@ -135,3 +135,19 @@ The implemented optional local provider reuses this selector and instruction unc
 AI settings → What informs your prompts lists every current nonblank prompt/feedback pair, newest first, including when sharing is disabled. The saved sharing choices determine the displayed on/off status; only the latest twenty pairs are sent when feedback sharing and AI prompts are enabled in personal mode. Edit feedback opens a 500-character field with Save feedback and Cancel. Saving appends an existing `PromptFeedbackSubmitted` action for that original prompt ID; it does not rewrite the question or alter AI sharing preferences. Delete feedback appends the same action with empty text and removes the pair from the current list and later contexts. Earlier source events and previously saved AI outputs remain unchanged. A changed source event during editing causes a visible conflict rather than overwriting newer feedback.
 
 The same paired JSON is used by Gemini and LM Studio, including compatible legacy context builders; replay never constructs a new request. This changes no source schema, projection version or backend Rule. Generic mode and sharing off exclude both halves of the pair, and internal IDs are not included in the model JSON.
+
+## Asking for a different prompt
+
+An explicit request for another generated question captures `differentFromPromptId`, the immutable AI response the user is replacing. Today uses its visible generated question; the editor uses its current generated option or the generated question already selected for that reflection. Manual question text and unfinished reflection writing are not sent through this field. The first request, starter-only request and automatic backup refill keep their existing contracts.
+
+The outgoing JSON ends with `differentPromptRequest`, containing the user’s instruction:
+
+> The user has requested a different prompt. Your new prompt's wording and topics should vary from your previously generated prompt: "[previously generated prompt]"
+
+The quoted question is encoded as JSON data, preserving its exact text. The fixed system task and its instruction-injection boundary still apply. Both managed Gemini and LM Studio receive the same context. This improves the model’s guidance; the app cannot guarantee that a probabilistic model always returns different wording.
+
+Replacement requests use `mixed-v2`. A fresh literal random seed resamples five recent, eight anniversary and seven least-recently-used reflections, by entry date. Each pool prefers excerpts absent from the preceding question’s entire captured source set; anniversary balancing/distance and least-use ordering apply within that preference. If alternatives are sparse, remaining eligible history fills the pool without duplicates, with the existing sparse-pool fallback toward twenty total. A small journal can reuse sources rather than silently omit all useful context. Sharing switches still govern journal and feedback inclusion, and editor dates/exclusions still apply.
+
+Cloud daily/editor requests use schemas 9/10; local requests use 11/12. The raw request records only the previous response ID, new seed and captured source references, alongside existing user request inputs. Computed grouping, AI input/output text and credentials are not added to request events. Exact AI response text remains its own received-response event. Legacy schemas retain `mixed-v1`; backup requests retain schemas 7/8. Projection version 12 rebuilds old checkpoints without inference. Both client append and Rules verify that the prior reference identifies an AI response in the same private journal stream.
+
+Tests reconstruct the outgoing JSON from each request-time snapshot, verify source rotation, current consent, logical dates, cloud/local and daily/editor contracts, sparse history and full/cached replay. No model is called by replay, reload or retrying a received output.

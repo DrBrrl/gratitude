@@ -75,6 +75,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
         const control = latest.exists() ? latest.data() as ReturnType<typeof emptyControl> : emptyControl();
         metadata = nextControl(control, action);
         if (action.type === 'PromptRequested') {
+          if('differentFromPromptId' in action.payload){const prior=await tx.get(doc(db,`${stream.path}/events/${action.payload.differentFromPromptId}`));if(prior.get('type')!=='PromptResponseReceived')throw new Error('Previous generated prompt is unavailable.');}
           if (action.payload.choicesId !== control.choicesId) throw new Error('AI consent changed. Please try again.');
           const choices = await tx.get(doc(db, `${stream.path}/events/${action.payload.choicesId}`));
           if ((isBackupRequest(action)?choices.get('payload.backupProvider'):(choices.get('payload.provider')??'gemini'))!==(isLocalRequest(action)?'lm-studio':'gemini')) throw new Error('AI provider changed. Review your model settings.');
