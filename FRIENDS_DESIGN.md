@@ -1,68 +1,64 @@
-# Friends and hugs — first design sketch
+# Friends, hugs and community gratitude
 
-The first implementation on this branch includes opt-in profiles, searchable usernames, requests, accepted friendships and a durable in-app hug inbox. Shared daily status, invitation links and device push remain design work. The following distinguishes the implemented first slice from those proposals.
+Friends lives in the heart tab between Journal and Settings. Account controls remain in Settings. Implemented here: chosen profiles, partial username discovery, consent-based requests, one hug per local day, optional individual streak sharing and repairable community streaks. Browser notifications remain a separate delivery decision; the app currently does not request permission or deliver background push.
 
-## Names and finding friends
+## Names and discovery
 
-The user has chosen searchable usernames as a way to find friends. Gratitude already uses a Firebase Authentication UID for each account and for access to its private journal. Friend relationships should use that identity too; changing a username or visible name must not change relationships or journal ownership.
+A Firebase UID owns relationships. An editable display name and case-insensitive unique username are separate from Google identity. Handles use 3–24 ASCII letters, digits or underscores, starting with a letter. Renaming releases the old handle atomically without transferring existing friendships. All displayed handles, including `@`, are italicised.
 
-Distinguish three things:
+Search accepts at least three characters from any part of a handle: `jam` finds both `jamie_spanou` and `testing_jamie`. Results use ten-row pages ordered by username, with a **More matches** action. There is no directory or email search in the UI. Discoverable names and handles are public to signed-in Google users; paging and minimum input length are usability/read-cost bounds, not an anti-enumeration guarantee. Additional abuse limits and rename-frequency policy remain open.
 
-- **Username:** a unique searchable handle such as `@jamie`, with case-insensitive matching. Availability and claiming must be checked atomically so two accounts cannot claim the same handle. Handles use 3–24 ASCII letters, digits or underscores, starting with a letter. Renaming atomically releases the old handle; relationships stay attached to UIDs. A rename-frequency policy remains open.
-- **Display name:** an editable label such as “Jamie”, shown alongside the handle so people can check whom they are adding. Display names need not be unique.
-- **Account identity:** the existing UID, used internally for relationships and access checks. A username is never a login credential or permission check.
+Each discoverable profile has a disposable search projection containing unique substrings of at least three characters (at most 253). Its writes must match the canonical profile. Once present, profile changes must update or delete that index atomically, keeping hidden/renamed profiles out of queries. Rules cannot prove a query against a cross-document join, so indexed reads rely on this write invariant instead of checking another profile for every returned row.
 
-First-slice experience:
+Existing profiles bootstrap their search index when their owner next opens the app; exact-handle lookup remains a fallback before that happens. Old open tabs may need refreshing before editing an indexed profile. The index can be rebuilt from current profiles; substrings never appear in source events. The composite `terms CONTAINS, username ASCENDING` Firestore index is required before publishing the frontend.
 
-1. When enabling Friends, choose a display name and an available username. Show exactly what will be discoverable before confirming. Do not automatically expose the Google account’s full name, email address or photo.
-2. Open Add a friend and search for a username. The first slice uses case-insensitive exact-handle lookup, accepting input with or without `@`; partial-name suggestions remain an open UX choice.
-3. Show the matching username and chosen display name, then send a friend request. Finding an account or sending a request grants no access to its journal or daily status.
-4. The recipient checks the sender’s name and handle and accepts or declines. Only accepted friends can exchange hugs, subject to their preferences. Sharing daily status requires separate consent.
+## Friend cards and hugs
 
-A searchable profile exposes only the chosen handle and display name to signed-in people looking it up. Do not offer a browsable public directory or email search. Exact username lookups can still be guessed: discoverable handles and names are not secrets. The lookup surface needs abuse limits and a clear explanation of discoverability.
+Only accepted, unblocked friends can exchange hugs. The card has a four-point gratitude star and the chosen name/italic handle; an outlined yellow heart sits on its right. Sending fills it for that date and confirms **Hug sent!** A user can pause incoming hugs, remove a connection or block someone, including directly from search. Unblocking does not restore friendship. Requests still have a 24-hour repeat delay.
 
-Private invitation links and copyable invitation codes remain a possible additional convenience, not a requirement for finding someone. If included, invitations expire, can be revoked, and require explicit confirmation before connecting or sharing status.
+New `HugSent` actions use schema 2 and capture the sender’s observed UTC offset in minutes. This is clock context for the action, not a precomputed date or streak. Server timestamps and bounded quarter-hour offsets (−12 to +14 hours) enforce a strictly advancing local-date bucket. A hug at 23:59 can be followed by one at 00:00; another on the same date is rejected. The previous action’s captured offset handles daylight-saving changes. Moving back to an earlier local date does not renew the allowance. The recipient’s preference and current relationship are checked on every write.
 
-Firebase documents UID, display name and email as separate user properties: [Manage users](https://firebase.google.com/docs/auth/web/manage-users). The friend-facing profile and username index must remain separate from private journal records. Username/profile selections are user actions; normalized lookup keys and availability/ownership indexes are projections or coordination records, not computed values inserted into source events. Removing or renaming a handle must never transfer an existing friendship to the account that later claims it.
+Existing schema-1 hug history replays with its original 24-hour rule. Its final legacy cooldown is retained until the first schema-2 hug; modern senders cannot downgrade to schema 1 to bypass daily checks. Pair-head timestamps preserve canonical sub-millisecond precision during unrelated actions.
 
-## A small Friends space
+Hug source history and existing private read acknowledgements remain intact, but the former inbox UI is replaced with **Community gratitude**. Sending confirms persistence, not that the recipient has seen the gesture. Full replay never sends an old hug again.
 
-The Friends heart tab sits between Journal and Settings in the bottom navigation. Settings → Account contains account and sign-out controls; Friends & hugs lives entirely in its own tab. It contains the chosen name/username, Add a friend, incoming/outgoing requests, accepted friends and a hug inbox. The placement and visual design can be reviewed with the working preview.
+## Sharing dates and streaks
 
-Each friend card shows the chosen name/handle and a Send a hug action. Daily status is not implemented yet. A simple acknowledgement confirms a hug was sent; delivery does not imply the recipient has seen it.
+The profile form defaults **Share my gratitude streaks with friends** on and explains that friends see gratitude dates and streaks, while prompts, reflections and photos remain private. Saving explicitly records `GratitudeSharingChosen` with the checkbox and selected IANA timezone. Existing users must review and save this new choice; the app does not silently publish their history. Sharing can be off while discovery and hugs remain on.
 
-Proposed next slice: sharing today’s reflection status is a separate opt-in choice, not an automatic consequence of accepting friendship. A person can receive hugs without sharing whether they have written. Share only whether a saved reflection exists for the displayed local date, never its prompt, text, photos, AI summaries, entry count or writing time.
+A lightweight owner publisher runs after sign-in, independently of opening Friends. Only a confirmed, synchronized private journal projection can publish. Its shared projection contains unique civil dates derived from `entryAt` (falling back to `recordedAt`) in the chosen shared-calendar timezone. Imports, backfills and date edits participate identically to ordinary entries; multiple entries on one day count once. Text-only changes do not rewrite the shared dates. A private receipt ties each new publication to the current journal source cursor. Rules check ownership, exact schema, consent, atomic provenance and source-prefix freshness; they do not recompute the owner’s entire journal on a server. Status is an owner-maintained projection, not a tamper-proof attestation.
 
-Use the sharing person’s chosen timezone and display the date so that friends in different timezones can understand “today”. Entry dates, including imports, backfills and date edits, determine the status. The exact timezone-setting behaviour still needs design. Stale or unavailable information is labelled accordingly, rather than interpreted as a missed reflection.
+Shared records expose no journal text, prompts, photos, summaries, entry identifiers/counts, exact writing times or private journal cursor. Accepted friends alone can read dates while sharing is enabled. Disabling sharing atomically deletes both the shared snapshot and private receipt; removing/blocking a friendship denies subsequent reads immediately. Already viewed information cannot be recalled. Raw sharing-choice history and publication provenance stay owner-only.
 
-Keep hugs available even if someone has already reflected. This is a personal gesture, not an automatic reminder campaign. Recipients control whether hugs are allowed and whether they produce notifications. Include mute, remove-friend and block controls, with sensible sending limits.
+The friend’s current streak appears beside their name as **(N days of gratitude in a row)**. It is absent when sharing is off/unavailable. Individual streaks use that person’s shared-calendar timezone. Community gratitude intersects both sets of civil dates and uses the earlier of their current local dates; today being unfinished retains yesterday’s run. For an active run: **Jamie and Robin have a 4 day gratitude streak.** Once it ends, show their longest shared run. A missing day repaired by either friend restores the shared run. Empty copy: **Your community streaks will show up here!**
 
-## Events, privacy and notifications
+Only live, server-confirmed peer consent/snapshots enter the UI. Peer dates are not saved in the application’s IndexedDB checkpoint; consent changes and friendship revocation remove the in-memory result. Unavailable information is omitted, not treated as a missed day. Sharing never grants access to the private journal stream or credentials.
 
-Keep the existing private journal stream private. Add friendship, invitation, naming, sharing-choice and hug user actions separately, with cached, rebuildable projections. Source events contain the actions and user-supplied choices; friendship state, daily completion flags, counts and notification delivery state belong in projections or operational records.
-
-Shared reads must be restricted to accepted friends with the relevant current consent. Friend access must never require permission to read the private journal stream. Disabling sharing or ending a friendship stops subsequent shared reads and deliveries; information already viewed cannot be recalled. The shared status projection and its permission checks need a detailed design before implementation.
-
-Record hugs durably for the in-app inbox. Optional device push needs a trusted sender outside the public SPA, private device registrations and duplicate-safe processing. Replaying events must not send old hugs again. The service choice, notification preferences, revocation behaviour and real-device delivery tests remain implementation-design work; no infrastructure has been provisioned.
-
-## Implemented storage and recovery
+## Source streams and projections
 
 | Record | Purpose and access |
 | --- | --- |
-| `friendProfiles/{uid}/events/{id}` | Immutable literal profile choices; owner-only history. |
-| `friendProfiles/{uid}` | Derived current name, handle, discovery choice and source cursor. Discoverable to authenticated lookup or to the owner/current unblocked connection. |
-| `friendUsernames/{key}` | Atomic normalized handle reservation, separate from private journal data. Collection listing is denied. |
-| `friendPairs/{id}/events/{id}` | Immutable request, acceptance, cancellation, decline, removal, blocking, hug-preference, send actions. Only the two participants read the history. |
-| `friendInboxes/{uid}/events/{id}` | Private read acknowledgements containing the selected pair/hug references; owner-only, with a separate source cursor. No sender read receipts. |
-| `friendPairs/{id}` | Validated relationship projection and source cursor; membership-filtered reads, no public directory. |
-| `friendLinks/{uid}/peers/{otherUid}` | Immutable reciprocal coordination pointers. Their atomic creation prevents concurrent requests creating duplicate relationships. |
+| `friendProfiles/{uid}/events/{id}` | Immutable literal name, handle and discoverability choices; owner-only. |
+| `friendProfiles/{uid}` | Current chosen profile and source cursor. |
+| `friendUsernames/{key}` | Atomic normalized handle reservation; listing denied. |
+| `friendSearch/{uid}` | Disposable discoverable name/handle substring index; Google-authenticated, bounded queries. |
+| `friendPairs/{id}/events/{id}` | Immutable request, answer, cancellation, removal, blocking, hug-preference and hug actions; participants only. |
+| `friendPairs/{id}` | Validated relationship state, daily hug clock context and source cursor. |
+| `friendLinks/{uid}/peers/{otherUid}` | Reciprocal pointers preventing duplicate/concurrent pair streams. |
+| `friendInboxes/{uid}/events/{id}` | Preserved owner-only legacy read acknowledgements; never sender read receipts. |
+| `friendSharing/{uid}/events/{id}` | Immutable literal sharing/timezone choices; owner-only. |
+| `friendSharing/{uid}` | Current consent projection; owner/current accepted friends. |
+| `friendGratitude/{uid}` | Disposable date-only publication; owner/current accepted friends with consent. |
+| `users/{uid}/privateProjections/gratitudeDays` | Owner-only publication receipt and private journal source cursor. |
 
-Profile updates, normalized reservations and literal source events commit atomically. Pair actions and projections also commit atomically. Security Rules check actor, recipient, source predecessor, sequence and permitted state transitions; they reject editing/deleting source events or forging projection state. Server time enforces the 24-hour hug/request limits. Recipient preference and blocking are checked again on every send. An account can be blocked directly from discovery without first issuing a request. Hidden handle reservations do not disclose the UID to unrelated callers. Read acknowledgements live in an owner-only stream, so the sender cannot observe their timing.
+Profile and pair actions commit atomically with their projections; Rules reject detached/fabricated state, stale predecessors, unauthorized actors and source mutation. An owner/deployment-scoped version-3 IndexedDB checkpoint has a digest and caches own sharing, profile, pair and legacy read projections. Warm opens fetch source tails; **Rebuild friends view** replays accessible source streams. The date publication is regenerated from full private journal replay and sharing choices, with no stored streak events. Online connectivity is required for social writes; there is no social outbox.
 
-A deployment- and owner-scoped IndexedDB checkpoint caches the social projection with a digest and version. Warm opens reconcile against canonical heads and fetch only event tails. Rebuild discards the projection and replays the complete accessible source streams. No replay path sends a hug or calls an external notification service. The private inbox cursor and seen references are cached alongside the profile and pair projections. The first UI shows the latest 20 incoming hugs; older actions remain in the canonical history. Previously viewed data cannot be remotely erased from an offline device.
+## Notifications and remaining decisions
 
-## Delivery and subsequent slices
+The prior implementation only stored in-app hugs, which explains why Firefox on Android did not show device alerts. Browser notifications need permission requested from a user gesture. Android delivery should use a service worker’s notification API. Showing an alert while Gratitude is open can use its live connection; delivery after it closes needs a trusted push sender and revocable private device registrations. A service worker alone does not create that sender.
 
-The first slice provides choosing a friend-facing name and unique username, finding an account by its handle, sending/accepting/declining/cancelling a friend request, and sending/receiving a hug in the app. Add the consent-controlled daily status and optional device notifications as separately reviewable slices. Each working feature needs permission tests and mobile/desktop action-by-action E2E screenshots under the existing zero-pixel, no-masking contract.
+Before background delivery is enabled, choose/provision its backend, define per-device opt-in, duplicate suppression and current friendship/preference checks, and test Firefox on a real Android device. Rebuilds and first synchronization must never notify old hugs. No push infrastructure or billed backend is added by this change. See [MDN’s notification guidance](https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API) and [Push API](https://developer.mozilla.org/en-US/docs/Web/API/Push_API). Private invitation links remain a possible later convenience.
 
-This ordering is a proposal, not a commitment to omit status or notifications from the completed feature. The user’s intended feature includes both gentle daily-status sharing and hugs that can notify their recipient.
+## Verification
+
+Pure tests cover substring bounds, logical-date selection, repaired intersections, sharing replay, midnight/DST handling and legacy-version restrictions. Firebase emulator tests cover bounded paged search, atomic rename/hiding, explicit sharing and private provenance, revocation, stale writes, per-day hug enforcement and rejected forged/downgraded actions. Browser walkthroughs 036–039 and 043 cover both viewports, screenshot every user action with zero tolerance and generate checks under each image.

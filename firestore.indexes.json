@@ -1,1 +1,7 @@
-{ "indexes": [], "fieldOverrides": [] }
+{
+  "indexes": [{
+    "collectionGroup": "friendSearch", "queryScope": "COLLECTION",
+    "fields": [{ "fieldPath": "terms", "arrayConfig": "CONTAINS" }, { "fieldPath": "username", "order": "ASCENDING" }]
+  }],
+  "fieldOverrides": []
+}

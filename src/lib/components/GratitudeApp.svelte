@@ -4,6 +4,8 @@
   import { page } from '$app/state';
   import { goto, pushState, replaceState } from '$app/navigation';
   import Friends from './Friends.svelte';
+  import { GratitudePublisher } from '../friends/publisher';
+  let gratitudePublisher: GratitudePublisher | null = null;
   import AccentPicker from './AccentPicker.svelte';
   import { accentTheme } from '../appearance';
   import { autoGrow } from '../auto-grow';
@@ -151,6 +153,7 @@
   function receiveView(value: JournalView) {
     if(value.state.ai.days[today]!==view.state.ai.days[today])dailyPromptError=null;
     view = value;
+    gratitudePublisher?.update(value);
     // Choose the landing page once from the loaded projection. Later syncs must
     // not interrupt writing or an explicitly selected tab.
     if (chooseInitialPage && value.ready && value.status === 'Synced') {
@@ -620,6 +623,7 @@
           calendarThumbnailCache?.dispose();calendarThumbnailCache=null;
           photoCredentialStore?.stop();photoCredentialStore=null;photoCredentialStatus={ready:false,saved:false,error:''};
           credentialStore?.stop();credentialStore=null;credentialStatus={ready:false,saved:false,error:''};
+          gratitudePublisher?.stop(); gratitudePublisher=null;
           repository?.stop(); repository = null;
           chooseInitialPage = true;
           aiBusy = false; generatingPrompt = false; aiMessage = ''; feedbackOpen = false; feedbackText = ''; choices = { enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' };
@@ -633,6 +637,7 @@
           view = { state: emptyProjection(), pending: null, status: '', error: '', ready: false };
           initialized = true;
           if (next && client) {
+            gratitudePublisher=new GratitudePublisher(client.db,next.uid); gratitudePublisher.start();
             const photoClient=client,photoOwner=next.uid;
             calendarThumbnailCache=new PhotoThumbnailCache(id=>navigator.onLine?readPhoto(photoClient,photoOwner,id):Promise.reject(new Error('Photo unavailable offline')));
             const scope=`${client.projectId}:${base}:${next.uid}`;
@@ -664,10 +669,10 @@
         });
       } else initialized = true;
     } catch { initialized = true; error = 'Sign-in is unavailable. Please try again later.'; }
-    const online = () => {refiller.reset();void repository?.syncBackups();void repository?.syncPromptResult().catch(()=>{});void repository?.retry();};
+    const online = () => {gratitudePublisher?.update(view);refiller.reset();void repository?.syncBackups();void repository?.syncPromptResult().catch(()=>{});void repository?.retry();};
     const refillTimer=setInterval(()=>{const refill=refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting&&(view.state.ai.choices.backupProvider!=='lm-studio'||!!modelConnection.token||credentialStatus.ready),online:navigator.onLine,visible:document.visibilityState==='visible',busy:busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state);refillMessage=refiller.status;void refill.then(()=>{refillMessage=refiller.status;});},3000);
     window.addEventListener('online', online);
-    return () => { session++; stopAuth(); calendarThumbnailCache?.dispose(); credentialStore?.stop();photoCredentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
+    return () => { session++; stopAuth(); gratitudePublisher?.stop(); calendarThumbnailCache?.dispose(); credentialStore?.stop();photoCredentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
   });
   async function signIn(journal = landing) {
     if (!initialized || busy) return;
@@ -853,7 +858,7 @@
         {#if results.length > JOURNAL_BATCH}<MoreReflections shown={visibleResults.length} total={results.length} onmore={showOlderReflections} />{/if}
       {/if}
     {:else if tab === 'friends'}
-      {#if client && !uiReview}<Friends {client} uid={user.uid} />{:else}<h1 class="page-heading">Friends &amp; hugs</h1><p>Friends are available when signed in to a Firebase journal.</p>{/if}
+      {#if client && !uiReview}<Friends {client} uid={user.uid} journal={view} />{:else}<h1 class="page-heading">Friends &amp; hugs</h1><p>Friends are available when signed in to a Firebase journal.</p>{/if}
     {:else}
       {#if settingsPage !== 'menu'}<button class="back" onclick={() => openSettings('menu')}><Icon name="back" />Settings</button>{/if}
       {#if settingsPage === 'menu'}

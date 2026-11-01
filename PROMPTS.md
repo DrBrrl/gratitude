@@ -1204,3 +1204,38 @@ Settings copy edits while you are updating all the screenshots:
 - Change "Your saved preferences are shared when requesting a prompt. The switches optionally include up to 20 earlier reflections (anniversaries, rediscoveries and recent writing) and 20 original questions with their feedback. Entry dates determine selection; imports count by their original dates. Your configured LM Studio server processes this context to generate your prompt." to "Your saved preferences are shared when requesting a prompt. The switches above optionally include up to 20 earlier reflections (anniversaries, rediscoveries, and recent writing) and up to 20 original questions with their feedback. Entry dates determine selection; imports count by their original dates. Your configured LM Studio server processes this context to generate your prompt." Hide it under a "Prompt info" drop-down-y thing like Account token sync.
 - Change "Choose a saved prompt on Today or in your reflection, with no wait for AI. Saving a reflection uses that prompt; skipping keeps it available. Removed prompts stay out of the reserve." to "Use one of these saved prompts on Today or in your reflection, with no wait for an AI call. Saving a reflection uses that prompt; skipping keeps it available. Remove prompts by cicking "I won't use this prompt" when it is presented to you; it will be removed from the reserve."
 ```
+
+## 2026-11-01 — Friends, hugs and community gratitude follow-up
+
+```text
+Thank you love, what a slog! Can you look at 2026-11-01 (16:35) - Friends & hugs behaviour and copy edits.txt next and start on that one?
+```
+
+User-authored instructions from `docs/Jamie follow-ups/2026-11-01 (16:35) - Friends & hugs behaviour and copy edits.txt`:
+
+```text
+"You can encourage your friends to practice gratitude by sending them a hug!" - Change to "You can encourage your friends to practice gratitude by sending them one hug per day!"
+
+The username displayed under the desplay name: Italicise (incl. the @)
+
+Italicise the @ in all instances of @username
+
+"Find your friend by searching for their @username!" - remove
+Change text in search box from "@username" to "Search for your friend's *@username*"
+
+Search behaviour: Allow searching for people using a part of their username - e.g. "jam" should return "jamie_spanou" and "testing_jamie", or convince me of why this isn't necessary
+
+Beside the "Displayname" text that shows up in the Your friends list, add the user's gratitude streak in parantheses, e.g. (xxx days of gratitude in a row)
+Add the ability to hide gratitude streaks from your friends, which would just remove the parenthesis entirely. Default to sharing the streak.
+Change the empty yellow heart beside the Displayname on the Your Friends list to the four-point gratitude star
+
+Move the "Send a hug to XXXX" button to be to the right of the Displayname/username block. Change it to a button showing an empty yellow heart when un-hugged, and a yellow heart when hug is sent.
+Remove the "One gentle hug per friend every 24 hours." text
+Make it so that a user can send one hug/day (12am-12pm), not /24 hours
+
+Change the text shown when a hug is sent from "A little hug, kept with care" to "Hug sent!"
+Notification behaviour:
+- Do we need to ask the browser a person is using for permission to send notifications? I didn't get any notifications on my android (firefox) when i was testing.
+- I don't think we need to display hug notifications under Your hugs 💛. Instead, let's make that section "Community gratitude" and have it display your gratitude streak with your friends! So if you've both filled in your gratitude for x consecutive days, on the same days, you get a gratitude streak toghether. Completely repairable. If the streak ends, you can instead display "longest streak". Text should be "Jamie and XXXX have an XXX day gratitude streak."
+- When that section is empty, show: "Your community streaks will show up here!"
+```

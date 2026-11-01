@@ -16,7 +16,7 @@ Users choose AI services and models for reflection prompts, photo descriptions a
 
 Reflections are private. Users can export and delete their data and understand what information is shared with an AI service.
 
-Users move between Today, Journal, Friends and Settings through the bottom navigation. They find friends through chosen usernames, accept connections, optionally share daily gratitude status and send gentle hugs. They control discoverability, sharing and notifications, and can pause or end a connection. Journal contents remain private.
+Users move between Today, Journal, Friends and Settings through the bottom navigation. They find friends through chosen usernames, accept connections, optionally share daily gratitude status and send gentle hugs. They see repairable individual and community gratitude streaks with chosen friends. They control discoverability, sharing and notifications, and can pause or end a connection. Journal contents remain private.
 
 The application supports keyboard navigation, screen readers, and readable layouts across screen sizes. Drafts are protected from accidental loss, and daily reflection remains available when AI generation is unavailable.
 
