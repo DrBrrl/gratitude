@@ -5,12 +5,14 @@
   import { FriendsRepository, saveFriendProfile, appendFriendAction, type DiscoveredProfile, type FriendsView } from '$lib/friends/repository';
   import { canHug, huggedToday, emptyProfile, usernameKey, type PairType, type PairProjection } from '$lib/friends/domain';
   import Icon from './Icon.svelte';
+  import HugNotifications from './HugNotifications.svelte';
+  import type {PushController,PushState} from '../push/controller';
   import type { JournalView } from '../firebase/repository';
   import { saveGratitudeSharing, publishGratitude } from '../friends/sharing';
   import { gratitudeDays, streakSummary, communityStreak, emptySharing } from '../friends/streaks';
   import { dayInZone } from '../civil-date';
 
-  let { client, uid, journal }: { client: FirebaseClient; uid: string; journal: JournalView } = $props();
+  let { client, uid, journal, pushController, pushState }: { client: FirebaseClient; uid: string; journal: JournalView; pushController:PushController|null;pushState:PushState } = $props();
   let repository: FriendsRepository | null = null;
   let view = $state.raw<FriendsView>({ sharing: emptySharing(''), gratitude: {}, streaksLoading: false, profile: emptyProfile(''), pairs: {}, peers: {}, ready: false, synced: false, error: '' });
   const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -67,27 +69,28 @@
     return () => { clearInterval(clock); opened.stop(); repository = null; window.removeEventListener('offline', offline); window.removeEventListener('online', online); };
   });
   async function run(task: () => Promise<unknown>, message: string, recovery=false) {
-    if (busy || (!view.synced && !recovery)) return;
-    busy = true; error = ''; notice = '';
-    try { await task(); await repository?.sync(); notice = message; }
+    if (busy || (!view.synced && !recovery)) return false;
+    busy = true; error = ''; notice = '';let saved=false;
+    try { await task(); await repository?.sync(); notice = message;saved=true; }
     catch (cause) {
       const code = (cause as { code?: string }).code;
       error = code ? code === 'permission-denied' ? 'This action is no longer available. Refresh and check the friendship or username.' : 'Could not save. Check your connection and try again.' : cause instanceof Error ? cause.message : 'Please try again.';
     } finally { busy = false; now = Date.now(); }
+    return saved;
   }
   function act(type: PairType, targetUid: string, extra: { allowHugs?: boolean } = {}) {
     return run(() => appendFriendAction(client.db, uid, { eventId: crypto.randomUUID(), type, targetUid, ...(type==='HugPreferencesChosen'?{allowHugs:extra.allowHugs}:type==='HugSent'?{utcOffsetMinutes:-new Date().getTimezoneOffset()}:{}) }), type === 'HugSent' ? 'Hug sent!' : 'Friendship updated.');
   }
   async function saveProfile() {
     editingProfile=true;
-    await run(async () => {
+    const saved=await run(async () => {
       await saveFriendProfile(client.db,uid,{username,displayName,discoverable});
       if (!view.sharing.sequence || view.sharing.enabled !== shareStreaks || shareStreaks && view.sharing.timeZone !== sharingZone) {
         const sharing = await saveGratitudeSharing(client.db,uid,{enabled:shareStreaks,timeZone:sharingZone},view.sharing.lastEventId);
         if (journal.ready && journal.status === 'Synced') await publishGratitude(client.db,uid,sharing,journal.state);
       }
-      editingProfile=false;
     }, 'Your friends profile is saved.');
+    if(saved)editingProfile=false;
   }
   async function findFriend(more = false) {
     if (disabled) return;
@@ -99,7 +102,7 @@
 
 </script>
 
-<div class="friends-space" data-streaks-loading={view.streaksLoading}>
+<div class="friends-space" aria-busy={busy} data-streaks-loading={view.streaksLoading}>
   <h1>Friends & hugs</h1>
   <p class="intro">You can encourage your friends to practice gratitude by sending them one hug per day!</p>
   {#if !view.ready}<p role="status">Opening your friends…</p>{:else}
@@ -129,7 +132,7 @@
     {#if view.profile.sequence}
       <section class="glass" aria-label="Add a friend">
         <h2>Add a friend</h2>
-        <form onsubmit={event => {event.preventDefault();void findFriend();}}><label class="sr-only" for="friend-search">Search for friends by username</label><div class="search-row"><div class="search-input"><input id="friend-search" type="search" bind:value={search} oninput={() => {found=[];searched=false;searchNext=null;}} placeholder=" " autocapitalize="none" autocomplete="off" spellcheck="false" disabled={disabled} />{#if !search}<span class="search-placeholder" aria-hidden="true">Search for your friend's <em>@username</em></span>{/if}</div><button class="outline" disabled={disabled || usernameKey(search).length<3}>Find friend</button></div></form>
+        <form onsubmit={event => {event.preventDefault();void findFriend();}}><label class="sr-only" for="friend-search">Search for friends by username</label><div class="search-row"><div class="search-input"><input id="friend-search" type="search" bind:value={search} oninput={() => {found=[];searched=false;searchNext=null;}} placeholder=" " autocapitalize="none" autocomplete="off" spellcheck="false" disabled={disabled} />{#if !search}<span class="search-placeholder" aria-hidden="true">Search for your friend's{' '}<em>@username</em></span>{/if}</div><button class="outline" disabled={disabled || usernameKey(search).length<3}>Find friend</button></div></form>
         <p class="hint search-help">Use at least 3 characters from any part of their username.</p>
         {#if searched && !found.length}<p class="hint search-result" role="status">No profile found for that username.</p>{/if}
         {#each found as person (person.uid)}
@@ -164,6 +167,7 @@
       </section>
       {#if blocked.length}<section aria-label="Blocked people"><h2>Blocked people</h2>{#each blocked as [id,p] (id)}<article class="glass"><h3>{name(peer(p))}</h3><p class="hint">Unblocking does not restore the friendship.</p><button class="outline" onclick={() => act('FriendUnblocked',peer(p))} disabled={disabled}>Unblock {name(peer(p))}</button></article>{/each}</section>{/if}
     {/if}
+    <HugNotifications controller={pushController} state={pushState} />
     <button class="quiet recovery" onclick={() => run(() => repository!.rebuild(),'Friends view rebuilt from saved actions.',true)} disabled={busy}>Rebuild friends view</button>
   {/if}
   {#if error || view.error}<p role="alert">{error || view.error}</p>{/if}
@@ -172,7 +176,7 @@
 
 <style>
   .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0; }
-  .search-input { position:relative;flex:1;min-width:0; }.search-placeholder { position:absolute;inset:0;padding:10px 12px;color:#aab2be;font-size:.8rem;line-height:1.4;pointer-events:none; }.search-input input { min-height:58px; }.search-help { font-size:.75rem;margin:10px 0 0; }.more-matches{margin-top:16px;}
+  .search-input { position:relative;flex:1;min-width:0; }.search-placeholder { position:absolute;inset:0;padding:0 10px;color:#aab2be;font-size:.7rem;line-height:42px;pointer-events:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }.search-input input { height:42px;min-height:42px;padding:9px 10px; }.search-row button { height:42px;min-height:42px;padding:8px 8px;font-size:.8rem; }.search-help { font-size:.75rem;margin:10px 0 0; }.more-matches{margin-top:16px;}
   .friend-streak { font-size:.78rem;font-weight:400;color:#bfc5ce;line-height:1.5; }.community-streak p { margin:0; }.community-streak strong { color:var(--accent-text);font-weight:600; } select { width:100%;padding:12px;border:1px solid var(--glass-border);border-radius:10px;background:#10151a;color:inherit;font:inherit; }
   .friend-card .profile-heading > div { flex:1; }.hug-button { display:grid;place-items:center;width:46px;height:46px;padding:6px;flex-shrink:0;color:var(--accent-text);border-color:var(--action-border); }.hug-button[aria-pressed=true] { opacity:1; }
   .friends-space { color:#f4f5fa; font-family:Arial,Helvetica,sans-serif; text-align:left; }
@@ -185,5 +189,5 @@
   section {margin:0 0 24px;} .glass {background:linear-gradient(130deg,#333738c9,#11171cc9);border:1px solid var(--glass-border);border-radius:22px;padding:20px;backdrop-filter:blur(18px);margin-bottom:18px;}
   label{display:block;font-size:.9rem;margin:16px 0 8px;} input:not([type=checkbox]){width:100%;min-width:0;background:#10151a99;border:1px solid var(--glass-border);border-radius:10px;color:inherit;padding:12px;font:inherit;} input:focus{outline:none;border-color:var(--action-border);} .check{display:flex;gap:10px;align-items:center;margin:18px 0}.check input{accent-color:var(--accent-text);width:18px;height:18px;flex-shrink:0;}
   button{font:inherit;min-height:44px;border-radius:12px;padding:10px 14px;cursor:pointer;color:inherit;}button:disabled{opacity:.5;cursor:default;} .primary{background:var(--accent-pale);color:#1e1d15;border:1px solid var(--accent-text);} .outline{background:#bac5ce0a;border:1px solid var(--action-border);} .quiet{background:none;border:0;color:#c7ccd4;text-decoration:underline;text-underline-offset:4px;} button:focus-visible,summary:focus-visible{outline:2px solid #bfc5ce;outline-offset:3px;} form>.primary,form>.outline{margin-right:8px;margin-top:10px}.profile-heading{display:flex;gap:12px;align-items:center;margin-bottom:14px}.profile-heading p,.profile-heading h2,.profile-heading h3{margin:0}.profile-heading :global(svg){color:var(--accent-text);flex-shrink:0}.search-row{display:flex;gap:10px}.search-row input{flex:1}.search-row button{flex-shrink:0}.search-result{margin-top:18px}.actions{display:flex;flex-wrap:wrap;gap:10px}summary{font-size:.85rem;cursor:pointer;color:#c7ccd4;margin-top:16px;line-height:1.5}.manage{margin-top:14px}.notice{color:var(--accent-soft);padding:12px;border:1px solid var(--glass-border);border-radius:12px}.connection{color:var(--accent-soft)}.recovery{font-size:.85rem;padding-left:0} [role=alert]{color:#f6b3bf;line-height:1.5}
-  @media(max-width:350px){.glass{padding:16px}.search-row{flex-wrap:wrap}.search-row input{flex-basis:100%}}
+  @media(max-width:350px){.glass{padding:16px}.search-row{flex-wrap:wrap}.search-row .search-input{flex-basis:100%}}
 </style>

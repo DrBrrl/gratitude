@@ -4,5 +4,6 @@
   "authDomain": "gratitude-drbrrl-dev.firebaseapp.com",
   "appId": "1:959183629113:web:33d4c1d0ab65759fe796e8",
   "appCheckSiteKey": "6Le40OQtAAAAAGbjSoI88w43bKAe0W4Ok30YYc0h",
-  "aiDataMode": "paid"
+  "aiDataMode": "paid",
+  "webPushPublicKey": "BClF7ejYOs6uWQf5qUvGbFSO1Yc5_DBhQ5D7EN6JONECJO94fJLwp76jwAblQAJd5Kd3McAKF60wkoXJAWWM4Eo"
 }

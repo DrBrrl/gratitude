@@ -22,6 +22,7 @@ export class TestStepHelper {
       }
       // Wait for real friend consent/date subscriptions before comparing their visible streaks.
       await expect(capturePage.locator('.friends-space[data-streaks-loading=true]')).toHaveCount(0,{timeout:15_000});
+      await expect(capturePage.locator('.friends-space[aria-busy=true], .push-notifications[aria-busy=true]')).toHaveCount(0,{timeout:15_000});
       await capturePage.mouse.move(0, 0);
       // Full-page capture has a deterministic document origin. Chromium mobile
       // can otherwise shift its scroll offset between beyond-viewport captures.

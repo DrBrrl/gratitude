@@ -23,5 +23,17 @@
       "enabled": false
     },
     "singleProjectMode": true
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "gratitude-push",
+      "runtime": "nodejs24",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "*-debug.log"
+      ]
+    }
+  ]
 }

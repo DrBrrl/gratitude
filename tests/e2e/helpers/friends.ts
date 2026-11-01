@@ -13,6 +13,7 @@ export async function openFriends(page: Page, steps: TestStepHelper, prefix = ''
     await expect(page.locator('.friends-space .connection')).toHaveCount(0,{timeout:15_000});
     await expect(page.getByText('Profile unavailable',{exact:true})).toHaveCount(0,{timeout:15_000});
     await expect(page.locator('.friends-space')).toHaveAttribute('data-streaks-loading','false',{timeout:15_000});
+    await expect(page.locator('.push-notifications')).toHaveAttribute('data-ready','true',{timeout:15_000});
   });
 }
 export async function createProfile(page: Page, steps: TestStepHelper, name: string, username: string, prefix = '') {

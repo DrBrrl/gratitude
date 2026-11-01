@@ -1,0 +1,32 @@
+import {before,after,test} from 'node:test';
+import assert from 'node:assert/strict';
+import{readFile}from'node:fs/promises';
+import{initializeTestEnvironment,assertSucceeds,assertFails}from'@firebase/rules-unit-testing';
+import{doc,getDoc,getDocs,collection,query,orderBy,setDoc,writeBatch,serverTimestamp,deleteDoc}from'firebase/firestore';
+import{choosePush}from'../../src/lib/push/repository.ts';
+import{applyPushChoice,emptyPushChoice}from'../../src/lib/push/protocol.ts';
+import{subscription,publicKey}from'../push/fixtures.mjs';
+let env;const db=uid=>env.authenticatedContext(uid,{firebase:{sign_in_provider:'google.com'}}).firestore();
+before(async()=>{env=await initializeTestEnvironment({projectId:'demo-gratitude',firestore:{host:'127.0.0.1',port:18080,rules:await readFile('firestore.rules','utf8')}});});after(async()=>env?.cleanup());
+test('notification choices replay; subscriptions are private, revocable and never source payloads',async()=>{
+ const a=db('push-alice'),b=db('push-bob'),device='fictional-device';const registration={subscription,scope:'https://drbrrl.github.io/gratitude/pr-preview/pr-20/',generation:'generation-first',publicKey};
+ await assertFails(setDoc(doc(a,`users/push-alice/pushDevices/${device}`),{...registration,choiceEventId:'missing',choiceSequence:1,createdAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+ const enabled=await choosePush(a,'push-alice',device,true,'button',registration,'push-enabled');assert.equal(enabled.enabled,true);
+ const saved=await assertSucceeds(getDoc(doc(a,`users/push-alice/pushDevices/${device}`)));assert.deepEqual(saved.get('subscription'),subscription);
+ await assertFails(getDoc(doc(b,`users/push-alice/pushDevices/${device}`)));await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),`users/push-alice/pushDevices/${device}`)));
+ await assertFails(getDocs(collection(b,'users/push-alice/pushChoices/fictional-device/events')));await assertFails(getDocs(collection(a,'users/push-alice/pushDevices')));
+ await assertFails(setDoc(doc(a,`users/push-alice/pushDevices/${device}`),{...saved.data(),scope:'https://evil.example/',updatedAt:serverTimestamp()}));
+ await assertFails(setDoc(doc(a,`users/push-alice/pushDevices/${device}`),{...saved.data(),subscription:{...subscription,endpoint:'https://127.0.0.1/internal'},updatedAt:serverTimestamp()}));
+ await assertFails(setDoc(doc(a,`users/push-alice/pushDevices/${device}`),{...saved.data(),choiceEventId:'other-choice',updatedAt:serverTimestamp()}));
+ await assertFails(setDoc(doc(a,'hugPushDeliveries/pair/events/hug/devices/fictional-device'),{status:'sent'}));
+ await assertFails(getDoc(doc(a,'hugPushDeliveries/pair/events/hug/devices/fictional-device')));
+ const disabled=await choosePush(a,'push-alice',device,false,'button',undefined,'push-disabled');assert.equal((await getDoc(doc(a,`users/push-alice/pushDevices/${device}`))).exists(),false);
+ const sources=await getDocs(query(collection(a,`users/push-alice/pushChoices/${device}/events`),orderBy('sequence')));const raw=sources.docs.map(d=>({...d.data(),recordedAt:d.get('recordedAt').toDate().toISOString()}));
+ assert.deepEqual(raw.reduce(applyPushChoice,emptyPushChoice()),disabled);assert.ok(raw.every(e=>Object.keys(e.payload).sort().join(',')==='enabled,previousEventId,reason'));
+ await assertFails(setDoc(doc(a,`users/push-alice/pushDevices/${device}`),{...saved.data(),updatedAt:serverTimestamp()}));
+ await assertFails(deleteDoc(doc(a,`users/push-alice/pushChoices/${device}/events/push-enabled`)));
+ // A detached off head cannot retain the active device, even when written outside the helper.
+ await choosePush(a,'push-alice',device,true,'button',registration,'push-enabled-again');
+ const forged=writeBatch(a);forged.set(doc(a,`users/push-alice/pushChoices/${device}`),{sequence:4,lastEventId:'forged-off',enabled:false});forged.set(doc(a,`users/push-alice/pushChoices/${device}/events/forged-off`),{eventId:'forged-off',type:'HugNotificationsChosen',schemaVersion:1,sequence:4,actorUid:'push-alice',deviceId:device,recordedAt:serverTimestamp(),payload:{previousEventId:'push-enabled-again',enabled:false,reason:'button'}});await assertFails(forged.commit());
+ await choosePush(a,'push-alice',device,false,'sign-out',undefined,'push-signed-out');
+});

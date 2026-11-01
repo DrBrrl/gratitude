@@ -1,0 +1,51 @@
+import{test,expect,type Page,type BrowserContext}from'@playwright/test';
+import{TestStepHelper}from'../helpers/test-step-helper';import{startJournal,FIXTURE_TIME,navigate}from'../helpers/journal-session';
+import{resetFriendsFixture,openFriends,createProfile}from'../helpers/friends';
+import{subscription}from'../../push/fixtures.mjs';
+async function binding(page:Page){return page.evaluate(async()=>{const scope=(await navigator.serviceWorker.getRegistration())!.scope;const name=`gratitude-push:${scope}:v1`;return new Promise<any>((resolve,reject)=>{const request=indexedDB.open(name);request.onsuccess=()=>{const db=request.result,tx=db.transaction('metadata'),read=tx.objectStore('metadata').get('binding');read.onsuccess=()=>{resolve(read.result);db.close();};read.onerror=()=>reject(read.error);};});});}
+async function pushFixture(context:BrowserContext){await context.grantPermissions([]);await context.addInitScript(value=>{
+ let subscribed=false;
+ const fake=()=>({endpoint:value.endpoint,options:{},toJSON:()=>value,unsubscribe:async()=>{subscribed=false;return true;}});
+ Object.defineProperty(PushManager.prototype,'subscribe',{value:async()=>{subscribed=true;return fake();}});
+ Object.defineProperty(PushManager.prototype,'getSubscription',{value:async()=>subscribed?fake():null});
+},subscription);}
+async function notifications(context:BrowserContext){const worker=context.serviceWorkers().filter(worker=>worker.url().includes('service-worker.js')).at(-1);if(!worker)throw Error('No notification worker');return worker.evaluate(async()=>{const values=await (self as unknown as ServiceWorkerGlobalScope).registration.getNotifications();return values.map(value=>({title:value.title,body:value.body,tag:value.tag,data:value.data}));});}
+
+test('device opt-in delivers and deduplicates background hugs with no app tab, and sign-out rejects queued messages',async({page,context},info)=>{
+ test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(360_000);
+ // Start with a deployed older worker, then exercise the real explicit upgrade.
+ let initialWorker=true;
+ await context.route('**/service-worker.js',async route=>{if(!initialWorker){await route.continue();return;}initialWorker=false;await route.fulfill({contentType:'application/javascript',body:`self.addEventListener('activate',event=>event.waitUntil((async()=>{const scope=self.registration.scope;await (await caches.open('gratitude-shell:'+scope+':legacy-fixture')).put(new URL('_app/immutable/legacy-fixture.js',scope),new Response('legacy public module'));await self.clients.claim();})()));`});});
+ await pushFixture(context);const steps=new TestStepHelper(page,info,{paintStaticPage:true});
+ await resetFriendsFixture(page);await startJournal(page,info,steps,'push-recipient');await openFriends(page,steps);await createProfile(page,steps,'Robin',`push_robin_${info.project.name.startsWith('mobile')?'m':'d'}`);
+ await steps.action('denied','Try notifications while browser permission is blocked',()=>page.getByRole('button',{name:'Turn on hug notifications',exact:true}).click(),async()=>{await expect(page.getByRole('alert')).toHaveText('Notifications are blocked. Allow them in your browser’s site settings, then try again.');await expect(page.getByText('Off on this device',{exact:true})).toBeVisible();});
+ await steps.action('permission','Allow notification permission in the browser',async()=>{await context.grantPermissions(['notifications']);await page.evaluate(()=>window.dispatchEvent(new Event('focus')));},async()=>{await expect(page.getByRole('alert')).toHaveCount(0);});
+ await steps.action('enable','Turn on hug notifications for this browser',()=>page.getByRole('button',{name:'Turn on hug notifications',exact:true}).click(),async()=>{await expect(page.getByText('On this device',{exact:true})).toBeVisible({timeout:15_000});await expect(page.getByRole('button',{name:'Turn off hug notifications',exact:true})).toBeEnabled();expect(await page.evaluate(async()=>{const scope=(await navigator.serviceWorker.getRegistration())!.scope;return (await fetch(new URL('_app/immutable/legacy-fixture.js',scope))).text();})).toBe('legacy public module');});
+ const active=await binding(page);expect(active).toBeTruthy();
+ const cdp=await context.newCDPSession(page);let registrationId='';cdp.on('ServiceWorker.workerRegistrationUpdated',event=>{for(const registration of event.registrations)if(registration.scopeURL===active.scope)registrationId=registration.registrationId;});await cdp.send('ServiceWorker.enable');await expect.poll(()=>registrationId).not.toBe('');
+ const worker=context.serviceWorkers().filter(worker=>worker.url()===active.scope+'service-worker.js').at(-1)!;expect(worker).toBeTruthy();
+ await worker.evaluate(time=>{Date.now=()=>new Date(time).getTime();},FIXTURE_TIME);
+ const now=Date.parse(FIXTURE_TIME),payload={...active,version:1,type:'hug',pairId:'fictional-pair',eventId:'fictional-hug',senderName:'Jamie',expiresAt:now+3_600_000};
+ const deliver=async(data:unknown)=>{await cdp.send('ServiceWorker.deliverPushMessage',{origin:new URL(active.scope).origin,registrationId,data:JSON.stringify(data)});};
+ await steps.action('wrong-scope','Ignore a message for another deployment',()=>deliver({...payload,scope:active.scope+'pr-preview/pr-999/'}),async()=>{await expect.poll(async()=>(await notifications(context)).length).toBe(0);});
+ await steps.action('expired','Ignore an expired hug',()=>deliver({...payload,expiresAt:now-1}),async()=>{await expect.poll(async()=>(await notifications(context)).length).toBe(0);});
+ await steps.action('receive-open','Receive a hug through the real service worker',()=>deliver(payload),async()=>{await expect.poll(()=>notifications(context)).toMatchObject([{title:'A hug for you 💛',body:'Jamie sent you a hug!'}]);});
+ await steps.action('duplicate','Receive the same transport message again',()=>deliver(payload),async()=>{await expect.poll(async()=>(await notifications(context)).length).toBe(1);});
+ const sentinel=await context.newPage();await sentinel.goto('about:blank');
+ steps.setPage(sentinel);
+ // Keep a browser context alive, but close every page belonging to Gratitude.
+ await steps.action('close-app','Close the Gratitude tab while leaving the browser running',()=>page.close(),async()=>{expect(context.pages().filter(page=>page.url().startsWith(active.scope))).toHaveLength(0);});
+ const closedSession=await context.newCDPSession(sentinel);await closedSession.send('ServiceWorker.enable');
+ await steps.action('receive-closed','Receive a second hug with no Gratitude page open',()=>closedSession.send('ServiceWorker.deliverPushMessage',{origin:new URL(active.scope).origin,registrationId,data:JSON.stringify({...payload,eventId:'second-hug',senderName:'Casey'})}),async()=>{await expect.poll(async()=>(await notifications(context)).map(n=>n.body).sort()).toEqual(['Casey sent you a hug!','Jamie sent you a hug!']);});
+ const target=(await notifications(context)).find(n=>n.body==='Casey sent you a hug!')!.data.url;
+ const reopened=await context.newPage();await reopened.clock.setFixedTime(new Date(FIXTURE_TIME));steps.setPage(reopened);
+ await steps.action('notification-link','Open the Friends link provided by the notification',()=>reopened.goto(target),async()=>{await expect(reopened.getByRole('heading',{name:'Friends & hugs',exact:true})).toBeVisible({timeout:15_000});await expect(reopened.getByText('On this device',{exact:true})).toBeVisible({timeout:15_000});});
+ await steps.action('disable','Turn notifications off on this device',()=>reopened.getByRole('button',{name:'Turn off hug notifications',exact:true}).click(),async()=>{await expect(reopened.getByText('Off on this device',{exact:true})).toBeVisible({timeout:15_000});await expect.poll(async()=>(await notifications(context)).length).toBe(0);});
+ await steps.action('ignore-muted','Deliver an already-queued hug after opting out',()=>closedSession.send('ServiceWorker.deliverPushMessage',{origin:new URL(active.scope).origin,registrationId,data:JSON.stringify({...payload,eventId:'muted-hug'})}),async()=>{await expect.poll(async()=>(await notifications(context)).length).toBe(0);});
+ await steps.action('enable-again','Opt in again with a fresh device binding',()=>reopened.getByRole('button',{name:'Turn on hug notifications',exact:true}).click(),async()=>{await expect(reopened.getByText('On this device',{exact:true})).toBeVisible({timeout:15_000});});
+ const renewed=await binding(reopened);expect(renewed.generation).not.toBe(active.generation);
+ await navigate(reopened,steps,'settings','Settings');await steps.action('account','Open account controls',()=>reopened.getByRole('button',{name:/^Account/}).click(),async()=>{await expect(reopened.getByRole('button',{name:'Sign out',exact:true})).toBeVisible();});
+ await steps.action('sign-out','Sign out and clear notification delivery locally',()=>reopened.getByRole('button',{name:'Sign out',exact:true}).click(),async()=>{await expect(reopened.getByRole('link',{name:'Sign in',exact:true})).toBeVisible({timeout:15_000});});
+ await steps.action('ignore-signed-out','Deliver a queued message for the signed-out account',()=>closedSession.send('ServiceWorker.deliverPushMessage',{origin:new URL(active.scope).origin,registrationId,data:JSON.stringify({...payload,...renewed,eventId:'signed-out-hug'})}),async()=>{await expect.poll(async()=>(await notifications(context)).length).toBe(0);});
+ steps.generateDocs('Background hugs on a chosen device','The browser push-subscription transport is a fictional fixture; Chromium’s Push API dispatches messages into the real service worker. Native notifications are inspected through registration.getNotifications(), including after the app tab closes; an actual blank browser page is captured while no app page exists. The notification’s actual link opens Friends. Muting, a new binding and sign-out reject queued old messages. Every action has an unmasked screenshot with zero tolerance and checks beneath it. Real Firefox/Android permission and OS notification-click checks are documented separately.');
+});

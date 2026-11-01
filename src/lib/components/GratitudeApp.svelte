@@ -4,6 +4,9 @@
   import { page } from '$app/state';
   import { goto, pushState, replaceState } from '$app/navigation';
   import Friends from './Friends.svelte';
+  import {PushController,suspendDevicePush,type PushState} from '../push/controller';
+  let pushController=$state.raw<PushController|null>(null);
+  let hugPushState=$state.raw<PushState>({ready:false,supported:false,configured:false,enabled:false,busy:false,online:true,permission:'unsupported',error:''});
   import { GratitudePublisher } from '../friends/publisher';
   let gratitudePublisher: GratitudePublisher | null = null;
   import AccentPicker from './AccentPicker.svelte';
@@ -158,12 +161,13 @@
     // not interrupt writing or an explicitly selected tab.
     if (chooseInitialPage && value.ready && value.status === 'Synced') {
       chooseInitialPage = false;
+      const requestedFriends=page.url.searchParams.get('open')==='friends';
       const requestedJournal = signInDestination === 'journal' || page.url.searchParams.get('afterSignIn') === 'journal';
       signInDestination = null;
-      tab = requestedJournal ? 'journal' : page.route.id === '/settings' ? 'settings' : todayReflection(value.state.entries, today).entry ? 'journal' : 'today';
-      if (requestedJournal) {
+      tab = requestedFriends ? 'friends' : requestedJournal ? 'journal' : page.route.id === '/settings' ? 'settings' : todayReflection(value.state.entries, today).entry ? 'journal' : 'today';
+      if (requestedJournal||requestedFriends) {
         const destination = new URL(page.url);
-        destination.searchParams.delete('afterSignIn');
+        destination.searchParams.delete('afterSignIn');destination.searchParams.delete('open');
         replaceState(destination, page.state);
       }
     }
@@ -623,6 +627,8 @@
           calendarThumbnailCache?.dispose();calendarThumbnailCache=null;
           photoCredentialStore?.stop();photoCredentialStore=null;photoCredentialStatus={ready:false,saved:false,error:''};
           credentialStore?.stop();credentialStore=null;credentialStatus={ready:false,saved:false,error:''};
+          pushController?.stop();pushController=null;
+          if(!next||user&&user.uid!==next.uid)void suspendDevicePush().catch(()=>{});
           gratitudePublisher?.stop(); gratitudePublisher=null;
           repository?.stop(); repository = null;
           chooseInitialPage = true;
@@ -638,6 +644,8 @@
           initialized = true;
           if (next && client) {
             gratitudePublisher=new GratitudePublisher(client.db,next.uid); gratitudePublisher.start();
+            pushController=new PushController(client,next.uid,status=>{if(session===current)hugPushState=status;});
+            void pushController.start().catch(()=>{if(session===current)hugPushState={...hugPushState,ready:true,error:'Notification status could not be opened. Reload to try again.'};});
             const photoClient=client,photoOwner=next.uid;
             calendarThumbnailCache=new PhotoThumbnailCache(id=>navigator.onLine?readPhoto(photoClient,photoOwner,id):Promise.reject(new Error('Photo unavailable offline')));
             const scope=`${client.projectId}:${base}:${next.uid}`;
@@ -672,7 +680,9 @@
     const online = () => {gratitudePublisher?.update(view);refiller.reset();void repository?.syncBackups();void repository?.syncPromptResult().catch(()=>{});void repository?.retry();};
     const refillTimer=setInterval(()=>{const refill=refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting&&(view.state.ai.choices.backupProvider!=='lm-studio'||!!modelConnection.token||credentialStatus.ready),online:navigator.onLine,visible:document.visibilityState==='visible',busy:busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state);refillMessage=refiller.status;void refill.then(()=>{refillMessage=refiller.status;});},3000);
     window.addEventListener('online', online);
-    return () => { session++; stopAuth(); gratitudePublisher?.stop(); calendarThumbnailCache?.dispose(); credentialStore?.stop();photoCredentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
+    const openHug=async(event:MessageEvent)=>{if(event.data?.type==='OPEN_HUG_FRIENDS'&&event.data.uid===user?.uid&&event.data.scope===new URL(`${base}/`,location.origin).href){if(writing&&text.trim())await persistDraft();await navigate('friends');}};
+    navigator.serviceWorker?.addEventListener('message',openHug);
+    return () => { session++; stopAuth();pushController?.stop();navigator.serviceWorker?.removeEventListener('message',openHug); gratitudePublisher?.stop(); calendarThumbnailCache?.dispose(); credentialStore?.stop();photoCredentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
   });
   async function signIn(journal = landing) {
     if (!initialized || busy) return;
@@ -697,7 +707,7 @@
     }
     if (!client) return;
     if (writing && text.trim()) await persistDraft();
-    try { await signOut(client.auth); } catch { error = 'Sign-out failed. Please try again.'; }
+    try { await pushController?.disable('sign-out');await signOut(client.auth); } catch { error = 'Sign-out failed. Please try again.'; }
   }
   async function save() {
     if (!repository) return;
@@ -858,7 +868,7 @@
         {#if results.length > JOURNAL_BATCH}<MoreReflections shown={visibleResults.length} total={results.length} onmore={showOlderReflections} />{/if}
       {/if}
     {:else if tab === 'friends'}
-      {#if client && !uiReview}<Friends {client} uid={user.uid} journal={view} />{:else}<h1 class="page-heading">Friends &amp; hugs</h1><p>Friends are available when signed in to a Firebase journal.</p>{/if}
+      {#if client && !uiReview}<Friends {client} uid={user.uid} journal={view} {pushController} pushState={hugPushState} />{:else}<h1 class="page-heading">Friends &amp; hugs</h1><p>Friends are available when signed in to a Firebase journal.</p>{/if}
     {:else}
       {#if settingsPage !== 'menu'}<button class="back" onclick={() => openSettings('menu')}><Icon name="back" />Settings</button>{/if}
       {#if settingsPage === 'menu'}

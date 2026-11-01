@@ -1,0 +1,10 @@
+{
+  "name": "gratitude-hug-push",
+  "private": true,
+  "type": "module",
+  "main": "src/index.mjs",
+  "engines": { "node": "24" },
+  "license": "GPL-3.0-only",
+  "scripts": { "test": "node --test ../tests/push/*.test.mjs" },
+  "dependencies": { "firebase-admin": "^13.0.0", "firebase-functions": "^7.0.0", "web-push": "^3.6.7" }
+}
