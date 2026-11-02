@@ -96,6 +96,7 @@
   button:disabled { opacity: .35; cursor: default; }
   .month-heading { background: none; border-color: transparent; padding-inline: 5px; text-align: left; max-width: 100%; }
   .month-controls { display: flex; gap: 4px; margin-left: auto; color: var(--accent-text); font-size: .65rem; }
+  .month-controls :global(svg) { color: var(--accent-highlight); }
   .month-controls button { height: 32px; white-space: nowrap; }
   .month-controls .arrow { display: grid; place-items: center; width: 32px; min-width: 32px; padding: 0; }
   .weekdays, .month-dates { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); }

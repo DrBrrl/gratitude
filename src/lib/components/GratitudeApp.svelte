@@ -475,6 +475,7 @@
   $effect(() => {
     document.documentElement.style.setProperty('--accent', theme.colour);
     document.documentElement.style.setProperty('--accent-text-weight', theme.textWeight);
+    document.documentElement.style.setProperty('--accent-highlight-weight', theme.highlightWeight);
     document.documentElement.style.setProperty('--smoke-rotation', theme.smokeRotation);
   });
   async function chooseAccent(colourIndex: number) {
@@ -976,7 +977,7 @@
   button { cursor: pointer; color: inherit; border: 0; background: none; min-height: 44px; }
   button:disabled { cursor: default; opacity: .5; }
   .brand { display: inline-flex; align-items: center; gap: 7px; color: inherit; text-decoration: none; font: 600 1.9rem/1.2 Georgia, serif; letter-spacing: -.04em; }
-  .brand-star { width: .6em; height: .6em; flex-shrink: 0; fill: var(--yellow); }
+  .brand-star { width: .6em; height: .6em; flex-shrink: 0; fill: var(--accent-highlight); }
   .today-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 42px; }
   .today-date { text-align: right; display: grid; gap: 10px; font-size: .9rem; line-height: 1.3; }
   .today-heading { margin: 0 0 14px; font: 700 2.15rem/1.15 Arial, Helvetica, sans-serif; letter-spacing: .015em; text-align: center; color: #c6c8ce; }
@@ -1045,13 +1046,13 @@
   .entry-text { white-space: pre-wrap; overflow-wrap: anywhere; }
   .entry-action { display: inline-flex; align-items: center; gap: 6px; color: var(--yellow); min-height: 28px; padding: 2px 8px; margin-top: 16px; font-size: .85rem; }
   .empty { text-align: center; padding: 36px 22px !important; }
-  .empty :global(svg) { color: var(--yellow); margin-bottom: 20px; }
+  .empty :global(svg) { color: var(--accent-highlight); margin-bottom: 20px; }
   .empty h2 { font-size: 1.65rem; }
   .empty p { color: #c5cad2; }
   .settings-menu { display: grid; gap: 14px; }
   .settings-row { display: flex; text-align: left; align-items: center; gap: 14px; padding: 18px 16px; width: 100%; min-height: 94px; }
   .row-icon, .account-avatar { display: grid; place-items: center; flex-shrink: 0; width: 50px; height: 50px; border-radius: 50%; background: #cbd2d51a; }
-  .row-icon.yellow { color: var(--yellow); background: var(--accent-wash); }
+  .row-icon.yellow { color: var(--accent-highlight); background: var(--accent-wash); }
   .row-copy { display: grid; gap: 6px; flex: 1; min-width: 0; }
   .row-copy strong { font-weight: 400; font-size: 1.08rem; }
   .row-copy span { color: #bac6d4; font-size: .85rem; overflow-wrap: anywhere; }
@@ -1089,7 +1090,8 @@
   nav.glass { position: fixed; z-index: 10; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 480px); display: flex; justify-content: space-around; border-radius: 24px 24px 0 0 !important; padding: 12px 8px max(12px, env(safe-area-inset-bottom)); background: linear-gradient(120deg, #34383bf2, #161a1cf5, #474342eb) !important; -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); }
   nav button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; min-width: 0; width: 25%; min-height: 59px; padding: 4px; font-size: .85rem; color: #cbd0de; }
   nav button[aria-current] { color: var(--yellow); }
-  nav button[aria-current]::after { content: ''; position: absolute; bottom: -7px; height: 3px; width: 28px; background: var(--yellow); border-radius: 4px; }
+  nav button[aria-current] :global(svg) { color: var(--accent-highlight); }
+  nav button[aria-current]::after { content: ''; position: absolute; bottom: -7px; height: 3px; width: 28px; background: var(--accent-highlight); border-radius: 4px; }
   dialog { width: min(390px, calc(100vw - 40px)); padding: 26px; color: inherit; background: linear-gradient(130deg, #333738ed, #14181af5); border: 1px solid var(--glass-border); border-radius: 24px; backdrop-filter: blur(24px); }
   dialog::backdrop { background: #02040599; }
   dialog .outline { margin-top: 14px; }

@@ -1049,3 +1049,12 @@ The navigation screenshot refresh used the pinned Nix environment on a disposabl
 ## 2026-11-02 — Retargeting the prompt follow-up after PR 20
 
 - Confirmed: PR 20 was merged with rewritten commit IDs. Its final tree on main (`c282e7e`) is identical to the stacked parent (`1809b7e`), so the overlap is historical rather than a product change. Rebase only PR 21’s three feature/test commits onto main instead of replaying the already-merged Friends/push commits. Preserve existing screenshots and source-event contracts.
+
+## 2026-11-02 — Vivid graphical account accents
+
+- Confirmed cause: `readableTextWeight` mixed darker palette shades heavily with white to meet the small-text contrast target over the foggy navigation. Blue retained 34% of its source colour, violet 37%, and magenta 42%. Reusing that small-label tint for filled icons and the wordmark star explained the reported grey appearance.
+- Decision: separate the graphical highlight tint from small text. Keep the existing 78% picker mix wherever it meets a 3:1 graphical contrast target against the existing conservative `#575757` glass bound; retain the existing 4.5:1 tint for small labels. Blue now retains 60%, violet 66%, magenta 77%; all fourteen highlights retain at least 60% of the source RGB channel spread. Default yellow remains 78%. These are bounded colour/contrast checks, not a claim of complete accessibility compliance.
+- Scope: filled navigation icons/indicator, the Gratitude star, accent Settings/empty-state icons, calendar symbols/arrows and Friends stars/hearts use the graphical token. The picker, account events, smoke, reflection rainbow, all border formulas and navigation surface remain unchanged. No backend or event schema change is needed.
+- Verification extends the existing fourteen-choice walkthrough: measure real computed icon/indicator colours and border RGBA without inserting/replacing page content, assert matching blue Today star/icon, and compare full-page mobile/desktop screenshots at zero tolerance with no masks.
+
+- Final validation: Svelte/TypeScript, 93 unit tests, five deployment tests and actionlint pass. Scenario 042 passed mobile/desktop regeneration and both subsequent unchanged-baseline comparisons (four browser tests, fifty screenshots per viewport per pass). The screenshot audit found 62 changed baselines with unchanged dimensions and 78–910 changed pixels each, localized to graphical highlights; the reviewed default-yellow images stay unchanged.

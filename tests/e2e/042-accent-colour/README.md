@@ -2,7 +2,7 @@
 
 # Your favourite accent colour
 
-Account accents follow the existing rainbow palette, sync independently of AI consent, recolour the smoke and glass, and preserve reflection date colours. AI guidance grows with its content and states its 500-character limit.
+Account accents follow the existing rainbow palette, sync independently of AI consent, recolour the smoke and glass, and preserve reflection date colours. Filled navigation icons and their underline keep at least 60% of each swatch’s chroma, with matching wordmark-star colour and unchanged border tint/opacity. AI guidance grows with its content and states its 500-character limit.
 
 Viewport: mobile-chromium.
 
@@ -112,7 +112,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose green accents and smoke
@@ -121,7 +121,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose sea green accents and smoke
@@ -130,7 +130,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose turquoise accents and smoke
@@ -139,7 +139,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose cyan accents and smoke
@@ -148,7 +148,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose sky blue accents and smoke
@@ -157,7 +157,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose blue accents and smoke
@@ -166,7 +166,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose violet accents and smoke
@@ -175,7 +175,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose purple accents and smoke
@@ -184,7 +184,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose magenta accents and smoke
@@ -193,7 +193,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose rose accents and smoke
@@ -202,7 +202,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose red accents and smoke
@@ -211,7 +211,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose orange accents and smoke
@@ -220,7 +220,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Use blue for the following screens
@@ -259,13 +259,13 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Open Today
+## Open Today with a vivid blue star and matching selected icon
 
-![Open Today](./screenshots/028-themed-today-mobile-chromium.png)
+![Open Today with a vivid blue star and matching selected icon](./screenshots/028-themed-today-mobile-chromium.png)
 
 **Verifications:**
 
-- [x] The expected result of this action is visible
+- [x] The wordmark star and selected Today icon share the stronger blue highlight
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Use blue calendar controls while keeping the saved date’s rainbow ring
