@@ -1502,3 +1502,9 @@ Example personal context (using topic description)
 ```text
 Also PR 22's checks keep failing - been retying them all day
 ```
+
+## 2026-11-02 — Restore topic defaults and extend description limit
+
+```text
+Let's revert those defaults to the ones i had and change the rule to be under 150 chars please!
+```
