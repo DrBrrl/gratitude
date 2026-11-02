@@ -1058,3 +1058,8 @@ The navigation screenshot refresh used the pinned Nix environment on a disposabl
 - Verification extends the existing fourteen-choice walkthrough: measure real computed icon/indicator colours and border RGBA without inserting/replacing page content, assert matching blue Today star/icon, and compare full-page mobile/desktop screenshots at zero tolerance with no masks.
 
 - Final validation: Svelte/TypeScript, 93 unit tests, five deployment tests and actionlint pass. Scenario 042 passed mobile/desktop regeneration and both subsequent unchanged-baseline comparisons (four browser tests, fifty screenshots per viewport per pass). The screenshot audit found 62 changed baselines with unchanged dimensions and 78–910 changed pixels each, localized to graphical highlights; the reviewed default-yellow images stay unchanged.
+
+## 2026-11-02 — PR 22 after the prompt feature merged
+
+- Confirmed: PR 22 already targeted main. Merging PR 21 introduced overlapping append-only changes in `PROMPTS.md`, `LEARNINGS.md` and `E2E_GUIDE.md`. Rebasing preserves both histories and guide additions; README and application changes merged automatically. `git range-diff` confirms the source/test/README colour patch is identical after rebasing.
+- Fresh validation against merged main passes Svelte/TypeScript, 95 unit tests, five deployment tests, actionlint and the production build. Existing screenshot baselines are preserved; there is no new visual change from this rebase.
