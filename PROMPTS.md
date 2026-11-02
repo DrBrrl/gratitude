@@ -1287,3 +1287,9 @@ Have merged 20! Can you resolve the conflicts for 21?
 ```text
 Thank youuuu! I noticed as i was testing that the highlights (e.g. the selected tab in the bottom when the icon fills in and the little star beside gratitude) are not very bright and vibrant in other colours, as least not as much as they are in yellow. Can we adjust those colours for the other choices please? Have them be closer to the actual colour on the colour picker or example? Or at least similar difference to the colour on the picker as the yellow is? The other colours basically look like a slightly coloured grey to me as opposed to a more saturated version. I did think the borders were good, it's really just the bottom menu bit and the star and other bits that have the same colour as those.
 ```
+
+## 2026-11-02 — Update PR 22 after merging PR 21
+
+```text
+Retarget that to main for me? Just merged PR 21 :)
+```
