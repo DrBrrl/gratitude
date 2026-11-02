@@ -80,7 +80,7 @@ test('attach private photos, correct searchable AI descriptions and retain them 
   release?.();
   await expect(page.getByText('Your edited summary is saved. The pending AI response will not replace it.', { exact: true })).toHaveCount(0, { timeout: 15_000 });
   mode = 'success';
-  await steps.action('late-result', 'Reload after the late AI response without losing the correction', () => page.reload(), async () => { await expectSynced(page); expect(requests).toBe(3); });
+  await steps.action('late-result', 'Reload after the late AI response without losing the correction', () => page.reload(), async () => { await expectSynced(page); await expectDecodedPhotos(page, 2); expect(requests).toBe(3); });
   await steps.action('reopen-after-reload', 'Recover both descriptions from saved events', () => page.getByRole('button', { name: 'View entry', exact: true }).click(), async () => { await expect(page.locator('.photo-card').nth(1).locator('.summary')).toHaveText('A little reminder of home.'); await expectDecodedPhotos(page, 2); expect(requests).toBe(3); });
   for (const number of [3, 4]) {
     await steps.action(`pick-${number}`, `Select photo ${number}`, () => page.getByLabel('Add photo', { exact: true }).setInputFiles('tests/fixtures/yellow-mug.png'), async () => { await expect(page.getByRole('img', { name: 'Attachment preview' })).toBeVisible({ timeout: 15_000 }); });

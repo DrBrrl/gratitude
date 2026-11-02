@@ -1,18 +1,20 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { accentChoices, accentTheme } from '../../src/lib/appearance.ts';
+import { ACCENT_POINTS, accentChoices, accentTheme } from '../../src/lib/appearance.ts';
 import { colours } from '../../src/lib/colours.ts';
 import { replay, emptyProjection, parseAction, type JournalEvent } from '../../src/lib/domain.ts';
 
-test('fourteen account accents reuse alternate journal shades, starting at yellow', () => {
+test('fourteen account accents use the exact supplied points and retain stable source slots', () => {
   assert.equal(accentChoices.length, 14);
   assert.equal(accentChoices[0].name, 'Yellow');
-  assert.equal(accentChoices[0].colour, '#e5e561');
-  assert.deepEqual(accentChoices.map(choice => choice.colour), colours.filter((_, index) => index % 2 === 0));
+  assert.equal(accentChoices[0].colour, '#ffe100');
+  assert.deepEqual(ACCENT_POINTS,['#ffe100','#a4df00','#15d600','#00d660','#00ca94','#3fca9c','#355ce8','#7707ff','#a100ff','#df40ff','#ff35da','#d62e31','#da6709','#dda41d']);
+  assert.deepEqual(accentChoices.map(choice=>choice.colourIndex),Array.from({length:14},(_,index)=>index*2));
+  assert.deepEqual(accentChoices.map(choice=>choice.colour),ACCENT_POINTS);
+  assert.equal(colours[0],'#e5e561','The journal date rainbow is independent');
   assert.deepEqual(accentTheme(99), accentTheme(0));
   for (const choice of accentChoices) {
     assert.equal(accentTheme(choice.colourIndex).colour, choice.colour);
-    assert.equal(accentTheme(choice.colourIndex).smokeRotation, `${choice.colourIndex * 360 / 28}deg`);
   }
 });
 test('appearance replays from literal choices, independently of AI consent and date colours', () => {
@@ -38,17 +40,22 @@ test('accent labels retain readable contrast on the frosted navigation, includin
     const mixed = [1, 3, 5].map(at => parseInt(theme.colour.slice(at, at + 2), 16) * weight + 255 * (1 - weight));
     assert.ok((luminance(mixed) + .05) / (luminance([87, 87, 87]) + .05) >= 4.5, choice.name);
   }
-  assert.equal(accentTheme(0).textWeight, '78%', 'Default yellow retains its existing text tint');
+  assert.equal(accentTheme(0).textWeight, '100%', 'The supplied yellow needs no white tint');
 });
 
 test('graphical accents stay close to their swatches while retaining contrast on frosted glass', () => {
   for (const choice of accentChoices) {
     const theme=accentTheme(choice.colourIndex),weight=parseFloat(theme.highlightWeight)/100;
     const mixed=[1,3,5].map(at=>parseInt(choice.colour.slice(at,at+2),16)*weight+255*(1-weight));
-    assert.ok(weight>=.6, `${choice.name} keeps at least 60% of its swatch chroma`);
+    assert.ok(weight>0&&weight<=1, `${choice.name} uses its source colour`);
+    if(weight<1){const stronger=[1,3,5].map(at=>parseInt(choice.colour.slice(at,at+2),16)*(weight+.01)+255*(1-weight-.01));assert.ok((luminance(stronger)+.05)/(luminance([87,87,87])+.05)<3,`${choice.name} retains the strongest readable swatch tint`);}
     assert.ok(weight>=parseFloat(theme.textWeight)/100, `${choice.name} highlights are at least as vivid as small text`);
     assert.ok((luminance(mixed)+.05)/(luminance([87,87,87])+.05)>=3, `${choice.name} graphical contrast`);
   }
   assert.equal(accentTheme(0).highlightWeight,accentTheme(0).textWeight,'Yellow keeps its reviewed appearance');
-  assert.ok(parseFloat(accentTheme(14).highlightWeight)>parseFloat(accentTheme(14).textWeight)*1.7,'Blue loses the previous grey wash');
+  assert.ok(parseFloat(accentTheme(12).highlightWeight)>parseFloat(accentTheme(12).textWeight)*1.5,'Blue loses the previous grey wash');
+});
+
+test('dark supplied swatches have readable selection checks',()=>{
+ for(const choice of accentChoices){const ink=[1,3,5].map(at=>parseInt(choice.inkColour.slice(at,at+2),16)),swatch=[1,3,5].map(at=>parseInt(choice.colour.slice(at,at+2),16));const values=[luminance(ink),luminance(swatch)].sort((a,b)=>a-b);assert.ok((values[1]+.05)/(values[0]+.05)>=4.5,choice.name);}
 });

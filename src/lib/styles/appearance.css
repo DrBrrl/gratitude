@@ -1,12 +1,11 @@
 :root {
-  --accent: #e5e561;
-  --accent-text-weight: 78%;
-  --accent-highlight-weight: 78%;
+  --accent: #ffe100;
+  --accent-text-weight: 100%;
+  --accent-highlight-weight: 100%;
   --accent-highlight: color-mix(in srgb, var(--accent) var(--accent-highlight-weight), white);
   --accent-text: color-mix(in srgb, var(--accent) var(--accent-text-weight), white);
   --yellow: var(--accent-text);
   --calendar-highlight: var(--accent-text);
-  --smoke-rotation: 0deg;
   --glass-border: color-mix(in srgb, var(--accent) 32%, transparent);
   --action-border: color-mix(in srgb, var(--accent) 78%, white);
   --accent-wash: color-mix(in srgb, var(--accent) 14%, transparent);

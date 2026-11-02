@@ -476,7 +476,6 @@
     document.documentElement.style.setProperty('--accent', theme.colour);
     document.documentElement.style.setProperty('--accent-text-weight', theme.textWeight);
     document.documentElement.style.setProperty('--accent-highlight-weight', theme.highlightWeight);
-    document.documentElement.style.setProperty('--smoke-rotation', theme.smokeRotation);
   });
   async function chooseAccent(colourIndex: number) {
     if (!repository) throw new Error('Wait for your journal to open.');

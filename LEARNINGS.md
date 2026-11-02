@@ -1063,3 +1063,16 @@ The navigation screenshot refresh used the pinned Nix environment on a disposabl
 
 - Confirmed: PR 22 already targeted main. Merging PR 21 introduced overlapping append-only changes in `PROMPTS.md`, `LEARNINGS.md` and `E2E_GUIDE.md`. Rebasing preserves both histories and guide additions; README and application changes merged automatically. `git range-diff` confirms the source/test/README colour patch is identical after rebasing.
 - Fresh validation against merged main passes Svelte/TypeScript, 95 unit tests, five deployment tests, actionlint and the production build. Existing screenshot baselines are preserved; there is no new visual change from this rebase.
+
+## 2026-11-02 — Supplied account hex points
+
+- Confirmed: the fourteen written hex values in the user’s image are the source palette, beginning with `#ffe100`. Some rendered text pixels differ from their written hex labels, so sampling the image would not reproduce the requested codes. The original image and literal table are retained in `docs/ux`.
+- Decision: detach account accents from the date rainbow, retaining the same even-numbered source slots. The picker uses exact supplied values and truthful colour names in the supplied order. Existing account slots acquire those new presentation values; no source-event migration or inference is needed. Journal date colours remain independent.
+- This supersedes the earlier 78% starting mix/minimum 60% channel-spread assumption: new highlights start at 100% of the supplied point and add only the white needed for their contrast bound. Labels retain a separate contrast target; borders/fills keep their formulas. The new true-yellow point needs no added white.
+- Smoke now uses an isolated colour blend of the exact point over the existing texture, with a fixed 55% saturation treatment for a subdued backdrop. Equally spaced hue-rotation angles could not represent this irregular supplied palette faithfully.
+
+- Full-refresh evidence: four isolated viewport/scenario groups preserve the same clocks/fixtures and use separate emulator ports/stores. Unbounded JVM thread pools overloaded the host; bounding test JVMs and warming Rules before browser runs corrected startup readiness. Two existing edit-save checks in scenarios 003/014 used the two-second UI budget while the captured real UI still said “Saving…”. They now use the existing fifteen-second server-confirmation budget; screenshot comparison settings are unchanged.
+
+- The ordinary photo comparison exposed a pre-existing reload race at scenario 011’s late-result step: the event stream was synchronized while the two actual thumbnails were still downloading. Its regenerated image captured placeholders, while the rerun captured decoded photos (6,797 pixels differed only within the thumbnail boxes). The step now waits for both real photos to load/decode before comparison, following the existing photo screenshot contract. No content is hidden or replaced.
+
+- A second readiness race appeared when reopening Friends from a notification: the push control was ready while the cached Friends view still displayed its temporary offline notice (64 px of layout difference). The step now waits for the real connected Friends view and enabled profile control before capture, matching the existing Friends-navigation helper. This does not alter offline product behaviour.
