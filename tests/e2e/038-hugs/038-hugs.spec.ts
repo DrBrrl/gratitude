@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {TestStepHelper} from '../helpers/test-step-helper';
-import {startJournal} from '../helpers/journal-session';
+import {expectSynced,startJournal} from '../helpers/journal-session';
 import {resetFriendsFixture,openFriends,createProfile,secondFriend,findFriend,switchFriend} from '../helpers/friends';
 
 test('accepted friends receive durable hugs with recipient controls, a local-day limit and replay-safe heart state',async({page},info)=>{
@@ -19,7 +19,7 @@ test('accepted friends receive durable hugs with recipient controls, a local-day
   await steps.action('manage','Open hug preferences',()=>other.getByText('Manage friendship with Alice',{exact:true}).click(),async()=>{await expect(other.getByRole('button',{name:'Pause hugs from Alice',exact:true})).toBeVisible();});
   await steps.action('pause','Pause hugs from this friend',()=>other.getByRole('button',{name:'Pause hugs from Alice',exact:true}).click(),async()=>{await expect(other.getByRole('button',{name:'Allow hugs from Alice',exact:true})).toBeVisible({timeout:15_000});});
   await steps.action('rebuild','Replay the complete friendship source without redelivering a hug',()=>other.getByRole('button',{name:'Rebuild friends view',exact:true}).click(),async()=>{await expect(other.getByText('Friends view rebuilt from saved actions.',{exact:true})).toBeVisible({timeout:15_000});await expect(other.getByRole('region',{name:'Hug inbox'})).toHaveCount(0);await expect(other.getByRole('button',{name:'Allow hugs from Alice',exact:true})).toBeVisible();});
-  await steps.action('reload','Reload after receiving a hug',()=>other.reload(),async()=>{await expect(other.getByRole('heading',{name:'Reflection time',exact:true})).toBeVisible({timeout:15_000});});
+  await steps.action('reload','Reload after receiving a hug',()=>other.reload(),async()=>{await expect(other.getByRole('heading',{name:'Reflection time',exact:true})).toBeVisible({timeout:15_000});await expectSynced(other);});
   await openFriends(other,steps,'restored-');
   await switchFriend(page,steps,'paused-on-sender',async()=>{await expect(page.getByText('Your friend has paused incoming hugs.',{exact:true})).toBeVisible({timeout:15_000});await expect(page.getByRole('button',{name:'Send a hug to Bob',exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'Send a hug to Bob',exact:true})).toHaveAttribute('aria-pressed','true');});
   await steps.action('remove-controls','Open controls to end the friendship',()=>page.getByText('Manage friendship with Bob',{exact:true}).click(),async()=>{await expect(page.getByRole('button',{name:'Remove Bob as a friend',exact:true})).toBeVisible();});

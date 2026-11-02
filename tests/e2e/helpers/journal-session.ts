@@ -26,8 +26,8 @@ export async function openEditor(page: Page, steps: TestStepHelper, id: string) 
 export async function backFromEditor(page: Page, steps: TestStepHelper, id: string, destination = 'Today') {
   await steps.action(id, `Return to ${destination} without losing the draft`, () => page.locator('button.back').click(), async () => { await expect(editor(page)).toHaveCount(0); });
 }
-export async function startJournal(page: Page, info: TestInfo, steps: TestStepHelper, name: string) {
-  await page.clock.setFixedTime(new Date(FIXTURE_TIME));
+export async function startJournal(page: Page, info: TestInfo, steps: TestStepHelper, name: string, fixtureTime = FIXTURE_TIME) {
+  await page.clock.setFixedTime(new Date(fixtureTime));
   await page.request.delete('http://127.0.0.1:19099/emulator/v1/projects/demo-gratitude/accounts');
   await page.context().route(/https:\/\/(unpkg\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//, (route) => route.abort());
   await steps.action('open', 'Open Gratitude', () => page.goto('./journal/'), async () => {

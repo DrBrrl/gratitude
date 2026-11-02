@@ -39,13 +39,13 @@
     finally{busy=false;}
   }
   async function save() {
-    busy=true;
+    busy=true;message='';failed=false;
     try {const input=draft.provider==='gemini'?{...connection,provider:'gemini' as const}:$state.snapshot(draft);const keepRemembered=credentialStatus.saved&&!!onsavetoken&&input.provider==='lm-studio'&&input.baseUrl===connection.baseUrl&&input.token===connection.token&&wasAccountConnection(scope);const saved=saveConnection(scope,input);await onchange(saved);if(keepRemembered)await onsavetoken!(saved);failed=false;message=saveMessage||(connectionOnly?'Local connection saved on this device.':'Provider saved to your account; connection settings saved on this device.');}
     catch(error){failed=true;message=error instanceof Error?error.message:'Could not save model settings on this device.';}
     finally{busy=false;}
   }
 </script>
-<section class="glass model-settings" aria-label={regionLabel}>
+<section class="glass model-settings" aria-label={regionLabel} aria-busy={busy}>
   <h2>{heading}</h2>
   <p class="hint">Current provider: {connection.provider==='lm-studio'?'LM Studio':'Gemini'}. Provider choice syncs across devices. The connection stays on this device unless you choose account token sync.</p>
   {#if !connectionOnly}<label for={`${field}-model-provider`}>AI provider</label>
