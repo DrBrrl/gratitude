@@ -1126,3 +1126,8 @@ The navigation screenshot refresh used the pinned Nix environment on a disposabl
 - Under that proposal, reflection excerpt text is bounded to 12,000 code units before JSON escaping. Longer generated prompts, feedback and editable/custom descriptions still need complete context-budget validation. The custom-label/count bounds are explicitly proposed for review rather than attributed to the user's file. No onboarding, template, selector, source schema or runtime behaviour is implemented by PR 23's document edits.
 
 - Follow-up supersedes the preceding editorial shortening: restore the exact supplied Family and Movement descriptions and change built-in validation to fewer than 150 characters (1–149 code units). Custom descriptions retain their distinct up-to-150 bound. With seventeen built-ins and the proposed twenty-custom-row cap, selected topic descriptions now contribute at most 5,533 code units before JSON escaping.
+
+## 2026-11-03 — Retarget the onboarding proposal after PR 22
+
+- Confirmed: GitHub automatically changed PR 23’s base to `main` after PR 22 merged. Because PR 22 was rebased, its original commits remained in the proposal branch’s ancestry: GitHub reported conflicts and included already-merged palette/application files, while a direct tree comparison with `main` showed only the seven proposal Markdown files.
+- Rebase the proposal’s documentation commits onto the merged `main` to remove that duplicated history. Preserve the proposal, copy edits, prompt log and learning log; verify that the resulting PR contains only its documentation changes.
