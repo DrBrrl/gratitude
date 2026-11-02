@@ -1,4 +1,4 @@
-import { test, expect as baseExpect } from '@playwright/test';
+import { test, expect as baseExpect, type Page } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 import { startJournal, navigate, signIn, expectSynced, FIXTURE_TIME, writeReflection } from '../helpers/journal-session';
 import { aiSettings, saveChoices } from '../helpers/gemini';
@@ -6,6 +6,23 @@ import { selectionLog } from '../helpers/ai-selection-fixture';
 import { accentChoices } from '../../../src/lib/appearance';
 import { replay } from '../../../src/lib/domain';
 const expect = baseExpect.configure({ timeout: 15_000 });
+async function checkHighlight(page:Page,colour:string){
+  const appearance=await page.evaluate(()=>{
+    // Resolve real computed CSS colours without adding or replacing any page content.
+    const canvas=new OffscreenCanvas(1,1),context=canvas.getContext('2d')!;
+    const rgb=(value:string)=>{context.clearRect(0,0,1,1);context.fillStyle=value;context.fillRect(0,0,1,1);return Array.from(context.getImageData(0,0,1,1).data);};
+    const active=document.querySelector('nav button[aria-current]')!;
+    return{icon:rgb(getComputedStyle(active.querySelector('svg')!).color),underline:rgb(getComputedStyle(active,'::after').backgroundColor),border:rgb(getComputedStyle(document.querySelector('.accent-picker')!).borderTopColor)};
+  });
+  const swatch=[1,3,5].map(at=>parseInt(colour.slice(at,at+2),16));
+  const chroma=(channels:number[])=>Math.max(...channels.slice(0,3))-Math.min(...channels.slice(0,3));
+  expect(chroma(appearance.icon)/chroma(swatch)).toBeGreaterThanOrEqual(.59);
+  expect(appearance.underline).toEqual(appearance.icon);
+  // Border opacity and palette colour stay independent of the brighter icon tint.
+  expect(appearance.border[3]).toBe(82);
+  for(let i=0;i<3;i++)expect(Math.abs(appearance.border[i]-swatch[i])).toBeLessThanOrEqual(2);
+}
+
 
 test('choose an account accent, keep rainbow reflections, and grow AI guidance with a clear limit', async ({ page, browser }, info) => {
   test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(600_000);
@@ -16,6 +33,7 @@ test('choose an account accent, keep rainbow reflections, and grow AI guidance w
   await steps.action('account', 'Open Account and its fourteen rainbow accent choices', () => page.getByRole('button', { name: /^Account / }).click(), async () => {
     await expect(page.getByRole('group', { name: 'Choose your accent colour' }).getByRole('button')).toHaveCount(14);
     await expect(page.getByRole('button', { name: 'Yellow', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await checkHighlight(page,accentChoices[0].colour);
   });
   for (const choice of accentChoices.slice(1)) {
     await steps.action(`colour-${choice.colourIndex}`, `Choose ${choice.name.toLowerCase()} accents and smoke`, () => page.getByRole('button', { name: choice.name, exact: true }).click(), async () => {
@@ -23,7 +41,8 @@ test('choose an account accent, keep rainbow reflections, and grow AI guidance w
       await expect(page.getByRole('button', { name: choice.name, exact: true })).toHaveAttribute('aria-pressed', 'true');
       await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))).toBe(choice.colour);
       await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue('--smoke-rotation'))).toBe(`${choice.colourIndex * 360 / 28}deg`);
-    });
+      await checkHighlight(page,choice.colour);
+    },'The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity');
   }
   await steps.action('blue', 'Use blue for the following screens', () => page.getByRole('button', { name: 'Blue', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Blue', exact: true })).toBeEnabled(); await expect(page.getByRole('button', { name: 'Blue', exact: true })).toHaveAttribute('aria-pressed', 'true'); });
   await steps.action('reload', 'Restore the account accent after reload', () => page.reload(), async () => { await expectSynced(page); await expect.poll(async () => replay(await selectionLog(page)).appearance.colourIndex).toBe(14); await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))).toBe(accentChoices[7].colour); });
@@ -31,10 +50,12 @@ test('choose an account accent, keep rainbow reflections, and grow AI guidance w
   const cardColour = await page.locator('.card').first().evaluate(node => (node as HTMLElement).style.getPropertyValue('--entry-colour'));
   expect(cardColour).not.toBe(accentChoices[7].colour);
   await steps.action('view-entry', 'Keep the reflection’s date colour under the blue theme', () => page.getByRole('button', { name: 'View entry', exact: true }).click(), async () => { await expect(page.locator('.detail')).toBeVisible(); expect(await page.locator('.detail').evaluate(node => (node as HTMLElement).style.getPropertyValue('--entry-colour'))).toBe(cardColour); });
-  await navigate(page, steps, 'themed-today', 'Today');
+  await steps.action('themed-today','Open Today with a vivid blue star and matching selected icon',()=>page.getByRole('navigation').getByRole('button',{name:'Today',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Reflection time',exact:true})).toBeVisible();const highlight=await page.locator('nav button[aria-current] svg').evaluate(node=>getComputedStyle(node).color);await expect(page.locator('.brand-star')).toHaveCSS('fill',highlight);await expect(page.locator('.week-open>span')).toHaveCSS('color',highlight);},'The wordmark star and selected Today icon share the stronger blue highlight');
+  const graphicalColour=await page.locator('.brand-star').evaluate(node=>getComputedStyle(node).fill);
   const ringColour = `rgb(${[1, 3, 5].map(at => parseInt(cardColour.slice(at, at + 2), 16)).join(', ')})`;
   await steps.action('themed-landing', 'Use blue calendar controls while keeping the saved date’s rainbow ring', () => page.getByRole('link', { name: 'Gratitude', exact: true }).click(), async () => {
     await expect(page.locator('.landing-calendar')).toBeVisible();
+    await expect(page.locator('.month-controls svg').first()).toHaveCSS('color',graphicalColour);
     await expect(page.locator('.landing-calendar [data-day="2026-10-01"] .number')).toHaveCSS('border-top-color', ringColour);
     await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))).toBe(accentChoices[7].colour);
   });
@@ -70,5 +91,5 @@ test('choose an account accent, keep rainbow reflections, and grow AI guidance w
   await navigate(page, steps, 'leave-settings', 'Settings');
   await steps.action('leave-account', 'Return to Account', () => page.getByRole('button', { name: /^Account / }).click(), async () => { await expect(page.getByRole('button', { name: 'Blue', exact: true })).toHaveAttribute('aria-pressed', 'true'); });
   await steps.action('signout', 'Return public pages to yellow on sign-out', () => page.getByRole('button', { name: 'Sign out', exact: true }).click(), async () => { await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible(); await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))).toBe(accentChoices[0].colour); });
-  await steps.generateDocs('Your favourite accent colour', 'Account accents follow the existing rainbow palette, sync independently of AI consent, recolour the smoke and glass, and preserve reflection date colours. AI guidance grows with its content and states its 500-character limit.');
+  await steps.generateDocs('Your favourite accent colour', 'Account accents follow the existing rainbow palette, sync independently of AI consent, recolour the smoke and glass, and preserve reflection date colours. Filled navigation icons and their underline keep at least 60% of each swatch’s chroma, with matching wordmark-star colour and unchanged border tint/opacity. AI guidance grows with its content and states its 500-character limit.');
 });

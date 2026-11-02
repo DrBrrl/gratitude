@@ -27,15 +27,28 @@ test('appearance replays from literal choices, independently of AI consent and d
   assert.throws(() => parseAction({ ...action, payload: { ...action.payload, hex: '#fff' } }));
 });
 
+function luminance(values: number[]) {
+  const rgb = values.map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+  return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722;
+}
+
 test('accent labels retain readable contrast on the frosted navigation, including blue and violet', () => {
-  function luminance(values: number[]) {
-    const rgb = values.map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
-    return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722;
-  }
   for (const choice of accentChoices) {
     const theme = accentTheme(choice.colourIndex), weight = parseFloat(theme.textWeight) / 100;
     const mixed = [1, 3, 5].map(at => parseInt(theme.colour.slice(at, at + 2), 16) * weight + 255 * (1 - weight));
     assert.ok((luminance(mixed) + .05) / (luminance([87, 87, 87]) + .05) >= 4.5, choice.name);
   }
   assert.equal(accentTheme(0).textWeight, '78%', 'Default yellow retains its existing text tint');
+});
+
+test('graphical accents stay close to their swatches while retaining contrast on frosted glass', () => {
+  for (const choice of accentChoices) {
+    const theme=accentTheme(choice.colourIndex),weight=parseFloat(theme.highlightWeight)/100;
+    const mixed=[1,3,5].map(at=>parseInt(choice.colour.slice(at,at+2),16)*weight+255*(1-weight));
+    assert.ok(weight>=.6, `${choice.name} keeps at least 60% of its swatch chroma`);
+    assert.ok(weight>=parseFloat(theme.textWeight)/100, `${choice.name} highlights are at least as vivid as small text`);
+    assert.ok((luminance(mixed)+.05)/(luminance([87,87,87])+.05)>=3, `${choice.name} graphical contrast`);
+  }
+  assert.equal(accentTheme(0).highlightWeight,accentTheme(0).textWeight,'Yellow keeps its reviewed appearance');
+  assert.ok(parseFloat(accentTheme(14).highlightWeight)>parseFloat(accentTheme(14).textWeight)*1.7,'Blue loses the previous grey wash');
 });
