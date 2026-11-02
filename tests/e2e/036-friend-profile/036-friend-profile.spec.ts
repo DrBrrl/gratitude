@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {TestStepHelper} from '../helpers/test-step-helper';
-import {startJournal,navigate} from '../helpers/journal-session';
+import {expectSynced,startJournal,navigate} from '../helpers/journal-session';
 import {resetFriendsFixture,openFriends,createProfile,secondFriend,findFriend} from '../helpers/friends';
 
 test('chosen public names, unique handles and opt-out discovery survive replay without sharing journal data',async({page},info)=>{
@@ -10,7 +10,7 @@ test('chosen public names, unique handles and opt-out discovery survive replay w
  await navigate(page,steps,'account-menu','Settings');
  await steps.action('account-only','Keep account controls separate from the Friends tab',()=>page.getByRole('button',{name:/^Account/}).click(),async()=>{await expect(page.getByRole('heading',{name:'Account',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Sign out',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Friends & hugs',exact:true})).toHaveCount(1);});
  await openFriends(page,steps,'from-account-');
- await steps.action('reload','Restore the cached friends profile after reload',()=>page.reload(),async()=>{await expect(page.getByRole('heading',{name:'Reflection time',exact:true})).toBeVisible({timeout:15_000});});
+ await steps.action('reload','Restore the cached friends profile after reload',()=>page.reload(),async()=>{await expect(page.getByRole('heading',{name:'Reflection time',exact:true})).toBeVisible({timeout:15_000});await expectSynced(page);});
  await openFriends(page,steps,'restored-');
  await steps.action('rebuild','Rebuild the friends profile from its source actions',()=>page.getByRole('button',{name:'Rebuild friends view',exact:true}).click(),async()=>{await expect(page.getByText('Friends view rebuilt from saved actions.',{exact:true})).toBeVisible({timeout:15_000});await expect(page.getByRole('heading',{name:'Jamie',exact:true})).toBeVisible();});
  await steps.action('edit','Edit the chosen profile',()=>page.getByRole('button',{name:'Edit friends profile',exact:true}).click(),async()=>{await expect(page.getByRole('textbox',{name:'Your username',exact:true})).toHaveValue(handle);});

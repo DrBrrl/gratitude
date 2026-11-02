@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {TestStepHelper} from '../helpers/test-step-helper';
-import {startJournal,seedHistory,navigate} from '../helpers/journal-session';
+import {expectSynced,startJournal,seedHistory,navigate} from '../helpers/journal-session';
 import {resetFriendsFixture,openFriends,createProfile,secondFriend,findFriend,switchFriend} from '../helpers/friends';
 
 test('substring discovery and repairable shared streaks respect consent, withdrawal and replay',async({page},info)=>{
@@ -29,7 +29,7 @@ test('substring discovery and repairable shared streaks respect consent, withdra
   await openFriends(page,steps,'repaired-');
   await steps.step('repaired-streak','Repair the community streak from the entry’s original date',[{description:'Backfilling the missing date repairs the shared four-day run without exposing reflection text',check:async()=>{await expect(page.getByRole('region',{name:'Community gratitude'})).toContainText('Jamie and Robin have a 4 day gratitude streak.',{timeout:15_000});}}]);
   await page.clock.setFixedTime(new Date('2026-10-03T04:31:07.000Z'));
-  await steps.action('later-visit','Return after the shared run has ended',()=>page.reload(),async()=>{await expect(page.getByRole('heading',{name:'Reflection time',exact:true})).toBeVisible({timeout:15_000});});
+  await steps.action('later-visit','Return after the shared run has ended',()=>page.reload(),async()=>{await expect(page.getByRole('heading',{name:'Reflection time',exact:true})).toBeVisible({timeout:15_000});await expectSynced(page);});
   await openFriends(page,steps,'longest-');
   await steps.step('longest-run','Keep the longest shared streak after a break',[{description:'The four-day shared run remains visible as the longest streak',check:async()=>{await expect(page.getByRole('region',{name:'Community gratitude'})).toContainText('Jamie and Robin’s longest gratitude streak: 4 days.',{timeout:15_000});}}]);
   await steps.action('edit-sharing','Review the shared calendar preference',()=>page.getByRole('button',{name:'Edit friends profile',exact:true}).click(),async()=>{await expect(page.getByRole('checkbox',{name:'Share my gratitude streaks with friends',exact:true})).toBeChecked();});
