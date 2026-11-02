@@ -43,8 +43,9 @@ test('choose an account accent, keep rainbow reflections, and grow AI guidance w
       await expect(page.getByRole('button', { name: choice.name, exact: true })).toHaveAttribute('aria-pressed', 'true');
       await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))).toBe(choice.colour);
       await expect(page.locator('.app-background')).toHaveCSS('isolation','isolate');
+      await expect(page.locator('.app-background')).toHaveCSS('filter','saturate(0.75)');
       const smoke=await page.locator('.app-background').evaluate(node=>({blend:getComputedStyle(node,'::after').mixBlendMode,colour:getComputedStyle(node,'::after').backgroundColor}));
-      expect(smoke.blend).toBe('color');expect(smoke.colour).toBe(`rgb(${[1,3,5].map(at=>parseInt(choice.colour.slice(at,at+2),16)).join(', ')})`);
+      expect(smoke.blend).toBe('hue');expect(smoke.colour).toBe(`rgb(${[1,3,5].map(at=>parseInt(choice.colour.slice(at,at+2),16)).join(', ')})`);
       await checkHighlight(page,choice.colour);
       await expect(page.getByRole('button',{name:choice.name,exact:true}).locator('span')).toHaveCSS('color',`rgb(${[1,3,5].map(at=>parseInt(choice.inkColour.slice(at,at+2),16)).join(', ')})`);
     },'The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity');
@@ -96,5 +97,5 @@ test('choose an account accent, keep rainbow reflections, and grow AI guidance w
   await navigate(page, steps, 'leave-settings', 'Settings');
   await steps.action('leave-account', 'Return to Account', () => page.getByRole('button', { name: /^Account / }).click(), async () => { await expect(page.getByRole('button', { name: 'Blue', exact: true })).toHaveAttribute('aria-pressed', 'true'); });
   await steps.action('signout', 'Return public pages to yellow on sign-out', () => page.getByRole('button', { name: 'Sign out', exact: true }).click(), async () => { await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible(); await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))).toBe(accentChoices[0].colour); });
-  await steps.generateDocs('Your favourite accent colour', 'Account accents use the fourteen supplied hex points independently of the date rainbow, sync independently of AI consent, recolour the smoke and glass, and preserve reflection date colours. The picker and smoke use the exact supplied hex points; icons use their strongest readable tint, with matching wordmark-star colour and the same border opacity. AI guidance grows with its content and states its 500-character limit.');
+  await steps.generateDocs('Your favourite accent colour', 'Account accents use the fourteen supplied hex points independently of the date rainbow, sync independently of AI consent, light the smoke and recolour the glass, and preserve reflection date colours. The picker uses the exact supplied hex points; the smoke keeps its neutral texture with a subdued lighting hue from the selected point; icons use their strongest readable tint, with matching wordmark-star colour and the same border opacity. AI guidance grows with its content and states its 500-character limit.');
 });

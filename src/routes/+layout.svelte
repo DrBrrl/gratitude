@@ -30,7 +30,7 @@
     pointer-events: none;
     background-color: #0c0d10;
     isolation: isolate;
-    filter: saturate(.55);
+    filter: saturate(.75);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -40,7 +40,8 @@
     position: absolute;
     inset: 0;
     background: var(--accent);
-    mix-blend-mode: color;
+    /* Keep the image's neutral ink and localized lighting saturation/luminance. */
+    mix-blend-mode: hue;
     pointer-events: none;
   }
 </style>

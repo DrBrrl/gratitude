@@ -2,7 +2,7 @@
 
 # Your favourite accent colour
 
-Account accents use the fourteen supplied hex points independently of the date rainbow, sync independently of AI consent, recolour the smoke and glass, and preserve reflection date colours. The picker and smoke use the exact supplied hex points; icons use their strongest readable tint, with matching wordmark-star colour and the same border opacity. AI guidance grows with its content and states its 500-character limit.
+Account accents use the fourteen supplied hex points independently of the date rainbow, sync independently of AI consent, light the smoke and recolour the glass, and preserve reflection date colours. The picker uses the exact supplied hex points; the smoke keeps its neutral texture with a subdued lighting hue from the selected point; icons use their strongest readable tint, with matching wordmark-star colour and the same border opacity. AI guidance grows with its content and states its 500-character limit.
 
 Viewport: desktop-chromium.
 

@@ -1301,3 +1301,9 @@ Hmmm, okay, the yellow looks a little green, so i am going to give you hex codes
 ```
 
 The prompt includes an attached image of fourteen hex codes, retained at [the palette reference](docs/ux/references/account-accent-palette.png). The literal codes are recorded in [the palette design](docs/ux/ACCOUNT_PALETTE.md).
+
+## 2026-11-03 — Subtle smoke lighting
+
+```text
+pr 22 looks great, but i would love for us to return to a version of the smoke/ink that is less saturated and more like a highlight colour/lighting effect please.
+```

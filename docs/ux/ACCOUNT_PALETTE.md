@@ -23,6 +23,6 @@ The picker uses each exact value. Existing even-numbered account slots are retai
 
 Highlights start at the selected colour itself, adding only enough white to meet the graphical 3:1 contrast bound on the existing conservative foggy-navigation surface. Small text has its own 4.5:1 tint. The supplied yellow needs no white mix. Glass borders, action borders, button fills and washes retain their existing mixing/opacity formulas, using the new point as their source.
 
-The original smoke image retains its texture and luminance. An isolated CSS colour-blend layer uses the selected hex directly; a uniform 55% saturation treatment keeps the background subdued. This replaces equally spaced hue rotations, so irregularly spaced palette points use their own colour. The blend/filter affects only the background layer, not writing, photos or controls.
+The original smoke image retains its texture, luminance and pattern of neutral ink with localized coloured lighting. An isolated CSS **hue** blend takes the hue from the selected hex while retaining the image’s own saturation, then scales that original saturation to 75%. Neutral smoke stays neutral and the coloured light remains subtle. This replaces the earlier colour blend, which transferred a highly saturated account colour across the whole image. The treatment affects only the background layer; controls, icons, writing and photos keep their existing colours.
 
 Selection checks use dark or white ink for readable contrast on each exact swatch; focus indicators use the readable graphical tint.
