@@ -2,7 +2,7 @@
 
 # Your favourite accent colour
 
-Account accents follow the existing rainbow palette, sync independently of AI consent, recolour the smoke and glass, and preserve reflection date colours. Filled navigation icons and their underline keep at least 60% of each swatch’s chroma, with matching wordmark-star colour and unchanged border tint/opacity. AI guidance grows with its content and states its 500-character limit.
+Account accents use the fourteen supplied hex points independently of the date rainbow, sync independently of AI consent, recolour the smoke and glass, and preserve reflection date colours. The picker and smoke use the exact supplied hex points; icons use their strongest readable tint, with matching wordmark-star colour and the same border opacity. AI guidance grows with its content and states its 500-character limit.
 
 Viewport: mobile-chromium.
 
@@ -142,18 +142,9 @@ Viewport: mobile-chromium.
 - [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Choose cyan accents and smoke
+## Choose teal accents and smoke
 
-![Choose cyan accents and smoke](./screenshots/015-colour-10-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Choose sky blue accents and smoke
-
-![Choose sky blue accents and smoke](./screenshots/016-colour-12-mobile-chromium.png)
+![Choose teal accents and smoke](./screenshots/015-colour-10-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Choose blue accents and smoke
 
-![Choose blue accents and smoke](./screenshots/017-colour-14-mobile-chromium.png)
+![Choose blue accents and smoke](./screenshots/016-colour-12-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Choose violet accents and smoke
 
-![Choose violet accents and smoke](./screenshots/018-colour-16-mobile-chromium.png)
+![Choose violet accents and smoke](./screenshots/017-colour-14-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Choose purple accents and smoke
 
-![Choose purple accents and smoke](./screenshots/019-colour-18-mobile-chromium.png)
+![Choose purple accents and smoke](./screenshots/018-colour-16-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,16 +180,16 @@ Viewport: mobile-chromium.
 
 ## Choose magenta accents and smoke
 
-![Choose magenta accents and smoke](./screenshots/020-colour-20-mobile-chromium.png)
+![Choose magenta accents and smoke](./screenshots/019-colour-18-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Choose rose accents and smoke
+## Choose pink accents and smoke
 
-![Choose rose accents and smoke](./screenshots/021-colour-22-mobile-chromium.png)
+![Choose pink accents and smoke](./screenshots/020-colour-20-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Choose red accents and smoke
 
-![Choose red accents and smoke](./screenshots/022-colour-24-mobile-chromium.png)
+![Choose red accents and smoke](./screenshots/021-colour-22-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +207,16 @@ Viewport: mobile-chromium.
 
 ## Choose orange accents and smoke
 
-![Choose orange accents and smoke](./screenshots/023-colour-26-mobile-chromium.png)
+![Choose orange accents and smoke](./screenshots/022-colour-24-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The selected icon and underline keep the swatch hue and strong colour; the glass border retains its original colour and opacity
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Choose gold accents and smoke
+
+![Choose gold accents and smoke](./screenshots/023-colour-26-mobile-chromium.png)
 
 **Verifications:**
 
