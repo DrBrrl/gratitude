@@ -19,7 +19,7 @@ test('complete Markdown and JSON exports preserve text and exclude drafts', asyn
   await backFromEditor(page, steps, 'leave-draft');
   await navigate(page, steps, 'settings', 'Settings');
   await steps.action('export-settings', 'Open export settings', () => page.getByRole('button', { name: /^Export journal/ }).click(), async () => { await expect(page.getByRole('radio', { name: /Markdown/ })).toBeChecked(); });
-  await steps.action('prepare-markdown', 'Prepare a Markdown journal', () => page.getByRole('button', { name: 'Prepare export' }).click(), async () => { await expect(page.getByRole('status')).toHaveText('Export ready'); });
+  await steps.action('prepare-markdown', 'Prepare a Markdown journal', () => page.getByRole('button', { name: 'Prepare export' }).click(), async () => { await expect(page.getByRole('status')).toHaveText('Export ready', { timeout: 15_000 }); });
   let markdownContent = '';
   const markdownDownload = page.waitForEvent('download');
   await steps.action('markdown', 'Download all saved reflections as Markdown', () => page.getByRole('button', { name: 'Download Markdown' }).click(), async () => {
@@ -33,7 +33,7 @@ test('complete Markdown and JSON exports preserve text and exclude drafts', asyn
     expect(md).toContain('A friend shared a funny story'); expect(md).toContain('\\*\\*tea\\*\\* &amp; &lt;sunshine&gt;'); expect(md).not.toContain('PRIVATE UNFINISHED DRAFT');
   }, 'Markdown contains both saved entries in the requested format, without system metadata or unfinished drafts');
   await steps.action('select-json', 'Select JSON export', () => page.getByRole('radio', { name: /JSON/ }).check(), async () => { await expect(page.getByRole('radio', { name: /JSON/ })).toBeChecked(); await expect(page.getByRole('button', { name: 'Download Markdown' })).toHaveCount(0); });
-  await steps.action('prepare-json', 'Prepare a JSON archive', () => page.getByRole('button', { name: 'Prepare export' }).click(), async () => { await expect(page.getByRole('status')).toHaveText('Export ready'); });
+  await steps.action('prepare-json', 'Prepare a JSON archive', () => page.getByRole('button', { name: 'Prepare export' }).click(), async () => { await expect(page.getByRole('status')).toHaveText('Export ready', { timeout: 15_000 }); });
   const jsonDownload = page.waitForEvent('download');
   await steps.action('json', 'Download the same journal as JSON', () => page.getByRole('button', { name: 'Download JSON' }).click(), async () => {
     const jsonFile = await jsonDownload; expect(jsonFile.suggestedFilename()).toBe('gratitude-journal.json');

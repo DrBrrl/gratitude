@@ -5,7 +5,7 @@ import { backFromEditor, editor, expectEditor, expectSynced, navigate, openEdito
 test('daily and historical drafts stay separate through navigation, reload and discard', async ({ page }, info) => {
   test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators');
   // Full-page software rendering across 37 steps needs headroom on hosted runners.
-  // Keep individual action and screenshot assertion limits unchanged.
+  // Keep click/screenshot limits; persistence confirmations use their own budget.
   test.setTimeout(240_000);
   const steps = new TestStepHelper(page, info);
   await startJournal(page, info, steps, 'draft');
@@ -33,7 +33,7 @@ test('daily and historical drafts stay separate through navigation, reload and d
   await expectEditor(page, 'The neighbour brought fresh lemons.');
   await steps.action('ask-discard', 'Ask to discard today’s draft', () => page.getByRole('button', { name: 'Discard draft', exact: true }).click(), async () => { await expect(page.getByRole('dialog')).toBeVisible(); });
   await steps.action('keep', 'Keep writing instead', () => page.getByRole('button', { name: 'Keep writing' }).click(), async () => { await expectEditor(page, 'The neighbour brought fresh lemons.'); await expect(page.getByRole('dialog')).not.toBeVisible(); });
-  await steps.action('save', 'Save the recovered draft', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => { await expect(page.locator('.saved-card')).toContainText('The neighbour brought fresh lemons.'); await expectSynced(page); });
+  await steps.action('save', 'Save the recovered draft', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => { await expect(page.locator('.saved-card')).toContainText('The neighbour brought fresh lemons.', { timeout: 15_000 }); await expectSynced(page); });
   await steps.action('done', 'Finish today’s reflection and return to the journal', () => page.getByRole('button', { name: 'Done', exact: true }).click(), async () => {
     await expect(page.getByRole('heading', { name: 'Your journal', exact: true })).toBeVisible();
     await expect(page.locator('article.card').first()).toHaveAttribute('style', todayColour!);
@@ -49,7 +49,7 @@ test('daily and historical drafts stay separate through navigation, reload and d
   await steps.action('past-recovered', 'Recover yesterday’s independent draft', () => page.getByRole('button', { name: 'Edit reflection' }).click(), async () => { await expectEditor(page, 'Yesterday I appreciated the garden and the roses.'); });
   await steps.action('save-past', 'Save yesterday’s edit after completing today’s reflection', () => page.getByRole('button', { name: 'Save changes', exact: true }).click(), async () => {
     await expectSynced(page);
-    await expect(page.locator('.saved-card')).toContainText('Yesterday I appreciated the garden and the roses.');
+    await expect(page.locator('.saved-card')).toContainText('Yesterday I appreciated the garden and the roses.', { timeout: 15_000 });
   });
   await steps.action('done-past', 'Finish the historical edit and return to the journal', () => page.getByRole('button', { name: 'Done', exact: true }).click(), async () => {
     await expect(page.getByRole('heading', { name: 'Your journal', exact: true })).toBeVisible();

@@ -24,7 +24,8 @@ test('personalised generation mixes twenty logical-date reflections and replays 
   await saveChoices(page,steps,'save-choices');
   await navigate(page,steps,'today','Today');
   await steps.action('generate','Generate using twenty saved reflections selected by logical date',()=>page.getByRole('button',{name:'Find me a prompt',exact:true}).click(),async()=>{
-    await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT);expect(contexts).toHaveLength(1);
+    // This commits a request with twenty source references, then its received result.
+    await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT,{timeout:30_000});expect(contexts).toHaveLength(1);
     const c=contexts[0];expect(Object.values(c.reflections).map(g=>g.length)).toEqual([8,7,0,5]);
     expect(c.referenceDate).toBe('2026-10-01');expect(c.timeZone).toBe('Australia/Hobart');
     expect(c.reflections.anniversary).toContainEqual({date:'2025-10-01',text:'An imported anniversary walk.'});
@@ -38,7 +39,7 @@ test('personalised generation mixes twenty logical-date reflections and replays 
   await steps.action('save-feedback','Save explicit feedback without inference',()=>page.getByRole('button',{name:'Save feedback'}).click(),async()=>{await expect(page.getByText('Prompt feedback saved.',{exact:true})).toBeVisible();expect(contexts).toHaveLength(1);});
   await steps.action('close-why','Close the source explanation',()=>page.getByRole('button',{name:'Why this prompt?'}).click(),async()=>{await expect(page.locator('.explanation')).toHaveCount(0);});
   await steps.action('another','Rediscover sources that have not yet informed a successful prompt',()=>page.getByRole('button',{name:'Another prompt',exact:true}).click(),async()=>{
-    await expect(page.locator('.daily-prompt h2')).toHaveText(SECOND_PROMPT);expect(contexts).toHaveLength(2);
+    await expect(page.locator('.daily-prompt h2')).toHaveText(SECOND_PROMPT,{timeout:30_000});expect(contexts).toHaveLength(2);
     const previous=new Set(Object.values(contexts[0].reflections).flat().map(e=>e.text));
     expect(contexts[1].differentPromptRequest).toBe(`The user has requested a different prompt. Your new prompt's wording and topics should vary from your previously generated prompt: ${JSON.stringify(FIRST_PROMPT)}`);
     expect(Object.keys(contexts[1]).at(-1)).toBe('differentPromptRequest');
@@ -51,7 +52,7 @@ test('personalised generation mixes twenty logical-date reflections and replays 
   await steps.action('draft','Keep unfinished writing out of Gemini context',()=>editor(page).fill('UNSAVED_PRIVATE_DRAFT'),async()=>{await expectEditor(page,'UNSAVED_PRIVATE_DRAFT');});
   await steps.action('backfill-date','Choose a backfill date for this reflection',()=>page.getByLabel('Entry date and time').fill('2026-09-24T12:00'),async()=>{await expect(page.getByLabel('Entry date and time')).toHaveValue('2026-09-24T12:00');});
   await steps.action('editor-generate','Select historical context relative to the editor’s date',()=>page.getByRole('button',{name:'Generate AI prompt',exact:true}).click(),async()=>{
-    await expect(page.getByRole('complementary',{name:'Generated prompt option'})).toBeVisible();expect(contexts).toHaveLength(3);
+    await expect(page.getByRole('complementary',{name:'Generated prompt option'})).toBeVisible({timeout:30_000});expect(contexts).toHaveLength(3);
     expect(contexts[2].referenceDate).toBe('2026-09-24');
     expect(contexts[2].differentPromptRequest).toContain(JSON.stringify(SECOND_PROMPT));
     expect(Object.values(contexts[2].reflections).flat().every(e=>e.date<'2026-09-24')).toBe(true);

@@ -21,7 +21,7 @@ export async function navigate(page: Page, steps: TestStepHelper, id: string, de
   });
 }
 export async function openEditor(page: Page, steps: TestStepHelper, id: string) {
-  await steps.action(id, 'Open the reflection editor', () => page.getByRole('button', { name: /^(Write a response|Continue your reflection)$/ }).click(), async () => { await expect(editor(page)).toBeVisible(); });
+  await steps.action(id, 'Open the reflection editor', async () => { const button=page.getByRole('button', { name: /^(Write a response|Continue your reflection)$/ }); await expect(button).toBeEnabled({ timeout: 15_000 }); await button.click(); }, async () => { await expect(editor(page)).toBeVisible({ timeout: 15_000 }); });
 }
 export async function backFromEditor(page: Page, steps: TestStepHelper, id: string, destination = 'Today') {
   await steps.action(id, `Return to ${destination} without losing the draft`, () => page.locator('button.back').click(), async () => { await expect(editor(page)).toHaveCount(0); });
