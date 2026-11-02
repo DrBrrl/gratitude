@@ -8,6 +8,8 @@ New and existing users are interrupted by the questionnaire on their next signed
 
 Use a versioned, account-synced completion/skip action for this rollout. Every account without a confirmed outcome for this onboarding version is eligible, including an existing empty journal; no first-use/legacy classification is needed. Completing or explicitly skipping dismisses automatic setup across devices. An interrupted unfinished setup resumes on the next visit. Clearing answers does not reset the rollout outcome. Preserve existing drafts and the intended navigation destination; do not interrupt an already-open editor mid-keystroke when a new app version arrives.
 
+With a valid offline session, keep completion/skip in the existing account-scoped outbox and acknowledge it locally, so the same device is not repeatedly interrupted. Other devices receive that outcome after synchronization; do not label it cloud-confirmed earlier.
+
 After Google sign-in, use the existing dark glass surfaces, shared page headings and back controls. Keep the flow mobile-first, with these screens:
 
 | Screen | Contents and actions |
@@ -26,6 +28,8 @@ Show progress through the optional questions, retain draft answers when moving B
 Private answers stay in an account/deployment-scoped device draft until confirmation. Skipping one question discards its unconfirmed changes; skipping the entire setup discards the private questionnaire draft. A colour preview returns to the last saved account colour on cancellation. Confirmed appearance choices use the existing account action. A failed save retains the draft and offers Retry or Continue without setup; do not report cloud synchronization until confirmed.
 
 The Friends form remains its own explicit save: explain before opening it that its display name and username can be visible to other users. Reuse its discoverability, sharing, validation and conflict controls. Saving private answers never creates a public profile or enables social sharing. A separately saved Friends profile is not rolled back when the questionnaire is cancelled; show that distinction rather than presenting the two streams as one atomic save.
+
+Connections explicitly saved in the AI step likewise use their existing separate storage. Cancelling the questionnaire does not roll back those saves. The review distinguishes already-saved connections/profile from unconfirmed private answers and source-sharing choices.
 
 ## Welcome copy edited by Jamie
 
