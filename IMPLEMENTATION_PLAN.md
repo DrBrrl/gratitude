@@ -65,6 +65,8 @@ Restore valid checkpoints and fetch only the confirmed tail. Commit cached event
 
 ## 4. Onboarding, Today, editor and journal search
 
+**Onboarding proposal for review:** [ONBOARDING_DESIGN.md](ONBOARDING_DESIGN.md) develops the welcome copy, optional private/public identity choices, existing account colour picker, fifteen topics, narrow/broad scope and 50–200-word prompt limit. Its four delivery slices separate stored answers, the questionnaire, permission-bound prompt generation and backup/export compatibility. This replaces the earlier three-question onboarding concept for future implementation; it changes no live behaviour in the design PR. In particular, larger questions require versioned validation/Rules and context-budget changes beyond editing the AI instruction.
+
 **Deliverable:** optional questions, explicit sharing controls, daily prompt view, starter fallback, skip/resume, durable editor, save/edit, freeform feedback, rainbow history, full entry and search.
 
 Use recorded fixture response events during UI development. Show device-pending and cloud-synced states accurately. Flush pending text before save; preserve entry identity across edits. Display the prompt and date-derived colour before writing. The colour is known offline; it follows the chosen local date, with no reservation or first-day colour commit. Keep Today/Journal/Settings navigation, with AI settings inside Settings.

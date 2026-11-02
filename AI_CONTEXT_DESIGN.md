@@ -2,6 +2,8 @@
 
 Implemented selection policy, 2026-10-27, based on merged main `16edbf7`.
 
+The [onboarding and prompt-preferences proposal](ONBOARDING_DESIGN.md#ai-instruction-and-json-proposal) describes a future instruction/context version with optional questionnaire answers, fifteen interests, narrow/broad scope and a configurable word limit. It is design-only: the implemented instruction below, current 600-character bounds and existing sharing behaviour remain in effect until that separate implementation is reviewed and delivered.
+
 This PR implements the exact Gemini instruction below and a twenty-reflection selector based on logical entry dates. New daily/editor requests use schemas 3/4 and `mixed-v1`; legacy schemas 1/2 and both `gratitude-v1`/`gratitude-v2` instruction tags remain replayable. Successful-use metadata is derived in projection version 7. Gemini-curated user notes remain deferred, not built or sent.
 
 ## Requested instruction — implemented in this PR

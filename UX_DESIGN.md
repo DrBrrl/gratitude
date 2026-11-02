@@ -24,6 +24,8 @@ Users sign in with Google before opening their Firebase journal. First-time user
 
 ## 1. Onboarding
 
+The newer [onboarding and prompt-preferences proposal](ONBOARDING_DESIGN.md) replaces the three-question M02 concept below for the next onboarding implementation. It proposes welcome copy, optional identity/profile choices, the account palette, fifteen interests, scope/word-limit controls and explicit AI permissions. The existing boards and M01–M03 notes remain historical design references; the expanded questionnaire is not implemented.
+
 ![M01 Welcome, M02 optional questions, M03 AI context choices](docs/ux/mockups/01-onboarding-yellow-ink.png)
 
 - **M01 Welcome:** Get started opens M02; Skip questions opens M03. Google sign-in provides account access before this flow; no separate password registration form is needed. Firebase synchronizes the same user's event stream across devices.
