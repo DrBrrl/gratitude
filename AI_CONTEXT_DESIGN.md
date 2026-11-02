@@ -2,7 +2,7 @@
 
 Implemented selection policy, 2026-10-27, based on merged main `16edbf7`.
 
-The [onboarding and prompt-preferences proposal](ONBOARDING_DESIGN.md#ai-instruction-and-json-proposal) describes a future instruction/context version with optional questionnaire answers, fifteen interests, narrow/broad scope and a configurable word limit. It is design-only: the implemented instruction below, current 600-character bounds and existing sharing behaviour remain in effect until that separate implementation is reviewed and delivered.
+The [onboarding and prompt-preferences proposal](ONBOARDING_DESIGN.md#ai-instruction-and-json-proposal) describes a future instruction/context version with questionnaire answers and identity-aware wording, seventeen editable topic descriptions plus custom topics, three scopes, a configurable word limit and a twenty-unit reflection budget (over-600-character entries cost two). It is design-only: the implemented instruction below, current 600-character bounds and existing sharing behaviour remain in effect until that separate implementation is reviewed and delivered.
 
 This PR implements the exact Gemini instruction below and a twenty-reflection selector based on logical entry dates. New daily/editor requests use schemas 3/4 and `mixed-v1`; legacy schemas 1/2 and both `gratitude-v1`/`gratitude-v2` instruction tags remain replayable. Successful-use metadata is derived in projection version 7. Gemini-curated user notes remain deferred, not built or sent.
 
@@ -153,3 +153,9 @@ Replacement requests use `mixed-v2`. A fresh literal random seed resamples five 
 Cloud daily/editor requests use schemas 9/10; local requests use 11/12. The raw request records only the previous response ID, new seed and captured source references, alongside existing user request inputs. Computed grouping, AI input/output text and credentials are not added to request events. Exact AI response text remains its own received-response event. Legacy schemas retain `mixed-v1`; backup requests retain schemas 7/8. Projection version 12 rebuilds old checkpoints without inference. Both client append and Rules verify that the prior reference identifies an AI response in the same private journal stream.
 
 Tests reconstruct the outgoing JSON from each request-time snapshot, verify source rotation, current consent, logical dates, cloud/local and daily/editor contracts, sparse history and full/cached replay. No model is called by replay, reload or retrying a received output.
+
+## Planned weighted reflection budget
+
+The updated [onboarding proposal](ONBOARDING_DESIGN.md#weighted-reflection-selection-proposal) changes future request versions to category budgets of 8/7/5 **units**, rather than twenty guaranteed distinct reflections. Complete trimmed saved text up to 600 code units costs one; longer text costs two, before applying the existing 1,000-character excerpt cap. A spent second unit is not a vacant slot for fallback. The proposal defines category scans, odd leftovers, fallback, version compatibility and acceptance examples. It applies equally to imported writing and both model providers, including replacement and backup requests.
+
+This remains design-only: the implemented fixed-count selector documented above is unchanged in this PR. The new policy needs its own selector/request versions and tests, not a reinterpretation of old request provenance.

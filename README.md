@@ -18,7 +18,7 @@ The repository contains a Svelte 5 / SvelteKit application with a responsive dar
 
 The journal offers a bundled starter prompt and optional Gemini or LM Studio prompts. Preview and production builds use paid Gemini, with personalization controlled by each user’s saved sharing choices. See [VISION.md](VISION.md) for the project’s intended end state.
 
-The [onboarding and prompt-preferences proposal](ONBOARDING_DESIGN.md) drafts the welcome copy, optional questions, fifteen topic choices, narrow/broad scope and a 50–200-word prompt limit. It also describes explicit answer sharing and the required longer-question compatibility work. This is a design for review; the live instruction and application are unchanged by that proposal.
+The [onboarding and prompt-preferences proposal](ONBOARDING_DESIGN.md) drafts Jamie’s welcome copy, next-visit setup for new and existing users, private name/pronoun greetings, AI and Friends setup, seventeen editable topic descriptions plus custom rows, three prompt scopes and a 50–200-word limit. It also proposes a twenty-unit reflection budget (entries over 600 characters cost two units), explicit answer sharing and longer-question compatibility work. This is a design for review; the live instruction and application are unchanged by that proposal.
 
 ## Development
 
