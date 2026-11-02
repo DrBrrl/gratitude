@@ -29,9 +29,18 @@
     z-index: -1;
     pointer-events: none;
     background-color: #0c0d10;
-    filter: hue-rotate(var(--smoke-rotation));
+    isolation: isolate;
+    filter: saturate(.55);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+  }
+  .app-background::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    mix-blend-mode: color;
+    pointer-events: none;
   }
 </style>

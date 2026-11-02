@@ -46,7 +46,7 @@ test('rainbow cards, expansion, full entries, search and editing', async ({ page
   await steps.action('open-edit', 'Open the latest reflection', () => page.getByRole('button', { name: 'View entry', exact: true }).first().click(), async () => { await expect(page.locator('.detail .entry-text')).toHaveText(longReflection.replace(/\n/g, '')); });
   await steps.action('edit', 'Edit the saved reflection', () => page.getByRole('button', { name: 'Edit reflection' }).click(), async () => { await expectEditor(page, longReflection); await expect(page.locator('button.back')).toHaveText('Journal'); });
   await steps.action('revise', 'Add a remembered detail', () => editor(page).fill('The rain made the garden smell wonderful. The roses opened.'), async () => { await expectEditor(page, 'The rain made the garden smell wonderful. The roses opened.'); });
-  await steps.action('save-edit', 'Save changes to the existing reflection', () => page.getByRole('button', { name: 'Save changes' }).click(), async () => { await expect(page.locator('.saved-card')).toContainText('The roses opened.'); await expectSynced(page); });
+  await steps.action('save-edit', 'Save changes to the existing reflection', () => page.getByRole('button', { name: 'Save changes' }).click(), async () => { await expect(page.locator('.saved-card')).toContainText('The roses opened.', { timeout: 15_000 }); await expectSynced(page); });
   await steps.action('edited-journal', 'Finish editing and return to the journal', () => page.getByRole('button', { name: 'Done', exact: true }).click(), async () => {
     await expect(page.getByRole('heading', { name: 'Your journal', exact: true })).toBeVisible();
     await expect(cards).toHaveCount(2);

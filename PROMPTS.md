@@ -1293,3 +1293,11 @@ Thank youuuu! I noticed as i was testing that the highlights (e.g. the selected 
 ```text
 Retarget that to main for me? Just merged PR 21 :)
 ```
+
+## 2026-11-02 — Explicit account accent palette
+
+```text
+Hmmm, okay, the yellow looks a little green, so i am going to give you hex codes. Let's make the colour picker and the highlights/box edges/smoke colours all be derived from the following colur points [Image #1]
+```
+
+The prompt includes an attached image of fourteen hex codes, retained at [the palette reference](docs/ux/references/account-accent-palette.png). The literal codes are recorded in [the palette design](docs/ux/ACCOUNT_PALETTE.md).
