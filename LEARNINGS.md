@@ -1150,3 +1150,10 @@ The navigation screenshot refresh used the pinned Nix environment on a disposabl
 - Three further built-in generation/edit calls produced the two revised boards (1536 × 1024) and the expanded welcome board (1254 × 1254). Eight prompts now document five selected boards and their earlier versions. All selected outputs are copied unchanged; no application code, source schema or E2E baseline is changed.
 
 - Verification: 109 local documentation/image/prompt links and seven heading anchors resolve; five current boards index all fourteen states; eight exact generation/edit prompts are retained. The original three welcome paragraphs, all seven feature descriptions and the optional-questions sentence match the previous revision exactly. Whitespace checks pass, and application source, schemas, workflows, VISION and E2E scenarios/baselines are unchanged. No browser tests were rerun for these design revisions.
+
+## 2026-11-03 — Model-neutral local-service review
+
+- The user removed the model-family focus from the design. The active proposal and review now focus on LM Studio, Ollama and verified compatible servers; earlier user prompts, generation prompts and learning entries remain historical records.
+- The revised connection board shows successful Ollama discovery with an unselected model picker, capability guidance and Save connection disabled until a model is selected. This preserves the distinction between testing a service and selecting a model. The built-in image edit is retained with its exact prompt and copied unchanged as a new version; the app remains unchanged.
+
+- Verification: 110 local documentation/image/prompt links resolve, the revised PNG is intact at 1536 × 1024, nine exact generation/edit prompts are retained, active design prose has no model-family focus, and prior prompt/learning history is preserved. Whitespace checks pass; no runtime or E2E changes require browser tests.

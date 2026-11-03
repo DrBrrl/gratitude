@@ -1542,3 +1542,9 @@ In reply to whether Hermes meant models, Hermes Agent or both:
 ```text
 I actually don't know much about Hermes, i thought it was another local model wrapper like LM Studio and Ollama :)
 ```
+
+## 2026-11-03 — Keep local-service design model-neutral
+
+```text
+No need to focus on hermes at all :)
+```

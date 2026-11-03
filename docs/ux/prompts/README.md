@@ -23,4 +23,4 @@ Generated mockups illustrate appearance; UX_DESIGN.md defines exact layout, full
 
 ## Expanded onboarding review
 
-The newer [O01–O14 generation record](onboarding-review/README.md) contains eight built-in image-generation/edit prompts for five current onboarding boards, including the expanded welcome and local-service revision. These use the revised questionnaire/copy, current palette and neutral ink lighting. The original eight boards and their prompts remain intact. [Review the new screens and flow](../ONBOARDING_REVIEW.md).
+The newer [O01–O14 generation record](onboarding-review/README.md) contains nine built-in image-generation/edit prompts for five current onboarding boards, including the expanded welcome and local-service revision. These use the revised questionnaire/copy, current palette and neutral ink lighting. The original eight boards and their prompts remain intact. [Review the new screens and flow](../ONBOARDING_REVIEW.md).

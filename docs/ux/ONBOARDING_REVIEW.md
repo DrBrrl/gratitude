@@ -44,17 +44,17 @@ O04 shows only the first five of seventeen built-in rows. The remaining rows and
 
 ## 3. Optional AI and Friends setup
 
-![O07 AI choices, O08 Ollama and model selection, and O09 public Friends profile](mockups/onboarding-review/03-ai-and-friends-v2.png)
+![O07 AI choices, O08 Ollama and model selection, and O09 public Friends profile](mockups/onboarding-review/03-ai-and-friends-v3.png)
 
-[Open this board at full size](mockups/onboarding-review/03-ai-and-friends-v2.png).
+[Open this board at full size](mockups/onboarding-review/03-ai-and-friends-v3.png).
 
 | Screen | What to review | Interaction |
 | --- | --- | --- |
 | O07 Choose your AI · 5 of 7 | Prompt provider, the same-model choices for photos/backups and independent refill control. | Configuration is optional. Choosing or saving a connection does not enable AI, sharing, automatic refill or a photo request. **Set up later** keeps existing choices and points to Settings → AI settings. |
-| O08 Local connection · 5 of 7 detail | **Service: Ollama**, a server address, optional proxy authentication, connection test and the **hermes3:8b** model. A capability note identifies it as text-only. | Open after choosing **Local model server**. Service choices are LM Studio, Ollama and a verified compatible-server adapter. **Save connection** is separate; Cancel returns to O07. The address and connected result are fictional, and no token is required by this native Ollama example. |
+| O08 Local connection · 5 of 7 detail | **Service: Ollama**, a server address, optional proxy authentication and a model picker awaiting a choice. The capability note asks for a selection before showing photo support. | Open after choosing **Local model server**. Service choices are LM Studio, Ollama and a verified compatible-server adapter. **Save connection** is separate and disabled until a model is selected; Cancel returns to O07. The address and connected result are fictional, and no token is required by this native Ollama example. |
 | O09 Your Friends profile · 6 of 7 | A public name and username, discoverability, date/streak sharing and shared calendar timezone. | Reuse the existing Friends form. Its discoverability and streak-sharing defaults are checked, but nothing is published until **Save friends profile** succeeds. Continue must not silently save it. **Set up later** leaves an existing profile unchanged. |
 
-The Ollama connection and Gemini review are alternative provider examples, not a forced switch from local back to cloud. Use the actual selected provider in the review and its disclosure. A Hermes model is selected on its server, rather than presented as a Hermes Agent connection. [The local-service proposal](../../AI_PROVIDER_DESIGN.md#onboarding-review-additional-local-services) defines the adapter, saved-setting and capability work required before these new service choices can be offered in the app. LM Studio keeps its existing token controls; native Ollama instead shows optional proxy authentication. A text-only prompt model must not receive photos through a shared-model choice. **Use my own cloud model** still requires its proposed provider implementation before release.
+The Ollama connection and Gemini review are alternative provider examples, not a forced switch from local back to cloud. Use the actual selected provider in the review and its disclosure. The connection test discovers the service and models; a successful test does not select a model automatically. [The local-service proposal](../../AI_PROVIDER_DESIGN.md#onboarding-review-additional-local-services) defines the adapter, saved-setting and capability work required before these new service choices can be offered in the app. LM Studio keeps its existing token controls; native Ollama instead shows optional proxy authentication. A text-only prompt model must not receive photos through a shared-model choice. **Use my own cloud model** still requires its proposed provider implementation before release.
 
 Private name/pronouns never populate a public profile automatically. O09’s fictional public values were entered separately. Profile and connection saves remain saved if the person later skips the questionnaire; review makes that boundary visible. Photo processing still requires its own existing authorization, and selecting a backup model does not enable refilling.
 
