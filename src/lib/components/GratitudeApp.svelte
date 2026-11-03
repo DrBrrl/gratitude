@@ -750,7 +750,7 @@
               if(session!==current)return;
               credentialStatus=status;
               try{
-                if(saved){modelConnection={...saved,provider:saved.provider??modelConnection.provider};saveConnection(scope,modelConnection,localStorage,sessionStorage,true);refiller.reset();}
+                if(saved){modelConnection={...saved,provider:saved.provider??'lm-studio'};saveConnection(scope,modelConnection,localStorage,sessionStorage,true);modelConnectionError='';refiller.reset();}
                 else if(saved===null){modelConnection={...modelConnection,token:''};clearConnectionToken(scope);}
               }catch{modelConnectionError='Could not keep the model token in this tab. Account sync remains available.';}
             },restoredAccountToken);

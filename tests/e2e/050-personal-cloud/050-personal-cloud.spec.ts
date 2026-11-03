@@ -33,6 +33,7 @@ test('a personal cloud key is write-only, defaults to generic context, restores 
  try{
   await network(page);await startJournal(page,info,steps,'personal-cloud');
   uid=await page.evaluate(async()=>{const name=(await indexedDB.databases()).find(db=>db.name?.startsWith('gratitude:demo-gratitude:'))?.name;if(!name)throw Error('No journal');return name.split(':').at(-2)!;});
+  await environment.withSecurityRulesDisabled(async admin=>setDoc(doc(admin.firestore(),`users/${uid}/privateSettings/lmStudio`),{schemaVersion:1,baseUrl:'https://fictional-legacy-laptop.example.test',model:'legacy/text-model',token:'fictional-legacy-lm-token',updatedAt:Timestamp.fromDate(new Date(FIXTURE_TIME))}));
   await seedHistory(page,[{text:'Fictional kettle and sunshine, private context.',recordedAt:'2026-09-30T01:00:00Z'}]);
   await aiSettings(page,steps,'ai');
   await steps.action('own-key','Choose a personal Gemini connection',()=>page.getByLabel('AI provider',{exact:true}).selectOption('personal-gemini'),async()=>{await expect(page.getByRole('region',{name:'Personal Gemini connection'})).toBeVisible();await expect(page.getByRole('button',{name:'Save private cloud connection'})).toBeDisabled();});
@@ -42,6 +43,7 @@ test('a personal cloud key is write-only, defaults to generic context, restores 
   await steps.action('save-key','Save the private account connection without approving personal data',()=>page.getByRole('button',{name:'Save private cloud connection'}).click(),async()=>{await expect(page.getByRole('status')).toContainText('key cannot be read back');await expect(page.getByLabel('Replacement Gemini API key (optional)')).toHaveValue('');expect(generations).toBe(0);});
   await toggleAI(page,steps,'enable',true);await saveChoices(page,steps,'enable-save');
   await navigate(page,steps,'today','Today');
+  await steps.action('reload-with-local-sync','Restore the personal provider alongside an existing synced LM Studio token',()=>page.reload(),async()=>{await expectSynced(page);await expect(page.getByRole('button',{name:'Find me a prompt',exact:true})).toBeEnabled();});
   await steps.action('generic','Request a generic question with your saved cloud connection',()=>page.getByRole('button',{name:'Find me a prompt',exact:true}).click(),async()=>{await expect(page.locator('.daily-prompt h2')).toHaveText('What fictional everyday kindness did you enjoy?');expect(generations).toBe(1);const request=calls.find(call=>call.operation==='generate');expect(request.context).toContain('No personal context is supplied.');expect(JSON.stringify(request)).not.toContain('Fictional kettle');expect(request.key).toBeUndefined();});
   await aiSettings(page,steps,'review');
   await steps.action('terms','Review this key’s provider terms before permitting personal context',()=>page.getByLabel(/I have reviewed Google/).check(),async()=>{await expect(page.getByLabel(/I have reviewed Google/)).toBeChecked();});
@@ -59,7 +61,7 @@ test('a personal cloud key is write-only, defaults to generic context, restores 
   await steps.action('photo-model','Choose its model independently',()=>photos.getByLabel('Your Gemini model').selectOption(MODEL),async()=>{await expect(photos.getByLabel('Your Gemini model')).toHaveValue(MODEL);});
   await steps.action('photo-terms','Review the photo connection’s own provider terms',()=>photos.getByLabel(/I have reviewed Google/).check(),async()=>{await expect(photos.getByLabel(/I have reviewed Google/)).toBeChecked();});
   await steps.action('photo-save','Save a separately bound photo key without changing the prompt connection',()=>photos.getByRole('button',{name:'Save private cloud connection'}).click(),async()=>{await expect(photos.getByLabel('Replacement Gemini API key (optional)')).toHaveValue('');await expect(photos.getByRole('status')).toContainText('key cannot be read back');expect(generations).toBe(2);const saved=calls.filter(call=>call.operation==='save');expect(saved.at(-1).connectionId).not.toBe(saved[0].connectionId);});
-  const log=await selectionLog(page);expect(JSON.stringify(log)).not.toContain(KEY);expect(log.find(event=>event.type==='PromptRequested')?.payload.contextMode).toBe('generic');
+  const log=await selectionLog(page);expect(JSON.stringify(log)).not.toContain(KEY);expect(JSON.stringify(log)).not.toContain('fictional-legacy-lm-token');expect(JSON.stringify(log)).not.toContain('fictional-legacy-laptop');expect(log.find(event=>event.type==='PromptRequested')?.payload.contextMode).toBe('generic');
   expect(await page.evaluate(()=>JSON.stringify({...localStorage,...sessionStorage}))).not.toContain(KEY);
   const secondContext=await page.context().browser()!.newContext({...info.project.use,baseURL:info.project.use.baseURL??process.env.E2E_BASE_URL??'http://127.0.0.1:4173/'});
   try{

@@ -169,9 +169,18 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Restore the personal provider alongside an existing synced LM Studio token
+
+![Restore the personal provider alongside an existing synced LM Studio token](./screenshots/018-reload-with-local-sync-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Request a generic question with your saved cloud connection
 
-![Request a generic question with your saved cloud connection](./screenshots/018-generic-desktop-chromium.png)
+![Request a generic question with your saved cloud connection](./screenshots/019-generic-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/019-review-settings-desktop-chromium.png)
+![Open Settings](./screenshots/020-review-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/020-review-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/021-review-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Review this key’s provider terms before permitting personal context
 
-![Review this key’s provider terms before permitting personal context](./screenshots/021-terms-desktop-chromium.png)
+![Review this key’s provider terms before permitting personal context](./screenshots/022-terms-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Save the explicit terms acknowledgement without re-entering a key
 
-![Save the explicit terms acknowledgement without re-entering a key](./screenshots/022-save-terms-desktop-chromium.png)
+![Save the explicit terms acknowledgement without re-entering a key](./screenshots/023-save-terms-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly allow journal context for this approved connection
 
-![Explicitly allow journal context for this approved connection](./screenshots/023-journal-permission-desktop-chromium.png)
+![Explicitly allow journal context for this approved connection](./screenshots/024-journal-permission-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/024-personal-permission-desktop-chromium.png)
+![Save these explicit sharing choices](./screenshots/025-personal-permission-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/025-personal-today-desktop-chromium.png)
+![Open Today](./screenshots/026-personal-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Request another prompt using only explicitly approved journal context
 
-![Request another prompt using only explicitly approved journal context](./screenshots/026-personal-desktop-chromium.png)
+![Request another prompt using only explicitly approved journal context](./screenshots/027-personal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/027-independent-photo-settings-desktop-chromium.png)
+![Open Settings](./screenshots/028-independent-photo-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/028-independent-photo-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/029-independent-photo-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Open independent photo connection settings
 
-![Open independent photo connection settings](./screenshots/029-photo-options-desktop-chromium.png)
+![Open independent photo connection settings](./screenshots/030-photo-options-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Choose a separate personal Gemini connection for photos
 
-![Choose a separate personal Gemini connection for photos](./screenshots/030-separate-key-desktop-chromium.png)
+![Choose a separate personal Gemini connection for photos](./screenshots/031-separate-key-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Enter a fictional key for the photo slot
 
-![Enter a fictional key for the photo slot](./screenshots/031-photo-key-desktop-chromium.png)
+![Enter a fictional key for the photo slot](./screenshots/032-photo-key-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Discover the photo key’s models without inference
 
-![Discover the photo key’s models without inference](./screenshots/032-photo-test-desktop-chromium.png)
+![Discover the photo key’s models without inference](./screenshots/033-photo-test-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Choose its model independently
 
-![Choose its model independently](./screenshots/033-photo-model-desktop-chromium.png)
+![Choose its model independently](./screenshots/034-photo-model-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Review the photo connection’s own provider terms
 
-![Review the photo connection’s own provider terms](./screenshots/034-photo-terms-desktop-chromium.png)
+![Review the photo connection’s own provider terms](./screenshots/035-photo-terms-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Save a separately bound photo key without changing the prompt connection
 
-![Save a separately bound photo key without changing the prompt connection](./screenshots/035-photo-save-desktop-chromium.png)
+![Save a separately bound photo key without changing the prompt connection](./screenshots/036-photo-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Open Gratitude in a separate browser storage context
 
-![Open Gratitude in a separate browser storage context](./screenshots/036-second-device-desktop-chromium.png)
+![Open Gratitude in a separate browser storage context](./screenshots/037-second-device-desktop-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/037-google-popup-desktop-chromium.png)
+![Choose Google sign-in](./screenshots/038-google-popup-desktop-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +360,7 @@ Viewport: desktop-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/038-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/039-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -361,7 +370,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/039-restored-settings-desktop-chromium.png)
+![Open Settings](./screenshots/040-restored-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -370,7 +379,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/040-restored-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/041-restored-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -379,7 +388,7 @@ Viewport: desktop-chromium.
 
 ## Restore the account connection without revealing its key
 
-![Restore the account connection without revealing its key](./screenshots/041-write-only-desktop-chromium.png)
+![Restore the account connection without revealing its key](./screenshots/042-write-only-desktop-chromium.png)
 
 **Verifications:**
 
@@ -388,7 +397,7 @@ Viewport: desktop-chromium.
 
 ## Test the restored connection using only its opaque reference
 
-![Test the restored connection using only its opaque reference](./screenshots/042-test-saved-desktop-chromium.png)
+![Test the restored connection using only its opaque reference](./screenshots/043-test-saved-desktop-chromium.png)
 
 **Verifications:**
 
@@ -397,7 +406,7 @@ Viewport: desktop-chromium.
 
 ## Inspect the independent photo connection on the second device
 
-![Inspect the independent photo connection on the second device](./screenshots/043-restore-photo-desktop-chromium.png)
+![Inspect the independent photo connection on the second device](./screenshots/044-restore-photo-desktop-chromium.png)
 
 **Verifications:**
 
@@ -406,7 +415,7 @@ Viewport: desktop-chromium.
 
 ## Close photo settings before managing the prompt key
 
-![Close photo settings before managing the prompt key](./screenshots/044-close-photo-desktop-chromium.png)
+![Close photo settings before managing the prompt key](./screenshots/045-close-photo-desktop-chromium.png)
 
 **Verifications:**
 
@@ -415,7 +424,7 @@ Viewport: desktop-chromium.
 
 ## Remove the saved key without switching providers silently
 
-![Remove the saved key without switching providers silently](./screenshots/045-remove-desktop-chromium.png)
+![Remove the saved key without switching providers silently](./screenshots/046-remove-desktop-chromium.png)
 
 **Verifications:**
 
@@ -424,7 +433,7 @@ Viewport: desktop-chromium.
 
 ## Keep the independent photo key after removing the prompt key
 
-![Keep the independent photo key after removing the prompt key](./screenshots/046-photo-retained-desktop-chromium.png)
+![Keep the independent photo key after removing the prompt key](./screenshots/047-photo-retained-desktop-chromium.png)
 
 **Verifications:**
 
@@ -433,7 +442,7 @@ Viewport: desktop-chromium.
 
 ## Return to the original browser and close its photo settings
 
-![Return to the original browser and close its photo settings](./screenshots/047-original-photo-close-desktop-chromium.png)
+![Return to the original browser and close its photo settings](./screenshots/048-original-photo-close-desktop-chromium.png)
 
 **Verifications:**
 
@@ -442,7 +451,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly choose the managed provider after removing the old key
 
-![Explicitly choose the managed provider after removing the old key](./screenshots/048-managed-desktop-chromium.png)
+![Explicitly choose the managed provider after removing the old key](./screenshots/049-managed-desktop-chromium.png)
 
 **Verifications:**
 
@@ -451,7 +460,7 @@ Viewport: desktop-chromium.
 
 ## Save the managed provider without restoring an obsolete personal credential
 
-![Save the managed provider without restoring an obsolete personal credential](./screenshots/049-save-managed-desktop-chromium.png)
+![Save the managed provider without restoring an obsolete personal credential](./screenshots/050-save-managed-desktop-chromium.png)
 
 **Verifications:**
 
@@ -460,7 +469,7 @@ Viewport: desktop-chromium.
 
 ## Reselect personal Gemini using fresh account metadata rather than the deleted cached key
 
-![Reselect personal Gemini using fresh account metadata rather than the deleted cached key](./screenshots/050-reselect-removed-desktop-chromium.png)
+![Reselect personal Gemini using fresh account metadata rather than the deleted cached key](./screenshots/051-reselect-removed-desktop-chromium.png)
 
 **Verifications:**
 

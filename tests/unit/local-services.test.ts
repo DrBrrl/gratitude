@@ -88,3 +88,9 @@ test('legacy destinations survive choosing another service and a personal connec
  }
  assert.deepEqual(validateConnection({provider:'gemini',baseUrl:'',model:'',token:'',connectionId:'deleted-key'}),defaultConnection());
 });
+test('explicit valid settings can replace an unreadable disposable active cache',()=>{
+ const map=new Map<string,string>([['gratitude:model:broken','{invalid json']]);
+ const storage:Storage={get length(){return map.size;},getItem:key=>map.get(key)??null,setItem:(key,value)=>{map.set(key,String(value));},removeItem:key=>{map.delete(key);},clear:()=>map.clear(),key:index=>[...map.keys()][index]??null};
+ const secretMap=new Map<string,string>();const secrets:Storage={get length(){return secretMap.size;},getItem:key=>secretMap.get(key)??null,setItem:(key,value)=>{secretMap.set(key,String(value));},removeItem:key=>{secretMap.delete(key);},clear:()=>secretMap.clear(),key:index=>[...secretMap.keys()][index]??null};
+ saveConnection('broken',connection,storage,secrets);assert.equal(readProviderConnection('broken','ollama',storage,secrets).baseUrl,connection.baseUrl);
+});
