@@ -2,7 +2,7 @@
 
 # Existing journals and offline setup
 
-Existing histories receive the same optional welcome. A 320px device can keep writing offline; its explicit skip is persisted and then synchronized, while unconfirmed identity stays in the local draft and never changes the journal greeting. Every action has an unmasked full-page zero-pixel comparison.
+Existing histories receive the same optional welcome. A 320px device can keep writing offline; its explicit skip is persisted and then synchronized, while unconfirmed identity stays in the local draft and never changes the journal greeting. An eighty-character private name also wraps in Settings, Journal and Today without horizontal overflow. Every action has an unmasked full-page zero-pixel comparison.
 
 Viewport: desktop-chromium.
 
@@ -144,6 +144,51 @@ Viewport: desktop-chromium.
 ## Recover the unconfirmed private draft for later editing
 
 ![Recover the unconfirmed private draft for later editing](./screenshots/015-restore-answers-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Use an eighty-character private name
+
+![Use an eighty-character private name](./screenshots/016-maximum-name-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Confirm the private name without enabling AI
+
+![Confirm the private name without enabling AI](./screenshots/017-save-name-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep the named Account row within the narrow menu
+
+![Keep the named Account row within the narrow menu](./screenshots/018-name-menu-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Wrap the full private name in the Journal heading
+
+![Wrap the full private name in the Journal heading](./screenshots/019-name-journal-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep the personalised Today heading inside the screen
+
+![Keep the personalised Today heading inside the screen](./screenshots/020-name-today-desktop-chromium.png)
 
 **Verifications:**
 

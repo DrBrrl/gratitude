@@ -69,7 +69,7 @@ test('choose an account accent, keep rainbow reflections, and grow AI guidance w
   await aiSettings(page, steps, 'guidance');
   await steps.action('prompt-info', 'Expand the explanation of prompt personalisation', () => page.getByText('Prompt info', { exact: true }).click(), async () => {
     await expect(page.locator('.prompt-info')).toHaveAttribute('open', '');
-    await expect(page.locator('.prompt-info p')).toContainText('The switches above optionally include up to 20 earlier reflections (anniversaries, rediscoveries, and recent writing) and up to 20 original questions with their feedback.');
+    await expect(page.locator('.prompt-info p')).toContainText('The switches above optionally include up to 20 units of earlier reflections (anniversaries, rediscoveries, and recent writing), plus up to 20 original questions with their feedback. Reflections over 600 characters use two units.');
   });
   await steps.action('close-prompt-info', 'Keep the optional explanation tucked away', () => page.getByText('Prompt info', { exact: true }).click(), async () => { await expect(page.locator('.prompt-info p')).toBeHidden(); });
   const guidance = page.getByRole('textbox', { name: 'What should prompts focus on or avoid?' });

@@ -19,7 +19,7 @@ test('new controls apply to both providers, all scopes and every request purpose
   for(const entryId of [undefined,'draft'])for(const backup of [false,true]){
    const request=makeRequest(state,'2026-10-27','personal','r',entryId,selection,target,backup);
    assert.deepEqual(parseAction(request),request);assert.ok(request.schemaVersion>=13);
-   const options=promptOptions(state,request);assert.ok(options.system.includes(`under ${wordLimit} words`));assert.ok(options.system.includes('for "Sam" (pronouns: "they/them")'));assert.equal(options.max,4000);
+   const options=promptOptions(state,request);assert.ok(options.system.includes(`under ${wordLimit} words`));assert.ok(options.system.includes('for "Sam" (pronouns: "they/them")'));assert.equal(options.max,4000);assert.ok(options.system.includes({narrow:'one specific subject',intermediate:'one or two main subjects',broad:'wider theme'}[scope]));
    const context=JSON.parse(buildContext(state,request));assert.deepEqual(context.topics,['Music and sounds: listening, playing, singing.']);assert.deepEqual(context.user,{preferredName:'Sam',pronouns:'they/them'});assert.ok(!JSON.stringify(request).includes('Sam'));
   }
  }
@@ -47,6 +47,10 @@ test('twenty-unit selection uses complete trimmed UTF-16 text and preserves old 
  let state=setup();for(let i=0;i<60;i++)state=write(state,'w'+i,i<20?'2025-10-27':i<40?'2026-10-20':'2020-01-01',i%3?'x'.repeat(601):'x'.repeat(600));
  const groups=selectReflections(state,{...input,weighted:true}),cost=(es:typeof state.entries)=>es.reduce((n,e)=>n+(e.text.trim().length>600?2:1),0);
  assert.equal(cost(groups.anniversary),8);assert.equal(cost(groups.recent),5);assert.equal(cost(groups.rediscovery),7);assert.equal(cost(selectedEntries(groups)),20);
+ for(const [text,expected] of [['  '+'😀'.repeat(300)+'  ',20],['  '+'😀'.repeat(300)+'x  ',10]] as const){
+  let unicodeState=setup();for(let i=0;i<25;i++)unicodeState=write(unicodeState,'utf'+i,'2020-01-01',text);
+  assert.equal(selectedEntries(selectReflections(unicodeState,{...input,weighted:true})).length,expected);
+ }
  const r=makeRequest(state,'2026-10-27','personal','weighted',undefined,selection),json=JSON.parse(buildContext(state,r));
  assert.equal(r.payload.templateVersion,'gratitude-v3');assert.ok(Object.values(json.reflections).flat().length<20);
  // A two-unit reflection contributes only the first 1,000 code units, never full unbounded writing.

@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/006-reflection-open-desktop-chromium.png)
+![Open the reflection editor](./screenshots/008-reflection-open-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Write a reflection
 
-![Write a reflection](./screenshots/007-reflection-type-desktop-chromium.png)
+![Write a reflection](./screenshots/009-reflection-type-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Save the reflection
 
-![Save the reflection](./screenshots/008-reflection-save-desktop-chromium.png)
+![Save the reflection](./screenshots/010-reflection-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/009-settings-desktop-chromium.png)
+![Open Settings](./screenshots/011-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Open Account and its fourteen rainbow accent choices
 
-![Open Account and its fourteen rainbow accent choices](./screenshots/010-account-desktop-chromium.png)
+![Open Account and its fourteen rainbow accent choices](./screenshots/012-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Choose lime accents and smoke
 
-![Choose lime accents and smoke](./screenshots/011-colour-2-desktop-chromium.png)
+![Choose lime accents and smoke](./screenshots/013-colour-2-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Choose green accents and smoke
 
-![Choose green accents and smoke](./screenshots/012-colour-4-desktop-chromium.png)
+![Choose green accents and smoke](./screenshots/014-colour-4-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Choose sea green accents and smoke
 
-![Choose sea green accents and smoke](./screenshots/013-colour-6-desktop-chromium.png)
+![Choose sea green accents and smoke](./screenshots/015-colour-6-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Choose turquoise accents and smoke
 
-![Choose turquoise accents and smoke](./screenshots/014-colour-8-desktop-chromium.png)
+![Choose turquoise accents and smoke](./screenshots/016-colour-8-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Choose teal accents and smoke
 
-![Choose teal accents and smoke](./screenshots/015-colour-10-desktop-chromium.png)
+![Choose teal accents and smoke](./screenshots/017-colour-10-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Choose blue accents and smoke
 
-![Choose blue accents and smoke](./screenshots/016-colour-12-desktop-chromium.png)
+![Choose blue accents and smoke](./screenshots/018-colour-12-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Choose violet accents and smoke
 
-![Choose violet accents and smoke](./screenshots/017-colour-14-desktop-chromium.png)
+![Choose violet accents and smoke](./screenshots/019-colour-14-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Choose purple accents and smoke
 
-![Choose purple accents and smoke](./screenshots/018-colour-16-desktop-chromium.png)
+![Choose purple accents and smoke](./screenshots/020-colour-16-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Choose magenta accents and smoke
 
-![Choose magenta accents and smoke](./screenshots/019-colour-18-desktop-chromium.png)
+![Choose magenta accents and smoke](./screenshots/021-colour-18-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Choose pink accents and smoke
 
-![Choose pink accents and smoke](./screenshots/020-colour-20-desktop-chromium.png)
+![Choose pink accents and smoke](./screenshots/022-colour-20-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Choose red accents and smoke
 
-![Choose red accents and smoke](./screenshots/021-colour-22-desktop-chromium.png)
+![Choose red accents and smoke](./screenshots/023-colour-22-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Choose orange accents and smoke
 
-![Choose orange accents and smoke](./screenshots/022-colour-24-desktop-chromium.png)
+![Choose orange accents and smoke](./screenshots/024-colour-24-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Choose gold accents and smoke
 
-![Choose gold accents and smoke](./screenshots/023-colour-26-desktop-chromium.png)
+![Choose gold accents and smoke](./screenshots/025-colour-26-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Use blue for the following screens
 
-![Use blue for the following screens](./screenshots/024-blue-desktop-chromium.png)
+![Use blue for the following screens](./screenshots/026-blue-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Restore the account accent after reload
 
-![Restore the account accent after reload](./screenshots/025-reload-desktop-chromium.png)
+![Restore the account accent after reload](./screenshots/027-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/026-journal-desktop-chromium.png)
+![Open Journal](./screenshots/028-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Keep the reflection’s date colour under the blue theme
 
-![Keep the reflection’s date colour under the blue theme](./screenshots/027-view-entry-desktop-chromium.png)
+![Keep the reflection’s date colour under the blue theme](./screenshots/029-view-entry-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Open Today with a vivid blue star and matching selected icon
 
-![Open Today with a vivid blue star and matching selected icon](./screenshots/028-themed-today-desktop-chromium.png)
+![Open Today with a vivid blue star and matching selected icon](./screenshots/030-themed-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Use blue calendar controls while keeping the saved date’s rainbow ring
 
-![Use blue calendar controls while keeping the saved date’s rainbow ring](./screenshots/029-themed-landing-desktop-chromium.png)
+![Use blue calendar controls while keeping the saved date’s rainbow ring](./screenshots/031-themed-landing-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Return to the themed app from the landing page
 
-![Return to the themed app from the landing page](./screenshots/030-return-journal-desktop-chromium.png)
+![Return to the themed app from the landing page](./screenshots/032-return-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/031-guidance-settings-desktop-chromium.png)
+![Open Settings](./screenshots/033-guidance-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/032-guidance-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/034-guidance-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Expand the explanation of prompt personalisation
 
-![Expand the explanation of prompt personalisation](./screenshots/033-prompt-info-desktop-chromium.png)
+![Expand the explanation of prompt personalisation](./screenshots/035-prompt-info-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Keep the optional explanation tucked away
 
-![Keep the optional explanation tucked away](./screenshots/034-close-prompt-info-desktop-chromium.png)
+![Keep the optional explanation tucked away](./screenshots/036-close-prompt-info-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Grow the field so all 500 characters remain visible
 
-![Grow the field so all 500 characters remain visible](./screenshots/035-long-guidance-desktop-chromium.png)
+![Grow the field so all 500 characters remain visible](./screenshots/037-long-guidance-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Prevent typing beyond the stated character limit
 
-![Prevent typing beyond the stated character limit](./screenshots/036-limit-desktop-chromium.png)
+![Prevent typing beyond the stated character limit](./screenshots/038-limit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +360,7 @@ Viewport: desktop-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/037-save-guidance-desktop-chromium.png)
+![Save these explicit sharing choices](./screenshots/039-save-guidance-desktop-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +369,7 @@ Viewport: desktop-chromium.
 
 ## Shrink the field when the guidance becomes shorter
 
-![Shrink the field when the guidance becomes shorter](./screenshots/038-short-guidance-desktop-chromium.png)
+![Shrink the field when the guidance becomes shorter](./screenshots/040-short-guidance-desktop-chromium.png)
 
 **Verifications:**
 
@@ -360,7 +378,7 @@ Viewport: desktop-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/039-save-short-desktop-chromium.png)
+![Save these explicit sharing choices](./screenshots/041-save-short-desktop-chromium.png)
 
 **Verifications:**
 
@@ -369,7 +387,7 @@ Viewport: desktop-chromium.
 
 ## Open Gratitude on a fresh device with default yellow
 
-![Open Gratitude on a fresh device with default yellow](./screenshots/040-device-desktop-chromium.png)
+![Open Gratitude on a fresh device with default yellow](./screenshots/042-device-desktop-chromium.png)
 
 **Verifications:**
 
@@ -378,7 +396,7 @@ Viewport: desktop-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/041-google-popup-desktop-chromium.png)
+![Choose Google sign-in](./screenshots/043-google-popup-desktop-chromium.png)
 
 **Verifications:**
 
@@ -387,7 +405,7 @@ Viewport: desktop-chromium.
 
 ## Return to the journal after today’s saved reflection
 
-![Return to the journal after today’s saved reflection](./screenshots/042-signed-in-desktop-chromium.png)
+![Return to the journal after today’s saved reflection](./screenshots/044-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -397,7 +415,7 @@ Viewport: desktop-chromium.
 
 ## Restore blue from the account’s event stream
 
-![Restore blue from the account’s event stream](./screenshots/043-synced-colour-desktop-chromium.png)
+![Restore blue from the account’s event stream](./screenshots/045-synced-colour-desktop-chromium.png)
 
 **Verifications:**
 
@@ -406,7 +424,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/044-restored-settings-desktop-chromium.png)
+![Open Settings](./screenshots/046-restored-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -415,7 +433,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/045-restored-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/047-restored-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -424,7 +442,7 @@ Viewport: desktop-chromium.
 
 ## Restore the saved short guidance and its character count
 
-![Restore the saved short guidance and its character count](./screenshots/046-restored-guidance-desktop-chromium.png)
+![Restore the saved short guidance and its character count](./screenshots/048-restored-guidance-desktop-chromium.png)
 
 **Verifications:**
 
@@ -433,7 +451,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/047-leave-settings-desktop-chromium.png)
+![Open Settings](./screenshots/049-leave-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -442,7 +460,7 @@ Viewport: desktop-chromium.
 
 ## Return to Account
 
-![Return to Account](./screenshots/048-leave-account-desktop-chromium.png)
+![Return to Account](./screenshots/050-leave-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -451,7 +469,7 @@ Viewport: desktop-chromium.
 
 ## Return public pages to yellow on sign-out
 
-![Return public pages to yellow on sign-out](./screenshots/049-signout-desktop-chromium.png)
+![Return public pages to yellow on sign-out](./screenshots/051-signout-desktop-chromium.png)
 
 **Verifications:**
 
