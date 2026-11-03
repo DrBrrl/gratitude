@@ -4,7 +4,7 @@
   import type {FirebaseClient} from '../firebase/client';
   import PersonalKeySettings from './PersonalKeySettings.svelte';
   import type {CredentialStatus} from '../firebase/model-credential';
-  let {client=null,purpose='prompts',heading='AI model',regionLabel='AI model connection',saveMessage='',credentialStatus={ready:false,saved:false,error:''},onsavetoken,onforgettoken,connection,scope,disabled=false,connectionOnly=false,initialError='',onchange}:{client?:FirebaseClient|null;purpose?:'prompts'|'photos';heading?:string;regionLabel?:string;saveMessage?:string;credentialStatus?:CredentialStatus;onsavetoken?:(connection:ModelConnection)=>Promise<void>;onforgettoken?:()=>Promise<void>;connection:ModelConnection;scope:string;disabled?:boolean;connectionOnly?:boolean;initialError?:string;onchange:(connection:ModelConnection)=>Promise<void>}=$props();
+  let {cloudConnections=null,client=null,purpose='prompts',heading='AI model',regionLabel='AI model connection',saveMessage='',credentialStatus={ready:false,saved:false,error:''},onsavetoken,onforgettoken,connection,scope,disabled=false,connectionOnly=false,initialError='',onchange}:{cloudConnections?:Record<string,ModelConnection>|null;client?:FirebaseClient|null;purpose?:'prompts'|'photos';heading?:string;regionLabel?:string;saveMessage?:string;credentialStatus?:CredentialStatus;onsavetoken?:(connection:ModelConnection)=>Promise<void>;onforgettoken?:()=>Promise<void>;connection:ModelConnection;scope:string;disabled?:boolean;connectionOnly?:boolean;initialError?:string;onchange:(connection:ModelConnection)=>Promise<void>}=$props();
   const field=$props.id();
   let draft=$state<ModelConnection>(defaultConnection()),busy=$state(false),message=$state(''),failed=$state(false),capabilities=$state<LocalCapabilities|null>(null);
   let models=$state<LocalModelInfo[]>([]),manualModel=$state(false),discoveredFor=$state('');
@@ -84,7 +84,7 @@
     {#if purpose==='photos'}<p class="hint">Choose a vision-capable model for photo descriptions. No journal text or prompt context is sent.</p>{/if}
     <button class="outline" type="button" onclick={testConnection} disabled={disabled||busy}>{busy?'Checking connection…':'Test connection'}</button>
   {:else if draft.provider==='personal-gemini'}
-    <PersonalKeySettings {client} connection={draft} disabled={disabled||busy} onchange={async saved=>{await onchange(saved);draft=saved;}} />
+    <PersonalKeySettings {client} connection={draft.connectionId&&cloudConnections?(cloudConnections[draft.connectionId]??{...draft,connectionId:undefined,connectionRevision:undefined}):draft} disabled={disabled||busy} onchange={async saved=>{await onchange(saved);draft=saved;}} />
   {:else}
     <p class="hint">Gemini uses this site’s managed Firebase AI connection.</p>
   {/if}

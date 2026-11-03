@@ -45,8 +45,8 @@ export function createAIRelay({db,project,keyring,fetcher=fetch,now=Date.now,tim
   let key;try{key=openKey(stored.data(),aad(uid,connectionId,revision),keyring());}catch{fail('unavailable','The saved cloud key could not be opened. Replace it in AI settings.');}
   return {metadata,key,ref,secret};
  }
- async function acquire(uid,generation,requestId){
-  const ref=db.doc(`users/${uid}/aiRelay/control`),at=now(),lease=randomUUID();
+ async function acquire(uid,generation,requestId,removal=false){
+  const ref=db.doc(`users/${uid}/aiRelay/${removal?'removals':'control'}`),at=now(),lease=randomUUID();
   await db.runTransaction(async tx=>{
    const previous=(await tx.get(ref)).data()??{},minute=Math.floor(at/60_000),hour=Math.floor(at/3_600_000),day=Math.floor(at/86_400_000);
    const minuteCount=previous.minute===minute?previous.minuteCount??0:0,hourCount=previous.hour===hour?previous.hourCount??0:0,dayCount=previous.day===day?previous.dayCount??0:0;
@@ -63,7 +63,7 @@ export function createAIRelay({db,project,keyring,fetcher=fetch,now=Date.now,tim
   const data=request.data;
   if(!exact(data,['operation','connectionId','revision','key','model','allowPersonal','requestId','system','context','image','max'])||!['test','save','delete','generate'].includes(data.operation))fail('invalid-argument','Choose a supported cloud connection action.');
   if(data.operation==='generate'&&!id(data.requestId))fail('invalid-argument','The recorded request identifier is invalid.');
-  const release=data.operation==='delete'?async()=>{}:await acquire(uid,data.operation==='generate',data.requestId);
+  const release=await acquire(uid,data.operation==='generate',data.requestId,data.operation==='delete');
   try{
    if(data.operation==='test'){
     let key=data.key;
@@ -87,11 +87,13 @@ export function createAIRelay({db,project,keyring,fetcher=fetch,now=Date.now,tim
     });
     return {connectionId:data.connectionId,revision,model:data.model,allowPersonal:data.allowPersonal};
    }
-   const saved=await credential(uid,data.connectionId,data.revision);
    if(data.operation==='delete'){
-    await db.runTransaction(async tx=>{const current=await tx.get(saved.ref);if(current.get('revision')!==data.revision)fail('failed-precondition','This connection changed on another device. Reopen its settings.');tx.delete(saved.ref);tx.delete(saved.secret);});
+    // Revocation must work even if ciphertext is missing or cannot be decrypted.
+    const ref=db.doc(`users/${uid}/privateConnections/${data.connectionId}`),secret=db.doc(`users/${uid}/privateModelKeys/${data.connectionId}`);
+    await db.runTransaction(async tx=>{const current=await tx.get(ref);if(current.exists&&(current.get('provider')!=='personal-gemini'||current.get('revision')!==data.revision))fail('failed-precondition','This connection changed on another device. Reopen its settings.');tx.delete(ref);tx.delete(secret);});
     return {deleted:true};
    }
+   const saved=await credential(uid,data.connectionId,data.revision);
    if(!id(data.requestId)||typeof data.system!=='string'||!data.system.trim()||data.system.length>5000||![600,1000,4000].includes(data.max))fail('invalid-argument','The inference request is invalid.');
    const stream=`users/${uid}/streams/v1`,source=await db.doc(`${stream}/events/${data.requestId}`).get(),p=source.get('payload');
    const photo=source.get('type')==='PhotoSummaryRequested';

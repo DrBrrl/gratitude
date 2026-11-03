@@ -80,3 +80,15 @@ test('removing a key during inference invalidates the late result and future use
  assert.equal((await admin.doc('users/relay-delete/privateModelKeys/connection').get()).exists,false);
  await assert.rejects(invoke({auth:auth('relay-delete'),data:{operation:'test',connectionId:'connection',revision:saved.revision}}),error=>error.code==='failed-precondition');
 });
+test('revocation does not need readable ciphertext or generation quota, and removal has its own bounded budget',async()=>{
+ const uid='relay-corrupt',network=endpoint(),invoke=relay(network.fetcher);
+ const saved=await invoke({auth:auth(uid),data:{operation:'save',connectionId:'connection',revision:null,key,model,allowPersonal:false}});
+ await admin.doc(`users/${uid}/privateModelKeys/connection`).update({keyVersion:'missing-old-version',ciphertext:'corrupt'});
+ await admin.doc(`users/${uid}/aiRelay/control`).set({lease:'other-inference',expiresAt:Date.parse(at)+125000,minute:Math.floor(Date.parse(at)/60000),minuteCount:99,hour:Math.floor(Date.parse(at)/3600000),hourCount:99,day:Math.floor(Date.parse(at)/86400000),dayCount:999});
+ assert.deepEqual(await invoke({auth:auth(uid),data:{operation:'delete',connectionId:'connection',revision:saved.revision}}),{deleted:true});
+ assert.equal((await admin.doc(`users/${uid}/privateModelKeys/connection`).get()).exists,false);
+ assert.equal((await admin.doc(`users/${uid}/privateConnections/connection`).get()).exists,false);
+ for(let i=0;i<14;i++)assert.deepEqual(await invoke({auth:auth(uid),data:{operation:'delete',connectionId:'connection',revision:saved.revision}}),{deleted:true});
+ await assert.rejects(invoke({auth:auth(uid),data:{operation:'delete',connectionId:'connection',revision:saved.revision}}),error=>error.code==='resource-exhausted');
+ assert.equal(network.calls.filter(call=>call.init.method==='POST').length,0);
+});

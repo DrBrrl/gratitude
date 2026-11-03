@@ -430,3 +430,39 @@ Viewport: mobile-chromium.
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to the original browser and close its photo settings
+
+![Return to the original browser and close its photo settings](./screenshots/047-original-photo-close-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Explicitly choose the managed provider after removing the old key
+
+![Explicitly choose the managed provider after removing the old key](./screenshots/048-managed-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Save the managed provider without restoring an obsolete personal credential
+
+![Save the managed provider without restoring an obsolete personal credential](./screenshots/049-save-managed-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Reselect personal Gemini using fresh account metadata rather than the deleted cached key
+
+![Reselect personal Gemini using fresh account metadata rather than the deleted cached key](./screenshots/050-reselect-removed-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
