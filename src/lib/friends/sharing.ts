@@ -21,8 +21,22 @@ export async function saveGratitudeSharing(db: Firestore, uid: string, choice: {
   });
 }
 
+const publications = new WeakMap<Firestore, Map<string, Promise<boolean | undefined>>>();
+
+/** Profile saving and the background publisher share one account publication queue. */
+export function publishGratitude(db: Firestore, uid: string, sharing: SharingProjection, state: Projection) {
+  let queue = publications.get(db);
+  if (!queue) { queue = new Map(); publications.set(db, queue); }
+  const prior = queue.get(uid) ?? Promise.resolve();
+  const result = prior.catch(() => undefined).then(() => publishSnapshot(db, uid, sharing, state));
+  queue.set(uid, result);
+  const cleanup = () => { if (queue.get(uid) === result) queue.delete(uid); };
+  void result.then(cleanup, cleanup);
+  return result;
+}
+
 /** Only civil dates leave the private journal; provenance remains owner-only. */
-export async function publishGratitude(db: Firestore, uid: string, sharing: SharingProjection, state: Projection) {
+async function publishSnapshot(db: Firestore, uid: string, sharing: SharingProjection, state: Projection) {
   if (!sharing.enabled || !sharing.timeZone || !sharing.lastEventId) return;
   const days = gratitudeDays(state.entries, sharing.timeZone);
   if (days.length > 36600) throw new Error('This shared calendar is larger than the supported date range.');

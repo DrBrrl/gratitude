@@ -48,7 +48,12 @@ test('explicit sharing publishes only dates; receipts and actions stay private; 
  const shared=await saveGratitudeSharing(a,uid,{enabled:true,timeZone:'Australia/Hobart'},null,'streak-share');
  assert.equal((await getDoc(doc(b,`friendSharing/${uid}`))).get('enabled'),true);
  await assertSucceeds(getDoc(doc(b,`friendGratitude/${uid}`))); // subscription is safe before initial publication
- assert.equal(await publishGratitude(a,uid,shared,emptyProjection()),true);
+ // Profile confirmation and its listener can request the initial snapshot together.
+ assert.deepEqual(await Promise.all([
+  publishGratitude(a,uid,shared,emptyProjection()),
+  publishGratitude(a,uid,shared,emptyProjection()),
+  publishGratitude(a,uid,shared,emptyProjection())
+ ]),[true,true,true]);
  const snapshot=await getDoc(doc(b,`friendGratitude/${uid}`));assert.deepEqual(snapshot.get('days'),[]);
  assert.deepEqual(Object.keys(snapshot.data()).sort(),['days','publicationId','schemaVersion','sharingEventId','timeZone']);
  await assertFails(getDoc(doc(stranger,`friendGratitude/${uid}`)));
