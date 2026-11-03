@@ -1,6 +1,6 @@
 # AI connections and personal API keys
 
-This is a proposal for review, except for the LM Studio model picker and independent prompt/photo connections described below. Additional services, named connection profiles and personal cloud keys are not implemented by this PR. Prompt/photo task slots and the explicit shared-model option are implemented. No relay, billing configuration or new cloud resources are provisioned.
+This is a proposal for review. The LM Studio model picker, independent prompt/photo connections, task slots and explicit shared-model option described below are already implemented in the base app. Additional services, named connection profiles and personal cloud keys remain proposed; this design PR does not implement them. No relay, billing configuration or new cloud resources are provisioned.
 
 ## Starting point
 
@@ -8,7 +8,7 @@ Gratitude currently supports managed Gemini through Firebase AI Logic and a dire
 
 The current adapter discovers models using LM Studio’s native `GET /api/v1/models`, then generates using `POST /v1/chat/completions`. A server exposing chat completions alone cannot use that discovery code. Provider choices, request schemas, backup refill choices and Firestore Rules currently enumerate Gemini and LM Studio; adding a dropdown option alone would leave persistence and replay incomplete. Evidence: `src/lib/ai/lm-studio.ts`, `src/lib/domain.ts`, `src/lib/firebase/model-credential.ts` and `firestore.rules`.
 
-The model picker in this PR uses the existing **Test connection** action to fetch that instance’s catalogue without inference. When there is a choice, **Model API identifier** becomes a select showing available identifiers and whether they are loaded. Loaded instance aliases are included; embeddings and malformed identifiers are excluded. Models advertising reasoning without an off option remain visible but disabled. The current unavailable identifier is retained until the user chooses a replacement. **Enter an identifier manually…** retains manual configuration. Choosing a model updates capability feedback, and **Save model settings** remains the explicit save action. Changing the server/token clears the discovered choices; failed discovery cannot leave another server’s catalogue selectable. Discovery never downloads or loads a model.
+The implemented model picker uses the existing **Test connection** action to fetch that instance’s catalogue without inference. When there is a choice, **Model API identifier** becomes a select showing available identifiers and whether they are loaded. Loaded instance aliases are included; embeddings and malformed identifiers are excluded. Models advertising reasoning without an off option remain visible but disabled. The current unavailable identifier is retained until the user chooses a replacement. **Enter an identifier manually…** retains manual configuration. Choosing a model updates capability feedback, and **Save model settings** remains the explicit save action. Changing the server/token clears the discovered choices; failed discovery cannot leave another server’s catalogue selectable. Discovery never downloads or loads a model.
 
 ## Implemented prompt/photo choices
 
@@ -58,6 +58,31 @@ vLLM is a candidate for the compatibility adapter, subject to fixture and real-s
 Adapters must reject incomplete/blank/oversized/tool-call output and visible reasoning/control markers. Preserve exact valid final text and the reported model; never store a separate reasoning field. Maintain existing prompt/summary bounds. Preserve the user’s non-thinking preference using documented model-specific controls; a model that cannot meet it is unavailable rather than silently overridden. Unsupported photos fail before image transmission. No tools, remote MCP, model-management calls or automatic downloads are part of connection testing or generation.
 
 Initially accept a server origin, matching the existing LM Studio form; normalize its optional `/v1` suffix consistently. Prefix-mounted services require a separately designed base-path field and matching credential binding. Reject embedded credentials, query secrets and unsupported schemes. Do not silently discard an arbitrary path and send a token to an unintended endpoint.
+
+### Onboarding review: additional local services
+
+The current PR remains a design review. Adding Ollama is a bounded provider feature for the later implementation: the existing shared context and recorded-response design can stay, while discovery, requests, settings and Rules gain service-aware versions. It is more than changing the URL in the LM Studio form, whose discovery and thinking controls are specific to that service.
+
+In onboarding and AI settings, **Local model server** opens a connection with separate **Service**, **Server address** and **Model API identifier** fields. Proposed service choices are **LM Studio**, **Ollama** and **Other OpenAI-compatible server**. A selected model belongs to that service/server; changing either invalidates old discovery and capability results. Prompts, photo descriptions and backups retain independent task choices and their explicit same-connection option.
+
+| Service choice | Discovery and request contract | Authentication and capabilities |
+| --- | --- | --- |
+| LM Studio | Preserve native `/api/v1/models` discovery and `/v1/chat/completions` generation. | Preserve bound token controls, native vision metadata and documented non-thinking parameters. |
+| Ollama | Use native [model discovery](https://docs.ollama.com/api/tags), model-specific metadata and [chat](https://docs.ollama.com/api/chat), with non-streaming responses and supported thinking-off controls. | Native local access does not authenticate a placeholder OpenAI API key. An explicitly configured proxy can have optional authentication. Check actual model capabilities before allowing photos. |
+| Other OpenAI-compatible server | A separate adapter for a verified `/v1/models` and chat-completions contract, with explicit manual model entry where discovery is unavailable. | Establish supported authentication, final-response semantics, vision and reasoning controls per tested service/model. Unknown capabilities are not a successful test or a blanket compatibility promise. |
+
+The local connection mockup shows **Service: Ollama** and **Model: hermes3:8b**. [Ollama’s catalogue](https://ollama.com/library/hermes3) lists that Hermes model as text-only, so the example tells the user to choose a vision model for photos. The **Proxy authentication (optional)** disclosure belongs to the transport, not the model. Keep the existing HTTPS/Tailscale and allowed-origin setup for access from phones. Clearly identify the actual model destination, including cloud-routed models a server may expose, rather than assuming a local server URL guarantees local inference. [Ollama’s compatibility guide](https://docs.ollama.com/api/openai-compatibility) distinguishes local and cloud use and documents the ignored local placeholder key.
+
+Hermes models and Hermes Agent are different choices. [Nous Research’s model card](https://huggingface.co/NousResearch/Hermes-3-Llama-3.1-8B) describes a model that can be served by inference software. [Hermes Agent’s API server](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/user-guide/features/api-server.md) exposes an agent with tools and its own conversation behaviour. Given the user’s clarified interest in a local-model-wrapper experience, the proposed first slice covers Hermes models through a supported server rather than a separate Hermes Agent integration. Do not add an agent gateway to the ordinary inference picker based only on its OpenAI-shaped response.
+
+Implementation work must include:
+
+- Service-specific adapters and capability tests, preserving the user’s non-thinking preference without sending LM Studio-only fields to other servers. Connection testing remains metadata-only; no model downloads, inference or tool execution.
+- Versioned literal provider/model/task selections, received responses, replay, checkpoint migration and Firestore Rules. Existing Gemini/LM Studio events keep their original meaning, and replay never contacts a model.
+- Service/server/model-bound private credentials, explicit optional account sync and independent task restoration. No credentials or computed discovery observations enter the event stream or exports.
+- Functional and zero-tolerance screenshot walkthroughs for discovery, model choice, unsupported photos/thinking, authentication failure, outages, same/separate task connections and restored settings. Shared outgoing prompt/context policy must match across Gemini, LM Studio and Ollama; no silent provider fallback.
+
+This can fit the onboarding implementation if kept to these tested local adapters. Personal cloud-key relays, general agent gateways and an unrestricted claim to support every compatible server remain separate decisions. No local-provider runtime implementation or infrastructure change is made by this design revision.
 
 ## Personal keys and hosting
 

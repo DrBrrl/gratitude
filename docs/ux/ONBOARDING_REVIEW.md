@@ -1,22 +1,32 @@
 # Onboarding mockups for review
 
-Four mobile design boards cover twelve screens and states for the [onboarding proposal](../../ONBOARDING_DESIGN.md). They use the dark glass, neutral ink lighting, yellow accent and four-point wordmark star from the current app. These are image-generated concepts, not implemented screens or E2E screenshots. The proposal defines exact copy, the complete topic catalogue and behaviour; the boards illustrate the layout.
+Five mobile design boards cover fourteen screens and states for the [onboarding proposal](../../ONBOARDING_DESIGN.md). They use the dark glass, neutral ink lighting, yellow accent and four-point wordmark star from the current app. These are image-generated concepts, not implemented screens or E2E screenshots. The proposal defines exact copy, the complete topic catalogue and behaviour; the boards illustrate the layout.
 
 The examples use fictional Sam, an explicitly entered public profile and a fictional local-model address. Selected answers illustrate choices the person has already made, not preselected questionnaire defaults. AI and its source-sharing choices start off for a new account; existing accounts keep their saved choices. Only the final Today screen has the normal four-tab navigation.
 
 ## 1. Welcome, identity and colour
 
-![O01 Welcome, O02 About you and O03 Your colour](mockups/onboarding-review/01-welcome-identity-colour.png)
+![O01 Welcome, O02 About you and O03 Your colour](mockups/onboarding-review/01-welcome-identity-colour-v2.png)
 
-[Open this board at full size](mockups/onboarding-review/01-welcome-identity-colour.png).
+[Open this board at full size](mockups/onboarding-review/01-welcome-identity-colour-v2.png).
 
 | Screen | What to review | Interaction |
 | --- | --- | --- |
-| O01 Welcome | Jamie’s introduction, with the feature list behind **What can I do here?** | **Let’s get started** opens O02. **Start writing without setup** acknowledges the rollout and restores the intended destination without saving questionnaire changes. Existing users receive the same welcome. |
+| O01 Welcome | The introduction starts directly beneath Gratitude, without the earlier title. The feature list stays behind **What can I do here?** | **Let’s get started** opens O02. **Start writing without setup** acknowledges the rollout and restores the intended destination without saving questionnaire changes. Existing users receive the same welcome. |
 | O02 About you · 1 of 7 | Optional private name and pronouns, distinct from public identity and AI permission. | Continue keeps these in the questionnaire draft; Skip discards this question’s unconfirmed edits. No Google name is inferred. |
-| O03 Your colour · 2 of 7 | Fourteen account colours; yellow selected here. Entries keep their date rainbow. | Preview the selection without changing journal-card colours. Cancellation returns to the saved colour; a confirmed colour uses the existing Account save behaviour. |
+| O03 Your colour · 2 of 7 | Fourteen account colours; yellow selected here. The card fits its contents and ends just after **Yellow**. | Preview the selection without changing journal-card colours. Cancellation returns to the saved colour; a confirmed colour uses the existing Account save behaviour. The earlier rainbow-entry caption is removed. |
 
-The welcome is deliberately text-led. Its disclosure can expand into the complete feature list from the proposal; that expanded state is not pictured. Keep a scrollable content region above reachable actions rather than shrinking the supplied copy on shorter screens.
+Below the disclosure, the copy is now **The following questions will personalise your journal.** The next sentence remains **All questions are optional and you can change your answers later!** There is no colon after the first sentence.
+
+### Expanded What can I do here?
+
+![O13 expanded welcome at the top and O14 the same page scrolled to the remaining features](mockups/onboarding-review/05-welcome-expanded.png)
+
+[Open the expanded welcome at full size](mockups/onboarding-review/05-welcome-expanded.png).
+
+O13 and O14 are two scroll positions of the same expanded Welcome page, not additional steps. O13 shows the introduction and the first two features; O14 continues with the remaining five features and the revised questions text. All seven feature descriptions remain available, including prompt choices, photos, backfilling, export and hugs. The open disclosure has an up chevron; activating it collapses the list in place.
+
+Keep a scrollable content region above reachable frosted footer actions rather than shrinking the supplied copy on shorter screens. The page gets longer when expanded; neither the footer nor the list becomes a separate navigation route.
 
 ## 2. Interests and prompt style
 
@@ -34,17 +44,17 @@ O04 shows only the first five of seventeen built-in rows. The remaining rows and
 
 ## 3. Optional AI and Friends setup
 
-![O07 AI choices, O08 local connection and O09 public Friends profile](mockups/onboarding-review/03-ai-and-friends.png)
+![O07 AI choices, O08 Ollama and model selection, and O09 public Friends profile](mockups/onboarding-review/03-ai-and-friends-v2.png)
 
-[Open this board at full size](mockups/onboarding-review/03-ai-and-friends.png).
+[Open this board at full size](mockups/onboarding-review/03-ai-and-friends-v2.png).
 
 | Screen | What to review | Interaction |
 | --- | --- | --- |
 | O07 Choose your AI · 5 of 7 | Prompt provider, the same-model choices for photos/backups and independent refill control. | Configuration is optional. Choosing or saving a connection does not enable AI, sharing, automatic refill or a photo request. **Set up later** keeps existing choices and points to Settings → AI settings. |
-| O08 Local connection · 5 of 7 detail | Address, token, optional account token storage, connection test and discovered-model picker. | Open after choosing local setup. **Save connection** is an explicit, separate save; Cancel returns to O07. This pictured connection uses a fictional address and placeholder token. |
+| O08 Local connection · 5 of 7 detail | **Service: Ollama**, a server address, optional proxy authentication, connection test and the **hermes3:8b** model. A capability note identifies it as text-only. | Open after choosing **Local model server**. Service choices are LM Studio, Ollama and a verified compatible-server adapter. **Save connection** is separate; Cancel returns to O07. The address and connected result are fictional, and no token is required by this native Ollama example. |
 | O09 Your Friends profile · 6 of 7 | A public name and username, discoverability, date/streak sharing and shared calendar timezone. | Reuse the existing Friends form. Its discoverability and streak-sharing defaults are checked, but nothing is published until **Save friends profile** succeeds. Continue must not silently save it. **Set up later** leaves an existing profile unchanged. |
 
-The local connection and Gemini review are alternative provider examples, not a forced switch from local back to cloud. Use the actual selected provider in the review and its disclosure. **Use my own cloud model** represents the provider setup required by the proposal; that connection path must work before releasing onboarding that offers it.
+The Ollama connection and Gemini review are alternative provider examples, not a forced switch from local back to cloud. Use the actual selected provider in the review and its disclosure. A Hermes model is selected on its server, rather than presented as a Hermes Agent connection. [The local-service proposal](../../AI_PROVIDER_DESIGN.md#onboarding-review-additional-local-services) defines the adapter, saved-setting and capability work required before these new service choices can be offered in the app. LM Studio keeps its existing token controls; native Ollama instead shows optional proxy authentication. A text-only prompt model must not receive photos through a shared-model choice. **Use my own cloud model** still requires its proposed provider implementation before release.
 
 Private name/pronouns never populate a public profile automatically. O09’s fictional public values were entered separately. Profile and connection saves remain saved if the person later skips the questionnaire; review makes that boundary visible. Photo processing still requires its own existing authorization, and selecting a backup model does not enable refilling.
 
@@ -84,7 +94,7 @@ flowchart TD
 
 Back retains the questionnaire draft. Skip this question discards that question’s unconfirmed changes and moves forward; Set up later preserves existing AI/profile settings. Skipping the whole setup discards private draft answers and records the rollout outcome. Explicitly saved connections/profile remain saved. No new bottom tab is introduced for onboarding.
 
-An unfinished visit resumes with its draft; existing users are interrupted once for this onboarding version, without losing journal drafts. A save error must keep entered answers and show Retry/Continue without setup, without claiming cloud confirmation. An offline completion stays account-scoped on the device until it can sync. These recovery states and the expanded welcome/custom-topic controls are specified in the proposal and are not additional rendered screens in this first review set.
+An unfinished visit resumes with its draft; existing users are interrupted once for this onboarding version, without losing journal drafts. A save error must keep entered answers and show Retry/Continue without setup, without claiming cloud confirmation. An offline completion stays account-scoped on the device until it can sync. These recovery states and the custom-topic controls remain specified in the proposal rather than rendered in this review set; the expanded welcome is pictured above.
 
 ## Review focus
 
@@ -95,4 +105,4 @@ An unfinished visit resumes with its draft; existing users are interrupted once 
 
 ## Generation record
 
-The [exact prompts and refinement record](prompts/onboarding-review/README.md) accompany all four PNGs. Built-in image generation was used; the selected images were copied unchanged into the repository. They are visual proposals, not screenshot baselines or evidence that onboarding works. Runtime implementation will require the functional and unmasked, zero-tolerance screenshot checks in [E2E_GUIDE.md](../../E2E_GUIDE.md).
+The [exact prompts and refinement record](prompts/onboarding-review/README.md) accompany the five selected PNGs. Earlier welcome/connection versions remain available as historical references. Built-in image generation was used; the selected images were copied unchanged into the repository. They are visual proposals, not screenshot baselines or evidence that onboarding works. Runtime implementation will require the functional and unmasked, zero-tolerance screenshot checks in [E2E_GUIDE.md](../../E2E_GUIDE.md).

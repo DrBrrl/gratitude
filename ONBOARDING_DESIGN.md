@@ -2,7 +2,7 @@
 
 Design proposal for review; this PR changes documentation only. The questionnaire, configurable prompt instruction and weighted context selection below are not implemented. The current fixed instruction remains under 100 words. This proposal develops the user’s “Onboarding + prompt modification” ideas and subsequent “Onboarding questionnaire copy edits”, both recorded verbatim in [PROMPTS.md](PROMPTS.md).
 
-[Review the mobile mockups](docs/ux/ONBOARDING_REVIEW.md): four image-generated boards show twelve screens and states, including editable interests, optional AI/Friends setup and explicit sharing. The guide maps each picture to the flow below; these concepts do not change the running app.
+[Review the mobile mockups](docs/ux/ONBOARDING_REVIEW.md): five image-generated boards show fourteen screens and states, including the expanded welcome, editable interests, optional local-service/Friends setup and explicit sharing. The guide maps each picture to the flow below; these concepts do not change the running app.
 
 ## The experience
 
@@ -33,9 +33,9 @@ The Friends form remains its own explicit save: explain before opening it that i
 
 Connections explicitly saved in the AI step likewise use their existing separate storage. Cancelling the questionnaire does not roll back those saves. The review distinguishes already-saved connections/profile from unconfirmed private answers and source-sharing choices.
 
-## Welcome copy edited by Jamie
+The screen starts with the Gratitude wordmark and the introduction directly below it; there is no additional welcome title. The feature list expands inline and scrolls with the page above reachable footer actions.
 
-### A tiny daily moment of gratitude
+## Welcome copy edited by Jamie
 
 Welcome to Gratitude! This is your own little space to pause and notice something you’re thankful for.
 
@@ -53,7 +53,7 @@ You can use an AI generated prompt, make up your own, or just start writing. The
 - **See what you’ve noticed:** Browse your calendar and colourful journal or search for a specific memory. Export your journal as as Markdown or JSON whenever you like.
 - **Share a little encouragement:** Find friends and send a hug to remind them to practice gratitude! Your journal entries stay private.
 
-**A few questions to personalise your journal:** All questions are optional and you can change your answers later!
+**The following questions will personalise your journal.** All questions are optional and you can change your answers later!
 
 The welcome copy above is Jamie’s supplied wording. Its own-cloud-model setup is a requirement for the proposed onboarding release, not an assertion that the current app already accepts every cloud provider/key; coordinate that path with [AI_PROVIDER_DESIGN.md](AI_PROVIDER_DESIGN.md). Saved backups and offline access retain their existing prerequisites.
 
@@ -88,6 +88,8 @@ Private identity is separate from the public Friends display name and unique use
 **What's your favourite colour?** Your choice will be used as your journal's main accent colour.
 
 Reuse the [account palette](docs/ux/ACCOUNT_PALETTE.md), including its exact hex points, readable highlights, smoke and glass borders. Store only the existing literal account colour selection. Neither topics nor answers choose a colour automatically, and journal cards/calendar date rings retain their independent 28-day rainbow.
+
+The picker card ends after the selected colour name with ordinary padding. Do not add the earlier rainbow-entry helper sentence or keep its empty space; the card fits its remaining contents.
 
 ### Topics to assess
 
@@ -147,6 +149,8 @@ Label the slider **Prompts under XX words**, with the selected number visible an
 ### AI settings
 
 Offer actual AI selection/configuration during onboarding, with **Set up later** explaining **Settings → AI settings**. Reuse provider, model picker, connection testing and token controls for prompts, photo descriptions and backups, including **Use the same model**. Offer the managed default Gemini, local LLM setup and the user’s own cloud-model connection as supported by the provider implementation. The welcome claim about own-cloud models must be backed by that implementation before release, rather than an inert onboarding control.
+
+For **Local model server**, separate Service from Server address and Model API identifier. The proposed service choices are LM Studio, Ollama and a verified OpenAI-compatible server adapter. The revised mockup uses Ollama with a Hermes text model, not a separate Hermes Agent service, and shows a text-only capability result before any photo transfer. Native Ollama has no mandatory token field; proxy authentication is optional and explicit. The bounded adapter work and compatibility conditions are in [the local-service design](AI_PROVIDER_DESIGN.md#onboarding-review-additional-local-services). This round remains design-only, as requested; existing runtime provider support is unchanged.
 
 Show which provider receives each task. Saving a connection is distinct from enabling AI, enabling refill, or sharing entries/answers/feedback; require explicit choices. Preserve current settings for returning users and when skipping. Keep credentials out of questionnaire events, JSON and exports, using the existing separate connection storage and opt-in account token sync. Testing uses the existing discovery boundary; do not send private writing or start generation merely to finish setup.
 

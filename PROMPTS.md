@@ -1520,3 +1520,25 @@ pr 22 is merged - let's retarget pr 23 to main :)
 ```text
 Amazing! Did you want to mock up some screens of what the onboarding might look like/work like for review?
 ```
+
+## 2026-11-03 — Refine onboarding and consider other local services
+
+```text
+Okay, let's get cracking! Let's remove the "a tiny daily moment for gratitude" title - i don't think we need it. The text below "what can i do here": change the part before the colon to  "The following questions will personalise your journal." Leave the second sentence as is. I'd like to see a screen of what the "what can i do here" looks like expanded please! Let's get the text underneath the colour name removed (the part about the rainbow journal entries) and shorten the box as appropriate. Apart from that, i think it looks good. It occurs to me that i had asked a while ago about getting support to use other local model setups like Ollama (and Hermes and stuff would be good) - is that a change we think we can make in this PR as well? Or too complex?
+```
+
+## 2026-11-03 — Scope clarification for onboarding revisions
+
+In reply to whether this round should revise the designs first or begin implementation:
+
+```text
+Revise designs for review first
+```
+
+## 2026-11-03 — Hermes clarification
+
+In reply to whether Hermes meant models, Hermes Agent or both:
+
+```text
+I actually don't know much about Hermes, i thought it was another local model wrapper like LM Studio and Ollama :)
+```

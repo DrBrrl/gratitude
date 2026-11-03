@@ -26,7 +26,7 @@ Users sign in with Google before opening their Firebase journal. First-time user
 
 The newer [onboarding and prompt-preferences proposal](ONBOARDING_DESIGN.md) replaces the three-question M02 concept below for the next onboarding implementation. It proposes welcome copy, next-visit setup for existing users, private name/pronoun greetings, separate AI/Friends setup, the account palette, seventeen editable topic descriptions plus custom rows, three scopes/word-limit controls and explicit AI permissions. The existing boards and M01–M03 notes remain historical design references; the expanded questionnaire is not implemented.
 
-The current [O01–O12 visual review](docs/ux/ONBOARDING_REVIEW.md) illustrates that expanded flow in four new boards, using the softer neutral ink and current account palette. It includes optional AI/Friends setup and shows four tabs only on the final Today screen. Use it for onboarding review; M01–M03 below remain the older concept.
+The current [O01–O14 visual review](docs/ux/ONBOARDING_REVIEW.md) illustrates that expanded flow in five new boards, using the softer neutral ink and current account palette. It includes optional AI/Friends setup and shows four tabs only on the final Today screen. Use it for onboarding review; M01–M03 below remain the older concept.
 
 ![M01 Welcome, M02 optional questions, M03 AI context choices](docs/ux/mockups/01-onboarding-yellow-ink.png)
 

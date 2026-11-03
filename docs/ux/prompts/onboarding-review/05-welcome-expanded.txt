@@ -1,0 +1,26 @@
+Use case: ui-mockup.
+Asset type: additional mobile design board for the existing Gratitude onboarding proposal, showing one expanded Welcome page at TWO scroll positions. Create exactly TWO full upright mobile app canvases side by side, approximately 390:844 proportions, on a square dark board. Full canvas edges visible, no hardware, perspective, crop or watermark. Board heading outside canvases: What can I do here? Label the first canvas O13 Expanded welcome · top and the second O14 Expanded welcome · scrolled. They are the SAME page, not two onboarding steps.
+Match the existing design: dark mode only, near-black #0c0d10, organic mostly neutral charcoal-grey ink with faint yellow lighting, smoked glass, restrained yellow #ffe100 borders and buttons, white serif wordmark with a small four-point yellow star AFTER Gratitude and vertically centered, readable grey/ivory sans-serif body text. No gold clouds, aurora, neon, five-point stars, decorative illustrations or bottom navigation. No A tiny daily moment heading.
+Use comfortably readable text. The page content scrolls vertically ABOVE a frosted footer with yellow Let's get started and secondary Start writing without setup in BOTH canvases; the footer never covers words. A subtle scrollbar shows first viewport near the top and second near the bottom. Feature labels are bold and body text wraps naturally, with clear paragraph gaps. Preserve quoted wording faithfully, do not invent or summarize features.
+LEFT O13: Gratitude wordmark at top, followed directly by these exact three introductory paragraphs:
+Welcome to Gratitude! This is your own little space to pause and notice something you’re thankful for.
+
+Some days you’ll have a lot to write. Other days, “sunlight” might be all you’ve got. One word is enough! The whole idea is to take a few seconds to notice something, however small, and intentionally feel grateful for it.
+
+You can use an AI generated prompt, make up your own, or just start writing. There’s no right or wrong way to fill the page!
+Then an OPEN disclosure row What can I do here? with an UP chevron and visible dark-glass expanded body. In this first scroll position show the first TWO features completely:
+Find a starting point: Ask an AI for a gratitude prompt. If you choose to share your topics of interest, past reflections, or feedback, the AI can use them to offer a more personalised prompt. You can also choose a saved backup prompt that you upload in advance without waiting for AI.
+
+Make the prompt yours: Edit any prompt, whether AI generated or not, ask for a different one to be generated, or write your own.
+The remaining five features are below the fold, not omitted from the page. Keep the footer visible with correct scroll padding. No new step count or Continue action.
+RIGHT O14: The same expanded page after scrolling, so the introductory text and first two features are now above the viewport. Begin the visible content with the remaining FIVE full features in the expanded glass panel:
+Choose your AI: You can use your own cloud model, local LLM setup, or the default Gemini model to generate prompts.
+
+Keep a picture with the moment: You can add photos and, if you want, ask AI to generate an image description for them. You can edit the description and use it in search later.
+
+Come back to a day: Write more than once a day, or retroactively add a reflection for a previous date. Backfilling a missed day fills that gap in your gratitude streak.
+
+See what you’ve noticed: Browse your calendar and colourful journal or search for a specific memory. Export your journal as as Markdown or JSON whenever you like.
+
+Share a little encouragement: Find friends and send a hug to remind them to practice gratitude! Your journal entries stay private.
+Then below the expanded feature panel show these exact sentences: The following questions will personalise your journal. All questions are optional and you can change your answers later! Keep them distinct, with no colon. End with the SAME frosted footer containing Let's get started and Start writing without setup. Do not repeat the introduction, renumber the features, change the selection state or turn the disclosure into a separate route. No automatic AI request or new sign-in prompt.
