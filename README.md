@@ -20,6 +20,8 @@ The journal offers a bundled starter prompt and optional Gemini or LM Studio pro
 
 The [onboarding and prompt-preferences proposal](ONBOARDING_DESIGN.md) drafts Jamie’s welcome copy, next-visit setup for new and existing users, private name/pronoun greetings, AI and Friends setup, seventeen editable topic descriptions plus custom rows, three prompt scopes and a 50–200-word limit. It also proposes a twenty-unit reflection budget (entries over 600 characters cost two units), explicit answer sharing and longer-question compatibility work. This is a design for review; the live instruction and application are unchanged by that proposal.
 
+[Twelve mobile onboarding mockups](docs/ux/ONBOARDING_REVIEW.md) illustrate that proposal across four boards, with a guide to the optional steps, editing, sharing and return to writing.
+
 ## Development
 
 Use the locked Nix shell for Node 24, Chromium, and repository tooling:

@@ -1,0 +1,6 @@
+Use case: ui-mockup edit.
+Input image: edit target, the generated three-screen Getting started onboarding board.
+Preserve this entire board, all three complete canvases, their headings, exact welcome/identity copy, fields, selection, fourteen swatches, footer buttons, spacing, typography and subtle neutral ink lighting. Make only these two localized corrections:
+1. On O01 move the little four-point yellow star from before Gratitude to just AFTER the word Gratitude, vertically centered on the wordmark line, matching the existing app. There must be only one star.
+2. On O03 remove the unlabeled grey sample control and the large yellow square check control BELOW the word Yellow. They are redundant placeholders, not settings. Keep the real selected check inside the yellow palette swatch. Put the existing sentence Your journal entries keep their rainbow colours. naturally underneath Yellow, retaining comfortable card padding. Do not add replacement controls or new text.
+Do not change anything else, add screens, crop canvases or introduce gold/neon smoke. Preserve the 3-screen landscape design board and its readable copy.

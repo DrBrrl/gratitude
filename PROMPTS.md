@@ -1514,3 +1514,9 @@ Let's revert those defaults to the ones i had and change the rule to be under 15
 ```text
 pr 22 is merged - let's retarget pr 23 to main :)
 ```
+
+## 2026-11-03 — Onboarding screens for review
+
+```text
+Amazing! Did you want to mock up some screens of what the onboarding might look like/work like for review?
+```

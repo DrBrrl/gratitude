@@ -20,3 +20,7 @@ References marked `90c4e4c` are the prior mockups under `docs/ux/mockups/` at th
 The remaining first-pass yellow renders were superseded by the navigation and photo instructions arriving during generation and are not part of the review set. All first-pass prompts are retained in `archive/yellow-intermediate/`; the earlier dark-aurora prompts and card-layout corrections are in `archive/violet-aurora/`. Original light-mode prompts remain directly in `archive/`. Earlier image files remain in Git history.
 
 Generated mockups illustrate appearance; UX_DESIGN.md defines exact layout, full prompt preservation, photo-summary handling, and interaction behavior.
+
+## Expanded onboarding review
+
+The newer [O01–O12 generation record](onboarding-review/README.md) contains five built-in image-generation/edit prompts for four additional onboarding boards. These use the revised questionnaire/copy, current palette and neutral ink lighting. The original eight boards and their prompts remain intact. [Review the new screens and flow](../ONBOARDING_REVIEW.md).

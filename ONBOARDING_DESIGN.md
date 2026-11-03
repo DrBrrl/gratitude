@@ -2,6 +2,8 @@
 
 Design proposal for review; this PR changes documentation only. The questionnaire, configurable prompt instruction and weighted context selection below are not implemented. The current fixed instruction remains under 100 words. This proposal develops the user’s “Onboarding + prompt modification” ideas and subsequent “Onboarding questionnaire copy edits”, both recorded verbatim in [PROMPTS.md](PROMPTS.md).
 
+[Review the mobile mockups](docs/ux/ONBOARDING_REVIEW.md): four image-generated boards show twelve screens and states, including editable interests, optional AI/Friends setup and explicit sharing. The guide maps each picture to the flow below; these concepts do not change the running app.
+
 ## The experience
 
 New and existing users are interrupted by the questionnaire on their next signed-in visit after this onboarding release. None of the questions, a public profile, or AI use is required to keep a journal: the interruption offers a clear skip straight to writing. Existing users receive the same welcome and can review their existing settings rather than start from blank choices.
