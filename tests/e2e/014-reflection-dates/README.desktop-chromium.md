@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/006-first-editor-desktop-chromium.png)
+![Open the reflection editor](./screenshots/008-first-editor-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Require a valid date before saving
 
-![Require a valid date before saving](./screenshots/007-empty-date-desktop-chromium.png)
+![Require a valid date before saving](./screenshots/009-empty-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Reject a future date in the first-reflection editor
 
-![Reject a future date in the first-reflection editor](./screenshots/008-future-desktop-chromium.png)
+![Reject a future date in the first-reflection editor](./screenshots/010-future-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Choose a past local date directly from Today
 
-![Choose a past local date directly from Today](./screenshots/009-past-desktop-chromium.png)
+![Choose a past local date directly from Today](./screenshots/011-past-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Write the reflection for that moment
 
-![Write the reflection for that moment](./screenshots/010-write-desktop-chromium.png)
+![Write the reflection for that moment](./screenshots/012-write-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Return to Today without losing the draft
 
-![Return to Today without losing the draft](./screenshots/011-leave-draft-desktop-chromium.png)
+![Return to Today without losing the draft](./screenshots/013-leave-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Reload the dated Today draft
 
-![Reload the dated Today draft](./screenshots/012-reload-draft-desktop-chromium.png)
+![Reload the dated Today draft](./screenshots/014-reload-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/013-resume-draft-desktop-chromium.png)
+![Open the reflection editor](./screenshots/015-resume-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Retain the chosen local date and reflection across reload
 
-![Retain the chosen local date and reflection across reload](./screenshots/014-retained-date-desktop-chromium.png)
+![Retain the chosen local date and reflection across reload](./screenshots/016-retained-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Retain the selected date in an offline pending save
 
-![Retain the selected date in an offline pending save](./screenshots/015-pending-date-desktop-chromium.png)
+![Retain the selected date in an offline pending save](./screenshots/017-pending-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Return the same dated reflection to the editor
 
-![Return the same dated reflection to the editor](./screenshots/016-recover-date-desktop-chromium.png)
+![Return the same dated reflection to the editor](./screenshots/018-recover-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Save the remembered moment without completing Today
 
-![Save the remembered moment without completing Today](./screenshots/017-save-past-desktop-chromium.png)
+![Save the remembered moment without completing Today](./screenshots/019-save-past-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Read the chosen date on the journal card
 
-![Read the chosen date on the journal card](./screenshots/018-done-desktop-chromium.png)
+![Read the chosen date on the journal card](./screenshots/020-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/019-today-incomplete-desktop-chromium.png)
+![Open Today](./screenshots/021-today-incomplete-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Keep Today available after saving a past reflection
 
-![Keep Today available after saving a past reflection](./screenshots/020-still-empty-desktop-chromium.png)
+![Keep Today available after saving a past reflection](./screenshots/022-still-empty-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/021-journal-desktop-chromium.png)
+![Open Journal](./screenshots/023-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Open the saved reflection
 
-![Open the saved reflection](./screenshots/022-detail-desktop-chromium.png)
+![Open the saved reflection](./screenshots/024-detail-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Edit the saved reflection with its existing date
 
-![Edit the saved reflection with its existing date](./screenshots/023-edit-desktop-chromium.png)
+![Edit the saved reflection with its existing date](./screenshots/025-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Reject future dates when editing a saved reflection
 
-![Reject future dates when editing a saved reflection](./screenshots/024-edit-future-desktop-chromium.png)
+![Reject future dates when editing a saved reflection](./screenshots/026-edit-future-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Move the reflection to this morning in local time
 
-![Move the reflection to this morning in local time](./screenshots/025-move-today-desktop-chromium.png)
+![Move the reflection to this morning in local time](./screenshots/027-move-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Return to Journal without losing the draft
 
-![Return to Journal without losing the draft](./screenshots/026-leave-edit-desktop-chromium.png)
+![Return to Journal without losing the draft](./screenshots/028-leave-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Reload without committing the changed date
 
-![Reload without committing the changed date](./screenshots/027-reload-edit-desktop-chromium.png)
+![Reload without committing the changed date](./screenshots/029-reload-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/028-resume-journal-desktop-chromium.png)
+![Open Journal](./screenshots/030-resume-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Keep the old saved date until the edit is committed
 
-![Keep the old saved date until the edit is committed](./screenshots/029-saved-date-desktop-chromium.png)
+![Keep the old saved date until the edit is committed](./screenshots/031-saved-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Restore the unsaved date change and original content
 
-![Restore the unsaved date change and original content](./screenshots/030-resume-edit-desktop-chromium.png)
+![Restore the unsaved date change and original content](./screenshots/032-resume-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Commit the changed date with the reflection
 
-![Commit the changed date with the reflection](./screenshots/031-save-edit-desktop-chromium.png)
+![Commit the changed date with the reflection](./screenshots/033-save-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Read the new local date on the same journal entry
 
-![Read the new local date on the same journal entry](./screenshots/032-done-edit-desktop-chromium.png)
+![Read the new local date on the same journal entry](./screenshots/034-done-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/033-today-complete-desktop-chromium.png)
+![Open Today](./screenshots/035-today-complete-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Recognize the reflection moved into Today
 
-![Recognize the reflection moved into Today](./screenshots/034-continuable-desktop-chromium.png)
+![Recognize the reflection moved into Today](./screenshots/036-continuable-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Start on Journal now that a reflection belongs to Today
 
-![Start on Journal now that a reflection belongs to Today](./screenshots/035-reload-saved-desktop-chromium.png)
+![Start on Journal now that a reflection belongs to Today](./screenshots/037-reload-saved-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/036-settings-desktop-chromium.png)
+![Open Settings](./screenshots/038-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +360,7 @@ Viewport: desktop-chromium.
 
 ## Open recovery
 
-![Open recovery](./screenshots/037-privacy-desktop-chromium.png)
+![Open recovery](./screenshots/039-privacy-desktop-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +369,7 @@ Viewport: desktop-chromium.
 
 ## Replay the original save and explicit date edit
 
-![Replay the original save and explicit date edit](./screenshots/038-rebuild-desktop-chromium.png)
+![Replay the original save and explicit date edit](./screenshots/040-rebuild-desktop-chromium.png)
 
 **Verifications:**
 
@@ -360,7 +378,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/039-replayed-journal-desktop-chromium.png)
+![Open Journal](./screenshots/041-replayed-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -369,7 +387,7 @@ Viewport: desktop-chromium.
 
 ## Preserve the edited date after complete replay
 
-![Preserve the edited date after complete replay](./screenshots/040-replayed-date-desktop-chromium.png)
+![Preserve the edited date after complete replay](./screenshots/042-replayed-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -378,7 +396,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/041-export-settings-desktop-chromium.png)
+![Open Settings](./screenshots/043-export-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -387,7 +405,7 @@ Viewport: desktop-chromium.
 
 ## Open Markdown export
 
-![Open Markdown export](./screenshots/042-export-desktop-chromium.png)
+![Open Markdown export](./screenshots/044-export-desktop-chromium.png)
 
 **Verifications:**
 
@@ -396,7 +414,7 @@ Viewport: desktop-chromium.
 
 ## Prepare the reflection with its edited date
 
-![Prepare the reflection with its edited date](./screenshots/043-prepare-desktop-chromium.png)
+![Prepare the reflection with its edited date](./screenshots/045-prepare-desktop-chromium.png)
 
 **Verifications:**
 
@@ -405,7 +423,7 @@ Viewport: desktop-chromium.
 
 ## Download the updated local date without system metadata
 
-![Download the updated local date without system metadata](./screenshots/044-download-desktop-chromium.png)
+![Download the updated local date without system metadata](./screenshots/046-download-desktop-chromium.png)
 
 **Verifications:**
 

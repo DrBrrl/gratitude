@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open a journal with 701 saved reflections
 
-![Open a journal with 701 saved reflections](./screenshots/006-journal-mobile-chromium.png)
+![Open a journal with 701 saved reflections](./screenshots/008-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Scroll down to automatically load older reflections
 
-![Scroll down to automatically load older reflections](./screenshots/007-scroll-mobile-chromium.png)
+![Scroll down to automatically load older reflections](./screenshots/009-scroll-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Open an entry from the second batch
 
-![Open an entry from the second batch](./screenshots/008-entry-mobile-chromium.png)
+![Open an entry from the second batch](./screenshots/010-entry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Return to the loaded journal range
 
-![Return to the loaded journal range](./screenshots/009-back-mobile-chromium.png)
+![Return to the loaded journal range](./screenshots/011-back-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings from a large journal
 
-![Open Settings from a large journal](./screenshots/010-settings-mobile-chromium.png)
+![Open Settings from a large journal](./screenshots/012-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Open model and prompt settings
 
-![Open model and prompt settings](./screenshots/011-ai-settings-mobile-chromium.png)
+![Open model and prompt settings](./screenshots/013-ai-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Return to the settings menu
 
-![Return to the settings menu](./screenshots/012-settings-back-mobile-chromium.png)
+![Return to the settings menu](./screenshots/014-settings-back-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Return to the journal after Settings
 
-![Return to the journal after Settings](./screenshots/013-journal-again-mobile-chromium.png)
+![Return to the journal after Settings](./screenshots/015-journal-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Search the complete history for an unmounted entry
 
-![Search the complete history for an unmounted entry](./screenshots/014-search-mobile-chromium.png)
+![Search the complete history for an unmounted entry](./screenshots/016-search-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Read the matching historical reflection
 
-![Read the matching historical reflection](./screenshots/015-oldest-mobile-chromium.png)
+![Read the matching historical reflection](./screenshots/017-oldest-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Return to the retained search
 
-![Return to the retained search](./screenshots/016-search-back-mobile-chromium.png)
+![Return to the retained search](./screenshots/018-search-back-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Restore the previously loaded journal range
 
-![Restore the previously loaded journal range](./screenshots/017-clear-mobile-chromium.png)
+![Restore the previously loaded journal range](./screenshots/019-clear-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Return to Today without rendering historical cards
 
-![Return to Today without rendering historical cards](./screenshots/018-today-mobile-chromium.png)
+![Return to Today without rendering historical cards](./screenshots/020-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Restore the large journal from its cached projection
 
-![Restore the large journal from its cached projection](./screenshots/019-reload-mobile-chromium.png)
+![Restore the large journal from its cached projection](./screenshots/021-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Open a fresh twenty-card range after reload
 
-![Open a fresh twenty-card range after reload](./screenshots/020-warm-journal-mobile-chromium.png)
+![Open a fresh twenty-card range after reload](./screenshots/022-warm-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Return to Today before opening the landing calendar
 
-![Return to Today before opening the landing calendar](./screenshots/021-landing-today-mobile-chromium.png)
+![Return to Today before opening the landing calendar](./screenshots/023-landing-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Open the landing page from Today with a large history
 
-![Open the landing page from Today with a large history](./screenshots/022-landing-mobile-chromium.png)
+![Open the landing page from Today with a large history](./screenshots/024-landing-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Choose a historical month without reloading the journal
 
-![Choose a historical month without reloading the journal](./screenshots/023-landing-chooser-mobile-chromium.png)
+![Choose a historical month without reloading the journal](./screenshots/025-landing-chooser-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Enter January
 
-![Enter January](./screenshots/024-landing-month-mobile-chromium.png)
+![Enter January](./screenshots/026-landing-month-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Enter the year of the earliest saved reflections
 
-![Enter the year of the earliest saved reflections](./screenshots/025-landing-year-mobile-chromium.png)
+![Enter the year of the earliest saved reflections](./screenshots/027-landing-year-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Show the saved rings from the complete historical projection
 
-![Show the saved rings from the complete historical projection](./screenshots/026-landing-apply-mobile-chromium.png)
+![Show the saved rings from the complete historical projection](./screenshots/028-landing-apply-mobile-chromium.png)
 
 **Verifications:**
 

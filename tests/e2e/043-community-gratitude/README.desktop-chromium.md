@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/006-friends-desktop-chromium.png)
+![Open Friends and hugs](./screenshots/008-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/007-display-name-desktop-chromium.png)
+![Choose a friend-facing display name](./screenshots/009-display-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/008-username-desktop-chromium.png)
+![Choose a searchable username](./screenshots/010-username-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/009-profile-save-desktop-chromium.png)
+![Save the opt-in friends profile](./screenshots/011-profile-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Open a separate signed-out browser
 
-![Open a separate signed-out browser](./screenshots/010-other-device-desktop-chromium.png)
+![Open a separate signed-out browser](./screenshots/012-other-device-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/011-google-popup-desktop-chromium.png)
+![Choose Google sign-in](./screenshots/013-google-popup-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Add a fictional Google account
 
-![Add a fictional Google account](./screenshots/012-new-account-desktop-chromium.png)
+![Add a fictional Google account](./screenshots/014-new-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Enter the fictional email address
 
-![Enter the fictional email address](./screenshots/013-email-desktop-chromium.png)
+![Enter the fictional email address](./screenshots/015-email-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,16 +153,34 @@ Viewport: desktop-chromium.
 
 ## Enter a display name
 
-![Enter a display name](./screenshots/014-name-desktop-chromium.png)
+![Enter a display name](./screenshots/016-name-desktop-chromium.png)
 
 **Verifications:**
 
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/017-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/018-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/015-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/019-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -154,7 +190,7 @@ Viewport: desktop-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/016-robin-friends-desktop-chromium.png)
+![Open Friends and hugs](./screenshots/020-robin-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -163,7 +199,7 @@ Viewport: desktop-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/017-robin-display-name-desktop-chromium.png)
+![Choose a friend-facing display name](./screenshots/021-robin-display-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -172,7 +208,7 @@ Viewport: desktop-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/018-robin-username-desktop-chromium.png)
+![Choose a searchable username](./screenshots/022-robin-username-desktop-chromium.png)
 
 **Verifications:**
 
@@ -181,7 +217,7 @@ Viewport: desktop-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/019-robin-profile-save-desktop-chromium.png)
+![Save the opt-in friends profile](./screenshots/023-robin-profile-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -190,7 +226,7 @@ Viewport: desktop-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/020-jamie-return-desktop-chromium.png)
+![Return to the other friend’s device](./screenshots/024-jamie-return-desktop-chromium.png)
 
 **Verifications:**
 
@@ -199,7 +235,7 @@ Viewport: desktop-chromium.
 
 ## Enter a friend’s username
 
-![Enter a friend’s username](./screenshots/021-search-name-desktop-chromium.png)
+![Enter a friend’s username](./screenshots/025-search-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -208,7 +244,7 @@ Viewport: desktop-chromium.
 
 ## Find the chosen profile by username
 
-![Find the chosen profile by username](./screenshots/022-find-desktop-chromium.png)
+![Find the chosen profile by username](./screenshots/026-find-desktop-chromium.png)
 
 **Verifications:**
 
@@ -217,7 +253,7 @@ Viewport: desktop-chromium.
 
 ## Discover both prefix and interior username matches
 
-![Discover both prefix and interior username matches](./screenshots/023-substring-matches-desktop-chromium.png)
+![Discover both prefix and interior username matches](./screenshots/027-substring-matches-desktop-chromium.png)
 
 **Verifications:**
 
@@ -226,7 +262,7 @@ Viewport: desktop-chromium.
 
 ## Request friendship from the matching profile
 
-![Request friendship from the matching profile](./screenshots/024-request-desktop-chromium.png)
+![Request friendship from the matching profile](./screenshots/028-request-desktop-chromium.png)
 
 **Verifications:**
 
@@ -235,7 +271,7 @@ Viewport: desktop-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/025-robin-request-desktop-chromium.png)
+![Return to the other friend’s device](./screenshots/029-robin-request-desktop-chromium.png)
 
 **Verifications:**
 
@@ -244,7 +280,7 @@ Viewport: desktop-chromium.
 
 ## Accept and see the shared streak intersection
 
-![Accept and see the shared streak intersection](./screenshots/026-accept-desktop-chromium.png)
+![Accept and see the shared streak intersection](./screenshots/030-accept-desktop-chromium.png)
 
 **Verifications:**
 
@@ -253,7 +289,7 @@ Viewport: desktop-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/027-jamie-community-desktop-chromium.png)
+![Return to the other friend’s device](./screenshots/031-jamie-community-desktop-chromium.png)
 
 **Verifications:**
 
@@ -262,7 +298,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/028-backfill-journal-desktop-chromium.png)
+![Open Journal](./screenshots/032-backfill-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -271,7 +307,7 @@ Viewport: desktop-chromium.
 
 ## Open another reflection to repair the missing day
 
-![Open another reflection to repair the missing day](./screenshots/029-new-backfill-desktop-chromium.png)
+![Open another reflection to repair the missing day](./screenshots/033-new-backfill-desktop-chromium.png)
 
 **Verifications:**
 
@@ -280,7 +316,7 @@ Viewport: desktop-chromium.
 
 ## Choose the missing historic date
 
-![Choose the missing historic date](./screenshots/030-backfill-date-desktop-chromium.png)
+![Choose the missing historic date](./screenshots/034-backfill-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +325,7 @@ Viewport: desktop-chromium.
 
 ## Write the backfilled reflection
 
-![Write the backfilled reflection](./screenshots/031-backfill-text-desktop-chromium.png)
+![Write the backfilled reflection](./screenshots/035-backfill-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -298,7 +334,7 @@ Viewport: desktop-chromium.
 
 ## Save the historic reflection
 
-![Save the historic reflection](./screenshots/032-save-backfill-desktop-chromium.png)
+![Save the historic reflection](./screenshots/036-save-backfill-desktop-chromium.png)
 
 **Verifications:**
 
@@ -307,7 +343,7 @@ Viewport: desktop-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/033-repaired-friends-desktop-chromium.png)
+![Open Friends and hugs](./screenshots/037-repaired-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -316,7 +352,7 @@ Viewport: desktop-chromium.
 
 ## Repair the community streak from the entry’s original date
 
-![Repair the community streak from the entry’s original date](./screenshots/034-repaired-streak-desktop-chromium.png)
+![Repair the community streak from the entry’s original date](./screenshots/038-repaired-streak-desktop-chromium.png)
 
 **Verifications:**
 
@@ -325,7 +361,7 @@ Viewport: desktop-chromium.
 
 ## Return after the shared run has ended
 
-![Return after the shared run has ended](./screenshots/035-later-visit-desktop-chromium.png)
+![Return after the shared run has ended](./screenshots/039-later-visit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -334,7 +370,7 @@ Viewport: desktop-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/036-longest-friends-desktop-chromium.png)
+![Open Friends and hugs](./screenshots/040-longest-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -343,7 +379,7 @@ Viewport: desktop-chromium.
 
 ## Keep the longest shared streak after a break
 
-![Keep the longest shared streak after a break](./screenshots/037-longest-run-desktop-chromium.png)
+![Keep the longest shared streak after a break](./screenshots/041-longest-run-desktop-chromium.png)
 
 **Verifications:**
 
@@ -352,7 +388,7 @@ Viewport: desktop-chromium.
 
 ## Review the shared calendar preference
 
-![Review the shared calendar preference](./screenshots/038-edit-sharing-desktop-chromium.png)
+![Review the shared calendar preference](./screenshots/042-edit-sharing-desktop-chromium.png)
 
 **Verifications:**
 
@@ -361,7 +397,7 @@ Viewport: desktop-chromium.
 
 ## Choose to keep gratitude dates and streaks private
 
-![Choose to keep gratitude dates and streaks private](./screenshots/039-hide-streaks-desktop-chromium.png)
+![Choose to keep gratitude dates and streaks private](./screenshots/043-hide-streaks-desktop-chromium.png)
 
 **Verifications:**
 
@@ -370,7 +406,7 @@ Viewport: desktop-chromium.
 
 ## Withdraw sharing and clear community streaks
 
-![Withdraw sharing and clear community streaks](./screenshots/040-save-private-desktop-chromium.png)
+![Withdraw sharing and clear community streaks](./screenshots/044-save-private-desktop-chromium.png)
 
 **Verifications:**
 
@@ -379,7 +415,7 @@ Viewport: desktop-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/041-robin-private-desktop-chromium.png)
+![Return to the other friend’s device](./screenshots/045-robin-private-desktop-chromium.png)
 
 **Verifications:**
 
@@ -388,7 +424,7 @@ Viewport: desktop-chromium.
 
 ## Rebuild from raw actions without restoring withdrawn sharing
 
-![Rebuild from raw actions without restoring withdrawn sharing](./screenshots/042-replay-desktop-chromium.png)
+![Rebuild from raw actions without restoring withdrawn sharing](./screenshots/046-replay-desktop-chromium.png)
 
 **Verifications:**
 

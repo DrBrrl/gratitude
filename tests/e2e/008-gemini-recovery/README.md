@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-configure-settings-mobile-chromium.png)
+![Open Settings](./screenshots/008-configure-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/007-configure-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/009-configure-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Choose to enable AI prompts
 
-![Choose to enable AI prompts](./screenshots/008-enable-mobile-chromium.png)
+![Choose to enable AI prompts](./screenshots/010-enable-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/009-save-choices-mobile-chromium.png)
+![Save these explicit sharing choices](./screenshots/011-save-choices-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/010-today-mobile-chromium.png)
+![Open Today](./screenshots/012-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Request a prompt and wait for the provider
 
-![Request a prompt and wait for the provider](./screenshots/011-request-mobile-chromium.png)
+![Request a prompt and wait for the provider](./screenshots/013-request-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Reload while inference is unfinished
 
-![Reload while inference is unfinished](./screenshots/012-interrupt-mobile-chromium.png)
+![Reload while inference is unfinished](./screenshots/014-interrupt-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Explicitly retry and receive a provider failure
 
-![Explicitly retry and receive a provider failure](./screenshots/013-retry-failure-mobile-chromium.png)
+![Explicitly retry and receive a provider failure](./screenshots/015-retry-failure-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Choose the bundled starter after the failure
 
-![Choose the bundled starter after the failure](./screenshots/014-fallback-mobile-chromium.png)
+![Choose the bundled starter after the failure](./screenshots/016-fallback-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Receive a prompt just as the connection drops
 
-![Receive a prompt just as the connection drops](./screenshots/015-received-offline-mobile-chromium.png)
+![Receive a prompt just as the connection drops](./screenshots/017-received-offline-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Reload with a received response waiting in the outbox
 
-![Reload with a received response waiting in the outbox](./screenshots/016-reload-result-mobile-chromium.png)
+![Reload with a received response waiting in the outbox](./screenshots/018-reload-result-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Sync the received output without new inference
 
-![Sync the received output without new inference](./screenshots/017-sync-result-mobile-chromium.png)
+![Sync the received output without new inference](./screenshots/019-sync-result-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Open the same account in another tab
 
-![Open the same account in another tab](./screenshots/018-other-tab-mobile-chromium.png)
+![Open the same account in another tab](./screenshots/020-other-tab-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/019-revoke-settings-mobile-chromium.png)
+![Open Settings](./screenshots/021-revoke-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/020-revoke-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/022-revoke-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Turn AI prompts off
 
-![Turn AI prompts off](./screenshots/021-disable-mobile-chromium.png)
+![Turn AI prompts off](./screenshots/023-disable-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Begin another prompt request before the changed choices are saved
 
-![Begin another prompt request before the changed choices are saved](./screenshots/022-late-request-mobile-chromium.png)
+![Begin another prompt request before the changed choices are saved](./screenshots/024-late-request-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/023-save-revocation-mobile-chromium.png)
+![Save these explicit sharing choices](./screenshots/025-save-revocation-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Return to the first tab after the late response
 
-![Return to the first tab after the late response](./screenshots/024-late-response-mobile-chromium.png)
+![Return to the first tab after the late response](./screenshots/026-late-response-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Reload after revoking AI consent
 
-![Reload after revoking AI consent](./screenshots/025-reload-revoked-mobile-chromium.png)
+![Reload after revoking AI consent](./screenshots/027-reload-revoked-mobile-chromium.png)
 
 **Verifications:**
 

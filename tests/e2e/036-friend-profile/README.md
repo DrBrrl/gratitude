@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/006-friends-mobile-chromium.png)
+![Open Friends and hugs](./screenshots/008-friends-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/007-display-name-mobile-chromium.png)
+![Choose a friend-facing display name](./screenshots/009-display-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/008-username-mobile-chromium.png)
+![Choose a searchable username](./screenshots/010-username-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/009-profile-save-mobile-chromium.png)
+![Save the opt-in friends profile](./screenshots/011-profile-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/010-account-menu-mobile-chromium.png)
+![Open Settings](./screenshots/012-account-menu-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Keep account controls separate from the Friends tab
 
-![Keep account controls separate from the Friends tab](./screenshots/011-account-only-mobile-chromium.png)
+![Keep account controls separate from the Friends tab](./screenshots/013-account-only-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/012-from-account-friends-mobile-chromium.png)
+![Open Friends and hugs](./screenshots/014-from-account-friends-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Restore the cached friends profile after reload
 
-![Restore the cached friends profile after reload](./screenshots/013-reload-mobile-chromium.png)
+![Restore the cached friends profile after reload](./screenshots/015-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/014-restored-friends-mobile-chromium.png)
+![Open Friends and hugs](./screenshots/016-restored-friends-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Rebuild the friends profile from its source actions
 
-![Rebuild the friends profile from its source actions](./screenshots/015-rebuild-mobile-chromium.png)
+![Rebuild the friends profile from its source actions](./screenshots/017-rebuild-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Edit the chosen profile
 
-![Edit the chosen profile](./screenshots/016-edit-mobile-chromium.png)
+![Edit the chosen profile](./screenshots/018-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Opt out of new username discovery
 
-![Opt out of new username discovery](./screenshots/017-hide-mobile-chromium.png)
+![Opt out of new username discovery](./screenshots/019-hide-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Save the discovery preference
 
-![Save the discovery preference](./screenshots/018-save-hidden-mobile-chromium.png)
+![Save the discovery preference](./screenshots/020-save-hidden-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Open a separate signed-out browser
 
-![Open a separate signed-out browser](./screenshots/019-other-device-mobile-chromium.png)
+![Open a separate signed-out browser](./screenshots/021-other-device-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/020-google-popup-mobile-chromium.png)
+![Choose Google sign-in](./screenshots/022-google-popup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Add a fictional Google account
 
-![Add a fictional Google account](./screenshots/021-new-account-mobile-chromium.png)
+![Add a fictional Google account](./screenshots/023-new-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Enter the fictional email address
 
-![Enter the fictional email address](./screenshots/022-email-mobile-chromium.png)
+![Enter the fictional email address](./screenshots/024-email-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,16 +234,34 @@ Viewport: mobile-chromium.
 
 ## Enter a display name
 
-![Enter a display name](./screenshots/023-name-mobile-chromium.png)
+![Enter a display name](./screenshots/025-name-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/026-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/027-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/024-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/028-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -235,7 +271,7 @@ Viewport: mobile-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/025-other-friends-mobile-chromium.png)
+![Open Friends and hugs](./screenshots/029-other-friends-mobile-chromium.png)
 
 **Verifications:**
 
@@ -244,7 +280,7 @@ Viewport: mobile-chromium.
 
 ## Choose a second person’s display name
 
-![Choose a second person’s display name](./screenshots/026-other-name-mobile-chromium.png)
+![Choose a second person’s display name](./screenshots/030-other-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -253,7 +289,7 @@ Viewport: mobile-chromium.
 
 ## Try the same username on another account
 
-![Try the same username on another account](./screenshots/027-taken-name-mobile-chromium.png)
+![Try the same username on another account](./screenshots/031-taken-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -262,7 +298,7 @@ Viewport: mobile-chromium.
 
 ## Reject a username that already belongs to someone else
 
-![Reject a username that already belongs to someone else](./screenshots/028-taken-rejected-mobile-chromium.png)
+![Reject a username that already belongs to someone else](./screenshots/032-taken-rejected-mobile-chromium.png)
 
 **Verifications:**
 
@@ -271,7 +307,7 @@ Viewport: mobile-chromium.
 
 ## Choose an available username instead
 
-![Choose an available username instead](./screenshots/029-available-name-mobile-chromium.png)
+![Choose an available username instead](./screenshots/033-available-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -280,7 +316,7 @@ Viewport: mobile-chromium.
 
 ## Save the other person’s own profile
 
-![Save the other person’s own profile](./screenshots/030-other-save-mobile-chromium.png)
+![Save the other person’s own profile](./screenshots/034-other-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +325,7 @@ Viewport: mobile-chromium.
 
 ## Enter the hidden username
 
-![Enter the hidden username](./screenshots/031-hidden-search-mobile-chromium.png)
+![Enter the hidden username](./screenshots/035-hidden-search-mobile-chromium.png)
 
 **Verifications:**
 
@@ -298,7 +334,7 @@ Viewport: mobile-chromium.
 
 ## Keep a hidden profile out of username discovery
 
-![Keep a hidden profile out of username discovery](./screenshots/032-hidden-result-mobile-chromium.png)
+![Keep a hidden profile out of username discovery](./screenshots/036-hidden-result-mobile-chromium.png)
 
 **Verifications:**
 

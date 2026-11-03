@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Use a tall screen where centering would otherwise move the calendar
 
-![Use a tall screen where centering would otherwise move the calendar](./screenshots/006-tall-mobile-chromium.png)
+![Use a tall screen where centering would otherwise move the calendar](./screenshots/008-tall-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open the top-anchored landing calendar
 
-![Open the top-anchored landing calendar](./screenshots/007-landing-mobile-chromium.png)
+![Open the top-anchored landing calendar](./screenshots/009-landing-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Open the month chooser
 
-![Open the month chooser](./screenshots/008-choose-mobile-chromium.png)
+![Open the month chooser](./screenshots/010-choose-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Enter a six-week month
 
-![Enter a six-week month](./screenshots/009-may-mobile-chromium.png)
+![Enter a six-week month](./screenshots/011-may-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Let the calendar extend downward for May
 
-![Let the calendar extend downward for May](./screenshots/010-apply-may-mobile-chromium.png)
+![Let the calendar extend downward for May](./screenshots/012-apply-may-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Advance to a shorter five-week month
 
-![Advance to a shorter five-week month](./screenshots/011-june-mobile-chromium.png)
+![Advance to a shorter five-week month](./screenshots/013-june-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Open the chooser again
 
-![Open the chooser again](./screenshots/012-choose-february-mobile-chromium.png)
+![Open the chooser again](./screenshots/014-choose-february-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Enter a four-week month
 
-![Enter a four-week month](./screenshots/013-february-mobile-chromium.png)
+![Enter a four-week month](./screenshots/015-february-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Keep the arrows fixed with February’s shorter grid
 
-![Keep the arrows fixed with February’s shorter grid](./screenshots/014-apply-february-mobile-chromium.png)
+![Keep the arrows fixed with February’s shorter grid](./screenshots/016-apply-february-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Move back to a taller month without moving the controls
 
-![Move back to a taller month without moving the controls](./screenshots/015-january-mobile-chromium.png)
+![Move back to a taller month without moving the controls](./screenshots/017-january-mobile-chromium.png)
 
 **Verifications:**
 

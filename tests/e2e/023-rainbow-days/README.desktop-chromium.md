@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Keep Today on its own local-date colour
 
-![Keep Today on its own local-date colour](./screenshots/006-today-colour-desktop-chromium.png)
+![Keep Today on its own local-date colour](./screenshots/008-today-colour-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/007-journal-desktop-chromium.png)
+![Open Journal](./screenshots/009-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Give same-day entries the same colour and repeat it after four weeks
 
-![Give same-day entries the same colour and repeat it after four weeks](./screenshots/008-same-day-desktop-chromium.png)
+![Give same-day entries the same colour and repeat it after four weeks](./screenshots/010-same-day-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Write another independent reflection
 
-![Write another independent reflection](./screenshots/009-new-desktop-chromium.png)
+![Write another independent reflection](./screenshots/011-new-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Choose the historical Sunday and preview its yellow immediately
 
-![Choose the historical Sunday and preview its yellow immediately](./screenshots/010-sunday-desktop-chromium.png)
+![Choose the historical Sunday and preview its yellow immediately](./screenshots/012-sunday-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Write a new moment on the same Sunday
 
-![Write a new moment on the same Sunday](./screenshots/011-write-desktop-chromium.png)
+![Write a new moment on the same Sunday](./screenshots/013-write-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Save with the same daily colour as the other Sunday entries
 
-![Save with the same daily colour as the other Sunday entries](./screenshots/012-save-desktop-chromium.png)
+![Save with the same daily colour as the other Sunday entries](./screenshots/014-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Return to the journal with the saved Sunday card
 
-![Return to the journal with the saved Sunday card](./screenshots/013-done-desktop-chromium.png)
+![Return to the journal with the saved Sunday card](./screenshots/015-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Read the new entry with its date colour
 
-![Read the new entry with its date colour](./screenshots/014-detail-desktop-chromium.png)
+![Read the new entry with its date colour](./screenshots/016-detail-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Edit the Sunday reflection
 
-![Edit the Sunday reflection](./screenshots/015-edit-desktop-chromium.png)
+![Edit the Sunday reflection](./screenshots/017-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Change the draft date and preview Monday’s colour
 
-![Change the draft date and preview Monday’s colour](./screenshots/016-monday-desktop-chromium.png)
+![Change the draft date and preview Monday’s colour](./screenshots/018-monday-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Keep the saved entry yellow until its date change is saved
 
-![Keep the saved entry yellow until its date change is saved](./screenshots/017-back-desktop-chromium.png)
+![Keep the saved entry yellow until its date change is saved](./screenshots/019-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Restore the Monday draft with its new colour
 
-![Restore the Monday draft with its new colour](./screenshots/018-resume-desktop-chromium.png)
+![Restore the Monday draft with its new colour](./screenshots/020-resume-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Save the changed date and colour together
 
-![Save the changed date and colour together](./screenshots/019-save-edit-desktop-chromium.png)
+![Save the changed date and colour together](./screenshots/021-save-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Read the same entry on its new date
 
-![Read the same entry on its new date](./screenshots/020-done-edit-desktop-chromium.png)
+![Read the same entry on its new date](./screenshots/022-done-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Open the full calendar
 
-![Open the full calendar](./screenshots/021-calendar-desktop-chromium.png)
+![Open the full calendar](./screenshots/023-calendar-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Match the saved-day circles to their cards
 
-![Match the saved-day circles to their cards](./screenshots/022-september-desktop-chromium.png)
+![Match the saved-day circles to their cards](./screenshots/024-september-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Repeat the Sunday colour four weeks earlier
 
-![Repeat the Sunday colour four weeks earlier](./screenshots/023-august-desktop-chromium.png)
+![Repeat the Sunday colour four weeks earlier](./screenshots/025-august-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/024-today-desktop-chromium.png)
+![Open Today](./screenshots/026-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Keep Today independent of the historical date edit
 
-![Keep Today independent of the historical date edit](./screenshots/025-stable-today-desktop-chromium.png)
+![Keep Today independent of the historical date edit](./screenshots/027-stable-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/026-settings-desktop-chromium.png)
+![Open Settings](./screenshots/028-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Open replay recovery
 
-![Open replay recovery](./screenshots/027-privacy-desktop-chromium.png)
+![Open replay recovery](./screenshots/029-privacy-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Rebuild saved entries entirely from source events
 
-![Rebuild saved entries entirely from source events](./screenshots/028-replay-desktop-chromium.png)
+![Rebuild saved entries entirely from source events](./screenshots/030-replay-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/029-replayed-journal-desktop-chromium.png)
+![Open Journal](./screenshots/031-replayed-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Recreate the same date colours after replay
 
-![Recreate the same date colours after replay](./screenshots/030-replayed-colours-desktop-chromium.png)
+![Recreate the same date colours after replay](./screenshots/032-replayed-colours-desktop-chromium.png)
 
 **Verifications:**
 

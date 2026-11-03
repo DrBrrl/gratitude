@@ -39,7 +39,7 @@ test('large journals load incrementally while search, Settings and cached recove
   await steps.action('settings', 'Open Settings from a large journal', () => timed('Settings', () => nav('Settings').click()), async () => {
     await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
     await expect(cards).toHaveCount(0);
-    await expect(page.locator('.settings-row')).toHaveCount(5);
+    await expect(page.locator('.settings-row')).toHaveCount(6);
   }, 'Settings replaces the journal without mounting or measuring hidden cards');
   await steps.action('ai-settings', 'Open model and prompt settings', () => page.getByRole('button', { name: /^AI settings/ }).click(), async () => {
     await expect(page.getByRole('heading', { name: 'AI settings', exact: true })).toBeVisible();

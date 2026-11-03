@@ -105,9 +105,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/011-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/012-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open Journal after sign-in from the landing page
 
-![Open Journal after sign-in from the landing page](./screenshots/011-signed-in-mobile-chromium.png)
+![Open Journal after sign-in from the landing page](./screenshots/013-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/012-today-mobile-chromium.png)
+![Open Today](./screenshots/014-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/013-private-open-mobile-chromium.png)
+![Open the reflection editor](./screenshots/015-private-open-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Write a reflection
 
-![Write a reflection](./screenshots/014-private-type-mobile-chromium.png)
+![Write a reflection](./screenshots/016-private-type-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Save the reflection
 
-![Save the reflection](./screenshots/015-private-save-mobile-chromium.png)
+![Save the reflection](./screenshots/017-private-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings directly with a restored account session
 
-![Open Settings directly with a restored account session](./screenshots/016-settings-restored-mobile-chromium.png)
+![Open Settings directly with a restored account session](./screenshots/018-settings-restored-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Open account settings
 
-![Open account settings](./screenshots/017-account-mobile-chromium.png)
+![Open account settings](./screenshots/019-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Sign out directly onto the public landing calendar
 
-![Sign out directly onto the public landing calendar](./screenshots/018-signout-mobile-chromium.png)
+![Sign out directly onto the public landing calendar](./screenshots/020-signout-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Keep the public landing on a signed-out Settings reload
 
-![Keep the public landing on a signed-out Settings reload](./screenshots/019-signed-out-reload-mobile-chromium.png)
+![Keep the public landing on a signed-out Settings reload](./screenshots/021-signed-out-reload-mobile-chromium.png)
 
 **Verifications:**
 

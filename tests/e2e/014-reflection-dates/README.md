@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/006-first-editor-mobile-chromium.png)
+![Open the reflection editor](./screenshots/008-first-editor-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Require a valid date before saving
 
-![Require a valid date before saving](./screenshots/007-empty-date-mobile-chromium.png)
+![Require a valid date before saving](./screenshots/009-empty-date-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Reject a future date in the first-reflection editor
 
-![Reject a future date in the first-reflection editor](./screenshots/008-future-mobile-chromium.png)
+![Reject a future date in the first-reflection editor](./screenshots/010-future-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Choose a past local date directly from Today
 
-![Choose a past local date directly from Today](./screenshots/009-past-mobile-chromium.png)
+![Choose a past local date directly from Today](./screenshots/011-past-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Write the reflection for that moment
 
-![Write the reflection for that moment](./screenshots/010-write-mobile-chromium.png)
+![Write the reflection for that moment](./screenshots/012-write-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Return to Today without losing the draft
 
-![Return to Today without losing the draft](./screenshots/011-leave-draft-mobile-chromium.png)
+![Return to Today without losing the draft](./screenshots/013-leave-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Reload the dated Today draft
 
-![Reload the dated Today draft](./screenshots/012-reload-draft-mobile-chromium.png)
+![Reload the dated Today draft](./screenshots/014-reload-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/013-resume-draft-mobile-chromium.png)
+![Open the reflection editor](./screenshots/015-resume-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Retain the chosen local date and reflection across reload
 
-![Retain the chosen local date and reflection across reload](./screenshots/014-retained-date-mobile-chromium.png)
+![Retain the chosen local date and reflection across reload](./screenshots/016-retained-date-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Retain the selected date in an offline pending save
 
-![Retain the selected date in an offline pending save](./screenshots/015-pending-date-mobile-chromium.png)
+![Retain the selected date in an offline pending save](./screenshots/017-pending-date-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Return the same dated reflection to the editor
 
-![Return the same dated reflection to the editor](./screenshots/016-recover-date-mobile-chromium.png)
+![Return the same dated reflection to the editor](./screenshots/018-recover-date-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Save the remembered moment without completing Today
 
-![Save the remembered moment without completing Today](./screenshots/017-save-past-mobile-chromium.png)
+![Save the remembered moment without completing Today](./screenshots/019-save-past-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Read the chosen date on the journal card
 
-![Read the chosen date on the journal card](./screenshots/018-done-mobile-chromium.png)
+![Read the chosen date on the journal card](./screenshots/020-done-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/019-today-incomplete-mobile-chromium.png)
+![Open Today](./screenshots/021-today-incomplete-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Keep Today available after saving a past reflection
 
-![Keep Today available after saving a past reflection](./screenshots/020-still-empty-mobile-chromium.png)
+![Keep Today available after saving a past reflection](./screenshots/022-still-empty-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/021-journal-mobile-chromium.png)
+![Open Journal](./screenshots/023-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Open the saved reflection
 
-![Open the saved reflection](./screenshots/022-detail-mobile-chromium.png)
+![Open the saved reflection](./screenshots/024-detail-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Edit the saved reflection with its existing date
 
-![Edit the saved reflection with its existing date](./screenshots/023-edit-mobile-chromium.png)
+![Edit the saved reflection with its existing date](./screenshots/025-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Reject future dates when editing a saved reflection
 
-![Reject future dates when editing a saved reflection](./screenshots/024-edit-future-mobile-chromium.png)
+![Reject future dates when editing a saved reflection](./screenshots/026-edit-future-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Move the reflection to this morning in local time
 
-![Move the reflection to this morning in local time](./screenshots/025-move-today-mobile-chromium.png)
+![Move the reflection to this morning in local time](./screenshots/027-move-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Return to Journal without losing the draft
 
-![Return to Journal without losing the draft](./screenshots/026-leave-edit-mobile-chromium.png)
+![Return to Journal without losing the draft](./screenshots/028-leave-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Reload without committing the changed date
 
-![Reload without committing the changed date](./screenshots/027-reload-edit-mobile-chromium.png)
+![Reload without committing the changed date](./screenshots/029-reload-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/028-resume-journal-mobile-chromium.png)
+![Open Journal](./screenshots/030-resume-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: mobile-chromium.
 
 ## Keep the old saved date until the edit is committed
 
-![Keep the old saved date until the edit is committed](./screenshots/029-saved-date-mobile-chromium.png)
+![Keep the old saved date until the edit is committed](./screenshots/031-saved-date-mobile-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: mobile-chromium.
 
 ## Restore the unsaved date change and original content
 
-![Restore the unsaved date change and original content](./screenshots/030-resume-edit-mobile-chromium.png)
+![Restore the unsaved date change and original content](./screenshots/032-resume-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: mobile-chromium.
 
 ## Commit the changed date with the reflection
 
-![Commit the changed date with the reflection](./screenshots/031-save-edit-mobile-chromium.png)
+![Commit the changed date with the reflection](./screenshots/033-save-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: mobile-chromium.
 
 ## Read the new local date on the same journal entry
 
-![Read the new local date on the same journal entry](./screenshots/032-done-edit-mobile-chromium.png)
+![Read the new local date on the same journal entry](./screenshots/034-done-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/033-today-complete-mobile-chromium.png)
+![Open Today](./screenshots/035-today-complete-mobile-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: mobile-chromium.
 
 ## Recognize the reflection moved into Today
 
-![Recognize the reflection moved into Today](./screenshots/034-continuable-mobile-chromium.png)
+![Recognize the reflection moved into Today](./screenshots/036-continuable-mobile-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: mobile-chromium.
 
 ## Start on Journal now that a reflection belongs to Today
 
-![Start on Journal now that a reflection belongs to Today](./screenshots/035-reload-saved-mobile-chromium.png)
+![Start on Journal now that a reflection belongs to Today](./screenshots/037-reload-saved-mobile-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/036-settings-mobile-chromium.png)
+![Open Settings](./screenshots/038-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +360,7 @@ Viewport: mobile-chromium.
 
 ## Open recovery
 
-![Open recovery](./screenshots/037-privacy-mobile-chromium.png)
+![Open recovery](./screenshots/039-privacy-mobile-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +369,7 @@ Viewport: mobile-chromium.
 
 ## Replay the original save and explicit date edit
 
-![Replay the original save and explicit date edit](./screenshots/038-rebuild-mobile-chromium.png)
+![Replay the original save and explicit date edit](./screenshots/040-rebuild-mobile-chromium.png)
 
 **Verifications:**
 
@@ -360,7 +378,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/039-replayed-journal-mobile-chromium.png)
+![Open Journal](./screenshots/041-replayed-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -369,7 +387,7 @@ Viewport: mobile-chromium.
 
 ## Preserve the edited date after complete replay
 
-![Preserve the edited date after complete replay](./screenshots/040-replayed-date-mobile-chromium.png)
+![Preserve the edited date after complete replay](./screenshots/042-replayed-date-mobile-chromium.png)
 
 **Verifications:**
 
@@ -378,7 +396,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/041-export-settings-mobile-chromium.png)
+![Open Settings](./screenshots/043-export-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -387,7 +405,7 @@ Viewport: mobile-chromium.
 
 ## Open Markdown export
 
-![Open Markdown export](./screenshots/042-export-mobile-chromium.png)
+![Open Markdown export](./screenshots/044-export-mobile-chromium.png)
 
 **Verifications:**
 
@@ -396,7 +414,7 @@ Viewport: mobile-chromium.
 
 ## Prepare the reflection with its edited date
 
-![Prepare the reflection with its edited date](./screenshots/043-prepare-mobile-chromium.png)
+![Prepare the reflection with its edited date](./screenshots/045-prepare-mobile-chromium.png)
 
 **Verifications:**
 
@@ -405,7 +423,7 @@ Viewport: mobile-chromium.
 
 ## Download the updated local date without system metadata
 
-![Download the updated local date without system metadata](./screenshots/044-download-mobile-chromium.png)
+![Download the updated local date without system metadata](./screenshots/046-download-mobile-chromium.png)
 
 **Verifications:**
 

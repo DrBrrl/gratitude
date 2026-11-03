@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Swipe right to the previous Sunday-first week
 
-![Swipe right to the previous Sunday-first week](./screenshots/006-previous-desktop-chromium.png)
+![Swipe right to the previous Sunday-first week](./screenshots/008-previous-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open all reflections on a date in the previous week
 
-![Open all reflections on a date in the previous week](./screenshots/007-date-desktop-chromium.png)
+![Open all reflections on a date in the previous week](./screenshots/009-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Return to the same historical week
 
-![Return to the same historical week](./screenshots/008-back-desktop-chromium.png)
+![Return to the same historical week](./screenshots/010-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Swipe left to return to this week
 
-![Swipe left to return to this week](./screenshots/009-next-desktop-chromium.png)
+![Swipe left to return to this week](./screenshots/011-next-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Use one horizontal scroll gesture to visit next week
 
-![Use one horizontal scroll gesture to visit next week](./screenshots/010-wheel-desktop-chromium.png)
+![Use one horizontal scroll gesture to visit next week](./screenshots/012-wheel-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Focus the week strip for keyboard navigation
 
-![Focus the week strip for keyboard navigation](./screenshots/011-focus-desktop-chromium.png)
+![Focus the week strip for keyboard navigation](./screenshots/013-focus-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Move back exactly one week with the left arrow key
 
-![Move back exactly one week with the left arrow key](./screenshots/012-key-this-week-desktop-chromium.png)
+![Move back exactly one week with the left arrow key](./screenshots/014-key-this-week-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Move back to the saved historical week
 
-![Move back to the saved historical week](./screenshots/013-key-previous-desktop-chromium.png)
+![Move back to the saved historical week](./screenshots/015-key-previous-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Open the calendar at the week being browsed
 
-![Open the calendar at the week being browsed](./screenshots/014-calendar-desktop-chromium.png)
+![Open the calendar at the week being browsed](./screenshots/016-calendar-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Reload without losing the calendar or its historical return week
 
-![Reload without losing the calendar or its historical return week](./screenshots/015-reload-calendar-desktop-chromium.png)
+![Reload without losing the calendar or its historical return week](./screenshots/017-reload-calendar-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Return from the calendar to the same week
 
-![Return from the calendar to the same week](./screenshots/016-calendar-back-desktop-chromium.png)
+![Return from the calendar to the same week](./screenshots/018-calendar-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Keep the browsed week when switching to Journal
 
-![Keep the browsed week when switching to Journal](./screenshots/017-journal-desktop-chromium.png)
+![Keep the browsed week when switching to Journal](./screenshots/019-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Swipe the Journal week strip forward too
 
-![Swipe the Journal week strip forward too](./screenshots/018-journal-next-desktop-chromium.png)
+![Swipe the Journal week strip forward too](./screenshots/020-journal-next-desktop-chromium.png)
 
 **Verifications:**
 

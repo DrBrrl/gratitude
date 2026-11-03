@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-import-settings-mobile-chromium.png)
+![Open Settings](./screenshots/008-import-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/007-import-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/009-import-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Open private spreadsheet import
 
-![Open private spreadsheet import](./screenshots/008-open-import-mobile-chromium.png)
+![Open private spreadsheet import](./screenshots/010-open-import-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Reject executable worksheet formulas
 
-![Reject executable worksheet formulas](./screenshots/009-reject-formula-mobile-chromium.png)
+![Reject executable worksheet formulas](./screenshots/011-reject-formula-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Preview the full fictional workbook before importing
 
-![Preview the full fictional workbook before importing](./screenshots/010-select-workbook-mobile-chromium.png)
+![Preview the full fictional workbook before importing](./screenshots/012-select-workbook-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Import all 102 questions into the signed-in private account
 
-![Import all 102 questions into the signed-in private account](./screenshots/011-confirm-import-mobile-chromium.png)
+![Import all 102 questions into the signed-in private account](./screenshots/013-confirm-import-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Reselect the same workbook
 
-![Reselect the same workbook](./screenshots/012-repeat-file-mobile-chromium.png)
+![Reselect the same workbook](./screenshots/014-repeat-file-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Keep a repeated import idempotent
 
-![Keep a repeated import idempotent](./screenshots/013-repeat-import-mobile-chromium.png)
+![Keep a repeated import idempotent](./screenshots/015-repeat-import-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/014-today-mobile-chromium.png)
+![Open Today](./screenshots/016-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Browse questions without an AI request
 
-![Browse questions without an AI request](./screenshots/015-open-reserve-mobile-chromium.png)
+![Browse questions without an AI request](./screenshots/017-open-reserve-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Skip a question without consuming or deleting it
 
-![Skip a question without consuming or deleting it](./screenshots/016-cycle-mobile-chromium.png)
+![Skip a question without consuming or deleting it](./screenshots/018-cycle-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Choose a saved question instantly
 
-![Choose a saved question instantly](./screenshots/017-use-mobile-chromium.png)
+![Choose a saved question instantly](./screenshots/019-use-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/018-write-mobile-chromium.png)
+![Open the reflection editor](./screenshots/020-write-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Write a reflection using the backup
 
-![Write a reflection using the backup](./screenshots/019-reflection-mobile-chromium.png)
+![Write a reflection using the backup](./screenshots/021-reflection-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Return to Today with writing already in progress
 
-![Return to Today with writing already in progress](./screenshots/020-draft-back-mobile-chromium.png)
+![Return to Today with writing already in progress](./screenshots/022-draft-back-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Open backups without discarding the existing draft
 
-![Open backups without discarding the existing draft](./screenshots/021-draft-options-mobile-chromium.png)
+![Open backups without discarding the existing draft](./screenshots/023-draft-options-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Cycle to the draft question again
 
-![Cycle to the draft question again](./screenshots/022-draft-cycle-mobile-chromium.png)
+![Cycle to the draft question again](./screenshots/024-draft-cycle-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Keep the question while preserving written text and entry identity
 
-![Keep the question while preserving written text and entry identity](./screenshots/023-draft-reselect-mobile-chromium.png)
+![Keep the question while preserving written text and entry identity](./screenshots/025-draft-reselect-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/024-draft-reopen-mobile-chromium.png)
+![Open the reflection editor](./screenshots/026-draft-reopen-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Retain the reflection when choosing a backup on Today
 
-![Retain the reflection when choosing a backup on Today](./screenshots/025-draft-kept-mobile-chromium.png)
+![Retain the reflection when choosing a backup on Today](./screenshots/027-draft-kept-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Consume a question only when a reflection is saved
 
-![Consume a question only when a reflection is saved](./screenshots/026-save-mobile-chromium.png)
+![Consume a question only when a reflection is saved](./screenshots/028-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Return to Journal after saving
 
-![Return to Journal after saving](./screenshots/027-done-mobile-chromium.png)
+![Return to Journal after saving](./screenshots/029-done-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: mobile-chromium.
 
 ## Open another reflection
 
-![Open another reflection](./screenshots/028-new-mobile-chromium.png)
+![Open another reflection](./screenshots/030-new-mobile-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: mobile-chromium.
 
 ## Browse the remaining reserve in the editor
 
-![Browse the remaining reserve in the editor](./screenshots/029-open-next-mobile-chromium.png)
+![Browse the remaining reserve in the editor](./screenshots/031-open-next-mobile-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: mobile-chromium.
 
 ## Disconnect after the app shell and private reserve are cached
 
-![Disconnect after the app shell and private reserve are cached](./screenshots/030-offline-mobile-chromium.png)
+![Disconnect after the app shell and private reserve are cached](./screenshots/032-offline-mobile-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: mobile-chromium.
 
 ## Choose to discard a question you will not use
 
-![Choose to discard a question you will not use](./screenshots/031-remove-choice-mobile-chromium.png)
+![Choose to discard a question you will not use](./screenshots/033-remove-choice-mobile-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: mobile-chromium.
 
 ## Keep an explicit removal durably on this device while offline
 
-![Keep an explicit removal durably on this device while offline](./screenshots/032-remove-offline-mobile-chromium.png)
+![Keep an explicit removal durably on this device while offline](./screenshots/034-remove-offline-mobile-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: mobile-chromium.
 
 ## Choose another backup without a network connection
 
-![Choose another backup without a network connection](./screenshots/033-use-offline-mobile-chromium.png)
+![Choose another backup without a network connection](./screenshots/035-use-offline-mobile-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: mobile-chromium.
 
 ## Write offline and retain the selected prompt with the draft
 
-![Write offline and retain the selected prompt with the draft](./screenshots/034-offline-draft-mobile-chromium.png)
+![Write offline and retain the selected prompt with the draft](./screenshots/036-offline-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: mobile-chromium.
 
 ## Reload the complete application while offline
 
-![Reload the complete application while offline](./screenshots/035-cold-offline-mobile-chromium.png)
+![Reload the complete application while offline](./screenshots/037-cold-offline-mobile-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: mobile-chromium.
 
 ## Reopen the independent offline draft
 
-![Reopen the independent offline draft](./screenshots/036-recover-offline-mobile-chromium.png)
+![Reopen the independent offline draft](./screenshots/038-recover-offline-mobile-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +360,7 @@ Viewport: mobile-chromium.
 
 ## Synchronize the offline removal without inference
 
-![Synchronize the offline removal without inference](./screenshots/037-reconnect-mobile-chromium.png)
+![Synchronize the offline removal without inference](./screenshots/039-reconnect-mobile-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +369,7 @@ Viewport: mobile-chromium.
 
 ## Save the recovered reflection with its original question
 
-![Save the recovered reflection with its original question](./screenshots/038-save-offline-draft-mobile-chromium.png)
+![Save the recovered reflection with its original question](./screenshots/040-save-offline-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -360,7 +378,7 @@ Viewport: mobile-chromium.
 
 ## Return to the saved journal
 
-![Return to the saved journal](./screenshots/039-finish-mobile-chromium.png)
+![Return to the saved journal](./screenshots/041-finish-mobile-chromium.png)
 
 **Verifications:**
 
@@ -369,7 +387,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/040-retained-settings-mobile-chromium.png)
+![Open Settings](./screenshots/042-retained-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -378,7 +396,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/041-retained-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/043-retained-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -387,7 +405,7 @@ Viewport: mobile-chromium.
 
 ## Verify used and removed questions stay out of the reserve
 
-![Verify used and removed questions stay out of the reserve](./screenshots/042-available-count-mobile-chromium.png)
+![Verify used and removed questions stay out of the reserve](./screenshots/044-available-count-mobile-chromium.png)
 
 **Verifications:**
 
@@ -396,7 +414,7 @@ Viewport: mobile-chromium.
 
 ## Prepare fictional private source input without changing the canonical stream
 
-![Prepare fictional private source input without changing the canonical stream](./screenshots/043-stage-source-mobile-chromium.png)
+![Prepare fictional private source input without changing the canonical stream](./screenshots/045-stage-source-mobile-chromium.png)
 
 **Verifications:**
 
@@ -405,7 +423,7 @@ Viewport: mobile-chromium.
 
 ## Reload the upgraded application and promote the staged literal question
 
-![Reload the upgraded application and promote the staged literal question](./screenshots/044-promote-source-mobile-chromium.png)
+![Reload the upgraded application and promote the staged literal question](./screenshots/046-promote-source-mobile-chromium.png)
 
 **Verifications:**
 
@@ -414,7 +432,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/045-promoted-settings-mobile-chromium.png)
+![Open Settings](./screenshots/047-promoted-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -423,7 +441,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/046-promoted-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/048-promoted-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -432,7 +450,7 @@ Viewport: mobile-chromium.
 
 ## Retain used and removed status when the same private input is encountered again
 
-![Retain used and removed status when the same private input is encountered again](./screenshots/047-staged-replay-mobile-chromium.png)
+![Retain used and removed status when the same private input is encountered again](./screenshots/049-staged-replay-mobile-chromium.png)
 
 **Verifications:**
 

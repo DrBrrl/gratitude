@@ -4,7 +4,7 @@ import {startJournal,openEditor,editor,expectSynced,expectDecodedPhotos,signIn,F
 import {aiSettings,toggleAI,saveChoices,AI_ENDPOINT} from '../helpers/gemini';
 import {selectionLog} from '../helpers/ai-selection-fixture';
 import {replay} from '../../../src/lib/domain';
-import {SYSTEM_PROMPT} from '../../../src/lib/ai/context';
+import {CURRENT_SYSTEM_PROMPT as SYSTEM_PROMPT} from '../helpers/gemini';
 import {PHOTO_SYSTEM_PROMPT} from '../../../src/lib/ai/instructions';
 const expect=baseExpect.configure({timeout:15_000});
 const PROMPT_SERVER='https://fictional-writing.example.test',PHOTO_SERVER='https://fictional-photos.example.test';

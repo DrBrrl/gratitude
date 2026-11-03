@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Browse short and long rainbow reflections
 
-![Browse short and long rainbow reflections](./screenshots/006-journal-mobile-chromium.png)
+![Browse short and long rainbow reflections](./screenshots/008-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Expand the longer reflection in place
 
-![Expand the longer reflection in place](./screenshots/007-expand-mobile-chromium.png)
+![Expand the longer reflection in place](./screenshots/009-expand-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Collapse the reflection again
 
-![Collapse the reflection again](./screenshots/008-collapse-mobile-chromium.png)
+![Collapse the reflection again](./screenshots/010-collapse-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Focus the search field
 
-![Focus the search field](./screenshots/009-focus-search-mobile-chromium.png)
+![Focus the search field](./screenshots/011-focus-search-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Search for an accent-insensitive phrase
 
-![Search for an accent-insensitive phrase](./screenshots/010-search-mobile-chromium.png)
+![Search for an accent-insensitive phrase](./screenshots/012-search-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Open the matching reflection
 
-![Open the matching reflection](./screenshots/011-open-entry-mobile-chromium.png)
+![Open the matching reflection](./screenshots/013-open-entry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Return to the retained search results
 
-![Return to the retained search results](./screenshots/012-back-mobile-chromium.png)
+![Return to the retained search results](./screenshots/014-back-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Search for a missing word
 
-![Search for a missing word](./screenshots/013-no-results-mobile-chromium.png)
+![Search for a missing word](./screenshots/015-no-results-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Clear the search
 
-![Clear the search](./screenshots/014-clear-mobile-chromium.png)
+![Clear the search](./screenshots/016-clear-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Open the latest reflection
 
-![Open the latest reflection](./screenshots/015-open-edit-mobile-chromium.png)
+![Open the latest reflection](./screenshots/017-open-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Edit the saved reflection
 
-![Edit the saved reflection](./screenshots/016-edit-mobile-chromium.png)
+![Edit the saved reflection](./screenshots/018-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Add a remembered detail
 
-![Add a remembered detail](./screenshots/017-revise-mobile-chromium.png)
+![Add a remembered detail](./screenshots/019-revise-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Save changes to the existing reflection
 
-![Save changes to the existing reflection](./screenshots/018-save-edit-mobile-chromium.png)
+![Save changes to the existing reflection](./screenshots/020-save-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Finish editing and return to the journal
 
-![Finish editing and return to the journal](./screenshots/019-edited-journal-mobile-chromium.png)
+![Finish editing and return to the journal](./screenshots/021-edited-journal-mobile-chromium.png)
 
 **Verifications:**
 

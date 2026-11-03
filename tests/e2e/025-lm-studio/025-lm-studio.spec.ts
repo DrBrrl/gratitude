@@ -3,7 +3,7 @@ import {TestStepHelper} from '../helpers/test-step-helper';
 import {startJournal,seedHistory,navigate,openEditor,editor,expectEditor,expectSynced,expectDecodedPhotos,signIn,FIXTURE_TIME} from '../helpers/journal-session';
 import {aiSettings,toggleAI,saveChoices,AI_ENDPOINT} from '../helpers/gemini';
 import {selectionLog} from '../helpers/ai-selection-fixture';
-import {SYSTEM_PROMPT} from '../../../src/lib/ai/context';
+import {CURRENT_SYSTEM_PROMPT as SYSTEM_PROMPT} from '../helpers/gemini';
 import {PHOTO_SYSTEM_PROMPT} from '../../../src/lib/ai/instructions';
 import {replay} from '../../../src/lib/domain';
 const expect=baseExpect.configure({timeout:15_000});
@@ -78,7 +78,7 @@ test('LM Studio prompts and photos use explicit local credentials and replay wit
  await steps.action('replay','Rebuild local prompt and photo history entirely from recorded events',()=>page.getByRole('button',{name:'Rebuild local view',exact:true}).click(),async()=>{
    await expectSynced(page);expect(submissions).toHaveLength(4);expect(cloud).toBe(0);
    const events=await selectionLog(page),full=replay(events);expect(full.ai.choices.provider).toBe('lm-studio');expect(replay(events.slice(3),replay(events.slice(0,3)))).toEqual(full);
-   expect(events.filter(e=>e.type==='PromptRequested').map(e=>e.schemaVersion)).toEqual([5,12,12]);expect(events.some(e=>e.type==='PhotoSummaryRequested'&&e.schemaVersion===2)).toBe(true);
+   expect(events.filter(e=>e.type==='PromptRequested').map(e=>e.schemaVersion)).toEqual([15,22,22]);expect(events.some(e=>e.type==='PhotoSummaryRequested'&&e.schemaVersion===2)).toBe(true);
    expect(JSON.stringify(events)).not.toContain(TOKEN);expect(JSON.stringify(events)).not.toContain('http://127.0.0.1:8080');expect(JSON.stringify(events)).not.toContain('This separate reasoning field');
  },'Exact local outputs and usage survive replay; credentials, addresses and reasoning are absent from the event stream');
  const otherContext=await browser.newContext({...info.project.use,baseURL:String(info.project.use.baseURL)});

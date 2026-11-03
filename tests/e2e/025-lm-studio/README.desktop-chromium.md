@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-configure-settings-desktop-chromium.png)
+![Open Settings](./screenshots/008-configure-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/007-configure-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/009-configure-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Choose LM Studio as the next AI provider
 
-![Choose LM Studio as the next AI provider](./screenshots/008-choose-local-desktop-chromium.png)
+![Choose LM Studio as the next AI provider](./screenshots/010-choose-local-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Check the authenticated server before entering a token
 
-![Check the authenticated server before entering a token](./screenshots/009-auth-required-desktop-chromium.png)
+![Check the authenticated server before entering a token](./screenshots/011-auth-required-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Enter a fictional token only in the local connection form
 
-![Enter a fictional token only in the local connection form](./screenshots/010-token-desktop-chromium.png)
+![Enter a fictional token only in the local connection form](./screenshots/012-token-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Discover the loaded model, image support and context length without inference
 
-![Discover the loaded model, image support and context length without inference](./screenshots/011-test-desktop-chromium.png)
+![Discover the loaded model, image support and context length without inference](./screenshots/013-test-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Save the account provider and this device’s private connection
 
-![Save the account provider and this device’s private connection](./screenshots/012-save-model-desktop-chromium.png)
+![Save the account provider and this device’s private connection](./screenshots/014-save-model-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Choose to enable AI prompts
 
-![Choose to enable AI prompts](./screenshots/013-enable-desktop-chromium.png)
+![Choose to enable AI prompts](./screenshots/015-enable-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Allow chosen saved reflections to inform local prompts
 
-![Allow chosen saved reflections to inform local prompts](./screenshots/014-share-desktop-chromium.png)
+![Allow chosen saved reflections to inform local prompts](./screenshots/016-share-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/015-save-sharing-desktop-chromium.png)
+![Save these explicit sharing choices](./screenshots/017-save-sharing-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/016-today-desktop-chromium.png)
+![Open Today](./screenshots/018-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Generate a gratitude prompt directly through LM Studio
 
-![Generate a gratitude prompt directly through LM Studio](./screenshots/017-generate-desktop-chromium.png)
+![Generate a gratitude prompt directly through LM Studio](./screenshots/019-generate-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Identify the recorded local provider and actual sources
 
-![Identify the recorded local provider and actual sources](./screenshots/018-why-desktop-chromium.png)
+![Identify the recorded local provider and actual sources](./screenshots/020-why-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Close the source explanation
 
-![Close the source explanation](./screenshots/019-close-why-desktop-chromium.png)
+![Close the source explanation](./screenshots/021-close-why-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/020-editor-desktop-chromium.png)
+![Open the reflection editor](./screenshots/022-editor-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Write a response that remains a private draft
 
-![Write a response that remains a private draft](./screenshots/021-write-desktop-chromium.png)
+![Write a response that remains a private draft](./screenshots/023-write-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Choose an earlier date for this reflection
 
-![Choose an earlier date for this reflection](./screenshots/022-date-desktop-chromium.png)
+![Choose an earlier date for this reflection](./screenshots/024-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Generate a local prompt for the selected entry date
 
-![Generate a local prompt for the selected entry date](./screenshots/023-editor-prompt-desktop-chromium.png)
+![Generate a local prompt for the selected entry date](./screenshots/025-editor-prompt-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Choose the generated local question for this draft
 
-![Choose the generated local question for this draft](./screenshots/024-use-option-desktop-chromium.png)
+![Choose the generated local question for this draft](./screenshots/026-use-option-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Inspect local AI processing before attaching a fictional photo
 
-![Inspect local AI processing before attaching a fictional photo](./screenshots/025-photo-desktop-chromium.png)
+![Inspect local AI processing before attaching a fictional photo](./screenshots/027-photo-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Attach the photo and ask the same local model for its summary
 
-![Attach the photo and ask the same local model for its summary](./screenshots/026-summarize-desktop-chromium.png)
+![Attach the photo and ask the same local model for its summary](./screenshots/028-summarize-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Save the backfilled reflection, prompt and local photo summary
 
-![Save the backfilled reflection, prompt and local photo summary](./screenshots/027-save-desktop-chromium.png)
+![Save the backfilled reflection, prompt and local photo summary](./screenshots/029-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Return to the saved journal
 
-![Return to the saved journal](./screenshots/028-done-desktop-chromium.png)
+![Return to the saved journal](./screenshots/030-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Reload with the same provider and no repeated inference
 
-![Reload with the same provider and no repeated inference](./screenshots/029-reload-desktop-chromium.png)
+![Reload with the same provider and no repeated inference](./screenshots/031-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/030-journal-desktop-chromium.png)
+![Open Journal](./screenshots/032-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Read the reflection and its saved local summary
 
-![Read the reflection and its saved local summary](./screenshots/031-entry-desktop-chromium.png)
+![Read the reflection and its saved local summary](./screenshots/033-entry-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Edit the saved reflection using the configured local provider
 
-![Edit the saved reflection using the configured local provider](./screenshots/032-edit-desktop-chromium.png)
+![Edit the saved reflection using the configured local provider](./screenshots/034-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Move the draft reference date forward without changing the saved entry yet
 
-![Move the draft reference date forward without changing the saved entry yet](./screenshots/033-reference-date-desktop-chromium.png)
+![Move the draft reference date forward without changing the saved entry yet](./screenshots/035-reference-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Exclude the edited entry even when its saved date is earlier than the reference day
 
-![Exclude the edited entry even when its saved date is earlier than the reference day](./screenshots/034-saved-editor-prompt-desktop-chromium.png)
+![Exclude the edited entry even when its saved date is earlier than the reference day](./screenshots/036-saved-editor-prompt-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Keep the existing saved question
 
-![Keep the existing saved question](./screenshots/035-keep-question-desktop-chromium.png)
+![Keep the existing saved question](./screenshots/037-keep-question-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Return without saving the edited date
 
-![Return without saving the edited date](./screenshots/036-back-desktop-chromium.png)
+![Return without saving the edited date](./screenshots/038-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +360,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/037-settings-desktop-chromium.png)
+![Open Settings](./screenshots/039-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +369,7 @@ Viewport: desktop-chromium.
 
 ## Open local projection recovery
 
-![Open local projection recovery](./screenshots/038-privacy-desktop-chromium.png)
+![Open local projection recovery](./screenshots/040-privacy-desktop-chromium.png)
 
 **Verifications:**
 
@@ -360,7 +378,7 @@ Viewport: desktop-chromium.
 
 ## Rebuild local prompt and photo history entirely from recorded events
 
-![Rebuild local prompt and photo history entirely from recorded events](./screenshots/039-replay-desktop-chromium.png)
+![Rebuild local prompt and photo history entirely from recorded events](./screenshots/041-replay-desktop-chromium.png)
 
 **Verifications:**
 
@@ -369,7 +387,7 @@ Viewport: desktop-chromium.
 
 ## Open the same account on a device without local credentials
 
-![Open the same account on a device without local credentials](./screenshots/040-other-device-desktop-chromium.png)
+![Open the same account on a device without local credentials](./screenshots/042-other-device-desktop-chromium.png)
 
 **Verifications:**
 
@@ -378,7 +396,7 @@ Viewport: desktop-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/041-google-popup-desktop-chromium.png)
+![Choose Google sign-in](./screenshots/043-google-popup-desktop-chromium.png)
 
 **Verifications:**
 
@@ -387,7 +405,7 @@ Viewport: desktop-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/042-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/044-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -397,7 +415,7 @@ Viewport: desktop-chromium.
 
 ## Keep the shared local provider when this device has no API token
 
-![Keep the shared local provider when this device has no API token](./screenshots/043-other-no-fallback-desktop-chromium.png)
+![Keep the shared local provider when this device has no API token](./screenshots/045-other-no-fallback-desktop-chromium.png)
 
 **Verifications:**
 
@@ -406,7 +424,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/044-other-connection-settings-desktop-chromium.png)
+![Open Settings](./screenshots/046-other-connection-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -415,7 +433,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/045-other-connection-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/047-other-connection-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -424,7 +442,7 @@ Viewport: desktop-chromium.
 
 ## Require device-specific connection credentials without reverting to Gemini
 
-![Require device-specific connection credentials without reverting to Gemini](./screenshots/046-other-private-desktop-chromium.png)
+![Require device-specific connection credentials without reverting to Gemini](./screenshots/048-other-private-desktop-chromium.png)
 
 **Verifications:**
 
@@ -433,7 +451,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/047-replayed-today-desktop-chromium.png)
+![Open Today](./screenshots/049-replayed-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -442,7 +460,7 @@ Viewport: desktop-chromium.
 
 ## Handle an unavailable local model without sending data to Gemini
 
-![Handle an unavailable local model without sending data to Gemini](./screenshots/048-failure-desktop-chromium.png)
+![Handle an unavailable local model without sending data to Gemini](./screenshots/050-failure-desktop-chromium.png)
 
 **Verifications:**
 
@@ -451,7 +469,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly use the starter after the local failure
 
-![Explicitly use the starter after the local failure](./screenshots/049-starter-desktop-chromium.png)
+![Explicitly use the starter after the local failure](./screenshots/051-starter-desktop-chromium.png)
 
 **Verifications:**
 
@@ -460,7 +478,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/050-retained-settings-desktop-chromium.png)
+![Open Settings](./screenshots/052-retained-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -469,7 +487,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/051-retained-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/053-retained-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -478,7 +496,7 @@ Viewport: desktop-chromium.
 
 ## Retain the address and tab token on this device
 
-![Retain the address and tab token on this device](./screenshots/052-private-settings-desktop-chromium.png)
+![Retain the address and tab token on this device](./screenshots/054-private-settings-desktop-chromium.png)
 
 **Verifications:**
 

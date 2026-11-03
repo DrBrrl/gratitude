@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-configure-settings-mobile-chromium.png)
+![Open Settings](./screenshots/008-configure-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/007-configure-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/009-configure-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Choose a local model without authorizing inference
 
-![Choose a local model without authorizing inference](./screenshots/008-local-mobile-chromium.png)
+![Choose a local model without authorizing inference](./screenshots/010-local-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Set the shared private HTTPS server address
 
-![Set the shared private HTTPS server address](./screenshots/009-server-mobile-chromium.png)
+![Set the shared private HTTPS server address](./screenshots/011-server-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Enter a fictional token in the password field
 
-![Enter a fictional token in the password field](./screenshots/010-token-mobile-chromium.png)
+![Enter a fictional token in the password field](./screenshots/012-token-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Save the local provider and tab-only connection
 
-![Save the local provider and tab-only connection](./screenshots/011-save-model-mobile-chromium.png)
+![Save the local provider and tab-only connection](./screenshots/013-save-model-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Review optional account storage and its trust boundary
 
-![Review optional account storage and its trust boundary](./screenshots/012-sync-options-mobile-chromium.png)
+![Review optional account storage and its trust boundary](./screenshots/014-sync-options-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Explicitly save the token with its server and model to this account
 
-![Explicitly save the token with its server and model to this account](./screenshots/013-remember-mobile-chromium.png)
+![Explicitly save the token with its server and model to this account](./screenshots/015-remember-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Open Gratitude on an independent browser device
 
-![Open Gratitude on an independent browser device](./screenshots/014-new-device-mobile-chromium.png)
+![Open Gratitude on an independent browser device](./screenshots/016-new-device-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/015-google-popup-mobile-chromium.png)
+![Choose Google sign-in](./screenshots/017-google-popup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/016-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/018-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -163,7 +181,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/017-restored-settings-mobile-chromium.png)
+![Open Settings](./screenshots/019-restored-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -172,7 +190,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/018-restored-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/020-restored-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -181,7 +199,7 @@ Viewport: mobile-chromium.
 
 ## Restore the exact bound connection without entering the token again
 
-![Restore the exact bound connection without entering the token again](./screenshots/019-restored-connection-mobile-chromium.png)
+![Restore the exact bound connection without entering the token again](./screenshots/021-restored-connection-mobile-chromium.png)
 
 **Verifications:**
 
@@ -190,7 +208,7 @@ Viewport: mobile-chromium.
 
 ## Test authenticated metadata using the restored token
 
-![Test authenticated metadata using the restored token](./screenshots/020-test-restored-mobile-chromium.png)
+![Test authenticated metadata using the restored token](./screenshots/022-test-restored-mobile-chromium.png)
 
 **Verifications:**
 
@@ -199,7 +217,7 @@ Viewport: mobile-chromium.
 
 ## Clear the token when editing its server destination
 
-![Clear the token when editing its server destination](./screenshots/021-change-server-mobile-chromium.png)
+![Clear the token when editing its server destination](./screenshots/023-change-server-mobile-chromium.png)
 
 **Verifications:**
 
@@ -208,7 +226,7 @@ Viewport: mobile-chromium.
 
 ## Reload without saving the different destination
 
-![Reload without saving the different destination](./screenshots/022-reload-mobile-chromium.png)
+![Reload without saving the different destination](./screenshots/024-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -217,7 +235,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/023-after-reload-settings-mobile-chromium.png)
+![Open Settings](./screenshots/025-after-reload-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -226,7 +244,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/024-after-reload-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/026-after-reload-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -235,7 +253,7 @@ Viewport: mobile-chromium.
 
 ## Restore the account token only with its saved server
 
-![Restore the account token only with its saved server](./screenshots/025-reload-pair-mobile-chromium.png)
+![Restore the account token only with its saved server](./screenshots/027-reload-pair-mobile-chromium.png)
 
 **Verifications:**
 
@@ -244,7 +262,7 @@ Viewport: mobile-chromium.
 
 ## Forget the saved credential from the first device
 
-![Forget the saved credential from the first device](./screenshots/026-forget-mobile-chromium.png)
+![Forget the saved credential from the first device](./screenshots/028-forget-mobile-chromium.png)
 
 **Verifications:**
 
@@ -253,7 +271,7 @@ Viewport: mobile-chromium.
 
 ## Clear the credential on the other connected device
 
-![Clear the credential on the other connected device](./screenshots/027-remote-forget-mobile-chromium.png)
+![Clear the credential on the other connected device](./screenshots/029-remote-forget-mobile-chromium.png)
 
 **Verifications:**
 
@@ -262,7 +280,7 @@ Viewport: mobile-chromium.
 
 ## Keep the token forgotten after another reload
 
-![Keep the token forgotten after another reload](./screenshots/028-reload-forgotten-mobile-chromium.png)
+![Keep the token forgotten after another reload](./screenshots/030-reload-forgotten-mobile-chromium.png)
 
 **Verifications:**
 
@@ -271,7 +289,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/029-forgotten-settings-mobile-chromium.png)
+![Open Settings](./screenshots/031-forgotten-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -280,7 +298,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/030-forgotten-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/032-forgotten-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +307,7 @@ Viewport: mobile-chromium.
 
 ## Require a new token after deletion
 
-![Require a new token after deletion](./screenshots/031-no-token-mobile-chromium.png)
+![Require a new token after deletion](./screenshots/033-no-token-mobile-chromium.png)
 
 **Verifications:**
 

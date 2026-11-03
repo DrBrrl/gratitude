@@ -1,7 +1,7 @@
 import { test, expect as baseExpect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, writeBatch, Timestamp, type Firestore } from 'firebase/firestore';
+import { doc, getDoc, writeBatch, Timestamp, type Firestore } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 import { TestStepHelper } from '../helpers/test-step-helper';
 import { startJournal, seedHistory, FIXTURE_TIME, navigate, expectSynced, expectDecodedPhotos } from '../helpers/journal-session';
@@ -38,13 +38,14 @@ test('private photo dates share fogged thumbnails across all calendars and disca
     const image = new Uint8Array(await readFile('tests/fixtures/import-mug.jpg'));
     await env.withSecurityRulesDisabled(async context => {
       const db = context.firestore(), batch = writeBatch(db), root = `users/${uid}/streams/v1`;
+      const offset=(await getDoc(doc(db,root))).get('sequence')??0;
       for (let i = 0; i < actions.length; i++) {
         const action = actions[i];
-        batch.set(doc(db, `${root}/events/${action.eventId}`), { ...action, sequence: i + 7, recordedAt: Timestamp.fromDate(new Date(FIXTURE_TIME)) });
+        batch.set(doc(db, `${root}/events/${action.eventId}`), { ...action, sequence: i + offset + 1, recordedAt: Timestamp.fromDate(new Date(FIXTURE_TIME)) });
         batch.set(doc(db, `${root}/photos/${photoKey(action.payload.entryId, action.payload.slot)}`), { lastEventId: action.eventId });
         if (action.payload.photoId !== 'calendar-missing') await uploadBytes(ref(context.storage('demo-gratitude.firebasestorage.app'), `users/${uid}/v1/${action.payload.photoId}`), image, { contentType: 'image/jpeg' });
       }
-      batch.set(doc(db, root), { sequence: 13, lastEventId: actions.at(-1)!.eventId }); await batch.commit();
+      batch.set(doc(db, root), { sequence: offset + actions.length, lastEventId: actions.at(-1)!.eventId }); await batch.commit();
     });
     const week = page.locator('.week-box');
     const photo = (scope: ReturnType<typeof page.locator>, day: string) => scope.locator(`[data-day="${day}"] .calendar-photo img`);

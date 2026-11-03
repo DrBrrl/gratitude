@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/006-tea-open-desktop-chromium.png)
+![Open the reflection editor](./screenshots/008-tea-open-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Write a reflection
 
-![Write a reflection](./screenshots/007-tea-type-desktop-chromium.png)
+![Write a reflection](./screenshots/009-tea-type-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Save the reflection
 
-![Save the reflection](./screenshots/008-tea-save-desktop-chromium.png)
+![Save the reflection](./screenshots/010-tea-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Open Gratitude on another device
 
-![Open Gratitude on another device](./screenshots/009-second-device-desktop-chromium.png)
+![Open Gratitude on another device](./screenshots/011-second-device-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/010-google-popup-desktop-chromium.png)
+![Choose Google sign-in](./screenshots/012-google-popup-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Return to the journal after today’s saved reflection
 
-![Return to the journal after today’s saved reflection](./screenshots/011-signed-in-desktop-chromium.png)
+![Return to the journal after today’s saved reflection](./screenshots/013-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -118,7 +136,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/012-second-journal-desktop-chromium.png)
+![Open Journal](./screenshots/014-second-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -127,7 +145,7 @@ Viewport: desktop-chromium.
 
 ## Reload the first device
 
-![Reload the first device](./screenshots/013-reload-desktop-chromium.png)
+![Reload the first device](./screenshots/015-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -136,7 +154,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/014-settings-desktop-chromium.png)
+![Open Settings](./screenshots/016-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -145,7 +163,7 @@ Viewport: desktop-chromium.
 
 ## Open Privacy & data
 
-![Open Privacy & data](./screenshots/015-recovery-desktop-chromium.png)
+![Open Privacy & data](./screenshots/017-recovery-desktop-chromium.png)
 
 **Verifications:**
 
@@ -154,7 +172,7 @@ Viewport: desktop-chromium.
 
 ## Rebuild the local projection from saved events
 
-![Rebuild the local projection from saved events](./screenshots/016-rebuild-desktop-chromium.png)
+![Rebuild the local projection from saved events](./screenshots/018-rebuild-desktop-chromium.png)
 
 **Verifications:**
 
@@ -163,7 +181,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/017-journal-desktop-chromium.png)
+![Open Journal](./screenshots/019-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -172,7 +190,7 @@ Viewport: desktop-chromium.
 
 ## Reload after a damaged device cache
 
-![Reload after a damaged device cache](./screenshots/018-corrupt-reload-desktop-chromium.png)
+![Reload after a damaged device cache](./screenshots/020-corrupt-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -181,7 +199,7 @@ Viewport: desktop-chromium.
 
 ## Verify the original reflection is recovered
 
-![Verify the original reflection is recovered](./screenshots/019-recovered-journal-desktop-chromium.png)
+![Verify the original reflection is recovered](./screenshots/021-recovered-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -190,7 +208,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/020-today-desktop-chromium.png)
+![Open Today](./screenshots/022-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -199,7 +217,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/021-continue-desktop-chromium.png)
+![Open the reflection editor](./screenshots/023-continue-desktop-chromium.png)
 
 **Verifications:**
 
@@ -208,7 +226,7 @@ Viewport: desktop-chromium.
 
 ## Disconnect this device
 
-![Disconnect this device](./screenshots/022-offline-desktop-chromium.png)
+![Disconnect this device](./screenshots/024-offline-desktop-chromium.png)
 
 **Verifications:**
 
@@ -217,7 +235,7 @@ Viewport: desktop-chromium.
 
 ## Continue today’s reflection while offline
 
-![Continue today’s reflection while offline](./screenshots/023-offline-type-desktop-chromium.png)
+![Continue today’s reflection while offline](./screenshots/025-offline-type-desktop-chromium.png)
 
 **Verifications:**
 
@@ -226,7 +244,7 @@ Viewport: desktop-chromium.
 
 ## Save the offline changes on this device
 
-![Save the offline changes on this device](./screenshots/024-offline-save-desktop-chromium.png)
+![Save the offline changes on this device](./screenshots/026-offline-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -235,7 +253,7 @@ Viewport: desktop-chromium.
 
 ## Close the application before reconnecting
 
-![Close the application before reconnecting](./screenshots/025-leave-desktop-chromium.png)
+![Close the application before reconnecting](./screenshots/027-leave-desktop-chromium.png)
 
 **Verifications:**
 
@@ -244,7 +262,7 @@ Viewport: desktop-chromium.
 
 ## Reconnect the device
 
-![Reconnect the device](./screenshots/026-online-desktop-chromium.png)
+![Reconnect the device](./screenshots/028-online-desktop-chromium.png)
 
 **Verifications:**
 
@@ -253,7 +271,7 @@ Viewport: desktop-chromium.
 
 ## Reopen Gratitude and retry the saved outbox
 
-![Reopen Gratitude and retry the saved outbox](./screenshots/027-return-desktop-chromium.png)
+![Reopen Gratitude and retry the saved outbox](./screenshots/029-return-desktop-chromium.png)
 
 **Verifications:**
 
@@ -262,7 +280,7 @@ Viewport: desktop-chromium.
 
 ## Check that the reflection was updated without duplication
 
-![Check that the reflection was updated without duplication](./screenshots/028-confirm-save-desktop-chromium.png)
+![Check that the reflection was updated without duplication](./screenshots/030-confirm-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -271,7 +289,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/029-settings-account-desktop-chromium.png)
+![Open Settings](./screenshots/031-settings-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -280,7 +298,7 @@ Viewport: desktop-chromium.
 
 ## Open account settings
 
-![Open account settings](./screenshots/030-account-desktop-chromium.png)
+![Open account settings](./screenshots/032-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +307,7 @@ Viewport: desktop-chromium.
 
 ## Sign out and hide the private journal
 
-![Sign out and hide the private journal](./screenshots/031-sign-out-desktop-chromium.png)
+![Sign out and hide the private journal](./screenshots/033-sign-out-desktop-chromium.png)
 
 **Verifications:**
 

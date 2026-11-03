@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## See fogged photo circles in the current week
 
-![See fogged photo circles in the current week](./screenshots/006-week-photos-desktop-chromium.png)
+![See fogged photo circles in the current week](./screenshots/008-week-photos-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open the lowered landing page and its photo month
 
-![Open the lowered landing page and its photo month](./screenshots/007-landing-desktop-chromium.png)
+![Open the lowered landing page and its photo month](./screenshots/009-landing-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Browse September’s photo dates
 
-![Browse September’s photo dates](./screenshots/008-september-desktop-chromium.png)
+![Browse September’s photo dates](./screenshots/010-september-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Return to the signed-in app
 
-![Return to the signed-in app](./screenshots/009-app-desktop-chromium.png)
+![Return to the signed-in app](./screenshots/011-app-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Open photo dates in the scrolling calendar
 
-![Open photo dates in the scrolling calendar](./screenshots/010-calendar-desktop-chromium.png)
+![Open photo dates in the scrolling calendar](./screenshots/012-calendar-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Load photos when their historical month becomes visible
 
-![Load photos when their historical month becomes visible](./screenshots/011-august-desktop-chromium.png)
+![Load photos when their historical month becomes visible](./screenshots/013-august-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Return to the previously loaded photo month
 
-![Return to the previously loaded photo month](./screenshots/012-return-september-desktop-chromium.png)
+![Return to the previously loaded photo month](./screenshots/014-return-september-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Reflect a photo removal from another device
 
-![Reflect a photo removal from another device](./screenshots/013-removed-desktop-chromium.png)
+![Reflect a photo removal from another device](./screenshots/015-removed-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Recreate photo date selections from cached and source state
 
-![Recreate photo date selections from cached and source state](./screenshots/014-reload-desktop-chromium.png)
+![Recreate photo date selections from cached and source state](./screenshots/016-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Keep the usual date-click behaviour for a photo date
 
-![Keep the usual date-click behaviour for a photo date](./screenshots/015-multiple-desktop-chromium.png)
+![Keep the usual date-click behaviour for a photo date](./screenshots/017-multiple-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/016-settings-desktop-chromium.png)
+![Open Settings](./screenshots/018-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Open account controls
 
-![Open account controls](./screenshots/017-account-desktop-chromium.png)
+![Open account controls](./screenshots/019-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## End the owner’s photo session
 
-![End the owner’s photo session](./screenshots/018-signout-desktop-chromium.png)
+![End the owner’s photo session](./screenshots/020-signout-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Keep the signed-out preview free of private images
 
-![Keep the signed-out preview free of private images](./screenshots/019-signedout-home-desktop-chromium.png)
+![Keep the signed-out preview free of private images](./screenshots/021-signedout-home-desktop-chromium.png)
 
 **Verifications:**
 

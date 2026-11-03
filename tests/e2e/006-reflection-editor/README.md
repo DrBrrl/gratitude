@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Read why this starter prompt is shown
 
-![Read why this starter prompt is shown](./screenshots/006-why-mobile-chromium.png)
+![Read why this starter prompt is shown](./screenshots/008-why-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/007-open-editor-mobile-chromium.png)
+![Open the reflection editor](./screenshots/009-open-editor-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Write the first paragraph
 
-![Write the first paragraph](./screenshots/008-first-mobile-chromium.png)
+![Write the first paragraph](./screenshots/010-first-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Start a new paragraph with one Enter
 
-![Start a new paragraph with one Enter](./screenshots/009-enter-mobile-chromium.png)
+![Start a new paragraph with one Enter](./screenshots/011-enter-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Write the next paragraph with half-line spacing
 
-![Write the next paragraph with half-line spacing](./screenshots/010-second-mobile-chromium.png)
+![Write the next paragraph with half-line spacing](./screenshots/012-second-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Paste another paragraph as plain text
 
-![Paste another paragraph as plain text](./screenshots/011-paste-mobile-chromium.png)
+![Paste another paragraph as plain text](./screenshots/013-paste-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Undo the paste
 
-![Undo the paste](./screenshots/012-undo-mobile-chromium.png)
+![Undo the paste](./screenshots/014-undo-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Restore the pasted paragraph
 
-![Restore the pasted paragraph](./screenshots/013-redo-mobile-chromium.png)
+![Restore the pasted paragraph](./screenshots/015-redo-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Save the paragraph-spaced reflection
 
-![Save the paragraph-spaced reflection](./screenshots/014-save-mobile-chromium.png)
+![Save the paragraph-spaced reflection](./screenshots/016-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Finish saving and open the journal
 
-![Finish saving and open the journal](./screenshots/015-journal-mobile-chromium.png)
+![Finish saving and open the journal](./screenshots/017-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Read the same paragraph layout in the full entry
 
-![Read the same paragraph layout in the full entry](./screenshots/016-entry-mobile-chromium.png)
+![Read the same paragraph layout in the full entry](./screenshots/018-entry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Continue the saved reflection
 
-![Continue the saved reflection](./screenshots/017-edit-again-mobile-chromium.png)
+![Continue the saved reflection](./screenshots/019-edit-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Move the caret to the end
 
-![Move the caret to the end](./screenshots/018-end-mobile-chromium.png)
+![Move the caret to the end](./screenshots/020-end-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Start another paragraph
 
-![Start another paragraph](./screenshots/019-new-paragraph-mobile-chromium.png)
+![Start another paragraph](./screenshots/021-new-paragraph-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Leave an intentional blank paragraph
 
-![Leave an intentional blank paragraph](./screenshots/020-blank-paragraph-mobile-chromium.png)
+![Leave an intentional blank paragraph](./screenshots/022-blank-paragraph-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Write after the blank paragraph
 
-![Write after the blank paragraph](./screenshots/021-evening-mobile-chromium.png)
+![Write after the blank paragraph](./screenshots/023-evening-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Save without adding extra blank lines
 
-![Save without adding extra blank lines](./screenshots/022-save-blank-line-mobile-chromium.png)
+![Save without adding extra blank lines](./screenshots/024-save-blank-line-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Reopen the saved paragraphs
 
-![Reopen the saved paragraphs](./screenshots/023-reopen-mobile-chromium.png)
+![Reopen the saved paragraphs](./screenshots/025-reopen-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Return to Saved reflection without losing the draft
 
-![Return to Saved reflection without losing the draft](./screenshots/024-back-saved-mobile-chromium.png)
+![Return to Saved reflection without losing the draft](./screenshots/026-back-saved-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/025-settings-mobile-chromium.png)
+![Open Settings](./screenshots/027-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Open AI settings from the Settings menu
 
-![Open AI settings from the Settings menu](./screenshots/026-ai-settings-mobile-chromium.png)
+![Open AI settings from the Settings menu](./screenshots/028-ai-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Return with the shared compact back control
 
-![Return with the shared compact back control](./screenshots/027-back-settings-mobile-chromium.png)
+![Return with the shared compact back control](./screenshots/029-back-settings-mobile-chromium.png)
 
 **Verifications:**
 

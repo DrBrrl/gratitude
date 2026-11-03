@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open Journal after sign-in from the landing page
 
-![Open Journal after sign-in from the landing page](./screenshots/005-signed-in-mobile-chromium.png)
+![Open Journal after sign-in from the landing page](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Complete sign-in directly into Journal even with no saved entries
 
-![Complete sign-in directly into Journal even with no saved entries](./screenshots/006-journal-destination-mobile-chromium.png)
+![Complete sign-in directly into Journal even with no saved entries](./screenshots/008-journal-destination-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/007-settings-mobile-chromium.png)
+![Open Settings](./screenshots/009-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Open the signed-in account
 
-![Open the signed-in account](./screenshots/008-account-mobile-chromium.png)
+![Open the signed-in account](./screenshots/010-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Sign out before checking the footer entry point
 
-![Sign out before checking the footer entry point](./screenshots/009-signout-mobile-chromium.png)
+![Sign out before checking the footer entry point](./screenshots/011-signout-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Return to the signed-out landing page
 
-![Return to the signed-out landing page](./screenshots/010-signedout-home-mobile-chromium.png)
+![Return to the signed-out landing page](./screenshots/012-signedout-home-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/011-google-popup-mobile-chromium.png)
+![Choose Google sign-in](./screenshots/013-google-popup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal after sign-in from the landing page
 
-![Open Journal after sign-in from the landing page](./screenshots/012-signed-in-mobile-chromium.png)
+![Open Journal after sign-in from the landing page](./screenshots/014-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -127,7 +145,7 @@ Viewport: mobile-chromium.
 
 ## Open Today after signing in
 
-![Open Today after signing in](./screenshots/013-today-mobile-chromium.png)
+![Open Today after signing in](./screenshots/015-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -136,7 +154,7 @@ Viewport: mobile-chromium.
 
 ## Keep the ordinary footer and interactive calendar after sign-in
 
-![Keep the ordinary footer and interactive calendar after sign-in](./screenshots/014-signedin-home-mobile-chromium.png)
+![Keep the ordinary footer and interactive calendar after sign-in](./screenshots/016-signedin-home-mobile-chromium.png)
 
 **Verifications:**
 

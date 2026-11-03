@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/006-editor-desktop-chromium.png)
+![Open the reflection editor](./screenshots/008-editor-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Reject an unsupported attachment without losing the reflection
 
-![Reject an unsupported attachment without losing the reflection](./screenshots/007-bad-type-desktop-chromium.png)
+![Reject an unsupported attachment without losing the reflection](./screenshots/009-bad-type-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Reject a photo larger than the upload limit
 
-![Reject a photo larger than the upload limit](./screenshots/008-too-large-desktop-chromium.png)
+![Reject a photo larger than the upload limit](./screenshots/010-too-large-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Select a photo and inspect the AI disclosure
 
-![Select a photo and inspect the AI disclosure](./screenshots/009-pick-desktop-chromium.png)
+![Select a photo and inspect the AI disclosure](./screenshots/011-pick-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Recover the selected photo after reloading the unsaved draft
 
-![Recover the selected photo after reloading the unsaved draft](./screenshots/010-reload-selection-desktop-chromium.png)
+![Recover the selected photo after reloading the unsaved draft](./screenshots/012-reload-selection-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/011-resume-editor-desktop-chromium.png)
+![Open the reflection editor](./screenshots/013-resume-editor-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Attach the private photo and generate its description
 
-![Attach the private photo and generate its description](./screenshots/012-attach-ai-desktop-chromium.png)
+![Attach the private photo and generate its description](./screenshots/014-attach-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Save a photo-only reflection without waiting on text
 
-![Save a photo-only reflection without waiting on text](./screenshots/013-save-photo-only-desktop-chromium.png)
+![Save a photo-only reflection without waiting on text](./screenshots/015-save-photo-only-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Browse the photo and its summary in the journal
 
-![Browse the photo and its summary in the journal](./screenshots/014-done-desktop-chromium.png)
+![Browse the photo and its summary in the journal](./screenshots/016-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Find an entry using only its AI image summary
 
-![Find an entry using only its AI image summary](./screenshots/015-search-ai-desktop-chromium.png)
+![Find an entry using only its AI image summary](./screenshots/017-search-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Read the photo and searchable summary together
 
-![Read the photo and searchable summary together](./screenshots/016-detail-desktop-chromium.png)
+![Read the photo and searchable summary together](./screenshots/018-detail-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Open the AI description for correction
 
-![Open the AI description for correction](./screenshots/017-edit-summary-desktop-chromium.png)
+![Open the AI description for correction](./screenshots/019-edit-summary-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Write a description in your own words
 
-![Write a description in your own words](./screenshots/018-correct-summary-desktop-chromium.png)
+![Write a description in your own words](./screenshots/020-correct-summary-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Save the correction and update the accessible image description
 
-![Save the correction and update the accessible image description](./screenshots/019-save-summary-desktop-chromium.png)
+![Save the correction and update the accessible image description](./screenshots/021-save-summary-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Return to the previous search after correcting the description
 
-![Return to the previous search after correcting the description](./screenshots/020-back-desktop-chromium.png)
+![Return to the previous search after correcting the description](./screenshots/022-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Find the corrected summary with accent-insensitive search
 
-![Find the corrected summary with accent-insensitive search](./screenshots/021-search-corrected-desktop-chromium.png)
+![Find the corrected summary with accent-insensitive search](./screenshots/023-search-corrected-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Open the corrected photo entry
 
-![Open the corrected photo entry](./screenshots/022-reopen-desktop-chromium.png)
+![Open the corrected photo entry](./screenshots/024-reopen-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Protect a photo-only reflection from losing its only attachment
 
-![Protect a photo-only reflection from losing its only attachment](./screenshots/023-last-photo-desktop-chromium.png)
+![Protect a photo-only reflection from losing its only attachment](./screenshots/025-last-photo-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Keep the photo-only reflection intact
 
-![Keep the photo-only reflection intact](./screenshots/024-keep-last-desktop-chromium.png)
+![Keep the photo-only reflection intact](./screenshots/026-keep-last-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Select another photo
 
-![Select another photo](./screenshots/025-pick-second-desktop-chromium.png)
+![Select another photo](./screenshots/027-pick-second-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Keep an attached photo when Gemini is unavailable
 
-![Keep an attached photo when Gemini is unavailable](./screenshots/026-failed-summary-desktop-chromium.png)
+![Keep an attached photo when Gemini is unavailable](./screenshots/028-failed-summary-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly retry the image summary
 
-![Explicitly retry the image summary](./screenshots/027-retry-summary-desktop-chromium.png)
+![Explicitly retry the image summary](./screenshots/029-retry-summary-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Write a correction while AI is still responding
 
-![Write a correction while AI is still responding](./screenshots/028-manual-during-ai-desktop-chromium.png)
+![Write a correction while AI is still responding](./screenshots/030-manual-during-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Supply the preferred image description
 
-![Supply the preferred image description](./screenshots/029-type-manual-desktop-chromium.png)
+![Supply the preferred image description](./screenshots/031-type-manual-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Commit the manual description before the AI response
 
-![Commit the manual description before the AI response](./screenshots/030-save-manual-desktop-chromium.png)
+![Commit the manual description before the AI response](./screenshots/032-save-manual-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Reload after the late AI response without losing the correction
 
-![Reload after the late AI response without losing the correction](./screenshots/031-late-result-desktop-chromium.png)
+![Reload after the late AI response without losing the correction](./screenshots/033-late-result-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Recover both descriptions from saved events
 
-![Recover both descriptions from saved events](./screenshots/032-reopen-after-reload-desktop-chromium.png)
+![Recover both descriptions from saved events](./screenshots/034-reopen-after-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Select photo 3
 
-![Select photo 3](./screenshots/033-pick-3-desktop-chromium.png)
+![Select photo 3](./screenshots/035-pick-3-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Attach photo 3 without sending it to Gemini
 
-![Attach photo 3 without sending it to Gemini](./screenshots/034-no-ai-3-desktop-chromium.png)
+![Attach photo 3 without sending it to Gemini](./screenshots/036-no-ai-3-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Select photo 4
 
-![Select photo 4](./screenshots/035-pick-4-desktop-chromium.png)
+![Select photo 4](./screenshots/037-pick-4-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Attach photo 4 without sending it to Gemini
 
-![Attach photo 4 without sending it to Gemini](./screenshots/036-no-ai-4-desktop-chromium.png)
+![Attach photo 4 without sending it to Gemini](./screenshots/038-no-ai-4-desktop-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +360,7 @@ Viewport: desktop-chromium.
 
 ## Ask to remove a photo without a summary
 
-![Ask to remove a photo without a summary](./screenshots/037-remove-desktop-chromium.png)
+![Ask to remove a photo without a summary](./screenshots/039-remove-desktop-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +369,7 @@ Viewport: desktop-chromium.
 
 ## Cancel removal and retain the attachment
 
-![Cancel removal and retain the attachment](./screenshots/038-keep-desktop-chromium.png)
+![Cancel removal and retain the attachment](./screenshots/040-keep-desktop-chromium.png)
 
 **Verifications:**
 
@@ -360,7 +378,7 @@ Viewport: desktop-chromium.
 
 ## Confirm which photo will be removed
 
-![Confirm which photo will be removed](./screenshots/039-remove-again-desktop-chromium.png)
+![Confirm which photo will be removed](./screenshots/041-remove-again-desktop-chromium.png)
 
 **Verifications:**
 
@@ -369,7 +387,7 @@ Viewport: desktop-chromium.
 
 ## Remove the attachment and its private stored file
 
-![Remove the attachment and its private stored file](./screenshots/040-confirm-remove-desktop-chromium.png)
+![Remove the attachment and its private stored file](./screenshots/042-confirm-remove-desktop-chromium.png)
 
 **Verifications:**
 
@@ -378,7 +396,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/041-settings-desktop-chromium.png)
+![Open Settings](./screenshots/043-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -387,7 +405,7 @@ Viewport: desktop-chromium.
 
 ## Open recovery controls
 
-![Open recovery controls](./screenshots/042-privacy-desktop-chromium.png)
+![Open recovery controls](./screenshots/044-privacy-desktop-chromium.png)
 
 **Verifications:**
 
@@ -396,7 +414,7 @@ Viewport: desktop-chromium.
 
 ## Reconstruct all photos and descriptions without calling Gemini
 
-![Reconstruct all photos and descriptions without calling Gemini](./screenshots/043-rebuild-desktop-chromium.png)
+![Reconstruct all photos and descriptions without calling Gemini](./screenshots/045-rebuild-desktop-chromium.png)
 
 **Verifications:**
 
@@ -405,7 +423,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/044-rebuilt-journal-desktop-chromium.png)
+![Open Journal](./screenshots/046-rebuilt-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -414,7 +432,7 @@ Viewport: desktop-chromium.
 
 ## Read photos and manual text after complete replay
 
-![Read photos and manual text after complete replay](./screenshots/045-rebuilt-detail-desktop-chromium.png)
+![Read photos and manual text after complete replay](./screenshots/047-rebuilt-detail-desktop-chromium.png)
 
 **Verifications:**
 
@@ -423,7 +441,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/046-export-settings-desktop-chromium.png)
+![Open Settings](./screenshots/048-export-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -432,7 +450,7 @@ Viewport: desktop-chromium.
 
 ## Open journal export
 
-![Open journal export](./screenshots/047-export-desktop-chromium.png)
+![Open journal export](./screenshots/049-export-desktop-chromium.png)
 
 **Verifications:**
 
@@ -441,7 +459,7 @@ Viewport: desktop-chromium.
 
 ## Include saved photo bytes and descriptions in Markdown ZIP
 
-![Include saved photo bytes and descriptions in Markdown ZIP](./screenshots/048-prepare-desktop-chromium.png)
+![Include saved photo bytes and descriptions in Markdown ZIP](./screenshots/050-prepare-desktop-chromium.png)
 
 **Verifications:**
 
@@ -450,7 +468,7 @@ Viewport: desktop-chromium.
 
 ## Download the complete photo journal archive
 
-![Download the complete photo journal archive](./screenshots/049-download-desktop-chromium.png)
+![Download the complete photo journal archive](./screenshots/051-download-desktop-chromium.png)
 
 **Verifications:**
 

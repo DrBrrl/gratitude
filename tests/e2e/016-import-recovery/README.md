@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-pending-settings-mobile-chromium.png)
+![Open Settings](./screenshots/008-pending-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open the private journal importer
 
-![Open the private journal importer](./screenshots/007-pending-import-mobile-chromium.png)
+![Open the private journal importer](./screenshots/009-pending-import-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Check the selected fictional ZIP before importing
 
-![Check the selected fictional ZIP before importing](./screenshots/008-preview-mobile-chromium.png)
+![Check the selected fictional ZIP before importing](./screenshots/010-preview-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Recover a server-confirmed import without starting automatically
 
-![Recover a server-confirmed import without starting automatically](./screenshots/009-pending-mobile-chromium.png)
+![Recover a server-confirmed import without starting automatically](./screenshots/011-pending-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Reload while the import is still unconfirmed
 
-![Reload while the import is still unconfirmed](./screenshots/010-reload-mobile-chromium.png)
+![Reload while the import is still unconfirmed](./screenshots/012-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/011-recovery-settings-mobile-chromium.png)
+![Open Settings](./screenshots/013-recovery-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Open the private journal importer
 
-![Open the private journal importer](./screenshots/012-recovery-import-mobile-chromium.png)
+![Open the private journal importer](./screenshots/014-recovery-import-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Recover the private ZIP selection on this device
 
-![Recover the private ZIP selection on this device](./screenshots/013-restored-mobile-chromium.png)
+![Recover the private ZIP selection on this device](./screenshots/015-restored-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Confirm this account before resuming
 
-![Confirm this account before resuming](./screenshots/014-account-mobile-chromium.png)
+![Confirm this account before resuming](./screenshots/016-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Stop on a corrupt stored photo without overwriting it
 
-![Stop on a corrupt stored photo without overwriting it](./screenshots/015-integrity-mobile-chromium.png)
+![Stop on a corrupt stored photo without overwriting it](./screenshots/017-integrity-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Confirm a retry after the corrupt test object is removed
 
-![Confirm a retry after the corrupt test object is removed](./screenshots/016-reconfirm-mobile-chromium.png)
+![Confirm a retry after the corrupt test object is removed](./screenshots/018-reconfirm-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Resume and show progress during a photo upload
 
-![Resume and show progress during a photo upload](./screenshots/017-start-resume-mobile-chromium.png)
+![Resume and show progress during a photo upload](./screenshots/019-start-resume-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Pause after the current upload operation
 
-![Pause after the current upload operation](./screenshots/018-pause-mobile-chromium.png)
+![Pause after the current upload operation](./screenshots/020-pause-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Retain the pending receipt and uploaded photo for recovery
 
-![Retain the pending receipt and uploaded photo for recovery](./screenshots/019-paused-mobile-chromium.png)
+![Retain the pending receipt and uploaded photo for recovery](./screenshots/021-paused-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Confirm continued import after pausing
 
-![Confirm continued import after pausing](./screenshots/020-confirm-resume-mobile-chromium.png)
+![Confirm continued import after pausing](./screenshots/022-confirm-resume-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Finish the same pending import without duplicate records
 
-![Finish the same pending import without duplicate records](./screenshots/021-resume-mobile-chromium.png)
+![Finish the same pending import without duplicate records](./screenshots/023-resume-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Reject changed source input under an existing source identity
 
-![Reject changed source input under an existing source identity](./screenshots/022-conflict-mobile-chromium.png)
+![Reject changed source input under an existing source identity](./screenshots/024-conflict-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Forget this device’s ZIP selection without deleting saved entries
 
-![Forget this device’s ZIP selection without deleting saved entries](./screenshots/023-forget-mobile-chromium.png)
+![Forget this device’s ZIP selection without deleting saved entries](./screenshots/025-forget-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/024-settings-mobile-chromium.png)
+![Open Settings](./screenshots/026-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Open journal recovery
 
-![Open journal recovery](./screenshots/025-privacy-mobile-chromium.png)
+![Open journal recovery](./screenshots/027-privacy-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Replay import receipts and entries without the ZIP or AI
 
-![Replay import receipts and entries without the ZIP or AI](./screenshots/026-rebuild-mobile-chromium.png)
+![Replay import receipts and entries without the ZIP or AI](./screenshots/028-rebuild-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Read all imported entries after complete replay
 
-![Read all imported entries after complete replay](./screenshots/027-journal-mobile-chromium.png)
+![Read all imported entries after complete replay](./screenshots/029-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/028-after-forget-settings-mobile-chromium.png)
+![Open Settings](./screenshots/030-after-forget-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: mobile-chromium.
 
 ## Open the private journal importer
 
-![Open the private journal importer](./screenshots/029-after-forget-import-mobile-chromium.png)
+![Open the private journal importer](./screenshots/031-after-forget-import-mobile-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: mobile-chromium.
 
 ## Keep the source ZIP off this device after forgetting it
 
-![Keep the source ZIP off this device after forgetting it](./screenshots/030-forgotten-mobile-chromium.png)
+![Keep the source ZIP off this device after forgetting it](./screenshots/032-forgotten-mobile-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: mobile-chromium.
 
 ## Check the selected fictional ZIP before importing
 
-![Check the selected fictional ZIP before importing](./screenshots/031-reselect-mobile-chromium.png)
+![Check the selected fictional ZIP before importing](./screenshots/033-reselect-mobile-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: mobile-chromium.
 
 ## Recognize completed imports using the server history
 
-![Recognize completed imports using the server history](./screenshots/032-receipt-recovery-mobile-chromium.png)
+![Recognize completed imports using the server history](./screenshots/034-receipt-recovery-mobile-chromium.png)
 
 **Verifications:**
 

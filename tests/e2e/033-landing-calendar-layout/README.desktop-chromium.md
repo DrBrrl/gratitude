@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Use a tall screen where centering would otherwise move the calendar
 
-![Use a tall screen where centering would otherwise move the calendar](./screenshots/006-tall-desktop-chromium.png)
+![Use a tall screen where centering would otherwise move the calendar](./screenshots/008-tall-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open the top-anchored landing calendar
 
-![Open the top-anchored landing calendar](./screenshots/007-landing-desktop-chromium.png)
+![Open the top-anchored landing calendar](./screenshots/009-landing-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Open the month chooser
 
-![Open the month chooser](./screenshots/008-choose-desktop-chromium.png)
+![Open the month chooser](./screenshots/010-choose-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Enter a six-week month
 
-![Enter a six-week month](./screenshots/009-may-desktop-chromium.png)
+![Enter a six-week month](./screenshots/011-may-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Let the calendar extend downward for May
 
-![Let the calendar extend downward for May](./screenshots/010-apply-may-desktop-chromium.png)
+![Let the calendar extend downward for May](./screenshots/012-apply-may-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Advance to a shorter five-week month
 
-![Advance to a shorter five-week month](./screenshots/011-june-desktop-chromium.png)
+![Advance to a shorter five-week month](./screenshots/013-june-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Open the chooser again
 
-![Open the chooser again](./screenshots/012-choose-february-desktop-chromium.png)
+![Open the chooser again](./screenshots/014-choose-february-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Enter a four-week month
 
-![Enter a four-week month](./screenshots/013-february-desktop-chromium.png)
+![Enter a four-week month](./screenshots/015-february-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Keep the arrows fixed with February’s shorter grid
 
-![Keep the arrows fixed with February’s shorter grid](./screenshots/014-apply-february-desktop-chromium.png)
+![Keep the arrows fixed with February’s shorter grid](./screenshots/016-apply-february-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Move back to a taller month without moving the controls
 
-![Move back to a taller month without moving the controls](./screenshots/015-january-desktop-chromium.png)
+![Move back to a taller month without moving the controls](./screenshots/017-january-desktop-chromium.png)
 
 **Verifications:**
 

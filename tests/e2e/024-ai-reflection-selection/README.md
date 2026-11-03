@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Replay imported and in-app history with old entry dates and today’s receipt time
 
-![Replay imported and in-app history with old entry dates and today’s receipt time](./screenshots/006-history-mobile-chromium.png)
+![Replay imported and in-app history with old entry dates and today’s receipt time](./screenshots/008-history-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/007-configure-settings-mobile-chromium.png)
+![Open Settings](./screenshots/009-configure-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/008-configure-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/010-configure-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Choose to enable AI prompts
 
-![Choose to enable AI prompts](./screenshots/009-enable-mobile-chromium.png)
+![Choose to enable AI prompts](./screenshots/011-enable-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Choose to share saved reflection context
 
-![Choose to share saved reflection context](./screenshots/010-journal-consent-mobile-chromium.png)
+![Choose to share saved reflection context](./screenshots/012-journal-consent-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Choose to share explicit prompt feedback
 
-![Choose to share explicit prompt feedback](./screenshots/011-feedback-consent-mobile-chromium.png)
+![Choose to share explicit prompt feedback](./screenshots/013-feedback-consent-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/012-save-choices-mobile-chromium.png)
+![Save these explicit sharing choices](./screenshots/014-save-choices-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/013-today-mobile-chromium.png)
+![Open Today](./screenshots/015-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Generate using twenty saved reflections selected by logical date
 
-![Generate using twenty saved reflections selected by logical date](./screenshots/014-generate-mobile-chromium.png)
+![Generate using twenty saved reflections selected by logical date](./screenshots/016-generate-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## See the actual number of saved sources
 
-![See the actual number of saved sources](./screenshots/015-why-mobile-chromium.png)
+![See the actual number of saved sources](./screenshots/017-why-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Open freeform prompt feedback
 
-![Open freeform prompt feedback](./screenshots/016-feedback-mobile-chromium.png)
+![Open freeform prompt feedback](./screenshots/018-feedback-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Write the feedback to share with the next request
 
-![Write the feedback to share with the next request](./screenshots/017-write-feedback-mobile-chromium.png)
+![Write the feedback to share with the next request](./screenshots/019-write-feedback-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Save explicit feedback without inference
 
-![Save explicit feedback without inference](./screenshots/018-save-feedback-mobile-chromium.png)
+![Save explicit feedback without inference](./screenshots/020-save-feedback-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Close the source explanation
 
-![Close the source explanation](./screenshots/019-close-why-mobile-chromium.png)
+![Close the source explanation](./screenshots/021-close-why-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Rediscover sources that have not yet informed a successful prompt
 
-![Rediscover sources that have not yet informed a successful prompt](./screenshots/020-another-mobile-chromium.png)
+![Rediscover sources that have not yet informed a successful prompt](./screenshots/022-another-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/021-editor-mobile-chromium.png)
+![Open the reflection editor](./screenshots/023-editor-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Keep unfinished writing out of Gemini context
 
-![Keep unfinished writing out of Gemini context](./screenshots/022-draft-mobile-chromium.png)
+![Keep unfinished writing out of Gemini context](./screenshots/024-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Choose a backfill date for this reflection
 
-![Choose a backfill date for this reflection](./screenshots/023-backfill-date-mobile-chromium.png)
+![Choose a backfill date for this reflection](./screenshots/025-backfill-date-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Select historical context relative to the editor’s date
 
-![Select historical context relative to the editor’s date](./screenshots/024-editor-generate-mobile-chromium.png)
+![Select historical context relative to the editor’s date](./screenshots/026-editor-generate-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Keep the existing question after receiving a generated option
 
-![Keep the existing question after receiving a generated option](./screenshots/025-keep-current-mobile-chromium.png)
+![Keep the existing question after receiving a generated option](./screenshots/027-keep-current-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Return to Today without saving the draft
 
-![Return to Today without saving the draft](./screenshots/026-back-mobile-chromium.png)
+![Return to Today without saving the draft](./screenshots/028-back-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Restore cached history without another AI request
 
-![Restore cached history without another AI request](./screenshots/027-reload-mobile-chromium.png)
+![Restore cached history without another AI request](./screenshots/029-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/028-settings-mobile-chromium.png)
+![Open Settings](./screenshots/030-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: mobile-chromium.
 
 ## Open journal recovery
 
-![Open journal recovery](./screenshots/029-privacy-mobile-chromium.png)
+![Open journal recovery](./screenshots/031-privacy-mobile-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: mobile-chromium.
 
 ## Recreate selection usage and exact prompts from source events
 
-![Recreate selection usage and exact prompts from source events](./screenshots/030-replay-mobile-chromium.png)
+![Recreate selection usage and exact prompts from source events](./screenshots/032-replay-mobile-chromium.png)
 
 **Verifications:**
 

@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/006-journal-mobile-chromium.png)
+![Open Journal](./screenshots/008-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Start an independent reflection
 
-![Start an independent reflection](./screenshots/007-new-mobile-chromium.png)
+![Start an independent reflection](./screenshots/009-new-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Leave a draft for today before choosing a different date
 
-![Leave a draft for today before choosing a different date](./screenshots/008-existing-draft-mobile-chromium.png)
+![Leave a draft for today before choosing a different date](./screenshots/010-existing-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Return to Journal without losing the draft
 
-![Return to Journal without losing the draft](./screenshots/009-back-mobile-chromium.png)
+![Return to Journal without losing the draft](./screenshots/011-back-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Open the calendar from Journal
 
-![Open the calendar from Journal](./screenshots/010-calendar-mobile-chromium.png)
+![Open the calendar from Journal](./screenshots/012-calendar-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Browse a past month
 
-![Browse a past month](./screenshots/011-month-mobile-chromium.png)
+![Browse a past month](./screenshots/013-month-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Open an empty dated journal
 
-![Open an empty dated journal](./screenshots/012-empty-date-mobile-chromium.png)
+![Open an empty dated journal](./screenshots/014-empty-date-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Protect the independent draft before starting another date
 
-![Protect the independent draft before starting another date](./screenshots/013-draft-choice-mobile-chromium.png)
+![Protect the independent draft before starting another date](./screenshots/015-draft-choice-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Keep the draft and remain on the selected date
 
-![Keep the draft and remain on the selected date](./screenshots/014-keep-mobile-chromium.png)
+![Keep the draft and remain on the selected date](./screenshots/016-keep-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Review the protected draft again
 
-![Review the protected draft again](./screenshots/015-choose-again-mobile-chromium.png)
+![Review the protected draft again](./screenshots/017-choose-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Resume the original text and date without silently retargeting it
 
-![Resume the original text and date without silently retargeting it](./screenshots/016-resume-mobile-chromium.png)
+![Resume the original text and date without silently retargeting it](./screenshots/018-resume-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Return to Journal without losing the draft
 
-![Return to Journal without losing the draft](./screenshots/017-return-date-mobile-chromium.png)
+![Return to Journal without losing the draft](./screenshots/019-return-date-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Request the selected historical date again
 
-![Request the selected historical date again](./screenshots/018-choose-discard-mobile-chromium.png)
+![Request the selected historical date again](./screenshots/020-choose-discard-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Explicitly discard the other draft before writing this date
 
-![Explicitly discard the other draft before writing this date](./screenshots/019-discard-mobile-chromium.png)
+![Explicitly discard the other draft before writing this date](./screenshots/021-discard-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Write the selected date reflection
 
-![Write the selected date reflection](./screenshots/020-write-mobile-chromium.png)
+![Write the selected date reflection](./screenshots/022-write-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Save a distinct historical entry
 
-![Save a distinct historical entry](./screenshots/021-save-mobile-chromium.png)
+![Save a distinct historical entry](./screenshots/023-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Return to the same dated journal
 
-![Return to the same dated journal](./screenshots/022-done-mobile-chromium.png)
+![Return to the same dated journal](./screenshots/024-done-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Open the saved backfill
 
-![Open the saved backfill](./screenshots/023-detail-mobile-chromium.png)
+![Open the saved backfill](./screenshots/025-detail-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Edit the reflection while retaining its calendar origin
 
-![Edit the reflection while retaining its calendar origin](./screenshots/024-edit-mobile-chromium.png)
+![Edit the reflection while retaining its calendar origin](./screenshots/026-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Choose a date in a different month
 
-![Choose a date in a different month](./screenshots/025-move-mobile-chromium.png)
+![Choose a date in a different month](./screenshots/027-move-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Recover the date edit and its return context after reload
 
-![Recover the date edit and its return context after reload](./screenshots/026-reload-edit-mobile-chromium.png)
+![Recover the date edit and its return context after reload](./screenshots/028-reload-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Commit the changed date without changing entry identity
 
-![Commit the changed date without changing entry identity](./screenshots/027-save-edit-mobile-chromium.png)
+![Commit the changed date without changing entry identity](./screenshots/029-save-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: mobile-chromium.
 
 ## Return to the original dated journal even when it is now empty
 
-![Return to the original dated journal even when it is now empty](./screenshots/028-done-edit-mobile-chromium.png)
+![Return to the original dated journal even when it is now empty](./screenshots/030-done-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: mobile-chromium.
 
 ## Return to the originating month after the entry moves
 
-![Return to the originating month after the entry moves](./screenshots/029-old-month-mobile-chromium.png)
+![Return to the originating month after the entry moves](./screenshots/031-old-month-mobile-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: mobile-chromium.
 
 ## Apply a cross-device date edit without jumping the calendar
 
-![Apply a cross-device date edit without jumping the calendar](./screenshots/030-remote-mobile-chromium.png)
+![Apply a cross-device date edit without jumping the calendar](./screenshots/032-remote-mobile-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/031-today-mobile-chromium.png)
+![Open Today](./screenshots/033-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: mobile-chromium.
 
 ## Recognize the remote move out of today
 
-![Recognize the remote move out of today](./screenshots/032-today-cleared-mobile-chromium.png)
+![Recognize the remote move out of today](./screenshots/034-today-cleared-mobile-chromium.png)
 
 **Verifications:**
 

@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Use a 320-pixel mobile screen
 
-![Use a 320-pixel mobile screen](./screenshots/006-narrow-mobile-chromium.png)
+![Use a 320-pixel mobile screen](./screenshots/008-narrow-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open the scrolling calendar on the narrow screen
 
-![Open the scrolling calendar on the narrow screen](./screenshots/007-open-mobile-chromium.png)
+![Open the scrolling calendar on the narrow screen](./screenshots/009-open-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Focus the calendar scroll region with its accessible label
 
-![Focus the calendar scroll region with its accessible label](./screenshots/008-focus-mobile-chromium.png)
+![Focus the calendar scroll region with its accessible label](./screenshots/010-focus-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Scroll to later months using the keyboard
 
-![Scroll to later months using the keyboard](./screenshots/009-keyboard-mobile-chromium.png)
+![Scroll to later months using the keyboard](./screenshots/011-keyboard-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Return to the current month
 
-![Return to the current month](./screenshots/010-now-mobile-chromium.png)
+![Return to the current month](./screenshots/012-now-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Return to the same Today page
 
-![Return to the same Today page](./screenshots/011-today-mobile-chromium.png)
+![Return to the same Today page](./screenshots/013-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Roll into the new Sunday-first week without a saved event
 
-![Roll into the new Sunday-first week without a saved event](./screenshots/012-sunday-mobile-chromium.png)
+![Roll into the new Sunday-first week without a saved event](./screenshots/014-sunday-mobile-chromium.png)
 
 **Verifications:**
 

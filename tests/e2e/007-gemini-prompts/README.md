@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-configure-settings-mobile-chromium.png)
+![Open Settings](./screenshots/008-configure-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/007-configure-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/009-configure-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Choose to enable AI prompts
 
-![Choose to enable AI prompts](./screenshots/008-enable-mobile-chromium.png)
+![Choose to enable AI prompts](./screenshots/010-enable-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Give Gemini an optional starting preference
 
-![Give Gemini an optional starting preference](./screenshots/009-preferences-mobile-chromium.png)
+![Give Gemini an optional starting preference](./screenshots/011-preferences-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Allow saved feedback to inform later prompts
 
-![Allow saved feedback to inform later prompts](./screenshots/010-feedback-choice-mobile-chromium.png)
+![Allow saved feedback to inform later prompts](./screenshots/012-feedback-choice-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/011-save-choices-mobile-chromium.png)
+![Save these explicit sharing choices](./screenshots/013-save-choices-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/012-today-mobile-chromium.png)
+![Open Today](./screenshots/014-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Request the first AI prompt
 
-![Request the first AI prompt](./screenshots/013-generate-mobile-chromium.png)
+![Request the first AI prompt](./screenshots/015-generate-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Inspect the sources used for this prompt
 
-![Inspect the sources used for this prompt](./screenshots/014-why-mobile-chromium.png)
+![Inspect the sources used for this prompt](./screenshots/016-why-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Open short freeform feedback
 
-![Open short freeform feedback](./screenshots/015-feedback-mobile-chromium.png)
+![Open short freeform feedback](./screenshots/017-feedback-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Describe what would suit you better
 
-![Describe what would suit you better](./screenshots/016-type-feedback-mobile-chromium.png)
+![Describe what would suit you better](./screenshots/018-type-feedback-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Save feedback without calling the provider
 
-![Save feedback without calling the provider](./screenshots/017-save-feedback-mobile-chromium.png)
+![Save feedback without calling the provider](./screenshots/019-save-feedback-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Close the prompt explanation
 
-![Close the prompt explanation](./screenshots/018-close-why-mobile-chromium.png)
+![Close the prompt explanation](./screenshots/020-close-why-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/019-write-mobile-chromium.png)
+![Open the reflection editor](./screenshots/021-write-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Respond to the recorded question
 
-![Respond to the recorded question](./screenshots/020-reflection-mobile-chromium.png)
+![Respond to the recorded question](./screenshots/022-reflection-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Save the reflection with its original AI prompt
 
-![Save the reflection with its original AI prompt](./screenshots/021-save-mobile-chromium.png)
+![Save the reflection with its original AI prompt](./screenshots/023-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Return to the journal
 
-![Return to the journal](./screenshots/022-done-mobile-chromium.png)
+![Return to the journal](./screenshots/024-done-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Reload the cached journal without requesting AI
 
-![Reload the cached journal without requesting AI](./screenshots/023-reload-mobile-chromium.png)
+![Reload the cached journal without requesting AI](./screenshots/025-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/024-recovery-settings-mobile-chromium.png)
+![Open Settings](./screenshots/026-recovery-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Open journal recovery
 
-![Open journal recovery](./screenshots/025-privacy-mobile-chromium.png)
+![Open journal recovery](./screenshots/027-privacy-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Recreate the entire projection from events
 
-![Recreate the entire projection from events](./screenshots/026-rebuild-mobile-chromium.png)
+![Recreate the entire projection from events](./screenshots/028-rebuild-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/027-journal-context-settings-mobile-chromium.png)
+![Open Settings](./screenshots/029-journal-context-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/028-journal-context-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/030-journal-context-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: mobile-chromium.
 
 ## Opt in to using earlier saved reflections
 
-![Opt in to using earlier saved reflections](./screenshots/029-include-journal-mobile-chromium.png)
+![Opt in to using earlier saved reflections](./screenshots/031-include-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: mobile-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/030-save-journal-context-mobile-chromium.png)
+![Save these explicit sharing choices](./screenshots/032-save-journal-context-mobile-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/031-new-day-mobile-chromium.png)
+![Open Today](./screenshots/033-new-day-mobile-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: mobile-chromium.
 
 ## Request a new day’s prompt using the chosen context
 
-![Request a new day’s prompt using the chosen context](./screenshots/032-next-prompt-mobile-chromium.png)
+![Request a new day’s prompt using the chosen context](./screenshots/034-next-prompt-mobile-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/033-history-mobile-chromium.png)
+![Open Journal](./screenshots/035-history-mobile-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: mobile-chromium.
 
 ## Read the old reflection after the model changed
 
-![Read the old reflection after the model changed](./screenshots/034-original-entry-mobile-chromium.png)
+![Read the old reflection after the model changed](./screenshots/036-original-entry-mobile-chromium.png)
 
 **Verifications:**
 

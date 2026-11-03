@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/006-today-draft-desktop-chromium.png)
+![Open the reflection editor](./screenshots/008-today-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Keep an unfinished Today reflection
 
-![Keep an unfinished Today reflection](./screenshots/007-draft-text-desktop-chromium.png)
+![Keep an unfinished Today reflection](./screenshots/009-draft-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Return to Today without losing the draft
 
-![Return to Today without losing the draft](./screenshots/008-leave-draft-desktop-chromium.png)
+![Return to Today without losing the draft](./screenshots/010-leave-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Open the existing Gratitude link to the private landing calendar
 
-![Open the existing Gratitude link to the private landing calendar](./screenshots/009-home-desktop-chromium.png)
+![Open the existing Gratitude link to the private landing calendar](./screenshots/011-home-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Move to the previous month
 
-![Move to the previous month](./screenshots/010-previous-month-desktop-chromium.png)
+![Move to the previous month](./screenshots/012-previous-month-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Move to the next month
 
-![Move to the next month](./screenshots/011-next-month-desktop-chromium.png)
+![Move to the next month](./screenshots/013-next-month-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Browse away from the current month again
 
-![Browse away from the current month again](./screenshots/012-past-again-desktop-chromium.png)
+![Browse away from the current month again](./screenshots/014-past-again-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Return to the current month
 
-![Return to the current month](./screenshots/013-current-month-desktop-chromium.png)
+![Return to the current month](./screenshots/015-current-month-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Open the month chooser from the calendar heading
 
-![Open the month chooser from the calendar heading](./screenshots/014-month-heading-desktop-chromium.png)
+![Open the month chooser from the calendar heading](./screenshots/016-month-heading-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Fit the longest month name in the compact dropdown
 
-![Fit the longest month name in the compact dropdown](./screenshots/015-longest-month-desktop-chromium.png)
+![Fit the longest month name in the compact dropdown](./screenshots/017-longest-month-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Type a month in the editable month dropdown
 
-![Type a month in the editable month dropdown](./screenshots/016-choose-month-desktop-chromium.png)
+![Type a month in the editable month dropdown](./screenshots/018-choose-month-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Apply the month and move to the year dropdown
 
-![Apply the month and move to the year dropdown](./screenshots/017-commit-month-desktop-chromium.png)
+![Apply the month and move to the year dropdown](./screenshots/019-commit-month-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Type a year in the editable year dropdown
 
-![Type a year in the editable year dropdown](./screenshots/018-choose-year-desktop-chromium.png)
+![Type a year in the editable year dropdown](./screenshots/020-choose-year-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Apply the year and close the month/year dropdowns
 
-![Apply the year and close the month/year dropdowns](./screenshots/019-old-month-desktop-chromium.png)
+![Apply the year and close the month/year dropdowns](./screenshots/021-old-month-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Read an entry from the landing calendar
 
-![Read an entry from the landing calendar](./screenshots/020-home-entry-desktop-chromium.png)
+![Read an entry from the landing calendar](./screenshots/022-home-entry-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Restore the same landing calendar month and focused date
 
-![Restore the same landing calendar month and focused date](./screenshots/021-home-back-desktop-chromium.png)
+![Restore the same landing calendar month and focused date](./screenshots/023-home-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Follow browser Forward back to the entry
 
-![Follow browser Forward back to the entry](./screenshots/022-home-forward-desktop-chromium.png)
+![Follow browser Forward back to the entry](./screenshots/024-home-forward-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Reload the entry and preserve its Home return context
 
-![Reload the entry and preserve its Home return context](./screenshots/023-entry-reload-desktop-chromium.png)
+![Reload the entry and preserve its Home return context](./screenshots/025-entry-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Return to the captured month after reloading the entry
 
-![Return to the captured month after reloading the entry](./screenshots/024-return-after-reload-desktop-chromium.png)
+![Return to the captured month after reloading the entry](./screenshots/026-return-after-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Open the journal using the existing landing-page action
 
-![Open the journal using the existing landing-page action](./screenshots/025-journal-link-desktop-chromium.png)
+![Open the journal using the existing landing-page action](./screenshots/027-journal-link-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Start a fresh landing visit on the current month
 
-![Start a fresh landing visit on the current month](./screenshots/026-fresh-home-desktop-chromium.png)
+![Start a fresh landing visit on the current month](./screenshots/028-fresh-home-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Return to Today after the fresh landing visit
 
-![Return to Today after the fresh landing visit](./screenshots/027-journal-again-desktop-chromium.png)
+![Return to Today after the fresh landing visit](./screenshots/029-journal-again-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/028-resume-draft-desktop-chromium.png)
+![Open the reflection editor](./screenshots/030-resume-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Retain the independent Today draft across both routes and reload
 
-![Retain the independent Today draft across both routes and reload](./screenshots/029-draft-preserved-desktop-chromium.png)
+![Retain the independent Today draft across both routes and reload](./screenshots/031-draft-preserved-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Return to Today without losing the draft
 
-![Return to Today without losing the draft](./screenshots/030-back-again-desktop-chromium.png)
+![Return to Today without losing the draft](./screenshots/032-back-again-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/031-settings-desktop-chromium.png)
+![Open Settings](./screenshots/033-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Open account settings
 
-![Open account settings](./screenshots/032-account-desktop-chromium.png)
+![Open account settings](./screenshots/034-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Sign out and clear private calendar state
 
-![Sign out and clear private calendar state](./screenshots/033-sign-out-desktop-chromium.png)
+![Sign out and clear private calendar state](./screenshots/035-sign-out-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/034-google-popup-desktop-chromium.png)
+![Choose Google sign-in](./screenshots/036-google-popup-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Add a fictional Google account
 
-![Add a fictional Google account](./screenshots/035-new-account-desktop-chromium.png)
+![Add a fictional Google account](./screenshots/037-new-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Enter the fictional email address
 
-![Enter the fictional email address](./screenshots/036-email-desktop-chromium.png)
+![Enter the fictional email address](./screenshots/038-email-desktop-chromium.png)
 
 **Verifications:**
 
@@ -342,16 +360,34 @@ Viewport: desktop-chromium.
 
 ## Enter a display name
 
-![Enter a display name](./screenshots/037-name-desktop-chromium.png)
+![Enter a display name](./screenshots/039-name-desktop-chromium.png)
 
 **Verifications:**
 
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/040-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/041-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/038-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/042-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -361,7 +397,7 @@ Viewport: desktop-chromium.
 
 ## Open a different account with no prior calendar or drafts
 
-![Open a different account with no prior calendar or drafts](./screenshots/039-isolated-desktop-chromium.png)
+![Open a different account with no prior calendar or drafts](./screenshots/043-isolated-desktop-chromium.png)
 
 **Verifications:**
 
@@ -370,7 +406,7 @@ Viewport: desktop-chromium.
 
 ## Show only the new account’s empty landing calendar
 
-![Show only the new account’s empty landing calendar](./screenshots/040-other-home-desktop-chromium.png)
+![Show only the new account’s empty landing calendar](./screenshots/044-other-home-desktop-chromium.png)
 
 **Verifications:**
 

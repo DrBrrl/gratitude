@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/006-journal-mobile-chromium.png)
+![Open Journal](./screenshots/008-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Filter the visible journal to one entry
 
-![Filter the visible journal to one entry](./screenshots/007-filter-mobile-chromium.png)
+![Filter the visible journal to one entry](./screenshots/009-filter-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/008-draft-tab-mobile-chromium.png)
+![Open Today](./screenshots/010-draft-tab-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/009-open-draft-mobile-chromium.png)
+![Open the reflection editor](./screenshots/011-open-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Leave an unfinished draft
 
-![Leave an unfinished draft](./screenshots/010-draft-mobile-chromium.png)
+![Leave an unfinished draft](./screenshots/012-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Return to Today without losing the draft
 
-![Return to Today without losing the draft](./screenshots/011-leave-draft-mobile-chromium.png)
+![Return to Today without losing the draft](./screenshots/013-leave-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/012-settings-mobile-chromium.png)
+![Open Settings](./screenshots/014-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Open export settings
 
-![Open export settings](./screenshots/013-export-settings-mobile-chromium.png)
+![Open export settings](./screenshots/015-export-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Prepare a Markdown journal
 
-![Prepare a Markdown journal](./screenshots/014-prepare-markdown-mobile-chromium.png)
+![Prepare a Markdown journal](./screenshots/016-prepare-markdown-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Download all saved reflections as Markdown
 
-![Download all saved reflections as Markdown](./screenshots/015-markdown-mobile-chromium.png)
+![Download all saved reflections as Markdown](./screenshots/017-markdown-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Select JSON export
 
-![Select JSON export](./screenshots/016-select-json-mobile-chromium.png)
+![Select JSON export](./screenshots/018-select-json-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Prepare a JSON archive
 
-![Prepare a JSON archive](./screenshots/017-prepare-json-mobile-chromium.png)
+![Prepare a JSON archive](./screenshots/019-prepare-json-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Download the same journal as JSON
 
-![Download the same journal as JSON](./screenshots/018-json-mobile-chromium.png)
+![Download the same journal as JSON](./screenshots/020-json-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Disconnect before another export
 
-![Disconnect before another export](./screenshots/019-offline-mobile-chromium.png)
+![Disconnect before another export](./screenshots/021-offline-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Request a complete export while offline
 
-![Request a complete export while offline](./screenshots/020-offline-export-mobile-chromium.png)
+![Request a complete export while offline](./screenshots/022-offline-export-mobile-chromium.png)
 
 **Verifications:**
 

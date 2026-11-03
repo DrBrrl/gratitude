@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/006-journal-desktop-chromium.png)
+![Open Journal](./screenshots/008-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Start an independent journal entry
 
-![Start an independent journal entry](./screenshots/007-new-desktop-chromium.png)
+![Start an independent journal entry](./screenshots/009-new-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Check that future dates cannot be saved
 
-![Check that future dates cannot be saved](./screenshots/008-future-desktop-chromium.png)
+![Check that future dates cannot be saved](./screenshots/010-future-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Choose a remembered moment on a previous local date
 
-![Choose a remembered moment on a previous local date](./screenshots/009-past-date-desktop-chromium.png)
+![Choose a remembered moment on a previous local date](./screenshots/011-past-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Write a reflection for that date
 
-![Write a reflection for that date](./screenshots/010-past-text-desktop-chromium.png)
+![Write a reflection for that date](./screenshots/012-past-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Return to Journal without losing the draft
 
-![Return to Journal without losing the draft](./screenshots/011-leave-draft-desktop-chromium.png)
+![Return to Journal without losing the draft](./screenshots/013-leave-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Keep the dated draft separate from Today
 
-![Keep the dated draft separate from Today](./screenshots/012-independent-today-desktop-chromium.png)
+![Keep the dated draft separate from Today](./screenshots/014-independent-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/013-draft-journal-desktop-chromium.png)
+![Open Journal](./screenshots/015-draft-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Reload with a dated draft still on this device
 
-![Reload with a dated draft still on this device](./screenshots/014-reload-draft-desktop-chromium.png)
+![Reload with a dated draft still on this device](./screenshots/016-reload-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/015-resume-journal-desktop-chromium.png)
+![Open Journal](./screenshots/017-resume-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Resume the independent draft with its chosen date
 
-![Resume the independent draft with its chosen date](./screenshots/016-resume-draft-desktop-chromium.png)
+![Resume the independent draft with its chosen date](./screenshots/018-resume-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Save the backfilled reflection
 
-![Save the backfilled reflection](./screenshots/017-save-past-desktop-chromium.png)
+![Save the backfilled reflection](./screenshots/019-save-past-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## See the backfilled date on its journal card
 
-![See the backfilled date on its journal card](./screenshots/018-done-past-desktop-chromium.png)
+![See the backfilled date on its journal card](./screenshots/020-done-past-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/019-today-desktop-chromium.png)
+![Open Today](./screenshots/021-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/020-today-draft-desktop-chromium.png)
+![Open the reflection editor](./screenshots/022-today-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Keep an unfinished reflection for Today
 
-![Keep an unfinished reflection for Today](./screenshots/021-today-text-desktop-chromium.png)
+![Keep an unfinished reflection for Today](./screenshots/023-today-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Return to Today without losing the draft
 
-![Return to Today without losing the draft](./screenshots/022-leave-today-draft-desktop-chromium.png)
+![Return to Today without losing the draft](./screenshots/024-leave-today-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/023-new-today-journal-desktop-chromium.png)
+![Open Journal](./screenshots/025-new-today-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Create another entry while Today has an unfinished draft
 
-![Create another entry while Today has an unfinished draft](./screenshots/024-new-today-desktop-chromium.png)
+![Create another entry while Today has an unfinished draft](./screenshots/026-new-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Record another moment for the same day
 
-![Record another moment for the same day](./screenshots/025-second-text-desktop-chromium.png)
+![Record another moment for the same day](./screenshots/027-second-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Save the independent entry without consuming Today’s draft
 
-![Save the independent entry without consuming Today’s draft](./screenshots/026-save-second-desktop-chromium.png)
+![Save the independent entry without consuming Today’s draft](./screenshots/028-save-second-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## See the independent entry alongside the backfill
 
-![See the independent entry alongside the backfill](./screenshots/027-done-second-desktop-chromium.png)
+![See the independent entry alongside the backfill](./screenshots/029-done-second-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Open the newly saved entry while the other draft remains unfinished
 
-![Open the newly saved entry while the other draft remains unfinished](./screenshots/028-saved-detail-desktop-chromium.png)
+![Open the newly saved entry while the other draft remains unfinished](./screenshots/030-saved-detail-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Edit that entry without opening Today’s different draft
 
-![Edit that entry without opening Today’s different draft](./screenshots/029-saved-edit-desktop-chromium.png)
+![Edit that entry without opening Today’s different draft](./screenshots/031-saved-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Return to Journal without losing the draft
 
-![Return to Journal without losing the draft](./screenshots/030-back-saved-entry-desktop-chromium.png)
+![Return to Journal without losing the draft](./screenshots/032-back-saved-entry-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Return to the journal without changing either entry
 
-![Return to the journal without changing either entry](./screenshots/031-back-journal-desktop-chromium.png)
+![Return to the journal without changing either entry](./screenshots/033-back-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/032-another-today-desktop-chromium.png)
+![Open Today](./screenshots/034-another-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Use Today’s shortcut for a fresh additional reflection
 
-![Use Today’s shortcut for a fresh additional reflection](./screenshots/033-another-desktop-chromium.png)
+![Use Today’s shortcut for a fresh additional reflection](./screenshots/035-another-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Return to Today without losing the draft
 
-![Return to Today without losing the draft](./screenshots/034-back-to-today-desktop-chromium.png)
+![Return to Today without losing the draft](./screenshots/036-back-to-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Resume Today’s original draft with its own text and colour
 
-![Resume Today’s original draft with its own text and colour](./screenshots/035-resume-today-desktop-chromium.png)
+![Resume Today’s original draft with its own text and colour](./screenshots/037-resume-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Finish Today’s original draft as its own reflection
 
-![Finish Today’s original draft as its own reflection](./screenshots/036-save-first-desktop-chromium.png)
+![Finish Today’s original draft as its own reflection](./screenshots/038-save-first-desktop-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +360,7 @@ Viewport: desktop-chromium.
 
 ## Browse both daily entries in chronological order
 
-![Browse both daily entries in chronological order](./screenshots/037-done-first-desktop-chromium.png)
+![Browse both daily entries in chronological order](./screenshots/039-done-first-desktop-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +369,7 @@ Viewport: desktop-chromium.
 
 ## Read the chosen date in the full entry
 
-![Read the chosen date in the full entry](./screenshots/038-past-detail-desktop-chromium.png)
+![Read the chosen date in the full entry](./screenshots/040-past-detail-desktop-chromium.png)
 
 **Verifications:**
 
@@ -360,7 +378,7 @@ Viewport: desktop-chromium.
 
 ## Edit the backfilled text while retaining its date and prompt
 
-![Edit the backfilled text while retaining its date and prompt](./screenshots/039-edit-past-desktop-chromium.png)
+![Edit the backfilled text while retaining its date and prompt](./screenshots/041-edit-past-desktop-chromium.png)
 
 **Verifications:**
 
@@ -369,7 +387,7 @@ Viewport: desktop-chromium.
 
 ## Add detail to the remembered moment
 
-![Add detail to the remembered moment](./screenshots/040-edit-text-desktop-chromium.png)
+![Add detail to the remembered moment](./screenshots/042-edit-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -378,7 +396,7 @@ Viewport: desktop-chromium.
 
 ## Save the edit without changing the historical date
 
-![Save the edit without changing the historical date](./screenshots/041-save-edit-desktop-chromium.png)
+![Save the edit without changing the historical date](./screenshots/043-save-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -387,7 +405,7 @@ Viewport: desktop-chromium.
 
 ## Return to all three independently saved reflections
 
-![Return to all three independently saved reflections](./screenshots/042-done-edit-desktop-chromium.png)
+![Return to all three independently saved reflections](./screenshots/044-done-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -396,7 +414,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/043-settings-desktop-chromium.png)
+![Open Settings](./screenshots/045-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -405,7 +423,7 @@ Viewport: desktop-chromium.
 
 ## Open journal recovery
 
-![Open journal recovery](./screenshots/044-privacy-desktop-chromium.png)
+![Open journal recovery](./screenshots/046-privacy-desktop-chromium.png)
 
 **Verifications:**
 
@@ -414,7 +432,7 @@ Viewport: desktop-chromium.
 
 ## Rebuild the dated journal entirely from source events
 
-![Rebuild the dated journal entirely from source events](./screenshots/045-rebuild-desktop-chromium.png)
+![Rebuild the dated journal entirely from source events](./screenshots/047-rebuild-desktop-chromium.png)
 
 **Verifications:**
 
@@ -423,7 +441,7 @@ Viewport: desktop-chromium.
 
 ## Read all entries after complete replay
 
-![Read all entries after complete replay](./screenshots/046-rebuilt-journal-desktop-chromium.png)
+![Read all entries after complete replay](./screenshots/048-rebuilt-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -432,7 +450,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/047-export-settings-desktop-chromium.png)
+![Open Settings](./screenshots/049-export-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -441,7 +459,7 @@ Viewport: desktop-chromium.
 
 ## Open journal export
 
-![Open journal export](./screenshots/048-export-desktop-chromium.png)
+![Open journal export](./screenshots/050-export-desktop-chromium.png)
 
 **Verifications:**
 
@@ -450,7 +468,7 @@ Viewport: desktop-chromium.
 
 ## Prepare all dated reflections for export
 
-![Prepare all dated reflections for export](./screenshots/049-prepare-desktop-chromium.png)
+![Prepare all dated reflections for export](./screenshots/051-prepare-desktop-chromium.png)
 
 **Verifications:**
 
@@ -459,7 +477,7 @@ Viewport: desktop-chromium.
 
 ## Download local entry dates without system metadata
 
-![Download local entry dates without system metadata](./screenshots/050-download-desktop-chromium.png)
+![Download local entry dates without system metadata](./screenshots/052-download-desktop-chromium.png)
 
 **Verifications:**
 

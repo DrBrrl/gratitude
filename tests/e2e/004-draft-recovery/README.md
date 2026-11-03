@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/006-history-mobile-chromium.png)
+![Open Journal](./screenshots/008-history-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/007-today-mobile-chromium.png)
+![Open Today](./screenshots/009-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/008-open-mobile-chromium.png)
+![Open the reflection editor](./screenshots/010-open-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Begin today’s unfinished reflection
 
-![Begin today’s unfinished reflection](./screenshots/009-type-mobile-chromium.png)
+![Begin today’s unfinished reflection](./screenshots/011-type-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Return to Today without losing the draft
 
-![Return to Today without losing the draft](./screenshots/010-back-today-mobile-chromium.png)
+![Return to Today without losing the draft](./screenshots/012-back-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/011-journal-mobile-chromium.png)
+![Open Journal](./screenshots/013-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Open yesterday’s saved entry
 
-![Open yesterday’s saved entry](./screenshots/012-past-entry-mobile-chromium.png)
+![Open yesterday’s saved entry](./screenshots/014-past-entry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Edit yesterday’s reflection
 
-![Edit yesterday’s reflection](./screenshots/013-past-editor-mobile-chromium.png)
+![Edit yesterday’s reflection](./screenshots/015-past-editor-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Keep a separate draft for yesterday
 
-![Keep a separate draft for yesterday](./screenshots/014-past-draft-mobile-chromium.png)
+![Keep a separate draft for yesterday](./screenshots/016-past-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Return to Journal without losing the draft
 
-![Return to Journal without losing the draft](./screenshots/015-back-entry-mobile-chromium.png)
+![Return to Journal without losing the draft](./screenshots/017-back-entry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Return to today’s independent prompt and colour
 
-![Return to today’s independent prompt and colour](./screenshots/016-stable-today-mobile-chromium.png)
+![Return to today’s independent prompt and colour](./screenshots/018-stable-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Reload with both drafts on this device
 
-![Reload with both drafts on this device](./screenshots/017-reload-mobile-chromium.png)
+![Reload with both drafts on this device](./screenshots/019-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/018-recover-today-mobile-chromium.png)
+![Open the reflection editor](./screenshots/020-recover-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Ask to discard today’s draft
 
-![Ask to discard today’s draft](./screenshots/019-ask-discard-mobile-chromium.png)
+![Ask to discard today’s draft](./screenshots/021-ask-discard-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Keep writing instead
 
-![Keep writing instead](./screenshots/020-keep-mobile-chromium.png)
+![Keep writing instead](./screenshots/022-keep-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Save the recovered draft
 
-![Save the recovered draft](./screenshots/021-save-mobile-chromium.png)
+![Save the recovered draft](./screenshots/023-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Finish today’s reflection and return to the journal
 
-![Finish today’s reflection and return to the journal](./screenshots/022-done-mobile-chromium.png)
+![Finish today’s reflection and return to the journal](./screenshots/024-done-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/023-revisit-today-mobile-chromium.png)
+![Open Today](./screenshots/025-revisit-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/024-continue-saved-mobile-chromium.png)
+![Open the reflection editor](./screenshots/026-continue-saved-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Make an edit that will be discarded
 
-![Make an edit that will be discarded](./screenshots/025-another-mobile-chromium.png)
+![Make an edit that will be discarded](./screenshots/027-another-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Open discard confirmation
 
-![Open discard confirmation](./screenshots/026-discard-again-mobile-chromium.png)
+![Open discard confirmation](./screenshots/028-discard-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Discard the edit while keeping the saved reflection
 
-![Discard the edit while keeping the saved reflection](./screenshots/027-confirm-discard-mobile-chromium.png)
+![Discard the edit while keeping the saved reflection](./screenshots/029-confirm-discard-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/028-past-again-mobile-chromium.png)
+![Open Journal](./screenshots/030-past-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: mobile-chromium.
 
 ## Open yesterday’s reflection again
 
-![Open yesterday’s reflection again](./screenshots/029-past-open-again-mobile-chromium.png)
+![Open yesterday’s reflection again](./screenshots/031-past-open-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: mobile-chromium.
 
 ## Recover yesterday’s independent draft
 
-![Recover yesterday’s independent draft](./screenshots/030-past-recovered-mobile-chromium.png)
+![Recover yesterday’s independent draft](./screenshots/032-past-recovered-mobile-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: mobile-chromium.
 
 ## Save yesterday’s edit after completing today’s reflection
 
-![Save yesterday’s edit after completing today’s reflection](./screenshots/031-save-past-mobile-chromium.png)
+![Save yesterday’s edit after completing today’s reflection](./screenshots/033-save-past-mobile-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: mobile-chromium.
 
 ## Finish the historical edit and return to the journal
 
-![Finish the historical edit and return to the journal](./screenshots/032-done-past-mobile-chromium.png)
+![Finish the historical edit and return to the journal](./screenshots/034-done-past-mobile-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: mobile-chromium.
 
 ## Reload into the journal once today’s reflection is saved
 
-![Reload into the journal once today’s reflection is saved](./screenshots/033-verify-discard-mobile-chromium.png)
+![Reload into the journal once today’s reflection is saved](./screenshots/035-verify-discard-mobile-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/034-verify-today-mobile-chromium.png)
+![Open Today](./screenshots/036-verify-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/035-verify-saved-mobile-chromium.png)
+![Open the reflection editor](./screenshots/037-verify-saved-mobile-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: mobile-chromium.
 
 ## Return to Today without losing the draft
 
-![Return to Today without losing the draft](./screenshots/036-leave-today-mobile-chromium.png)
+![Return to Today without losing the draft](./screenshots/038-leave-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +360,7 @@ Viewport: mobile-chromium.
 
 ## Reopen Today at the start of a new local day
 
-![Reopen Today at the start of a new local day](./screenshots/037-new-day-mobile-chromium.png)
+![Reopen Today at the start of a new local day](./screenshots/039-new-day-mobile-chromium.png)
 
 **Verifications:**
 

@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/006-friends-desktop-chromium.png)
+![Open Friends and hugs](./screenshots/008-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/007-display-name-desktop-chromium.png)
+![Choose a friend-facing display name](./screenshots/009-display-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/008-username-desktop-chromium.png)
+![Choose a searchable username](./screenshots/010-username-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/009-profile-save-desktop-chromium.png)
+![Save the opt-in friends profile](./screenshots/011-profile-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Try notifications while browser permission is blocked
 
-![Try notifications while browser permission is blocked](./screenshots/010-denied-desktop-chromium.png)
+![Try notifications while browser permission is blocked](./screenshots/012-denied-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Allow notification permission in the browser
 
-![Allow notification permission in the browser](./screenshots/011-permission-desktop-chromium.png)
+![Allow notification permission in the browser](./screenshots/013-permission-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Turn on hug notifications for this browser
 
-![Turn on hug notifications for this browser](./screenshots/012-enable-desktop-chromium.png)
+![Turn on hug notifications for this browser](./screenshots/014-enable-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Ignore a message for another deployment
 
-![Ignore a message for another deployment](./screenshots/013-wrong-scope-desktop-chromium.png)
+![Ignore a message for another deployment](./screenshots/015-wrong-scope-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Ignore an expired hug
 
-![Ignore an expired hug](./screenshots/014-expired-desktop-chromium.png)
+![Ignore an expired hug](./screenshots/016-expired-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Receive a hug through the real service worker
 
-![Receive a hug through the real service worker](./screenshots/015-receive-open-desktop-chromium.png)
+![Receive a hug through the real service worker](./screenshots/017-receive-open-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Receive the same transport message again
 
-![Receive the same transport message again](./screenshots/016-duplicate-desktop-chromium.png)
+![Receive the same transport message again](./screenshots/018-duplicate-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Close the Gratitude tab while leaving the browser running
 
-![Close the Gratitude tab while leaving the browser running](./screenshots/017-close-app-desktop-chromium.png)
+![Close the Gratitude tab while leaving the browser running](./screenshots/019-close-app-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Receive a second hug with no Gratitude page open
 
-![Receive a second hug with no Gratitude page open](./screenshots/018-receive-closed-desktop-chromium.png)
+![Receive a second hug with no Gratitude page open](./screenshots/020-receive-closed-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Open the Friends link provided by the notification
 
-![Open the Friends link provided by the notification](./screenshots/019-notification-link-desktop-chromium.png)
+![Open the Friends link provided by the notification](./screenshots/021-notification-link-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Turn notifications off on this device
 
-![Turn notifications off on this device](./screenshots/020-disable-desktop-chromium.png)
+![Turn notifications off on this device](./screenshots/022-disable-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Deliver an already-queued hug after opting out
 
-![Deliver an already-queued hug after opting out](./screenshots/021-ignore-muted-desktop-chromium.png)
+![Deliver an already-queued hug after opting out](./screenshots/023-ignore-muted-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Opt in again with a fresh device binding
 
-![Opt in again with a fresh device binding](./screenshots/022-enable-again-desktop-chromium.png)
+![Opt in again with a fresh device binding](./screenshots/024-enable-again-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/023-settings-desktop-chromium.png)
+![Open Settings](./screenshots/025-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Open account controls
 
-![Open account controls](./screenshots/024-account-desktop-chromium.png)
+![Open account controls](./screenshots/026-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Sign out and clear notification delivery locally
 
-![Sign out and clear notification delivery locally](./screenshots/025-sign-out-desktop-chromium.png)
+![Sign out and clear notification delivery locally](./screenshots/027-sign-out-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Deliver a queued message for the signed-out account
 
-![Deliver a queued message for the signed-out account](./screenshots/026-ignore-signed-out-desktop-chromium.png)
+![Deliver a queued message for the signed-out account](./screenshots/028-ignore-signed-out-desktop-chromium.png)
 
 **Verifications:**
 

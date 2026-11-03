@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-configure-settings-desktop-chromium.png)
+![Open Settings](./screenshots/008-configure-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/007-configure-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/009-configure-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Select the local Gemma provider
 
-![Select the local Gemma provider](./screenshots/008-local-desktop-chromium.png)
+![Select the local Gemma provider](./screenshots/010-local-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Enter a fictional tab-only credential
 
-![Enter a fictional tab-only credential](./screenshots/009-token-desktop-chromium.png)
+![Enter a fictional tab-only credential](./screenshots/011-token-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Save the local connection and provider choice
 
-![Save the local connection and provider choice](./screenshots/010-save-model-desktop-chromium.png)
+![Save the local connection and provider choice](./screenshots/012-save-model-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Choose to enable AI prompts
 
-![Choose to enable AI prompts](./screenshots/011-enable-desktop-chromium.png)
+![Choose to enable AI prompts](./screenshots/013-enable-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/012-choices-desktop-chromium.png)
+![Save these explicit sharing choices](./screenshots/014-choices-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/013-today-desktop-chromium.png)
+![Open Today](./screenshots/015-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Show a rejected request next to its retry button
 
-![Show a rejected request next to its retry button](./screenshots/014-rejected-desktop-chromium.png)
+![Show a rejected request next to its retry button](./screenshots/016-rejected-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Restore a visible failure notice after reloading without retrying inference
 
-![Restore a visible failure notice after reloading without retrying inference](./screenshots/015-reload-failure-desktop-chromium.png)
+![Restore a visible failure notice after reloading without retrying inference](./screenshots/017-reload-failure-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly retry with the compatible non-thinking setting
 
-![Explicitly retry with the compatible non-thinking setting](./screenshots/016-retry-desktop-chromium.png)
+![Explicitly retry with the compatible non-thinking setting](./screenshots/018-retry-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Replay the completed prompt without generating another
 
-![Replay the completed prompt without generating another](./screenshots/017-reload-success-desktop-chromium.png)
+![Replay the completed prompt without generating another](./screenshots/019-reload-success-desktop-chromium.png)
 
 **Verifications:**
 

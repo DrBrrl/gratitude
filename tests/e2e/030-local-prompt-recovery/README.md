@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-configure-settings-mobile-chromium.png)
+![Open Settings](./screenshots/008-configure-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/007-configure-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/009-configure-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Select the local Gemma provider
 
-![Select the local Gemma provider](./screenshots/008-local-mobile-chromium.png)
+![Select the local Gemma provider](./screenshots/010-local-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Enter a fictional tab-only credential
 
-![Enter a fictional tab-only credential](./screenshots/009-token-mobile-chromium.png)
+![Enter a fictional tab-only credential](./screenshots/011-token-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Save the local connection and provider choice
 
-![Save the local connection and provider choice](./screenshots/010-save-model-mobile-chromium.png)
+![Save the local connection and provider choice](./screenshots/012-save-model-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Choose to enable AI prompts
 
-![Choose to enable AI prompts](./screenshots/011-enable-mobile-chromium.png)
+![Choose to enable AI prompts](./screenshots/013-enable-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/012-choices-mobile-chromium.png)
+![Save these explicit sharing choices](./screenshots/014-choices-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/013-today-mobile-chromium.png)
+![Open Today](./screenshots/015-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Show a rejected request next to its retry button
 
-![Show a rejected request next to its retry button](./screenshots/014-rejected-mobile-chromium.png)
+![Show a rejected request next to its retry button](./screenshots/016-rejected-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Restore a visible failure notice after reloading without retrying inference
 
-![Restore a visible failure notice after reloading without retrying inference](./screenshots/015-reload-failure-mobile-chromium.png)
+![Restore a visible failure notice after reloading without retrying inference](./screenshots/017-reload-failure-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Explicitly retry with the compatible non-thinking setting
 
-![Explicitly retry with the compatible non-thinking setting](./screenshots/016-retry-mobile-chromium.png)
+![Explicitly retry with the compatible non-thinking setting](./screenshots/018-retry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Replay the completed prompt without generating another
 
-![Replay the completed prompt without generating another](./screenshots/017-reload-success-mobile-chromium.png)
+![Replay the completed prompt without generating another](./screenshots/019-reload-success-mobile-chromium.png)
 
 **Verifications:**
 

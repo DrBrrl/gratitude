@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/006-editor-desktop-chromium.png)
+![Open the reflection editor](./screenshots/008-editor-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Write a reflection before attaching a photo
 
-![Write a reflection before attaching a photo](./screenshots/007-text-desktop-chromium.png)
+![Write a reflection before attaching a photo](./screenshots/009-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Stage a selected photo on this device
 
-![Stage a selected photo on this device](./screenshots/008-pick-desktop-chromium.png)
+![Stage a selected photo on this device](./screenshots/010-pick-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Preserve the selected photo and pause uploading when the connection drops
 
-![Preserve the selected photo and pause uploading when the connection drops](./screenshots/009-offline-attach-desktop-chromium.png)
+![Preserve the selected photo and pause uploading when the connection drops](./screenshots/011-offline-attach-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Cancel the staged selection without changing the reflection
 
-![Cancel the staged selection without changing the reflection](./screenshots/010-cancel-desktop-chromium.png)
+![Cancel the staged selection without changing the reflection](./screenshots/012-cancel-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Choose the photo again
 
-![Choose the photo again](./screenshots/011-pick-again-desktop-chromium.png)
+![Choose the photo again](./screenshots/013-pick-again-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Attach without enabling Gemini or prompt personalization
 
-![Attach without enabling Gemini or prompt personalization](./screenshots/012-attach-no-ai-desktop-chromium.png)
+![Attach without enabling Gemini or prompt personalization](./screenshots/014-attach-no-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Keep an offline save and its attached photo ready for recovery
 
-![Keep an offline save and its attached photo ready for recovery](./screenshots/013-pending-save-desktop-chromium.png)
+![Keep an offline save and its attached photo ready for recovery](./screenshots/015-pending-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Return the pending reflection to its original photo identity
 
-![Return the pending reflection to its original photo identity](./screenshots/014-recover-pending-desktop-chromium.png)
+![Return the pending reflection to its original photo identity](./screenshots/016-recover-pending-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Reconnect with the reflection and photo still together
 
-![Reconnect with the reflection and photo still together](./screenshots/015-reconnect-desktop-chromium.png)
+![Reconnect with the reflection and photo still together](./screenshots/017-reconnect-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Save the reflection and its attachment
 
-![Save the reflection and its attachment](./screenshots/016-save-desktop-chromium.png)
+![Save the reflection and its attachment](./screenshots/018-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Receive a summary just as the connection drops
 
-![Receive a summary just as the connection drops](./screenshots/017-received-offline-desktop-chromium.png)
+![Receive a summary just as the connection drops](./screenshots/019-received-offline-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Keep the received summary in the outbox after reload
 
-![Keep the received summary in the outbox after reload](./screenshots/018-reload-desktop-chromium.png)
+![Keep the received summary in the outbox after reload](./screenshots/020-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Sync the received description without another Gemini call
 
-![Sync the received description without another Gemini call](./screenshots/019-sync-result-desktop-chromium.png)
+![Sync the received description without another Gemini call](./screenshots/021-sync-result-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Read the synchronized summary beside the retained photo
 
-![Read the synchronized summary beside the retained photo](./screenshots/020-detail-desktop-chromium.png)
+![Read the synchronized summary beside the retained photo](./screenshots/022-detail-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Edit reflection text while keeping its independent photo state
 
-![Edit reflection text while keeping its independent photo state](./screenshots/021-edit-text-desktop-chromium.png)
+![Edit reflection text while keeping its independent photo state](./screenshots/023-edit-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Add detail to the reflection
 
-![Add detail to the reflection](./screenshots/022-new-text-desktop-chromium.png)
+![Add detail to the reflection](./screenshots/024-new-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Save text without replacing photos or regenerating the summary
 
-![Save text without replacing photos or regenerating the summary](./screenshots/023-save-edit-desktop-chromium.png)
+![Save text without replacing photos or regenerating the summary](./screenshots/025-save-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Return to the journal after editing
 
-![Return to the journal after editing](./screenshots/024-done-desktop-chromium.png)
+![Return to the journal after editing](./screenshots/026-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Start an independent draft to review discard behavior
 
-![Start an independent draft to review discard behavior](./screenshots/025-new-desktop-chromium.png)
+![Start an independent draft to review discard behavior](./screenshots/027-new-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Select a photo for the unsaved reflection
 
-![Select a photo for the unsaved reflection](./screenshots/026-draft-photo-desktop-chromium.png)
+![Select a photo for the unsaved reflection](./screenshots/028-draft-photo-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Attach the photo while leaving the reflection unsaved
 
-![Attach the photo while leaving the reflection unsaved](./screenshots/027-draft-attach-desktop-chromium.png)
+![Attach the photo while leaving the reflection unsaved](./screenshots/029-draft-attach-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Review the draft discard confirmation
 
-![Review the draft discard confirmation](./screenshots/028-discard-desktop-chromium.png)
+![Review the draft discard confirmation](./screenshots/030-discard-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Discard the unsaved reflection and remove its attached file
 
-![Discard the unsaved reflection and remove its attached file](./screenshots/029-confirm-discard-desktop-chromium.png)
+![Discard the unsaved reflection and remove its attached file](./screenshots/031-confirm-discard-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Return to the existing journal
 
-![Return to the existing journal](./screenshots/030-back-desktop-chromium.png)
+![Return to the existing journal](./screenshots/032-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Open the saved photo before testing an interrupted file removal
 
-![Open the saved photo before testing an interrupted file removal](./screenshots/031-cleanup-detail-desktop-chromium.png)
+![Open the saved photo before testing an interrupted file removal](./screenshots/033-cleanup-detail-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Review removal of the saved attachment
 
-![Review removal of the saved attachment](./screenshots/032-remove-photo-desktop-chromium.png)
+![Review removal of the saved attachment](./screenshots/034-remove-photo-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Retain a cleanup intent when the file deletion fails
 
-![Retain a cleanup intent when the file deletion fails](./screenshots/033-cleanup-pending-desktop-chromium.png)
+![Retain a cleanup intent when the file deletion fails](./screenshots/035-cleanup-pending-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Finish confirmed file cleanup after reloading with a connection
 
-![Finish confirmed file cleanup after reloading with a connection](./screenshots/034-cleanup-reload-desktop-chromium.png)
+![Finish confirmed file cleanup after reloading with a connection](./screenshots/036-cleanup-reload-desktop-chromium.png)
 
 **Verifications:**
 

@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-configure-settings-mobile-chromium.png)
+![Open Settings](./screenshots/008-configure-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/007-configure-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/009-configure-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Choose LM Studio for reflection prompts
 
-![Choose LM Studio for reflection prompts](./screenshots/008-local-prompts-mobile-chromium.png)
+![Choose LM Studio for reflection prompts](./screenshots/010-local-prompts-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Choose the writing computer
 
-![Choose the writing computer](./screenshots/009-prompt-server-mobile-chromium.png)
+![Choose the writing computer](./screenshots/011-prompt-server-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Enter the writing server token
 
-![Enter the writing server token](./screenshots/010-prompt-token-mobile-chromium.png)
+![Enter the writing server token](./screenshots/012-prompt-token-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Discover writing models
 
-![Discover writing models](./screenshots/011-prompt-models-mobile-chromium.png)
+![Discover writing models](./screenshots/013-prompt-models-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Choose a text-only model for prompts
 
-![Choose a text-only model for prompts](./screenshots/012-prompt-model-mobile-chromium.png)
+![Choose a text-only model for prompts](./screenshots/014-prompt-model-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Save the writing connection
 
-![Save the writing connection](./screenshots/013-save-prompts-mobile-chromium.png)
+![Save the writing connection](./screenshots/015-save-prompts-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Open account sync for the writing connection
 
-![Open account sync for the writing connection](./screenshots/014-prompt-sync-options-mobile-chromium.png)
+![Open account sync for the writing connection](./screenshots/016-prompt-sync-options-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Remember only the writing connection in its account slot
 
-![Remember only the writing connection in its account slot](./screenshots/015-remember-prompts-mobile-chromium.png)
+![Remember only the writing connection in its account slot](./screenshots/017-remember-prompts-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Choose to enable AI prompts
 
-![Choose to enable AI prompts](./screenshots/016-enable-mobile-chromium.png)
+![Choose to enable AI prompts](./screenshots/018-enable-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/017-save-consent-mobile-chromium.png)
+![Save these explicit sharing choices](./screenshots/019-save-consent-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Open the photo connection settings
 
-![Open the photo connection settings](./screenshots/018-photo-options-mobile-chromium.png)
+![Open the photo connection settings](./screenshots/020-photo-options-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Choose a separate LM Studio connection for photos
 
-![Choose a separate LM Studio connection for photos](./screenshots/019-separate-mobile-chromium.png)
+![Choose a separate LM Studio connection for photos](./screenshots/021-separate-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Choose a different computer for photos
 
-![Choose a different computer for photos](./screenshots/020-photo-server-mobile-chromium.png)
+![Choose a different computer for photos](./screenshots/022-photo-server-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Enter only that computer’s token
 
-![Enter only that computer’s token](./screenshots/021-photo-token-mobile-chromium.png)
+![Enter only that computer’s token](./screenshots/023-photo-token-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Discover models on the photo computer
 
-![Discover models on the photo computer](./screenshots/022-photo-models-mobile-chromium.png)
+![Discover models on the photo computer](./screenshots/024-photo-models-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Choose its vision model
 
-![Choose its vision model](./screenshots/023-photo-model-mobile-chromium.png)
+![Choose its vision model](./screenshots/025-photo-model-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Save the independent photo model without changing prompts
 
-![Save the independent photo model without changing prompts](./screenshots/024-save-photo-mobile-chromium.png)
+![Save the independent photo model without changing prompts](./screenshots/026-save-photo-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Open account sync for the photo connection
 
-![Open account sync for the photo connection](./screenshots/025-photo-sync-options-mobile-chromium.png)
+![Open account sync for the photo connection](./screenshots/027-photo-sync-options-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Remember the second connection independently
 
-![Remember the second connection independently](./screenshots/026-remember-photo-mobile-chromium.png)
+![Remember the second connection independently](./screenshots/028-remember-photo-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Open another device
 
-![Open another device](./screenshots/027-other-device-mobile-chromium.png)
+![Open another device](./screenshots/029-other-device-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: mobile-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/028-google-popup-mobile-chromium.png)
+![Choose Google sign-in](./screenshots/030-google-popup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: mobile-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/029-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/031-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -280,7 +298,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/030-other-settings-mobile-chromium.png)
+![Open Settings](./screenshots/032-other-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +307,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/031-other-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/033-other-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -298,7 +316,7 @@ Viewport: mobile-chromium.
 
 ## Restore both connections on another signed-in device
 
-![Restore both connections on another signed-in device](./screenshots/032-other-photo-mobile-chromium.png)
+![Restore both connections on another signed-in device](./screenshots/034-other-photo-mobile-chromium.png)
 
 **Verifications:**
 
@@ -307,7 +325,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/033-today-mobile-chromium.png)
+![Open Today](./screenshots/035-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -316,7 +334,7 @@ Viewport: mobile-chromium.
 
 ## Generate a prompt on the writing computer
 
-![Generate a prompt on the writing computer](./screenshots/034-generate-mobile-chromium.png)
+![Generate a prompt on the writing computer](./screenshots/036-generate-mobile-chromium.png)
 
 **Verifications:**
 
@@ -325,7 +343,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/035-editor-mobile-chromium.png)
+![Open the reflection editor](./screenshots/037-editor-mobile-chromium.png)
 
 **Verifications:**
 
@@ -334,7 +352,7 @@ Viewport: mobile-chromium.
 
 ## Keep the draft out of image requests
 
-![Keep the draft out of image requests](./screenshots/036-draft-mobile-chromium.png)
+![Keep the draft out of image requests](./screenshots/038-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -343,7 +361,7 @@ Viewport: mobile-chromium.
 
 ## Choose a fictional image
 
-![Choose a fictional image](./screenshots/037-photo-mobile-chromium.png)
+![Choose a fictional image](./screenshots/039-photo-mobile-chromium.png)
 
 **Verifications:**
 
@@ -352,7 +370,7 @@ Viewport: mobile-chromium.
 
 ## Keep a photo-server outage separate from the writing server
 
-![Keep a photo-server outage separate from the writing server](./screenshots/038-photo-outage-mobile-chromium.png)
+![Keep a photo-server outage separate from the writing server](./screenshots/040-photo-outage-mobile-chromium.png)
 
 **Verifications:**
 
@@ -361,7 +379,7 @@ Viewport: mobile-chromium.
 
 ## Retry only the selected photo model
 
-![Retry only the selected photo model](./screenshots/039-retry-photo-mobile-chromium.png)
+![Retry only the selected photo model](./screenshots/041-retry-photo-mobile-chromium.png)
 
 **Verifications:**
 
@@ -370,7 +388,7 @@ Viewport: mobile-chromium.
 
 ## Save the reflection and independent summary
 
-![Save the reflection and independent summary](./screenshots/040-save-entry-mobile-chromium.png)
+![Save the reflection and independent summary](./screenshots/042-save-entry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -379,7 +397,7 @@ Viewport: mobile-chromium.
 
 ## Open the journal
 
-![Open the journal](./screenshots/041-done-mobile-chromium.png)
+![Open the journal](./screenshots/043-done-mobile-chromium.png)
 
 **Verifications:**
 
@@ -388,7 +406,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/042-shared-settings-mobile-chromium.png)
+![Open Settings](./screenshots/044-shared-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -397,7 +415,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/043-shared-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/045-shared-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -406,7 +424,7 @@ Viewport: mobile-chromium.
 
 ## Discover a vision-capable model on the writing server
 
-![Discover a vision-capable model on the writing server](./screenshots/044-list-shared-mobile-chromium.png)
+![Discover a vision-capable model on the writing server](./screenshots/046-list-shared-mobile-chromium.png)
 
 **Verifications:**
 
@@ -415,7 +433,7 @@ Viewport: mobile-chromium.
 
 ## Choose a model that can handle both tasks
 
-![Choose a model that can handle both tasks](./screenshots/045-choose-shared-mobile-chromium.png)
+![Choose a model that can handle both tasks](./screenshots/047-choose-shared-mobile-chromium.png)
 
 **Verifications:**
 
@@ -424,7 +442,7 @@ Viewport: mobile-chromium.
 
 ## Save it as the prompt model
 
-![Save it as the prompt model](./screenshots/046-save-shared-mobile-chromium.png)
+![Save it as the prompt model](./screenshots/048-save-shared-mobile-chromium.png)
 
 **Verifications:**
 
@@ -433,7 +451,7 @@ Viewport: mobile-chromium.
 
 ## Open photo model choices again
 
-![Open photo model choices again](./screenshots/047-shared-photo-options-mobile-chromium.png)
+![Open photo model choices again](./screenshots/049-shared-photo-options-mobile-chromium.png)
 
 **Verifications:**
 
@@ -442,7 +460,7 @@ Viewport: mobile-chromium.
 
 ## Choose the explicit same-model option
 
-![Choose the explicit same-model option](./screenshots/048-reuse-mobile-chromium.png)
+![Choose the explicit same-model option](./screenshots/050-reuse-mobile-chromium.png)
 
 **Verifications:**
 
@@ -451,7 +469,7 @@ Viewport: mobile-chromium.
 
 ## Save the shared model choice
 
-![Save the shared model choice](./screenshots/049-save-reuse-mobile-chromium.png)
+![Save the shared model choice](./screenshots/051-save-reuse-mobile-chromium.png)
 
 **Verifications:**
 
@@ -460,7 +478,7 @@ Viewport: mobile-chromium.
 
 ## Return to the journal
 
-![Return to the journal](./screenshots/050-journal-mobile-chromium.png)
+![Return to the journal](./screenshots/052-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -469,7 +487,7 @@ Viewport: mobile-chromium.
 
 ## Open the saved entry
 
-![Open the saved entry](./screenshots/051-entry-mobile-chromium.png)
+![Open the saved entry](./screenshots/053-entry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -478,7 +496,7 @@ Viewport: mobile-chromium.
 
 ## Choose another image using the shared model
 
-![Choose another image using the shared model](./screenshots/052-another-photo-mobile-chromium.png)
+![Choose another image using the shared model](./screenshots/054-another-photo-mobile-chromium.png)
 
 **Verifications:**
 
@@ -487,7 +505,7 @@ Viewport: mobile-chromium.
 
 ## Send the photo to the prompt connection only after choosing reuse
 
-![Send the photo to the prompt connection only after choosing reuse](./screenshots/053-shared-summary-mobile-chromium.png)
+![Send the photo to the prompt connection only after choosing reuse](./screenshots/055-shared-summary-mobile-chromium.png)
 
 **Verifications:**
 
@@ -496,7 +514,7 @@ Viewport: mobile-chromium.
 
 ## Reload recorded summaries without inference
 
-![Reload recorded summaries without inference](./screenshots/054-reload-mobile-chromium.png)
+![Reload recorded summaries without inference](./screenshots/056-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -505,7 +523,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/055-reload-settings-mobile-chromium.png)
+![Open Settings](./screenshots/057-reload-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -514,7 +532,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/056-reload-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/058-reload-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -523,7 +541,7 @@ Viewport: mobile-chromium.
 
 ## Restore the saved same-model choice and updated account model
 
-![Restore the saved same-model choice and updated account model](./screenshots/057-restored-shared-mobile-chromium.png)
+![Restore the saved same-model choice and updated account model](./screenshots/059-restored-shared-mobile-chromium.png)
 
 **Verifications:**
 
@@ -532,7 +550,7 @@ Viewport: mobile-chromium.
 
 ## Rebuild all settings and results from source events
 
-![Rebuild all settings and results from source events](./screenshots/058-replay-mobile-chromium.png)
+![Rebuild all settings and results from source events](./screenshots/060-replay-mobile-chromium.png)
 
 **Verifications:**
 

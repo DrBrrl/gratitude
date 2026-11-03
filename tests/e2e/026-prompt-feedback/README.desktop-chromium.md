@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open the current prompt explanation
 
-![Open the current prompt explanation](./screenshots/006-starter-why-desktop-chromium.png)
+![Open the current prompt explanation](./screenshots/008-starter-why-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open feedback for this specific question
 
-![Open feedback for this specific question](./screenshots/007-starter-open-desktop-chromium.png)
+![Open feedback for this specific question](./screenshots/009-starter-open-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Write explicit feedback on the displayed prompt
 
-![Write explicit feedback on the displayed prompt](./screenshots/008-starter-write-desktop-chromium.png)
+![Write explicit feedback on the displayed prompt](./screenshots/010-starter-write-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Save the feedback without making an AI request
 
-![Save the feedback without making an AI request](./screenshots/009-starter-save-desktop-chromium.png)
+![Save the feedback without making an AI request](./screenshots/011-starter-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Close the prompt explanation after saving feedback
 
-![Close the prompt explanation after saving feedback](./screenshots/010-starter-close-desktop-chromium.png)
+![Close the prompt explanation after saving feedback](./screenshots/012-starter-close-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/011-initial-settings-desktop-chromium.png)
+![Open Settings](./screenshots/013-initial-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/012-initial-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/014-initial-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Review the starter question and its complete note while sharing is off
 
-![Review the starter question and its complete note while sharing is off](./screenshots/013-visible-off-desktop-chromium.png)
+![Review the starter question and its complete note while sharing is off](./screenshots/015-visible-off-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Choose to enable AI prompts
 
-![Choose to enable AI prompts](./screenshots/014-enable-desktop-chromium.png)
+![Choose to enable AI prompts](./screenshots/016-enable-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Choose to include saved prompt feedback
 
-![Choose to include saved prompt feedback](./screenshots/015-share-desktop-chromium.png)
+![Choose to include saved prompt feedback](./screenshots/017-share-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/016-consent-desktop-chromium.png)
+![Save these explicit sharing choices](./screenshots/018-consent-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/017-today-desktop-chromium.png)
+![Open Today](./screenshots/019-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Generate with the exact question and full saved feedback
 
-![Generate with the exact question and full saved feedback](./screenshots/018-generate-desktop-chromium.png)
+![Generate with the exact question and full saved feedback](./screenshots/020-generate-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Open the current prompt explanation
 
-![Open the current prompt explanation](./screenshots/019-generated-why-desktop-chromium.png)
+![Open the current prompt explanation](./screenshots/021-generated-why-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Open feedback for this specific question
 
-![Open feedback for this specific question](./screenshots/020-generated-open-desktop-chromium.png)
+![Open feedback for this specific question](./screenshots/022-generated-open-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Write explicit feedback on the displayed prompt
 
-![Write explicit feedback on the displayed prompt](./screenshots/021-generated-write-desktop-chromium.png)
+![Write explicit feedback on the displayed prompt](./screenshots/023-generated-write-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Save the feedback without making an AI request
 
-![Save the feedback without making an AI request](./screenshots/022-generated-save-desktop-chromium.png)
+![Save the feedback without making an AI request](./screenshots/024-generated-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Close the prompt explanation after saving feedback
 
-![Close the prompt explanation after saving feedback](./screenshots/023-generated-close-desktop-chromium.png)
+![Close the prompt explanation after saving feedback](./screenshots/025-generated-close-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/024-manage-settings-desktop-chromium.png)
+![Open Settings](./screenshots/026-manage-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/025-manage-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/027-manage-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Inspect feedback alongside each original question
 
-![Inspect feedback alongside each original question](./screenshots/026-two-pairs-desktop-chromium.png)
+![Inspect feedback alongside each original question](./screenshots/028-two-pairs-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Edit the starter prompt feedback in Settings
 
-![Edit the starter prompt feedback in Settings](./screenshots/027-edit-desktop-chromium.png)
+![Edit the starter prompt feedback in Settings](./screenshots/029-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Change the local feedback draft
 
-![Change the local feedback draft](./screenshots/028-draft-desktop-chromium.png)
+![Change the local feedback draft](./screenshots/030-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Cancel without changing saved feedback
 
-![Cancel without changing saved feedback](./screenshots/029-cancel-desktop-chromium.png)
+![Cancel without changing saved feedback](./screenshots/031-cancel-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Reopen feedback with the original saved text
 
-![Reopen feedback with the original saved text](./screenshots/030-edit-again-desktop-chromium.png)
+![Reopen feedback with the original saved text](./screenshots/032-edit-again-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Write the replacement feedback
 
-![Write the replacement feedback](./screenshots/031-revise-desktop-chromium.png)
+![Write the replacement feedback](./screenshots/033-revise-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Save the replacement immediately
 
-![Save the replacement immediately](./screenshots/032-save-edit-desktop-chromium.png)
+![Save the replacement immediately](./screenshots/034-save-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/033-updated-today-desktop-chromium.png)
+![Open Today](./screenshots/035-updated-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Generate using the revised feedback and the other saved pair
 
-![Generate using the revised feedback and the other saved pair](./screenshots/034-updated-context-desktop-chromium.png)
+![Generate using the revised feedback and the other saved pair](./screenshots/036-updated-context-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/035-delete-settings-desktop-chromium.png)
+![Open Settings](./screenshots/037-delete-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/036-delete-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/038-delete-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +360,7 @@ Viewport: desktop-chromium.
 
 ## Delete only the generated prompt’s feedback pair
 
-![Delete only the generated prompt’s feedback pair](./screenshots/037-delete-pair-desktop-chromium.png)
+![Delete only the generated prompt’s feedback pair](./screenshots/039-delete-pair-desktop-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +369,7 @@ Viewport: desktop-chromium.
 
 ## Reload the saved feedback changes without inference
 
-![Reload the saved feedback changes without inference](./screenshots/038-reload-desktop-chromium.png)
+![Reload the saved feedback changes without inference](./screenshots/040-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -360,7 +378,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/039-retained-settings-desktop-chromium.png)
+![Open Settings](./screenshots/041-retained-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -369,7 +387,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/040-retained-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/042-retained-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -378,7 +396,7 @@ Viewport: desktop-chromium.
 
 ## Keep edits and deletions after reload
 
-![Keep edits and deletions after reload](./screenshots/041-retained-pair-desktop-chromium.png)
+![Keep edits and deletions after reload](./screenshots/043-retained-pair-desktop-chromium.png)
 
 **Verifications:**
 
@@ -387,7 +405,7 @@ Viewport: desktop-chromium.
 
 ## Turn off sharing while keeping the saved feedback visible
 
-![Turn off sharing while keeping the saved feedback visible](./screenshots/042-unshare-desktop-chromium.png)
+![Turn off sharing while keeping the saved feedback visible](./screenshots/044-unshare-desktop-chromium.png)
 
 **Verifications:**
 
@@ -396,7 +414,7 @@ Viewport: desktop-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/043-unshare-save-desktop-chromium.png)
+![Save these explicit sharing choices](./screenshots/045-unshare-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -405,7 +423,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/044-private-today-desktop-chromium.png)
+![Open Today](./screenshots/046-private-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -414,7 +432,7 @@ Viewport: desktop-chromium.
 
 ## Generate without either half of the saved feedback
 
-![Generate without either half of the saved feedback](./screenshots/045-private-context-desktop-chromium.png)
+![Generate without either half of the saved feedback](./screenshots/047-private-context-desktop-chromium.png)
 
 **Verifications:**
 
@@ -423,7 +441,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/046-reshare-settings-desktop-chromium.png)
+![Open Settings](./screenshots/048-reshare-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -432,7 +450,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/047-reshare-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/049-reshare-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -441,7 +459,7 @@ Viewport: desktop-chromium.
 
 ## Re-enable sharing of the remaining saved pair
 
-![Re-enable sharing of the remaining saved pair](./screenshots/048-reshare-choice-desktop-chromium.png)
+![Re-enable sharing of the remaining saved pair](./screenshots/050-reshare-choice-desktop-chromium.png)
 
 **Verifications:**
 
@@ -450,7 +468,7 @@ Viewport: desktop-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/049-reshare-save-desktop-chromium.png)
+![Save these explicit sharing choices](./screenshots/051-reshare-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -459,7 +477,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/050-remaining-today-desktop-chromium.png)
+![Open Today](./screenshots/052-remaining-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -468,7 +486,7 @@ Viewport: desktop-chromium.
 
 ## Generate using only the revised undeleted pair
 
-![Generate using only the revised undeleted pair](./screenshots/051-remaining-context-desktop-chromium.png)
+![Generate using only the revised undeleted pair](./screenshots/053-remaining-context-desktop-chromium.png)
 
 **Verifications:**
 
@@ -477,7 +495,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/052-last-settings-desktop-chromium.png)
+![Open Settings](./screenshots/054-last-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -486,7 +504,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/053-last-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/055-last-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -495,7 +513,7 @@ Viewport: desktop-chromium.
 
 ## Delete the last feedback pair
 
-![Delete the last feedback pair](./screenshots/054-delete-last-desktop-chromium.png)
+![Delete the last feedback pair](./screenshots/056-delete-last-desktop-chromium.png)
 
 **Verifications:**
 
@@ -504,7 +522,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/055-recovery-settings-desktop-chromium.png)
+![Open Settings](./screenshots/057-recovery-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -513,7 +531,7 @@ Viewport: desktop-chromium.
 
 ## Open recovery for the complete event history
 
-![Open recovery for the complete event history](./screenshots/056-privacy-desktop-chromium.png)
+![Open recovery for the complete event history](./screenshots/058-privacy-desktop-chromium.png)
 
 **Verifications:**
 
@@ -522,7 +540,7 @@ Viewport: desktop-chromium.
 
 ## Replay feedback additions, edits and deletions without inference
 
-![Replay feedback additions, edits and deletions without inference](./screenshots/057-replay-desktop-chromium.png)
+![Replay feedback additions, edits and deletions without inference](./screenshots/059-replay-desktop-chromium.png)
 
 **Verifications:**
 
@@ -531,7 +549,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/058-replayed-settings-desktop-chromium.png)
+![Open Settings](./screenshots/060-replayed-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -540,7 +558,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/059-replayed-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/061-replayed-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -549,7 +567,7 @@ Viewport: desktop-chromium.
 
 ## Keep deleted pairs out of the rebuilt Settings view
 
-![Keep deleted pairs out of the rebuilt Settings view](./screenshots/060-empty-replayed-desktop-chromium.png)
+![Keep deleted pairs out of the rebuilt Settings view](./screenshots/062-empty-replayed-desktop-chromium.png)
 
 **Verifications:**
 
@@ -558,7 +576,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/061-cleared-today-desktop-chromium.png)
+![Open Today](./screenshots/063-cleared-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -567,7 +585,7 @@ Viewport: desktop-chromium.
 
 ## Generate after complete feedback deletion and replay
 
-![Generate after complete feedback deletion and replay](./screenshots/062-cleared-context-desktop-chromium.png)
+![Generate after complete feedback deletion and replay](./screenshots/064-cleared-context-desktop-chromium.png)
 
 **Verifications:**
 

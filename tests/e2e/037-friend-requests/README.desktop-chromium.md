@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/006-private-open-desktop-chromium.png)
+![Open the reflection editor](./screenshots/008-private-open-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Write a reflection
 
-![Write a reflection](./screenshots/007-private-type-desktop-chromium.png)
+![Write a reflection](./screenshots/009-private-type-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Save the reflection
 
-![Save the reflection](./screenshots/008-private-save-desktop-chromium.png)
+![Save the reflection](./screenshots/010-private-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/009-friends-desktop-chromium.png)
+![Open Friends and hugs](./screenshots/011-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/010-display-name-desktop-chromium.png)
+![Choose a friend-facing display name](./screenshots/012-display-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/011-username-desktop-chromium.png)
+![Choose a searchable username](./screenshots/013-username-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/012-profile-save-desktop-chromium.png)
+![Save the opt-in friends profile](./screenshots/014-profile-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Open a separate signed-out browser
 
-![Open a separate signed-out browser](./screenshots/013-other-device-desktop-chromium.png)
+![Open a separate signed-out browser](./screenshots/015-other-device-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/014-google-popup-desktop-chromium.png)
+![Choose Google sign-in](./screenshots/016-google-popup-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Add a fictional Google account
 
-![Add a fictional Google account](./screenshots/015-new-account-desktop-chromium.png)
+![Add a fictional Google account](./screenshots/017-new-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Enter the fictional email address
 
-![Enter the fictional email address](./screenshots/016-email-desktop-chromium.png)
+![Enter the fictional email address](./screenshots/018-email-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,16 +180,34 @@ Viewport: desktop-chromium.
 
 ## Enter a display name
 
-![Enter a display name](./screenshots/017-name-desktop-chromium.png)
+![Enter a display name](./screenshots/019-name-desktop-chromium.png)
 
 **Verifications:**
 
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/020-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/021-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/018-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/022-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -181,7 +217,7 @@ Viewport: desktop-chromium.
 
 ## Open Friends and hugs
 
-![Open Friends and hugs](./screenshots/019-bob-friends-desktop-chromium.png)
+![Open Friends and hugs](./screenshots/023-bob-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -190,7 +226,7 @@ Viewport: desktop-chromium.
 
 ## Choose a friend-facing display name
 
-![Choose a friend-facing display name](./screenshots/020-bob-display-name-desktop-chromium.png)
+![Choose a friend-facing display name](./screenshots/024-bob-display-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -199,7 +235,7 @@ Viewport: desktop-chromium.
 
 ## Choose a searchable username
 
-![Choose a searchable username](./screenshots/021-bob-username-desktop-chromium.png)
+![Choose a searchable username](./screenshots/025-bob-username-desktop-chromium.png)
 
 **Verifications:**
 
@@ -208,7 +244,7 @@ Viewport: desktop-chromium.
 
 ## Save the opt-in friends profile
 
-![Save the opt-in friends profile](./screenshots/022-bob-profile-save-desktop-chromium.png)
+![Save the opt-in friends profile](./screenshots/026-bob-profile-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -217,7 +253,7 @@ Viewport: desktop-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/023-alice-return-desktop-chromium.png)
+![Return to the other friend’s device](./screenshots/027-alice-return-desktop-chromium.png)
 
 **Verifications:**
 
@@ -226,7 +262,7 @@ Viewport: desktop-chromium.
 
 ## Enter a friend’s username
 
-![Enter a friend’s username](./screenshots/024-search-name-desktop-chromium.png)
+![Enter a friend’s username](./screenshots/028-search-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -235,7 +271,7 @@ Viewport: desktop-chromium.
 
 ## Find the chosen profile by username
 
-![Find the chosen profile by username](./screenshots/025-find-desktop-chromium.png)
+![Find the chosen profile by username](./screenshots/029-find-desktop-chromium.png)
 
 **Verifications:**
 
@@ -244,7 +280,7 @@ Viewport: desktop-chromium.
 
 ## Send a friend request without sharing journal content
 
-![Send a friend request without sharing journal content](./screenshots/026-request-desktop-chromium.png)
+![Send a friend request without sharing journal content](./screenshots/030-request-desktop-chromium.png)
 
 **Verifications:**
 
@@ -253,7 +289,7 @@ Viewport: desktop-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/027-bob-request-desktop-chromium.png)
+![Return to the other friend’s device](./screenshots/031-bob-request-desktop-chromium.png)
 
 **Verifications:**
 
@@ -262,7 +298,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly accept Alice’s request
 
-![Explicitly accept Alice’s request](./screenshots/028-accept-desktop-chromium.png)
+![Explicitly accept Alice’s request](./screenshots/032-accept-desktop-chromium.png)
 
 **Verifications:**
 
@@ -271,7 +307,7 @@ Viewport: desktop-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/029-alice-friends-desktop-chromium.png)
+![Return to the other friend’s device](./screenshots/033-alice-friends-desktop-chromium.png)
 
 **Verifications:**
 
@@ -280,7 +316,7 @@ Viewport: desktop-chromium.
 
 ## Open friendship controls
 
-![Open friendship controls](./screenshots/030-manage-desktop-chromium.png)
+![Open friendship controls](./screenshots/034-manage-desktop-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +325,7 @@ Viewport: desktop-chromium.
 
 ## Block Bob and end the friendship
 
-![Block Bob and end the friendship](./screenshots/031-block-desktop-chromium.png)
+![Block Bob and end the friendship](./screenshots/035-block-desktop-chromium.png)
 
 **Verifications:**
 
@@ -298,7 +334,7 @@ Viewport: desktop-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/032-revoked-desktop-chromium.png)
+![Return to the other friend’s device](./screenshots/036-revoked-desktop-chromium.png)
 
 **Verifications:**
 
@@ -307,7 +343,7 @@ Viewport: desktop-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/033-alice-blocked-desktop-chromium.png)
+![Return to the other friend’s device](./screenshots/037-alice-blocked-desktop-chromium.png)
 
 **Verifications:**
 
@@ -316,7 +352,7 @@ Viewport: desktop-chromium.
 
 ## Unblock without automatically restoring consent
 
-![Unblock without automatically restoring consent](./screenshots/034-unblock-desktop-chromium.png)
+![Unblock without automatically restoring consent](./screenshots/038-unblock-desktop-chromium.png)
 
 **Verifications:**
 

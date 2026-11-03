@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 import { editor, expectEditor, expectSynced, navigate, openEditor, startJournal } from '../helpers/journal-session';
-import { SYSTEM_PROMPT } from '../../../src/lib/ai/context';
+import {CURRENT_SYSTEM_PROMPT as SYSTEM_PROMPT} from '../helpers/gemini';
 import { AI_ENDPOINT, FIRST_PROMPT, SECOND_PROMPT, respond, aiSettings, saveChoices, toggleAI } from '../helpers/gemini';
 
 test('consent, personalized prompts, freeform feedback and immutable journal history', async ({ page }, info) => {
@@ -35,7 +35,7 @@ test('consent, personalized prompts, freeform feedback and immutable journal his
     expect(requests[0]).toContain('Everyday moments'); expect(requests[0]).toContain('reflections');
   }, 'The exact provider response is displayed only after it is saved, using the approved preferences');
   await steps.action('why', 'Inspect the sources used for this prompt', () => page.getByRole('button', { name: 'Why this prompt?' }).click(), async () => {
-    await expect(page.locator('.explanation')).toContainText('0 saved reflections and 0 pieces of feedback');
+    await expect(page.locator('.explanation')).toContainText('0 saved reflections (0 of 20 context units) and 0 pieces of feedback');
   });
   await steps.action('feedback', 'Open short freeform feedback', () => page.getByRole('button', { name: 'Give prompt feedback' }).click(), async () => {
     await expect(page.getByLabel('What would make prompts better for you?')).toBeVisible();

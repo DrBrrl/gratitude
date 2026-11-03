@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Read why this starter prompt is shown
 
-![Read why this starter prompt is shown](./screenshots/006-why-desktop-chromium.png)
+![Read why this starter prompt is shown](./screenshots/008-why-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/007-open-editor-desktop-chromium.png)
+![Open the reflection editor](./screenshots/009-open-editor-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Write the first paragraph
 
-![Write the first paragraph](./screenshots/008-first-desktop-chromium.png)
+![Write the first paragraph](./screenshots/010-first-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Start a new paragraph with one Enter
 
-![Start a new paragraph with one Enter](./screenshots/009-enter-desktop-chromium.png)
+![Start a new paragraph with one Enter](./screenshots/011-enter-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Write the next paragraph with half-line spacing
 
-![Write the next paragraph with half-line spacing](./screenshots/010-second-desktop-chromium.png)
+![Write the next paragraph with half-line spacing](./screenshots/012-second-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Paste another paragraph as plain text
 
-![Paste another paragraph as plain text](./screenshots/011-paste-desktop-chromium.png)
+![Paste another paragraph as plain text](./screenshots/013-paste-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Undo the paste
 
-![Undo the paste](./screenshots/012-undo-desktop-chromium.png)
+![Undo the paste](./screenshots/014-undo-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Restore the pasted paragraph
 
-![Restore the pasted paragraph](./screenshots/013-redo-desktop-chromium.png)
+![Restore the pasted paragraph](./screenshots/015-redo-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Save the paragraph-spaced reflection
 
-![Save the paragraph-spaced reflection](./screenshots/014-save-desktop-chromium.png)
+![Save the paragraph-spaced reflection](./screenshots/016-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Finish saving and open the journal
 
-![Finish saving and open the journal](./screenshots/015-journal-desktop-chromium.png)
+![Finish saving and open the journal](./screenshots/017-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Read the same paragraph layout in the full entry
 
-![Read the same paragraph layout in the full entry](./screenshots/016-entry-desktop-chromium.png)
+![Read the same paragraph layout in the full entry](./screenshots/018-entry-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Continue the saved reflection
 
-![Continue the saved reflection](./screenshots/017-edit-again-desktop-chromium.png)
+![Continue the saved reflection](./screenshots/019-edit-again-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Move the caret to the end
 
-![Move the caret to the end](./screenshots/018-end-desktop-chromium.png)
+![Move the caret to the end](./screenshots/020-end-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Start another paragraph
 
-![Start another paragraph](./screenshots/019-new-paragraph-desktop-chromium.png)
+![Start another paragraph](./screenshots/021-new-paragraph-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Leave an intentional blank paragraph
 
-![Leave an intentional blank paragraph](./screenshots/020-blank-paragraph-desktop-chromium.png)
+![Leave an intentional blank paragraph](./screenshots/022-blank-paragraph-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Write after the blank paragraph
 
-![Write after the blank paragraph](./screenshots/021-evening-desktop-chromium.png)
+![Write after the blank paragraph](./screenshots/023-evening-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Save without adding extra blank lines
 
-![Save without adding extra blank lines](./screenshots/022-save-blank-line-desktop-chromium.png)
+![Save without adding extra blank lines](./screenshots/024-save-blank-line-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Reopen the saved paragraphs
 
-![Reopen the saved paragraphs](./screenshots/023-reopen-desktop-chromium.png)
+![Reopen the saved paragraphs](./screenshots/025-reopen-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Return to Saved reflection without losing the draft
 
-![Return to Saved reflection without losing the draft](./screenshots/024-back-saved-desktop-chromium.png)
+![Return to Saved reflection without losing the draft](./screenshots/026-back-saved-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/025-settings-desktop-chromium.png)
+![Open Settings](./screenshots/027-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Open AI settings from the Settings menu
 
-![Open AI settings from the Settings menu](./screenshots/026-ai-settings-desktop-chromium.png)
+![Open AI settings from the Settings menu](./screenshots/028-ai-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Return with the shared compact back control
 
-![Return with the shared compact back control](./screenshots/027-back-settings-desktop-chromium.png)
+![Return with the shared compact back control](./screenshots/029-back-settings-desktop-chromium.png)
 
 **Verifications:**
 

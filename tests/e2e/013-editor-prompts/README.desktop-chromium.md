@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-configure-settings-desktop-chromium.png)
+![Open Settings](./screenshots/008-configure-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/007-configure-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/009-configure-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Choose to enable AI prompts
 
-![Choose to enable AI prompts](./screenshots/008-enable-desktop-chromium.png)
+![Choose to enable AI prompts](./screenshots/010-enable-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/009-choices-desktop-chromium.png)
+![Save these explicit sharing choices](./screenshots/011-choices-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/010-today-desktop-chromium.png)
+![Open Today](./screenshots/012-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Generate Today’s original prompt
 
-![Generate Today’s original prompt](./screenshots/011-daily-prompt-desktop-chromium.png)
+![Generate Today’s original prompt](./screenshots/013-daily-prompt-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/012-first-editor-desktop-chromium.png)
+![Open the reflection editor](./screenshots/014-first-editor-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Write today’s first reflection
 
-![Write today’s first reflection](./screenshots/013-first-text-desktop-chromium.png)
+![Write today’s first reflection](./screenshots/015-first-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Save today’s first reflection with its original question
 
-![Save today’s first reflection with its original question](./screenshots/014-first-save-desktop-chromium.png)
+![Save today’s first reflection with its original question](./screenshots/016-first-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Finish the first reflection
 
-![Finish the first reflection](./screenshots/015-first-done-desktop-chromium.png)
+![Finish the first reflection](./screenshots/017-first-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/016-return-today-desktop-chromium.png)
+![Open Today](./screenshots/018-return-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Start another reflection today
 
-![Start another reflection today](./screenshots/017-another-desktop-chromium.png)
+![Start another reflection today](./screenshots/019-another-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Generate a question inside the reflection editor
 
-![Generate a question inside the reflection editor](./screenshots/018-editor-ai-desktop-chromium.png)
+![Generate a question inside the reflection editor](./screenshots/020-editor-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Choose the generated question for this reflection
 
-![Choose the generated question for this reflection](./screenshots/019-use-ai-desktop-chromium.png)
+![Choose the generated question for this reflection](./screenshots/021-use-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Write a second independent reflection
 
-![Write a second independent reflection](./screenshots/020-second-text-desktop-chromium.png)
+![Write a second independent reflection](./screenshots/022-second-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Reload with the selected question and response safely in the draft
 
-![Reload with the selected question and response safely in the draft](./screenshots/021-reload-draft-desktop-chromium.png)
+![Reload with the selected question and response safely in the draft](./screenshots/023-reload-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Resume the additional reflection and its chosen AI question
 
-![Resume the additional reflection and its chosen AI question](./screenshots/022-resume-desktop-chromium.png)
+![Resume the additional reflection and its chosen AI question](./screenshots/024-resume-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Save the additional reflection with its own question
 
-![Save the additional reflection with its own question](./screenshots/023-second-save-desktop-chromium.png)
+![Save the additional reflection with its own question](./screenshots/025-second-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Edit a saved reflection and its prompt
 
-![Edit a saved reflection and its prompt](./screenshots/024-edit-second-desktop-chromium.png)
+![Edit a saved reflection and its prompt](./screenshots/026-edit-second-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Double-click the question to edit it manually
 
-![Double-click the question to edit it manually](./screenshots/025-double-click-desktop-chromium.png)
+![Double-click the question to edit it manually](./screenshots/027-double-click-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Write a replacement question
 
-![Write a replacement question](./screenshots/026-manual-buffer-desktop-chromium.png)
+![Write a replacement question](./screenshots/028-manual-buffer-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Cancel the replacement without changing the question
 
-![Cancel the replacement without changing the question](./screenshots/027-cancel-prompt-desktop-chromium.png)
+![Cancel the replacement without changing the question](./screenshots/029-cancel-prompt-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Open prompt editing with the accessible mobile-friendly button
 
-![Open prompt editing with the accessible mobile-friendly button](./screenshots/028-edit-button-desktop-chromium.png)
+![Open prompt editing with the accessible mobile-friendly button](./screenshots/030-edit-button-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Keep an empty question from being accepted
 
-![Keep an empty question from being accepted](./screenshots/029-empty-prompt-desktop-chromium.png)
+![Keep an empty question from being accepted](./screenshots/031-empty-prompt-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Write the custom question again
 
-![Write the custom question again](./screenshots/030-manual-question-desktop-chromium.png)
+![Write the custom question again](./screenshots/032-manual-question-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Keep the manually written question in this local draft
 
-![Keep the manually written question in this local draft](./screenshots/031-accept-manual-desktop-chromium.png)
+![Keep the manually written question in this local draft](./screenshots/033-accept-manual-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Save the edited question while retaining the reflection text
 
-![Save the edited question while retaining the reflection text](./screenshots/032-save-manual-desktop-chromium.png)
+![Save the edited question while retaining the reflection text](./screenshots/034-save-manual-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Return to both saved entries
 
-![Return to both saved entries](./screenshots/033-manual-done-desktop-chromium.png)
+![Return to both saved entries](./screenshots/035-manual-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Find the reflection using its manually edited question
 
-![Find the reflection using its manually edited question](./screenshots/034-search-manual-desktop-chromium.png)
+![Find the reflection using its manually edited question](./screenshots/036-search-manual-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Read the saved custom question in the full entry
 
-![Read the saved custom question in the full entry](./screenshots/035-open-manual-desktop-chromium.png)
+![Read the saved custom question in the full entry](./screenshots/037-open-manual-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Request another question while keeping the saved entry open
 
-![Request another question while keeping the saved entry open](./screenshots/036-edit-again-desktop-chromium.png)
+![Request another question while keeping the saved entry open](./screenshots/038-edit-again-desktop-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +360,7 @@ Viewport: desktop-chromium.
 
 ## Start an AI request that will arrive later
 
-![Start an AI request that will arrive later](./screenshots/037-delayed-ai-desktop-chromium.png)
+![Start an AI request that will arrive later](./screenshots/039-delayed-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +369,7 @@ Viewport: desktop-chromium.
 
 ## Edit the question while AI is working
 
-![Edit the question while AI is working](./screenshots/038-edit-in-flight-desktop-chromium.png)
+![Edit the question while AI is working](./screenshots/040-edit-in-flight-desktop-chromium.png)
 
 **Verifications:**
 
@@ -360,7 +378,7 @@ Viewport: desktop-chromium.
 
 ## Write the question to retain when the AI response arrives
 
-![Write the question to retain when the AI response arrives](./screenshots/039-later-manual-desktop-chromium.png)
+![Write the question to retain when the AI response arrives](./screenshots/041-later-manual-desktop-chromium.png)
 
 **Verifications:**
 
@@ -369,7 +387,7 @@ Viewport: desktop-chromium.
 
 ## Confirm the manual question during the AI request
 
-![Confirm the manual question during the AI request](./screenshots/040-keep-manual-desktop-chromium.png)
+![Confirm the manual question during the AI request](./screenshots/042-keep-manual-desktop-chromium.png)
 
 **Verifications:**
 
@@ -378,7 +396,7 @@ Viewport: desktop-chromium.
 
 ## Retain an already-received question offline without replacing manual text
 
-![Retain an already-received question offline without replacing manual text](./screenshots/041-received-offline-desktop-chromium.png)
+![Retain an already-received question offline without replacing manual text](./screenshots/043-received-offline-desktop-chromium.png)
 
 **Verifications:**
 
@@ -387,7 +405,7 @@ Viewport: desktop-chromium.
 
 ## Reload without repeating the AI request
 
-![Reload without repeating the AI request](./screenshots/042-reload-result-desktop-chromium.png)
+![Reload without repeating the AI request](./screenshots/044-reload-result-desktop-chromium.png)
 
 **Verifications:**
 
@@ -396,7 +414,7 @@ Viewport: desktop-chromium.
 
 ## Resume the durable manual question in the saved-entry draft
 
-![Resume the durable manual question in the saved-entry draft](./screenshots/043-resume-manual-desktop-chromium.png)
+![Resume the durable manual question in the saved-entry draft](./screenshots/045-resume-manual-desktop-chromium.png)
 
 **Verifications:**
 
@@ -405,7 +423,7 @@ Viewport: desktop-chromium.
 
 ## Open the saved entry’s independent local draft
 
-![Open the saved entry’s independent local draft](./screenshots/044-resume-editor-desktop-chromium.png)
+![Open the saved entry’s independent local draft](./screenshots/046-resume-editor-desktop-chromium.png)
 
 **Verifications:**
 
@@ -414,7 +432,7 @@ Viewport: desktop-chromium.
 
 ## Sync the received AI output without another model call
 
-![Sync the received AI output without another model call](./screenshots/045-sync-result-desktop-chromium.png)
+![Sync the received AI output without another model call](./screenshots/047-sync-result-desktop-chromium.png)
 
 **Verifications:**
 
@@ -423,7 +441,7 @@ Viewport: desktop-chromium.
 
 ## Keep the manual question instead of the late AI option
 
-![Keep the manual question instead of the late AI option](./screenshots/046-reject-option-desktop-chromium.png)
+![Keep the manual question instead of the late AI option](./screenshots/048-reject-option-desktop-chromium.png)
 
 **Verifications:**
 
@@ -432,7 +450,7 @@ Viewport: desktop-chromium.
 
 ## Save the retained manual question
 
-![Save the retained manual question](./screenshots/047-final-save-desktop-chromium.png)
+![Save the retained manual question](./screenshots/049-final-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -441,7 +459,7 @@ Viewport: desktop-chromium.
 
 ## Finish editing and return to the journal
 
-![Finish editing and return to the journal](./screenshots/048-final-done-desktop-chromium.png)
+![Finish editing and return to the journal](./screenshots/050-final-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -450,7 +468,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/049-replay-menu-settings-desktop-chromium.png)
+![Open Settings](./screenshots/051-replay-menu-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -459,7 +477,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/050-replay-menu-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/052-replay-menu-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -468,7 +486,7 @@ Viewport: desktop-chromium.
 
 ## Return to Settings
 
-![Return to Settings](./screenshots/051-settings-back-desktop-chromium.png)
+![Return to Settings](./screenshots/053-settings-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -477,7 +495,7 @@ Viewport: desktop-chromium.
 
 ## Open journal recovery
 
-![Open journal recovery](./screenshots/052-privacy-desktop-chromium.png)
+![Open journal recovery](./screenshots/054-privacy-desktop-chromium.png)
 
 **Verifications:**
 
@@ -486,7 +504,7 @@ Viewport: desktop-chromium.
 
 ## Recreate the edited questions from recorded events
 
-![Recreate the edited questions from recorded events](./screenshots/053-rebuild-desktop-chromium.png)
+![Recreate the edited questions from recorded events](./screenshots/055-rebuild-desktop-chromium.png)
 
 **Verifications:**
 
@@ -495,7 +513,7 @@ Viewport: desktop-chromium.
 
 ## Return to Today with its original question unchanged
 
-![Return to Today with its original question unchanged](./screenshots/054-today-unchanged-desktop-chromium.png)
+![Return to Today with its original question unchanged](./screenshots/056-today-unchanged-desktop-chromium.png)
 
 **Verifications:**
 

@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-initial-settings-desktop-chromium.png)
+![Open Settings](./screenshots/008-initial-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/007-initial-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/009-initial-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Choose to enable AI prompts
 
-![Choose to enable AI prompts](./screenshots/008-enable-desktop-chromium.png)
+![Choose to enable AI prompts](./screenshots/010-enable-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Set the same personal guidance used for ordinary prompts
 
-![Set the same personal guidance used for ordinary prompts](./screenshots/009-guidance-desktop-chromium.png)
+![Set the same personal guidance used for ordinary prompts](./screenshots/011-guidance-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/010-save-consent-desktop-chromium.png)
+![Save these explicit sharing choices](./screenshots/012-save-consent-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Open spreadsheet import
 
-![Open spreadsheet import](./screenshots/011-import-desktop-chromium.png)
+![Open spreadsheet import](./screenshots/013-import-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Select 29 fictional questions
 
-![Select 29 fictional questions](./screenshots/012-file-desktop-chromium.png)
+![Select 29 fictional questions](./screenshots/014-file-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Import the reserve without inference while automatic refill is off
 
-![Import the reserve without inference while automatic refill is off](./screenshots/013-confirm-desktop-chromium.png)
+![Import the reserve without inference while automatic refill is off](./screenshots/015-confirm-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Choose the backup refill provider independently from normal prompts
 
-![Choose the backup refill provider independently from normal prompts](./screenshots/014-preferences-desktop-chromium.png)
+![Choose the backup refill provider independently from normal prompts](./screenshots/016-preferences-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Save a local backup preference with automatic generation still off
 
-![Save a local backup preference with automatic generation still off](./screenshots/015-save-local-choice-desktop-chromium.png)
+![Save a local backup preference with automatic generation still off](./screenshots/017-save-local-choice-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Open device-private local backup credentials
 
-![Open device-private local backup credentials](./screenshots/016-open-connection-desktop-chromium.png)
+![Open device-private local backup credentials](./screenshots/018-open-connection-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Enter a fictional local server token for this browser tab
 
-![Enter a fictional local server token for this browser tab](./screenshots/017-token-desktop-chromium.png)
+![Enter a fictional local server token for this browser tab](./screenshots/019-token-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Save local connection settings without changing the foreground Gemini provider
 
-![Save local connection settings without changing the foreground Gemini provider](./screenshots/018-save-connection-desktop-chromium.png)
+![Save local connection settings without changing the foreground Gemini provider](./screenshots/020-save-connection-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Reopen backup preferences
 
-![Reopen backup preferences](./screenshots/019-refill-preferences-desktop-chromium.png)
+![Reopen backup preferences](./screenshots/021-refill-preferences-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Enable automatic refill below thirty
 
-![Enable automatic refill below thirty](./screenshots/020-automatic-desktop-chromium.png)
+![Enable automatic refill below thirty](./screenshots/022-automatic-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Save the preference and let the selected local LLM replenish one question
 
-![Save the preference and let the selected local LLM replenish one question](./screenshots/021-local-refill-desktop-chromium.png)
+![Save the preference and let the selected local LLM replenish one question](./screenshots/023-local-refill-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Open the independent refill preference again
 
-![Open the independent refill preference again](./screenshots/022-cloud-preferences-desktop-chromium.png)
+![Open the independent refill preference again](./screenshots/024-cloud-preferences-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Choose Gemini for future backup refills
 
-![Choose Gemini for future backup refills](./screenshots/023-choose-cloud-desktop-chromium.png)
+![Choose Gemini for future backup refills](./screenshots/025-choose-cloud-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Save the cloud preference without generating above the minimum
 
-![Save the cloud preference without generating above the minimum](./screenshots/024-save-cloud-desktop-chromium.png)
+![Save the cloud preference without generating above the minimum](./screenshots/026-save-cloud-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/025-today-desktop-chromium.png)
+![Open Today](./screenshots/027-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Background generation preserves the current daily question
 
-![Background generation preserves the current daily question](./screenshots/026-today-unchanged-desktop-chromium.png)
+![Background generation preserves the current daily question](./screenshots/028-today-unchanged-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Choose from the complete reserve
 
-![Choose from the complete reserve](./screenshots/027-picker-desktop-chromium.png)
+![Choose from the complete reserve](./screenshots/029-picker-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Select a question without invoking either model
 
-![Select a question without invoking either model](./screenshots/028-choose-desktop-chromium.png)
+![Select a question without invoking either model](./screenshots/030-choose-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/029-editor-desktop-chromium.png)
+![Open the reflection editor](./screenshots/031-editor-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Write a reflection using the selected reserve prompt
 
-![Write a reflection using the selected reserve prompt](./screenshots/030-write-desktop-chromium.png)
+![Write a reflection using the selected reserve prompt](./screenshots/032-write-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Save the reflection and replenish the used question through Gemini
 
-![Save the reflection and replenish the used question through Gemini](./screenshots/031-save-desktop-chromium.png)
+![Save the reflection and replenish the used question through Gemini](./screenshots/033-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal after successful replenishment
 
-![Open Journal after successful replenishment](./screenshots/032-done-desktop-chromium.png)
+![Open Journal after successful replenishment](./screenshots/034-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Reload a full reserve without new inference
 
-![Reload a full reserve without new inference](./screenshots/033-reload-desktop-chromium.png)
+![Reload a full reserve without new inference](./screenshots/035-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/034-complete-settings-desktop-chromium.png)
+![Open Settings](./screenshots/036-complete-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/035-complete-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/037-complete-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Verify cloud/local output and consumption through complete and cached replay
 
-![Verify cloud/local output and consumption through complete and cached replay](./screenshots/036-replay-desktop-chromium.png)
+![Verify cloud/local output and consumption through complete and cached replay](./screenshots/038-replay-desktop-chromium.png)
 
 **Verifications:**
 

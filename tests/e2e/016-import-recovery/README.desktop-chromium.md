@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-pending-settings-desktop-chromium.png)
+![Open Settings](./screenshots/008-pending-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open the private journal importer
 
-![Open the private journal importer](./screenshots/007-pending-import-desktop-chromium.png)
+![Open the private journal importer](./screenshots/009-pending-import-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Check the selected fictional ZIP before importing
 
-![Check the selected fictional ZIP before importing](./screenshots/008-preview-desktop-chromium.png)
+![Check the selected fictional ZIP before importing](./screenshots/010-preview-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Recover a server-confirmed import without starting automatically
 
-![Recover a server-confirmed import without starting automatically](./screenshots/009-pending-desktop-chromium.png)
+![Recover a server-confirmed import without starting automatically](./screenshots/011-pending-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Reload while the import is still unconfirmed
 
-![Reload while the import is still unconfirmed](./screenshots/010-reload-desktop-chromium.png)
+![Reload while the import is still unconfirmed](./screenshots/012-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/011-recovery-settings-desktop-chromium.png)
+![Open Settings](./screenshots/013-recovery-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Open the private journal importer
 
-![Open the private journal importer](./screenshots/012-recovery-import-desktop-chromium.png)
+![Open the private journal importer](./screenshots/014-recovery-import-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Recover the private ZIP selection on this device
 
-![Recover the private ZIP selection on this device](./screenshots/013-restored-desktop-chromium.png)
+![Recover the private ZIP selection on this device](./screenshots/015-restored-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Confirm this account before resuming
 
-![Confirm this account before resuming](./screenshots/014-account-desktop-chromium.png)
+![Confirm this account before resuming](./screenshots/016-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Stop on a corrupt stored photo without overwriting it
 
-![Stop on a corrupt stored photo without overwriting it](./screenshots/015-integrity-desktop-chromium.png)
+![Stop on a corrupt stored photo without overwriting it](./screenshots/017-integrity-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Confirm a retry after the corrupt test object is removed
 
-![Confirm a retry after the corrupt test object is removed](./screenshots/016-reconfirm-desktop-chromium.png)
+![Confirm a retry after the corrupt test object is removed](./screenshots/018-reconfirm-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Resume and show progress during a photo upload
 
-![Resume and show progress during a photo upload](./screenshots/017-start-resume-desktop-chromium.png)
+![Resume and show progress during a photo upload](./screenshots/019-start-resume-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Pause after the current upload operation
 
-![Pause after the current upload operation](./screenshots/018-pause-desktop-chromium.png)
+![Pause after the current upload operation](./screenshots/020-pause-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Retain the pending receipt and uploaded photo for recovery
 
-![Retain the pending receipt and uploaded photo for recovery](./screenshots/019-paused-desktop-chromium.png)
+![Retain the pending receipt and uploaded photo for recovery](./screenshots/021-paused-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Confirm continued import after pausing
 
-![Confirm continued import after pausing](./screenshots/020-confirm-resume-desktop-chromium.png)
+![Confirm continued import after pausing](./screenshots/022-confirm-resume-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Finish the same pending import without duplicate records
 
-![Finish the same pending import without duplicate records](./screenshots/021-resume-desktop-chromium.png)
+![Finish the same pending import without duplicate records](./screenshots/023-resume-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Reject changed source input under an existing source identity
 
-![Reject changed source input under an existing source identity](./screenshots/022-conflict-desktop-chromium.png)
+![Reject changed source input under an existing source identity](./screenshots/024-conflict-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Forget this device’s ZIP selection without deleting saved entries
 
-![Forget this device’s ZIP selection without deleting saved entries](./screenshots/023-forget-desktop-chromium.png)
+![Forget this device’s ZIP selection without deleting saved entries](./screenshots/025-forget-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/024-settings-desktop-chromium.png)
+![Open Settings](./screenshots/026-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Open journal recovery
 
-![Open journal recovery](./screenshots/025-privacy-desktop-chromium.png)
+![Open journal recovery](./screenshots/027-privacy-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Replay import receipts and entries without the ZIP or AI
 
-![Replay import receipts and entries without the ZIP or AI](./screenshots/026-rebuild-desktop-chromium.png)
+![Replay import receipts and entries without the ZIP or AI](./screenshots/028-rebuild-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Read all imported entries after complete replay
 
-![Read all imported entries after complete replay](./screenshots/027-journal-desktop-chromium.png)
+![Read all imported entries after complete replay](./screenshots/029-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/028-after-forget-settings-desktop-chromium.png)
+![Open Settings](./screenshots/030-after-forget-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Open the private journal importer
 
-![Open the private journal importer](./screenshots/029-after-forget-import-desktop-chromium.png)
+![Open the private journal importer](./screenshots/031-after-forget-import-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Keep the source ZIP off this device after forgetting it
 
-![Keep the source ZIP off this device after forgetting it](./screenshots/030-forgotten-desktop-chromium.png)
+![Keep the source ZIP off this device after forgetting it](./screenshots/032-forgotten-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Check the selected fictional ZIP before importing
 
-![Check the selected fictional ZIP before importing](./screenshots/031-reselect-desktop-chromium.png)
+![Check the selected fictional ZIP before importing](./screenshots/033-reselect-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Recognize completed imports using the server history
 
-![Recognize completed imports using the server history](./screenshots/032-receipt-recovery-desktop-chromium.png)
+![Recognize completed imports using the server history](./screenshots/034-receipt-recovery-desktop-chromium.png)
 
 **Verifications:**
 

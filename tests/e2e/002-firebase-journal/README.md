@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/006-tea-open-mobile-chromium.png)
+![Open the reflection editor](./screenshots/008-tea-open-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Write a reflection
 
-![Write a reflection](./screenshots/007-tea-type-mobile-chromium.png)
+![Write a reflection](./screenshots/009-tea-type-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Save the reflection
 
-![Save the reflection](./screenshots/008-tea-save-mobile-chromium.png)
+![Save the reflection](./screenshots/010-tea-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Open Gratitude on another device
 
-![Open Gratitude on another device](./screenshots/009-second-device-mobile-chromium.png)
+![Open Gratitude on another device](./screenshots/011-second-device-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/010-google-popup-mobile-chromium.png)
+![Choose Google sign-in](./screenshots/012-google-popup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Return to the journal after today’s saved reflection
 
-![Return to the journal after today’s saved reflection](./screenshots/011-signed-in-mobile-chromium.png)
+![Return to the journal after today’s saved reflection](./screenshots/013-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -118,7 +136,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/012-second-journal-mobile-chromium.png)
+![Open Journal](./screenshots/014-second-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -127,7 +145,7 @@ Viewport: mobile-chromium.
 
 ## Reload the first device
 
-![Reload the first device](./screenshots/013-reload-mobile-chromium.png)
+![Reload the first device](./screenshots/015-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -136,7 +154,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/014-settings-mobile-chromium.png)
+![Open Settings](./screenshots/016-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -145,7 +163,7 @@ Viewport: mobile-chromium.
 
 ## Open Privacy & data
 
-![Open Privacy & data](./screenshots/015-recovery-mobile-chromium.png)
+![Open Privacy & data](./screenshots/017-recovery-mobile-chromium.png)
 
 **Verifications:**
 
@@ -154,7 +172,7 @@ Viewport: mobile-chromium.
 
 ## Rebuild the local projection from saved events
 
-![Rebuild the local projection from saved events](./screenshots/016-rebuild-mobile-chromium.png)
+![Rebuild the local projection from saved events](./screenshots/018-rebuild-mobile-chromium.png)
 
 **Verifications:**
 
@@ -163,7 +181,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/017-journal-mobile-chromium.png)
+![Open Journal](./screenshots/019-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -172,7 +190,7 @@ Viewport: mobile-chromium.
 
 ## Reload after a damaged device cache
 
-![Reload after a damaged device cache](./screenshots/018-corrupt-reload-mobile-chromium.png)
+![Reload after a damaged device cache](./screenshots/020-corrupt-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -181,7 +199,7 @@ Viewport: mobile-chromium.
 
 ## Verify the original reflection is recovered
 
-![Verify the original reflection is recovered](./screenshots/019-recovered-journal-mobile-chromium.png)
+![Verify the original reflection is recovered](./screenshots/021-recovered-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -190,7 +208,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/020-today-mobile-chromium.png)
+![Open Today](./screenshots/022-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -199,7 +217,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/021-continue-mobile-chromium.png)
+![Open the reflection editor](./screenshots/023-continue-mobile-chromium.png)
 
 **Verifications:**
 
@@ -208,7 +226,7 @@ Viewport: mobile-chromium.
 
 ## Disconnect this device
 
-![Disconnect this device](./screenshots/022-offline-mobile-chromium.png)
+![Disconnect this device](./screenshots/024-offline-mobile-chromium.png)
 
 **Verifications:**
 
@@ -217,7 +235,7 @@ Viewport: mobile-chromium.
 
 ## Continue today’s reflection while offline
 
-![Continue today’s reflection while offline](./screenshots/023-offline-type-mobile-chromium.png)
+![Continue today’s reflection while offline](./screenshots/025-offline-type-mobile-chromium.png)
 
 **Verifications:**
 
@@ -226,7 +244,7 @@ Viewport: mobile-chromium.
 
 ## Save the offline changes on this device
 
-![Save the offline changes on this device](./screenshots/024-offline-save-mobile-chromium.png)
+![Save the offline changes on this device](./screenshots/026-offline-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -235,7 +253,7 @@ Viewport: mobile-chromium.
 
 ## Close the application before reconnecting
 
-![Close the application before reconnecting](./screenshots/025-leave-mobile-chromium.png)
+![Close the application before reconnecting](./screenshots/027-leave-mobile-chromium.png)
 
 **Verifications:**
 
@@ -244,7 +262,7 @@ Viewport: mobile-chromium.
 
 ## Reconnect the device
 
-![Reconnect the device](./screenshots/026-online-mobile-chromium.png)
+![Reconnect the device](./screenshots/028-online-mobile-chromium.png)
 
 **Verifications:**
 
@@ -253,7 +271,7 @@ Viewport: mobile-chromium.
 
 ## Reopen Gratitude and retry the saved outbox
 
-![Reopen Gratitude and retry the saved outbox](./screenshots/027-return-mobile-chromium.png)
+![Reopen Gratitude and retry the saved outbox](./screenshots/029-return-mobile-chromium.png)
 
 **Verifications:**
 
@@ -262,7 +280,7 @@ Viewport: mobile-chromium.
 
 ## Check that the reflection was updated without duplication
 
-![Check that the reflection was updated without duplication](./screenshots/028-confirm-save-mobile-chromium.png)
+![Check that the reflection was updated without duplication](./screenshots/030-confirm-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -271,7 +289,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/029-settings-account-mobile-chromium.png)
+![Open Settings](./screenshots/031-settings-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -280,7 +298,7 @@ Viewport: mobile-chromium.
 
 ## Open account settings
 
-![Open account settings](./screenshots/030-account-mobile-chromium.png)
+![Open account settings](./screenshots/032-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +307,7 @@ Viewport: mobile-chromium.
 
 ## Sign out and hide the private journal
 
-![Sign out and hide the private journal](./screenshots/031-sign-out-mobile-chromium.png)
+![Sign out and hide the private journal](./screenshots/033-sign-out-mobile-chromium.png)
 
 **Verifications:**
 

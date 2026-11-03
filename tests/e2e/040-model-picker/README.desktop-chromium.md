@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/006-configure-settings-desktop-chromium.png)
+![Open Settings](./screenshots/008-configure-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/007-configure-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/009-configure-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Choose LM Studio
 
-![Choose LM Studio](./screenshots/008-local-desktop-chromium.png)
+![Choose LM Studio](./screenshots/010-local-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Enter the model laptop’s HTTPS origin
 
-![Enter the model laptop’s HTTPS origin](./screenshots/009-server-desktop-chromium.png)
+![Enter the model laptop’s HTTPS origin](./screenshots/011-server-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Enter the fictional server token
 
-![Enter the fictional server token](./screenshots/010-token-desktop-chromium.png)
+![Enter the fictional server token](./screenshots/012-token-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Discover models without generation or loading
 
-![Discover models without generation or loading](./screenshots/011-discover-desktop-chromium.png)
+![Discover models without generation or loading](./screenshots/013-discover-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Choose an available unloaded text model
 
-![Choose an available unloaded text model](./screenshots/012-unloaded-desktop-chromium.png)
+![Choose an available unloaded text model](./screenshots/014-unloaded-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Choose a loaded instance by its API identifier
 
-![Choose a loaded instance by its API identifier](./screenshots/013-alias-desktop-chromium.png)
+![Choose a loaded instance by its API identifier](./screenshots/015-alias-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Return to manual API identifier entry
 
-![Return to manual API identifier entry](./screenshots/014-manual-desktop-chromium.png)
+![Return to manual API identifier entry](./screenshots/016-manual-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Enter an identifier missing from this server
 
-![Enter an identifier missing from this server](./screenshots/015-missing-desktop-chromium.png)
+![Enter an identifier missing from this server](./screenshots/017-missing-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Retain the missing choice while offering discovered replacements
 
-![Retain the missing choice while offering discovered replacements](./screenshots/016-recover-desktop-chromium.png)
+![Retain the missing choice while offering discovered replacements](./screenshots/018-recover-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly replace the missing identifier
 
-![Explicitly replace the missing identifier](./screenshots/017-replacement-desktop-chromium.png)
+![Explicitly replace the missing identifier](./screenshots/019-replacement-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Save the chosen model without inference
 
-![Save the chosen model without inference](./screenshots/018-save-desktop-chromium.png)
+![Save the chosen model without inference](./screenshots/020-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Restore the saved identifier without fetching a catalogue
 
-![Restore the saved identifier without fetching a catalogue](./screenshots/019-reload-desktop-chromium.png)
+![Restore the saved identifier without fetching a catalogue](./screenshots/021-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/020-restored-settings-desktop-chromium.png)
+![Open Settings](./screenshots/022-restored-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/021-restored-ai-desktop-chromium.png)
+![Open AI sharing choices](./screenshots/023-restored-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Keep the chosen model and token after reload
 
-![Keep the chosen model and token after reload](./screenshots/022-saved-model-desktop-chromium.png)
+![Keep the chosen model and token after reload](./screenshots/024-saved-model-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly refresh the server catalogue
 
-![Explicitly refresh the server catalogue](./screenshots/023-refresh-desktop-chromium.png)
+![Explicitly refresh the server catalogue](./screenshots/025-refresh-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Clear discovered models and the token on a destination change
 
-![Clear discovered models and the token on a destination change](./screenshots/024-switch-server-desktop-chromium.png)
+![Clear discovered models and the token on a destination change](./screenshots/026-switch-server-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Keep old models unavailable when the new server rejects authentication
 
-![Keep old models unavailable when the new server rejects authentication](./screenshots/025-auth-required-desktop-chromium.png)
+![Keep old models unavailable when the new server rejects authentication](./screenshots/027-auth-required-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Enter a token for the new destination
 
-![Enter a token for the new destination](./screenshots/026-new-token-desktop-chromium.png)
+![Enter a token for the new destination](./screenshots/028-new-token-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Report an empty catalogue without selecting another provider
 
-![Report an empty catalogue without selecting another provider](./screenshots/027-empty-desktop-chromium.png)
+![Report an empty catalogue without selecting another provider](./screenshots/029-empty-desktop-chromium.png)
 
 **Verifications:**
 

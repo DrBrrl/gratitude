@@ -51,9 +51,27 @@ Viewport: desktop-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: desktop-chromium.
 
 ## Read the present Sunday-first week and its repairable streak
 
-![Read the present Sunday-first week and its repairable streak](./screenshots/006-week-desktop-chromium.png)
+![Read the present Sunday-first week and its repairable streak](./screenshots/008-week-desktop-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: desktop-chromium.
 
 ## Open the only entry on a date directly from the week box
 
-![Open the only entry on a date directly from the week box](./screenshots/007-week-date-desktop-chromium.png)
+![Open the only entry on a date directly from the week box](./screenshots/009-week-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: desktop-chromium.
 
 ## Return to Today and the same week date
 
-![Return to Today and the same week date](./screenshots/008-week-back-desktop-chromium.png)
+![Return to Today and the same week date](./screenshots/010-week-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Open the full calendar without adding a navigation tab
 
-![Open the full calendar without adding a navigation tab](./screenshots/009-open-calendar-desktop-chromium.png)
+![Open the full calendar without adding a navigation tab](./screenshots/011-open-calendar-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Jump directly to an earlier month
 
-![Jump directly to an earlier month](./screenshots/010-jump-desktop-chromium.png)
+![Jump directly to an earlier month](./screenshots/012-jump-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Scroll continuously into earlier history
 
-![Scroll continuously into earlier history](./screenshots/011-scroll-desktop-chromium.png)
+![Scroll continuously into earlier history](./screenshots/013-scroll-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Return to September using the month chooser
 
-![Return to September using the month chooser](./screenshots/012-return-month-desktop-chromium.png)
+![Return to September using the month chooser](./screenshots/014-return-month-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Open a saved date from the scrolling calendar
 
-![Open a saved date from the scrolling calendar](./screenshots/013-single-desktop-chromium.png)
+![Open a saved date from the scrolling calendar](./screenshots/015-single-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Return to the originating month and focused day
 
-![Return to the originating month and focused day](./screenshots/014-calendar-back-desktop-chromium.png)
+![Return to the originating month and focused day](./screenshots/016-calendar-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Show every reflection on a multiple-entry date
 
-![Show every reflection on a multiple-entry date](./screenshots/015-multiple-desktop-chromium.png)
+![Show every reflection on a multiple-entry date](./screenshots/017-multiple-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Read one reflection in the dated journal
 
-![Read one reflection in the dated journal](./screenshots/016-multi-entry-desktop-chromium.png)
+![Read one reflection in the dated journal](./screenshots/018-multi-entry-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Return to the same dated journal
 
-![Return to the same dated journal](./screenshots/017-day-back-desktop-chromium.png)
+![Return to the same dated journal](./screenshots/019-day-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Return from the dated journal to the same month
 
-![Return from the dated journal to the same month](./screenshots/018-month-back-desktop-chromium.png)
+![Return from the dated journal to the same month](./screenshots/020-month-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Open the missing date without creating a draft
 
-![Open the missing date without creating a draft](./screenshots/019-gap-desktop-chromium.png)
+![Open the missing date without creating a draft](./screenshots/021-gap-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Choose to write a reflection for the missing date
 
-![Choose to write a reflection for the missing date](./screenshots/020-write-gap-desktop-chromium.png)
+![Choose to write a reflection for the missing date](./screenshots/022-write-gap-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Remember a moment from that date
 
-![Remember a moment from that date](./screenshots/021-reflection-desktop-chromium.png)
+![Remember a moment from that date](./screenshots/023-reflection-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Save the backfill and join the two stretches
 
-![Save the backfill and join the two stretches](./screenshots/022-save-desktop-chromium.png)
+![Save the backfill and join the two stretches](./screenshots/024-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Return to the dated journal after saving
 
-![Return to the dated journal after saving](./screenshots/023-done-desktop-chromium.png)
+![Return to the dated journal after saving](./screenshots/025-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Return to the calendar and see the repaired date ring
 
-![Return to the calendar and see the repaired date ring](./screenshots/024-repaired-desktop-chromium.png)
+![Return to the calendar and see the repaired date ring](./screenshots/026-repaired-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Recover the calendar month after reload
 
-![Recover the calendar month after reload](./screenshots/025-reload-desktop-chromium.png)
+![Recover the calendar month after reload](./screenshots/027-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Return to Today without losing the repaired streak
 
-![Return to Today without losing the repaired streak](./screenshots/026-exit-desktop-chromium.png)
+![Return to Today without losing the repaired streak](./screenshots/028-exit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/027-journal-desktop-chromium.png)
+![Open Journal](./screenshots/029-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Use the same week box above New entry in Journal
 
-![Use the same week box above New entry in Journal](./screenshots/028-journal-box-desktop-chromium.png)
+![Use the same week box above New entry in Journal](./screenshots/030-journal-box-desktop-chromium.png)
 
 **Verifications:**
 

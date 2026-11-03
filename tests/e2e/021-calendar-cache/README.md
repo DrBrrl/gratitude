@@ -51,9 +51,27 @@ Viewport: mobile-chromium.
 - [x] The display name is entered
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Review the optional next-visit onboarding
+
+![Review the optional next-visit onboarding](./screenshots/005-setup-welcome-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The welcome offers optional setup without enabling AI or sharing
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep existing settings and skip optional onboarding
+
+![Keep existing settings and skip optional onboarding](./screenshots/006-setup-skip-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/005-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/007-signed-in-mobile-chromium.png)
 
 **Verifications:**
 
@@ -63,7 +81,7 @@ Viewport: mobile-chromium.
 
 ## Open the synchronized calendar
 
-![Open the synchronized calendar](./screenshots/006-calendar-mobile-chromium.png)
+![Open the synchronized calendar](./screenshots/008-calendar-mobile-chromium.png)
 
 **Verifications:**
 
@@ -72,7 +90,7 @@ Viewport: mobile-chromium.
 
 ## Choose the historical month to preserve
 
-![Choose the historical month to preserve](./screenshots/007-month-mobile-chromium.png)
+![Choose the historical month to preserve](./screenshots/009-month-mobile-chromium.png)
 
 **Verifications:**
 
@@ -81,7 +99,7 @@ Viewport: mobile-chromium.
 
 ## Reload during a backend outage without discarding the cached prefix
 
-![Reload during a backend outage without discarding the cached prefix](./screenshots/008-cached-reload-mobile-chromium.png)
+![Reload during a backend outage without discarding the cached prefix](./screenshots/010-cached-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -90,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Revalidate the saved prefix when Firestore returns
 
-![Revalidate the saved prefix when Firestore returns](./screenshots/009-reconnected-mobile-chromium.png)
+![Revalidate the saved prefix when Firestore returns](./screenshots/011-reconnected-mobile-chromium.png)
 
 **Verifications:**
 
