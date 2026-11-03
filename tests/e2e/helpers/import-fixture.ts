@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, Timestamp, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, Timestamp, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, deleteObject } from 'firebase/storage';
 import { archiveFixture } from '../../fixtures/import-journal.mjs';
 import { parseImportArchive } from '../../../src/lib/import-archive';
@@ -35,8 +35,9 @@ export async function pendingImportFixture(page:Page, corrupt:boolean) {
   const env=await initializeTestEnvironment({projectId:'demo-gratitude',firestore:{host:'127.0.0.1',port:18080},storage:{host:'127.0.0.1',port:19199}});
   await env.withSecurityRulesDisabled(async context=>{
     const db=context.firestore(),root=`users/${uid}/streams/v1`,batch=writeBatch(db);
-    batch.set(doc(db,`${root}/events/${plan.confirmationId}`),{eventId:plan.confirmationId,type:'ImportRecordConfirmed',schemaVersion:1,sequence:1,recordedAt:Timestamp.fromDate(new Date('2026-10-01T04:31:07Z')),payload:plan.input});
-    batch.set(doc(db,root),{sequence:1,lastEventId:plan.confirmationId});
+    const sequence=((await getDoc(doc(db,root))).get('sequence')??0)+1;
+    batch.set(doc(db,`${root}/events/${plan.confirmationId}`),{eventId:plan.confirmationId,type:'ImportRecordConfirmed',schemaVersion:1,sequence,recordedAt:Timestamp.fromDate(new Date('2026-10-01T04:31:07Z')),payload:plan.input});
+    batch.set(doc(db,root),{sequence,lastEventId:plan.confirmationId});
     batch.set(doc(db,`${root}/imports/${plan.input.sourceKey}`),{confirmationId:plan.confirmationId,lastEventId:plan.confirmationId});
     await batch.commit();
     if(corrupt)await uploadBytes(ref(context.storage('demo-gratitude.firebasestorage.app'),`users/${uid}/v1/${plan.input.attachments[0].photoId}`),fixture.jpeg,{contentType:'image/jpeg',customMetadata:{importSourceKey:plan.input.sourceKey,sourceDigest:plan.input.attachments[0].sourceDigest,storedDigest:'0'.repeat(64)}});

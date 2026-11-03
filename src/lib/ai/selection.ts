@@ -2,7 +2,7 @@ import type { Entry, Projection } from '../domain.ts';
 import { civilDate, dayInZone, validDay } from '../civil-date.ts';
 
 export const SELECTOR_VERSION = 'mixed-v1';
-export type SelectionInput = { day: string; timeZone: string; selectionSeed: string; entryId?: string; avoidEntryIds?: readonly string[] };
+export type SelectionInput = { day: string; timeZone: string; selectionSeed: string; entryId?: string; weighted?:boolean; avoidEntryIds?: readonly string[] };
 export type Selection = { anniversary: Entry[]; rediscovery: Entry[]; fallback: Entry[]; recent: Entry[] };
 export function validTimeZone(value: unknown): value is string {
   if (typeof value !== 'string' || value.length > 100 || !/^[A-Za-z_+-]+(?:\/[A-Za-z0-9_+-]+)*$/.test(value)) return false;
@@ -49,9 +49,15 @@ export function selectReflections(state: Projection, input: SelectionInput): Sel
   const candidates=state.entries.filter(entry => entry.id !== input.entryId && entry.text.trim()).map(entry => ({
     entry, day: dayInZone(entry.entryAt ?? entry.recordedAt,input.timeZone)
   })).filter(item => item.day < input.day).sort((a,b)=>compare(a.day,b.day)||compare(a.entry.id,b.entry.id));
+  const cost=(entry:Entry)=>input.weighted && entry.text.trim().length>600?2:1;
+  const spent=(entries:Entry[])=>entries.reduce((sum,entry)=>sum+cost(entry),0);
   const used=new Set<string>();
   const take=(entries: Entry[], count: number) => {
-    const result=entries.filter(entry=>!used.has(entry.id)).sort(freshness).slice(0,count);
+    const result:Entry[]=[];let remaining=count;
+    for(const entry of entries.filter(entry=>!used.has(entry.id)).sort(freshness)){
+      if(cost(entry)<=remaining){result.push(entry);remaining-=cost(entry);}
+      if(!remaining)break;
+    }
     result.forEach(entry=>used.add(entry.id)); return result;
   };
   const ref=ordinal(input.day);
@@ -72,21 +78,21 @@ export function selectReflections(state: Projection, input: SelectionInput): Sel
   const years=shuffle([...groups.keys()].sort((a,b)=>a-b),draw);
   for(const y of years) groups.set(y,shuffle(groups.get(y)!,draw).sort((a,b)=>freshness(a.entry,b.entry)||a.distance-b.distance));
   const anniversary:Entry[]=[];
-  while(anniversary.length<8) {
-    const freshRemaining=avoid.size>0&&[...groups.values()].some(items=>items.some(item=>!used.has(item.entry.id)&&!avoid.has(item.entry.id)));
+  while(spent(anniversary)<8) {
+    const freshRemaining=avoid.size>0&&[...groups.values()].some(items=>items.some(item=>!used.has(item.entry.id)&&!avoid.has(item.entry.id)&&cost(item.entry)<=8-spent(anniversary)));
     let found=false;
     for(const y of years) {
       const queue=groups.get(y)!;
-      const index=freshRemaining?queue.findIndex(item=>!used.has(item.entry.id)&&!avoid.has(item.entry.id)):0;
+      const index=queue.findIndex(item=>!used.has(item.entry.id)&&cost(item.entry)<=8-spent(anniversary)&&(!freshRemaining||!avoid.has(item.entry.id)));
       const item=index<0?undefined:queue.splice(index,1)[0];
       if(item && !used.has(item.entry.id)) {anniversary.push(item.entry);used.add(item.entry.id);found=true;}
-      if(anniversary.length===8) break;
+      if(spent(anniversary)===8) break;
     }
     if(!found) break;
   }
   const leastUsed=shuffle(candidates.map(item=>item.entry),draw).sort((a,b)=>(state.ai.usage[a.id]?.lastSequence??0)-(state.ai.usage[b.id]?.lastSequence??0));
   const rediscovery=take(leastUsed,7);
-  const fallback=take(leastUsed,20-recent.length-anniversary.length-rediscovery.length);
+  const fallback=take(leastUsed,20-spent(recent)-spent(anniversary)-spent(rediscovery));
   return {anniversary,rediscovery,fallback,recent};
 }
 export function selectedEntries(selection: Selection) {

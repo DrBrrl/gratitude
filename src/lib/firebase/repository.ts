@@ -1,3 +1,4 @@
+import type { OnboardingAction } from '../onboarding';
 import type { GenerateSummary } from '../ai/local-contract';
 import type { ImportSelection } from '../import-archive';
 import { collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, orderBy, query, where, limit } from 'firebase/firestore';
@@ -6,13 +7,13 @@ import { openDB, type IDBPDatabase } from 'idb';
 import { base } from '$app/paths';
 import { applyEvent, emptyProjection, replay, GENERATION, PROJECTION_VERSION, type Action, type AIAction, type ResponseAction, type Projection, type PhotoAction, type ImportAction, type BackupAction, type AppearanceAction, photoKey, photoProvider } from '../domain';
 import type { FirebaseClient } from './client';
-import { makeRequest, buildContext, type GeneratePrompt } from '../ai/context';
+import { makeRequest, buildContext, promptOptions, validatePromptOutput, boundContext, type GeneratePrompt } from '../ai/context';
 
 import { erasePhoto, type StagedPhoto } from '../photos';
 import {availableBackups,importedBackup,BACKUP_MINIMUM} from '../backup-prompts';
 
 type Checkpoint = { state: Projection; digest: string };
-export type JournalView = { state: Projection; pending: Action | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean; backupRemoved?: string[]; backupStatus?: string; backupImporting?: boolean };
+export type JournalView = { state: Projection; pending: Action | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean; backupRemoved?: string[]; backupStatus?: string; backupImporting?: boolean; onboardingPending?:boolean };
 async function digest(state: Projection) {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(state)));
   return [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, '0')).join('');
@@ -21,6 +22,8 @@ export class JournalRepository {
   private db!: IDBPDatabase;
   private state = emptyProjection();
   private pending: Action | null = null;
+  private setupFinish: Extract<OnboardingAction,{type:'OnboardingFinished'}>|null=null;
+  private setupSyncing=false;
   private stopped = false;
   private listenerGeneration = 0;
   private sending = false;
@@ -45,7 +48,7 @@ export class JournalRepository {
   private error = '';
   constructor(private client: FirebaseClient, private uid: string, private notify: (view: JournalView) => void) {}
   private emit() {
-    if (!this.stopped) this.notify({ state: this.state, pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, backupImporting:this.backupImporting||this.backupActions.some(a=>a.type==='BackupPromptImported'),backupRemoved:this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),backupStatus:this.backupStatus, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
+    if (!this.stopped) this.notify({ state: this.state, pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, onboardingPending:!!this.setupFinish, backupImporting:this.backupImporting||this.backupActions.some(a=>a.type==='BackupPromptImported'),backupRemoved:this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),backupStatus:this.backupStatus, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
   }
   async start() {
     const generation = ++this.listenerGeneration;
@@ -54,6 +57,7 @@ export class JournalRepository {
       upgrade(db) { db.createObjectStore('cache'); db.createObjectStore('outbox'); }
     });
     if (this.stopped) { this.db.close(); return; }
+    this.setupFinish=await this.db.get('outbox','onboarding-finish')??null;
     this.pending = await this.db.get('outbox', 'pending') ?? null;
     this.backupActions=await this.db.get('outbox','backup-actions')??[];
     this.aiResult = await this.db.get('outbox', 'ai-result') ?? null;
@@ -64,7 +68,7 @@ export class JournalRepository {
     if (checkpoint) {
       try {
         const s = checkpoint.state;
-        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance ||
+        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.requestUnits || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance || !s.onboarding ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
           if (!s.lastEventId) throw new Error('Invalid checkpoint anchor');
@@ -105,6 +109,7 @@ export class JournalRepository {
           if (this.stopped || generation !== this.listenerGeneration) return;
           this.state = next;
           this.ready = true; this.error = '';
+          if(!snapshot.metadata.fromCache && this.setupFinish) void this.syncOnboarding().catch(()=>{});
           if(!snapshot.metadata.fromCache && this.backupActions.length) void this.syncBackups().catch(()=>{});
           if(!snapshot.metadata.fromCache && !this.importedBackups){this.importedBackups=true;void this.loadBackupImports();}
           // A stream read does not acknowledge an outstanding write.
@@ -197,7 +202,28 @@ export class JournalRepository {
     await this.db.delete('outbox', 'pending');
     this.pending = null; this.error = ''; this.status = 'Pending save returned to editor'; this.emit();
   }
-  async commitAI(action: AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction) {
+  async finishOnboarding(outcome:'completed'|'skipped') {
+    if(!this.setupFinish) this.setupFinish={eventId:crypto.randomUUID(),type:'OnboardingFinished',schemaVersion:1,payload:{version:1,outcome}};
+    await this.db.put('outbox',this.setupFinish,'onboarding-finish');this.emit();
+    if(navigator.onLine) void this.syncOnboarding().catch(()=>{});
+  }
+  async syncOnboarding() {
+    if(!this.setupFinish||this.setupSyncing||this.stopped||!navigator.onLine)return;
+    this.setupSyncing=true;
+    try {
+      if(this.state.onboarding.version<this.setupFinish.payload.version) await this.commitAI(this.setupFinish);
+      await this.db.delete('outbox','onboarding-finish');this.setupFinish=null;
+    } finally {this.setupSyncing=false;this.emit();}
+  }
+  async readOnboardingDraft(): Promise<unknown> { await this.draftChain; return this.db.get('outbox', 'onboarding-draft'); }
+  async writeOnboardingDraft(value: unknown | null) {
+    this.draftChain = this.draftChain.then(async () => {
+      if (value === null) await this.db.delete('outbox', 'onboarding-draft');
+      else await this.db.put('outbox', value, 'onboarding-draft');
+    });
+    return this.draftChain;
+  }
+  async commitAI(action: AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
     if (!this.ready || this.stopped || !navigator.onLine) throw new Error('Connect and wait for your journal to sync first.');
     const result = await appendReflection(this.client.db, this.uid, action);
     // Await the confirmed projection, never invoke an AI adapter from a listener.
@@ -221,17 +247,20 @@ export class JournalRepository {
       if (!committed.created) return; // Only the transaction winner may dispatch this request.
       const control = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/ai/control`));
       if (this.stopped || control.get('requestId') !== request.eventId || control.get('choicesId') !== request.payload.choicesId) throw new Error('AI sharing choices changed.');
+      if('answersId' in request.payload){const setup=await getDocFromServer(doc(this.client.db,`users/${this.uid}/streams/${GENERATION}/onboarding/control`));if((setup.get('answersId')??null)!==request.payload.answersId)throw new Error('Questionnaire answers changed.');}
       let output;
-      try { output = await generate(buildContext(snapshot, request)); }
+      try { const options=promptOptions(snapshot,request);output = await generate(boundContext(buildContext(snapshot, request),options),options);validatePromptOutput(output,options); }
       catch (cause) {
         if (this.stopped) return;
         const reason = cause instanceof Error && ['blocked', 'invalid-response'].includes(cause.message) ? cause.message as 'blocked' | 'invalid-response' : 'unavailable';
         await this.commitAI({ eventId: `${request.eventId}_failure`, type: 'AIRequestFailed', schemaVersion: 1, payload: { requestId: request.eventId, reason } });
+        if(request.schemaVersion>=13&&reason==='invalid-response')throw new Error('The model returned an empty, incomplete or over-limit prompt. Try another request or use a saved backup prompt.');
+        if(cause instanceof Error&&cause.message.startsWith('Your selected AI context'))throw cause;
         if(generate.target) throw new Error(reason==='invalid-response'?'LM Studio returned an incomplete or invalid prompt. Try again or use the starter prompt.':cause instanceof Error?cause.message:'Could not reach LM Studio.');
         throw new Error('No new prompt arrived. You can try again or use the starter prompt.');
       }
       if (this.stopped) return;
-      const response: ResponseAction = { eventId: `${request.eventId}_response`, type: 'PromptResponseReceived', schemaVersion: 1,
+      const response: ResponseAction = { eventId: `${request.eventId}_response`, type: 'PromptResponseReceived', schemaVersion: request.schemaVersion>=13?2:1,
         payload: { requestId: request.eventId, ...output } };
       // Save the already received output before attempting its cloud append.
       await this.db.put('outbox', response, 'ai-result');
@@ -295,7 +324,7 @@ export class JournalRepository {
     try { await this.commitAI(result); }
     catch (cause) {
       // Revocation/replacement invalidates a late result. Network failures retain it.
-      if (!(cause instanceof Error) || !cause.message.includes('no longer current')) throw cause;
+      if (!(cause instanceof Error) || !(/no longer current|Questionnaire answers changed/.test(cause.message))) throw cause;
       await this.db.delete('outbox', 'ai-result'); this.aiResult = null; this.emit();
       throw new Error('That request was replaced or AI sharing changed. The late prompt was discarded.');
     }
@@ -386,4 +415,4 @@ export class JournalRepository {
 }
 
 /** UI-facing contract shared with the development event-fixture adapter. */
-export type JournalStore = Pick<JournalRepository, 'queueBackups' | 'queueBackup' | 'syncBackups' | 'readImportArchive' | 'storeImportArchive' | 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult' | 'requestPhotoSummary' | 'syncPhotoResult' | 'readStagedPhoto' | 'stagePhoto' | 'clearStagedPhoto' | 'cancelStagedPhoto' | 'removePhoto' | 'retryPhotoCleanup'>;
+export type JournalStore = Pick<JournalRepository, 'finishOnboarding' | 'syncOnboarding' | 'readOnboardingDraft' | 'writeOnboardingDraft' | 'queueBackups' | 'queueBackup' | 'syncBackups' | 'readImportArchive' | 'storeImportArchive' | 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult' | 'requestPhotoSummary' | 'syncPhotoResult' | 'readStagedPhoto' | 'stagePhoto' | 'clearStagedPhoto' | 'cancelStagedPhoto' | 'removePhoto' | 'retryPhotoCleanup'>;

@@ -12,7 +12,7 @@
   import { gratitudeDays, streakSummary, communityStreak, emptySharing } from '../friends/streaks';
   import { dayInZone } from '../civil-date';
 
-  let { client, uid, journal, pushController, pushState }: { client: FirebaseClient; uid: string; journal: JournalView; pushController:PushController|null;pushState:PushState } = $props();
+  let { client, uid, journal, pushController, pushState, profileOnly=false }: { profileOnly?:boolean; client: FirebaseClient; uid: string; journal: JournalView; pushController:PushController|null;pushState:PushState } = $props();
   let repository: FriendsRepository | null = null;
   let view = $state.raw<FriendsView>({ sharing: emptySharing(''), gratitude: {}, streaksLoading: false, profile: emptyProfile(''), pairs: {}, peers: {}, ready: false, synced: false, error: '' });
   const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -102,9 +102,9 @@
 
 </script>
 
-<div class="friends-space" aria-busy={busy} data-streaks-loading={view.streaksLoading}>
-  <h1>Friends & hugs</h1>
-  <p class="intro">You can encourage your friends to practice gratitude by sending them one hug per day!</p>
+<div class="friends-space" aria-busy={busy||!view.ready} data-streaks-loading={view.streaksLoading}>
+  {#if !profileOnly}<h1>Friends & hugs</h1>
+  <p class="intro">You can encourage your friends to practice gratitude by sending them one hug per day!</p>{/if}
   {#if !view.ready}<p role="status">Opening your friends…</p>{:else}
     {#if !view.synced}<p class="connection" role="status">Saved on this device. Connect to refresh friends and send hugs.</p>{/if}
     <section class="glass" aria-label="Your friends profile">
@@ -129,7 +129,7 @@
         <button class="outline" onclick={editProfile}>Edit friends profile</button>
       {/if}
     </section>
-    {#if view.profile.sequence}
+    {#if view.profile.sequence && !profileOnly}
       <section class="glass" aria-label="Add a friend">
         <h2>Add a friend</h2>
         <form onsubmit={event => {event.preventDefault();void findFriend();}}><label class="sr-only" for="friend-search">Search for friends by username</label><div class="search-row"><div class="search-input"><input id="friend-search" type="search" bind:value={search} oninput={() => {found=[];searched=false;searchNext=null;}} placeholder=" " autocapitalize="none" autocomplete="off" spellcheck="false" disabled={disabled} />{#if !search}<span class="search-placeholder" aria-hidden="true">Search for your friend's{' '}<em>@username</em></span>{/if}</div><button class="outline" disabled={disabled || usernameKey(search).length<3}>Find friend</button></div></form>
@@ -167,8 +167,8 @@
       </section>
       {#if blocked.length}<section aria-label="Blocked people"><h2>Blocked people</h2>{#each blocked as [id,p] (id)}<article class="glass"><h3>{name(peer(p))}</h3><p class="hint">Unblocking does not restore the friendship.</p><button class="outline" onclick={() => act('FriendUnblocked',peer(p))} disabled={disabled}>Unblock {name(peer(p))}</button></article>{/each}</section>{/if}
     {/if}
-    <HugNotifications controller={pushController} state={pushState} />
-    <button class="quiet recovery" onclick={() => run(() => repository!.rebuild(),'Friends view rebuilt from saved actions.',true)} disabled={busy}>Rebuild friends view</button>
+    {#if !profileOnly}<HugNotifications controller={pushController} state={pushState} />{/if}
+    {#if !profileOnly}<button class="quiet recovery" onclick={() => run(() => repository!.rebuild(),'Friends view rebuilt from saved actions.',true)} disabled={busy}>Rebuild friends view</button>{/if}
   {/if}
   {#if error || view.error}<p role="alert">{error || view.error}</p>{/if}
   {#if notice}<p class="notice" role="status">{notice}</p>{/if}

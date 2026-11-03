@@ -1,6 +1,6 @@
 # Onboarding mockups for review
 
-Five mobile design boards cover fourteen screens and states for the [onboarding proposal](../../ONBOARDING_DESIGN.md). They use the dark glass, neutral ink lighting, yellow accent and four-point wordmark star from the current app. These are image-generated concepts, not implemented screens or E2E screenshots. The proposal defines exact copy, the complete topic catalogue and behaviour; the boards illustrate the layout.
+Five mobile design boards cover fourteen screens and states for the [onboarding proposal](../../ONBOARDING_DESIGN.md). They use the dark glass, neutral ink lighting, yellow accent and four-point wordmark star from the current app. These original image-generated concepts illustrate the layout; the [actual browser walkthrough](../../tests/e2e/046-onboarding/README.md) now shows the running implementation. [Implementation notes](../../ONBOARDING_DESIGN.md#implementation-notes) identify the final copy, behaviour and supported-provider differences.
 
 The examples use fictional Sam, an explicitly entered public profile and a fictional local-model address. Selected answers illustrate choices the person has already made, not preselected questionnaire defaults. AI and its source-sharing choices start off for a new account; existing accounts keep their saved choices. Only the final Today screen has the normal four-tab navigation.
 
@@ -106,3 +106,7 @@ An unfinished visit resumes with its draft; existing users are interrupted once 
 ## Generation record
 
 The [exact prompts and refinement record](prompts/onboarding-review/README.md) accompany the five selected PNGs. Earlier welcome/connection versions remain available as historical references. Built-in image generation was used; the selected images were copied unchanged into the repository. They are visual proposals, not screenshot baselines or evidence that onboarding works. Runtime implementation will require the functional and unmasked, zero-tolerance screenshot checks in [E2E_GUIDE.md](../../E2E_GUIDE.md).
+
+## Runtime implementation
+
+The optional onboarding now runs in the application; see [implementation notes](../../ONBOARDING_DESIGN.md#implementation-notes) and the [actual browser walkthrough](../../tests/e2e/046-onboarding/README.md). These original concept images remain for comparison. Runtime provider choices are Gemini and LM Studio; the Ollama/own-cloud states still illustrate future provider work.

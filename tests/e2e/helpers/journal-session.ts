@@ -1,6 +1,6 @@
 import { expect, type Page, type TestInfo } from '@playwright/test';
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, Timestamp, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, Timestamp, writeBatch } from 'firebase/firestore';
 import { STARTER_ID } from '../../../src/lib/domain';
 import { TestStepHelper } from './test-step-helper';
 
@@ -12,6 +12,7 @@ export async function editorText(page: Page) {
 export async function expectEditor(page: Page, text: string) { await expect.poll(() => editorText(page)).toBe(text); }
 export async function expectSynced(page: Page) {
   await expect(page.getByRole('navigation', { name: 'Journal navigation' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('main[data-onboarding-pending=true]')).toHaveCount(0,{timeout:15000});
   await expect(page.locator('.sync-status')).toHaveCount(0, { timeout: 15_000 });
   await expect(page.getByRole('alert')).toHaveCount(0);
 }
@@ -36,7 +37,7 @@ export async function startJournal(page: Page, info: TestInfo, steps: TestStepHe
   }, 'The shared landing page shows its empty calendar and frosted sign-in notice');
   await signIn(page, info, steps, name);
 }
-export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, name: string, existing = false, landing: 'Today' | 'Journal' = 'Today', requestedJournal = false, trigger?: () => Promise<unknown>) {
+export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, name: string, existing = false, landing: 'Today' | 'Journal' = 'Today', requestedJournal = false, trigger?: () => Promise<unknown>, preferredName = '', skipSetup=true) {
   const email = `${name}-${info.project.name}@example.test`;
   // Firebase Auth loads Google's popup bootstrap before opening the emulator UI.
   const opened = page.waitForEvent('popup', { timeout: 15_000 });
@@ -54,7 +55,14 @@ export async function signIn(page: Page, info: TestInfo, steps: TestStepHelper, 
     await steps.step('name', 'Enter a display name', [{ description: 'The display name is entered', check: async () => { await expect(popup.locator('#display-name-input')).toHaveValue('Gratitude visitor'); } }], popup);
     await popup.locator('#sign-in').click();
   }
-  const destination = landing === 'Journal' ? 'Your journal' : 'Reflection time';
+  await expect(page.locator('main')).toHaveAttribute('data-journal-ready','true',{timeout:15000});
+  await expect.poll(async()=>await page.getByRole('progressbar',{name:'Onboarding progress'}).isVisible()||await page.getByRole('navigation',{name:'Journal navigation'}).isVisible(),{timeout:15000}).toBe(true);
+  if(await page.getByRole('progressbar',{name:'Onboarding progress'}).isVisible()){
+    await steps.step('setup-welcome','Review the optional next-visit onboarding',[{description:'The welcome offers optional setup without enabling AI or sharing',check:async()=>{await expect(page.getByText('The following questions will personalise your journal.',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Skip for now',exact:true})).toBeVisible();}}]);
+    if(!skipSetup)return;
+    await steps.action('setup-skip','Keep existing settings and skip optional onboarding',()=>page.getByRole('button',{name:'Skip for now',exact:true}).click(),async()=>{await expectSynced(page);});
+  }
+  const destination = landing === 'Journal' ? preferredName ? `${preferredName}’s Journal` : 'Your journal' : preferredName ? `Reflection time, ${preferredName}!` : 'Reflection time';
   await steps.step('signed-in', requestedJournal ? 'Open Journal after sign-in from the landing page' : landing === 'Journal' ? 'Return to the journal after today’s saved reflection' : 'Complete sign-in and open Today', [{ description: requestedJournal ? 'The landing sign-in link opens the synchronized Journal' : landing === 'Journal' ? 'The saved daily reflection makes Journal the initial page on this device' : 'The private journal is synchronized and Today is ready', check: async () => {
     await expectSynced(page);
     await expect(page.getByRole('heading', { name: destination, exact: true })).toBeVisible();
@@ -86,6 +94,7 @@ export async function seedHistory(page: Page, entries: { text: string; recordedA
     await environment.withSecurityRulesDisabled(async context => {
       const db = context.firestore();
       const root = `users/${uid}/streams/v1`;
+      const head=await getDoc(doc(db,root));const initialSequence=head.get('sequence')??0;
       // Each entry writes an event and its conflict pointer. Keep large fictional
       // histories below Firestore's 500-write batch limit.
       for (let offset = 0; offset < entries.length; offset += 200) {
@@ -94,12 +103,12 @@ export async function seedHistory(page: Page, entries: { text: string; recordedA
         const index = offset + localIndex;
         const id = `fixture-${index + 1}`;
         batch.set(doc(db, `${root}/events/${id}`), { eventId: id, type: 'ReflectionWritten', schemaVersion: 1,
-          sequence: index + 1, recordedAt: Timestamp.fromDate(new Date(entry.recordedAt)),
+          sequence: initialSequence + index + 1, recordedAt: Timestamp.fromDate(new Date(entry.recordedAt)),
           payload: { entryId: id, text: entry.text, expectedRevision: 0, starterId: STARTER_ID } });
         batch.set(doc(db, `${root}/entries/${id}`), { lastEventId: id });
         });
         const count = Math.min(entries.length, offset + 200);
-        batch.set(doc(db, root), { sequence: count, lastEventId: `fixture-${count}` });
+        batch.set(doc(db, root), { sequence: initialSequence+count, lastEventId: `fixture-${count}` });
         await batch.commit();
       }
     });

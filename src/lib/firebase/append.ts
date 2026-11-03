@@ -1,10 +1,11 @@
+import { isOnboardingAction } from '../onboarding.ts';
 import { stableJSON } from '../import-source.ts';
 import { doc, getDocFromServer, runTransaction, serverTimestamp, Timestamp, type Firestore, type DocumentData } from 'firebase/firestore';
 import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, isLocalRequest, isBackupRequest, isBackupAction, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey, photoProvider } from '../domain.ts';
 import {BACKUP_LEASE_MS} from '../backup-prompts.ts';
 
 export function decodeEvent(data: DocumentData): JournalEvent {
-  const payload = data.type === 'ReflectionWritten' && (data.schemaVersion === 3 || data.schemaVersion === 4 || data.schemaVersion === 5 || data.schemaVersion === 6) && data.payload.entryAt
+  const payload = data.type === 'ReflectionWritten' && (data.schemaVersion === 3 || data.schemaVersion === 4 || data.schemaVersion === 5 || data.schemaVersion === 6 || data.schemaVersion === 7) && data.payload.entryAt
     ? { ...data.payload, entryAt: typeof data.payload.entryAt === 'string' ? data.payload.entryAt : data.payload.entryAt.toDate().toISOString() } : data.payload;
   return { ...data, payload, recordedAt: typeof data.recordedAt === 'string' ? data.recordedAt : data.recordedAt.toDate().toISOString() } as JournalEvent;
 }
@@ -14,7 +15,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
   const action = parseAction(input);
   const stream = doc(db, `users/${uid}/streams/${GENERATION}`);
   const event = doc(db, `${stream.path}/events/${action.eventId}`);
-  const pointer = doc(db, action.type === 'AccentColourChosen' ? `${stream.path}/appearance/control` : action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
+  const pointer = doc(db, isOnboardingAction(action) ? `${stream.path}/onboarding/control` : action.type === 'AccentColourChosen' ? `${stream.path}/appearance/control` : action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
   const resultFromPrior = (value: DocumentData) => {
     const decoded = decodeEvent(value);
     const original = parseAction({ eventId: decoded.eventId, type: decoded.type, schemaVersion: decoded.schemaVersion, payload: decoded.payload });
@@ -27,7 +28,17 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
       const [prior,head,latest] = await Promise.all([tx.get(event),tx.get(stream),tx.get(pointer)]);
       if (prior.exists()) return resultFromPrior(prior.data());
       let metadata: Record<string, unknown>;
-      if (action.type === 'AccentColourChosen') {
+      if (isOnboardingAction(action)) {
+        const answersId = latest.get('answersId') ?? null;
+        const version = latest.get('version') ?? 0;
+        if (action.type === 'OnboardingFinished' ? action.payload.version <= version : action.payload.previousEventId !== answersId) {
+          throw new Error(action.type === 'OnboardingFinished' ? 'This setup has already been acknowledged on another device.' : 'Your answers changed on another device. Your draft is kept; review the latest answers before saving.');
+        }
+        metadata = { lastEventId: action.eventId,
+          answersId: action.type === 'OnboardingFinished' ? answersId : action.eventId,
+          version: action.type === 'OnboardingFinished' ? action.payload.version : version,
+          outcomeId: action.type === 'OnboardingFinished' ? action.eventId : latest.get('outcomeId') ?? null };
+      } else if (action.type === 'AccentColourChosen') {
         if ((latest.get('lastEventId') ?? null) !== action.payload.previousEventId) throw new Error('Your accent colour changed on another device. Please choose again.');
         metadata = { lastEventId: action.eventId };
       } else if (isBackupAction(action)) {
@@ -47,11 +58,11 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
           const previous = await tx.get(doc(db, `${stream.path}/events/${latest.get('lastEventId')}`));
           if (!previous.exists()) throw new Error('Incomplete reflection history.');
           revision = previous.get('payload.expectedRevision') + 1;
-          if (latest.get('importId') && action.schemaVersion !== 6) throw new Error('Use the current editor for imported reflections.');
+          if (latest.get('importId') && action.schemaVersion !== 6 && action.schemaVersion !== 7) throw new Error('Use the current editor for imported reflections.');
           const original = previous.get('payload.promptId') ?? STARTER_ID;
-          if (action.schemaVersion !== 5 && action.schemaVersion !== 6 && promptId(action) !== original) throw new Error('A saved reflection keeps its original prompt.');
+          if (action.schemaVersion !== 5 && action.schemaVersion !== 6 && action.schemaVersion !== 7 && promptId(action) !== original) throw new Error('A saved reflection keeps its original prompt.');
           const previousAt = previous.get('payload.entryAt') as Timestamp | undefined;
-          if (action.schemaVersion !== 6 && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 ? (previousAt?.toDate().toISOString() ?? null) !== action.payload.entryAt : !!previousAt)) throw new Error('A saved reflection keeps its original entry date.');
+          if (action.schemaVersion !== 6 && action.schemaVersion !== 7 && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 ? (previousAt?.toDate().toISOString() ?? null) !== action.payload.entryAt : !!previousAt)) throw new Error('A saved reflection keeps its original entry date.');
         }
         if (revision !== action.payload.expectedRevision) throw new Error('This reflection changed on another device. Your text has been kept; reload the reflection before editing again.');
         metadata = { lastEventId: action.eventId, ...(latest.get('importId') ? { importId: latest.get('importId') } : {}) };
@@ -74,6 +85,11 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
       } else {
         const control = latest.exists() ? latest.data() as ReturnType<typeof emptyControl> : emptyControl();
         metadata = nextControl(control, action);
+        if(action.type==='PromptRequested' && 'answersId' in action.payload || action.type==='PromptResponseReceived'){
+          const request=action.type==='PromptRequested'?action:decodeEvent((await tx.get(doc(db,`${stream.path}/events/${action.payload.requestId}`))).data()!) as Extract<SourceAction,{type:'PromptRequested'}>;
+          if('answersId' in request.payload){const setup=await tx.get(doc(db,`${stream.path}/onboarding/control`));if((setup.get('answersId')??null)!==request.payload.answersId)throw new Error('Questionnaire answers changed.');}
+          if(action.type==='PromptResponseReceived' && (action.schemaVersion===2)!==(request.schemaVersion>=13))throw new Error('Prompt response schema does not match its request.');
+        }
         if (action.type === 'PromptRequested') {
           if('differentFromPromptId' in action.payload){const prior=await tx.get(doc(db,`${stream.path}/events/${action.payload.differentFromPromptId}`));if(prior.get('type')!=='PromptResponseReceived')throw new Error('Previous generated prompt is unavailable.');}
           if (action.payload.choicesId !== control.choicesId) throw new Error('AI consent changed. Please try again.');
@@ -99,7 +115,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
         }
       }
       const sequence = (head.get('sequence') ?? 0) + 1;
-      const payload = action.type === 'ReflectionWritten' && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6) && action.payload.entryAt
+      const payload = action.type === 'ReflectionWritten' && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6 || action.schemaVersion === 7) && action.payload.entryAt
         ? { ...action.payload, entryAt: Timestamp.fromDate(new Date(action.payload.entryAt)) } : action.payload;
       tx.set(event, { ...action, payload, sequence, recordedAt: serverTimestamp() });
       tx.set(stream, { sequence, lastEventId: action.eventId });

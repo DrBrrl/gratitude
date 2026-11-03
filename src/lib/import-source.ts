@@ -24,10 +24,10 @@ function sourceDate(value: unknown, millis: unknown) {
   const calendar = new Date(Date.UTC(y,m-1,d,h,min,s));
   return y >= 1 && m >= 1 && m <= 12 && d >= 1 && h < 24 && min < 60 && s < 60 && calendar.getUTCDate() === d && Date.parse(value as string) === millis;
 }
-export function validImportSource(v: unknown): v is ImportSource {
+export function validImportSource(v: unknown,maxPrompt=600): v is ImportSource {
   if (!exactKeys(v, SOURCE_KEYS)) return false;
   return Number.isSafeInteger(v.id) && Number(v.id) >= 0 && bounded(v.noteId, 80) && !!String(v.noteId).trim()
-    && bounded(v.noteText, 10000) && optional(v.prompt, 600) && (v.prompt === null || !!String(v.prompt).trim())
+    && bounded(v.noteText, 10000) && optional(v.prompt, maxPrompt) && (v.prompt === null || !!String(v.prompt).trim())
     && sourceDate(v.createdOnStr, v.createdOn) && sourceDate(v.updatedOnStr, v.updatedOn)
     && Number(v.createdOn) >= 0 && Number(v.updatedOn) >= Number(v.createdOn)
     && typeof v.noteColor === 'string' && /^#[0-9a-f]{6}$/i.test(v.noteColor)
@@ -35,10 +35,10 @@ export function validImportSource(v: unknown): v is ImportSource {
     && optional(v.promptId, 80) && optional(v.moodId, 80) && optional(v.backgroundId, 80);
 }
 export function hasSourcePhoto(source: ImportSource) { return !!(source.imagePath || source.driveImagePath); }
-export function validImportInput(v: unknown): v is ImportInput {
+export function validImportInput(v: unknown,maxPrompt=600): v is ImportInput {
   if (!exactKeys(v, ['format','sourceKey','entryId','source','attachments'])) return false;
   const id = (v: unknown) => typeof v === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(v);
-  return v.format === IMPORT_FORMAT && typeof v.sourceKey === 'string' && /^[a-f0-9]{64}$/.test(v.sourceKey) && v.entryId === `e_${v.sourceKey}` && validImportSource(v.source)
+  return v.format === IMPORT_FORMAT && typeof v.sourceKey === 'string' && /^[a-f0-9]{64}$/.test(v.sourceKey) && v.entryId === `e_${v.sourceKey}` && validImportSource(v.source,maxPrompt)
     && Array.isArray(v.attachments) && v.attachments.length === (hasSourcePhoto(v.source) ? 1 : 0)
     && v.attachments.every(a => exactKeys(a, ['photoId','sourceDigest']) && id(a.photoId) && typeof a.sourceDigest === 'string' && /^[a-f0-9]{64}$/.test(a.sourceDigest))
     && (!!v.source.noteText.trim() || v.attachments.length > 0);

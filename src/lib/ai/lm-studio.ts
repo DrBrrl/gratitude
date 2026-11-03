@@ -73,14 +73,15 @@ export function parseLocalResponse(data:any,max:number) {
 export async function generateLocal(input:ModelConnection,system:string,content:unknown,max:number,fetcher:typeof fetch=fetch) {
   const connection=validateConnection(input),capabilities=await probeLocalModel(connection,fetcher);
   if(Array.isArray(content)&&!capabilities.vision) throw new Error('The selected local model does not support photos. You can attach the photo without AI or write its summary.');
+  if(max>1000&&capabilities.contextLength&&new TextEncoder().encode(system+JSON.stringify(content)).length+2048>capabilities.contextLength)throw new Error('This context may exceed the selected model’s loaded context. Increase its context length or reduce sharing before retrying.');
   // Native discovery calls non-thinking 'off'; chat/completions calls it 'none'.
-  const payload={model:connection.model,messages:[{role:'system',content:system},{role:'user',content}],stream:false,max_tokens:max===600?512:768,
+  const payload={model:connection.model,messages:[{role:'system',content:system},{role:'user',content}],stream:false,max_tokens:max===600?512:max>1000?2048:768,
     ...(capabilities.supportsThinking?{chat_template_kwargs:{enable_thinking:false}}:{}),...(capabilities.reasoningOff?{reasoning_effort:'none'}:{})};
   return parseLocalResponse(await request(connection,'/v1/chat/completions',payload,fetcher),max);
 }
 export function localGenerator(connection:ModelConnection):GeneratePrompt {
   const captured=validateConnection(connection);
-  return Object.assign((context:string)=>generateLocal(captured,SYSTEM_PROMPT,context,600),{target:{provider:'lm-studio' as const,model:captured.model,thinking:false as const}});
+  return Object.assign((context:string,options?:import('./context').PromptOptions)=>generateLocal(captured,options?.system??SYSTEM_PROMPT,context,options?.max??600),{target:{provider:'lm-studio' as const,model:captured.model,thinking:false as const}});
 }
 
 // Scope device preferences and tab credentials to the signed-in account/deployment.

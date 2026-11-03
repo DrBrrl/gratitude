@@ -102,7 +102,7 @@ export async function parseImportArchive(file: Blob, now=new Date()): Promise<Im
   const records:PlannedImport[]=[], files=new Map<string,File>(), ids=new Set<string>();
   for (let i=0;i<raw.length;i++) {
     const source=raw[i];
-    if (!validImportSource(source) || source.updatedOn>now.getTime() || !source.noteText.trim() && !hasSourcePhoto(source)) throw new Error(`Record ${i+1} has unsupported fields, dates, text or prompt. Nothing was imported.`);
+    if (!validImportSource(source,4000) || source.updatedOn>now.getTime() || !source.noteText.trim() && !hasSourcePhoto(source)) throw new Error(`Record ${i+1} has unsupported fields, dates, text or prompt. Nothing was imported.`);
     if (ids.has(source.noteId)) throw new Error('The export contains duplicate source identities.'); ids.add(source.noteId);
     const key=await sha256(JSON.stringify([IMPORT_FORMAT,source.noteId]));
     const input:ImportInput={format:IMPORT_FORMAT,sourceKey:key,entryId:`e_${key}`,source:Object.fromEntries(SOURCE_KEYS.map(k=>[k,source[k]])) as typeof source,attachments:[]};

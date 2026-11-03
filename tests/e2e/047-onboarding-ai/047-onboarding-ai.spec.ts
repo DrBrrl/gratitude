@@ -1,0 +1,64 @@
+import {test,expect as baseExpect} from '@playwright/test';
+import {TestStepHelper} from '../helpers/test-step-helper';
+import {startJournal,seedHistory,navigate,openEditor,expectSynced,editor} from '../helpers/journal-session';
+import {aiSettings,toggleAI,saveChoices,AI_ENDPOINT,respond} from '../helpers/gemini';
+import {selectionLog} from '../helpers/ai-selection-fixture';
+import {replay} from '../../../src/lib/domain';
+const expect=baseExpect.configure({timeout:15000});
+const LONG=Array.from({length:100},(_,i)=>i===0?'Notice':'something').join(' ')+'?';
+const MODEL='google/gemma-4-31b',TOKEN='fictional-onboarding-token';
+test('explicit questionnaire consent informs cloud and local prompts with weighted context and long question recovery',async({page},info)=>{
+ test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(600000);
+ const steps=new TestStepHelper(page,info,{paintStaticPage:true}),requests:any[]=[];
+ await page.route(AI_ENDPOINT,async route=>{const body=route.request().postDataJSON();requests.push({provider:'gemini',system:body.systemInstruction.parts[0].text,json:JSON.parse(body.contents[0].parts[0].text)});await respond(route,LONG);});
+ await page.route('http://127.0.0.1:8080/**',async route=>{
+  const headers={'access-control-allow-origin':'*','access-control-allow-headers':'authorization,content-type'};
+  if(route.request().method()==='OPTIONS'){await route.fulfill({status:204,headers});return;}
+  expect(route.request().headers().authorization).toBe(`Bearer ${TOKEN}`);
+  if(route.request().url().endsWith('/api/v1/models')){await route.fulfill({headers,json:{models:[{type:'llm',key:MODEL,loaded_instances:[{id:MODEL,config:{context_length:32768}}],capabilities:{vision:false,reasoning:{allowed_options:['off','on'],default:'on'}}}]}});return;}
+  const body=route.request().postDataJSON();expect(body.max_tokens).toBe(2048);expect(body.chat_template_kwargs).toEqual({enable_thinking:false});expect(body.reasoning_effort).toBe('none');
+  requests.push({provider:'lm-studio',system:body.messages[0].content,json:JSON.parse(body.messages[1].content)});
+  await route.fulfill({headers,json:{model:MODEL,choices:[{finish_reason:'stop',message:{role:'assistant',content:LONG}}]}});
+ });
+ await startJournal(page,info,steps,'onboarding-ai');
+ await seedHistory(page,Array.from({length:18},(_,i)=>({text:'x'.repeat(601),recordedAt:`2025-10-${String(i%7+1).padStart(2,'0')}T01:00:00Z`})));
+ await navigate(page,steps,'settings','Settings');
+ await steps.action('answers','Choose private answers separately from AI use',()=>page.getByRole('button',{name:/^Personalise your journal/}).click(),async()=>{await expect(page.getByLabel('What would you like to be called?')).toHaveValue('');});
+ await steps.action('name','Choose a name for the private journal',()=>page.getByLabel('What would you like to be called?').fill('Sam'),async()=>{await expect(page.getByLabel('What would you like to be called?')).toHaveValue('Sam');});
+ await steps.action('pronouns','Explicitly provide pronouns',()=>page.getByLabel('Share your pronouns if you like!').fill('they/them'),async()=>{await expect(page.getByLabel('Share your pronouns if you like!')).toHaveValue('they/them');});
+ await steps.action('music','Select a description to inform prompts',()=>page.getByRole('button',{name:'Music',exact:true}).click(),async()=>{await expect(page.getByRole('button',{name:'Music',exact:true})).toHaveAttribute('aria-pressed','true');});
+ await steps.action('scope','Choose the broad scope',()=>page.getByRole('radio',{name:/^Broad/}).check(),async()=>{await expect(page.getByRole('radio',{name:/^Broad/})).toBeChecked();});
+ await steps.action('focus-limit','Focus the word limit control',()=>page.getByRole('slider').focus(),async()=>{await expect(page.getByRole('slider')).toBeFocused();});
+ await steps.action('limit','Choose the 200-word option',()=>page.getByRole('slider').press('End'),async()=>{await expect(page.getByRole('slider')).toHaveValue('200');});
+ await steps.action('consent','Explicitly share selected questionnaire answers',()=>page.getByLabel('Use my questionnaire answers for AI prompts',{exact:true}).check(),async()=>{await expect(page.getByLabel('Use my questionnaire answers for AI prompts',{exact:true})).toBeChecked();});
+ await steps.action('save-answers','Confirm only literal questionnaire inputs',()=>page.getByRole('button',{name:'Save my answers',exact:true}).click(),async()=>{await expect(page.getByRole('status')).toHaveText('Your answers are saved.');expect(requests).toHaveLength(0);});
+ await steps.action('back-settings','Return to Settings',()=>page.locator('button.back').click(),async()=>{await expect(page.getByRole('heading',{name:'Settings',exact:true})).toBeVisible();});
+ await steps.action('ai','Open AI settings and inspect the confirmed sources',()=>page.getByRole('button',{name:/^AI settings/}).click(),async()=>{await expect(page.locator('.prompt-sources')).toContainText('Sam');await expect(page.locator('.prompt-sources')).toContainText('Music and sounds: listening, playing, singing.');});
+ await toggleAI(page,steps,'enable',true);
+ await steps.action('history-consent','Allow saved reflections for future generation',()=>page.getByRole('switch',{name:'Use journal entries',exact:true}).click(),async()=>{await expect(page.getByRole('switch',{name:'Use journal entries',exact:true})).toHaveAttribute('aria-checked','true');});
+ await saveChoices(page,steps,'save-ai');
+ await steps.action('today','Open the personalised Today heading',()=>page.getByRole('navigation').getByRole('button',{name:'Today',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Reflection time, Sam!',exact:true})).toBeVisible();});
+ await steps.action('cloud','Generate with the reviewed instruction and descriptions-only JSON',()=>page.getByRole('button',{name:'Find me a prompt',exact:true}).click(),async()=>{
+  await expect(page.locator('.daily-prompt h2')).toHaveText(LONG);expect(requests).toHaveLength(1);expect(requests[0].system).toContain('for "Sam" (pronouns: "they/them")');expect(requests[0].system).toContain('under 200 words');expect(requests[0].system).toContain('open-ended invitation');expect(requests[0].json.topics).toEqual(['Music and sounds: listening, playing, singing.']);expect(requests[0].json.user).toEqual({preferredName:'Sam',pronouns:'they/them'});expect(Object.values(requests[0].json.reflections).flat()).toHaveLength(10);
+ });
+ await steps.action('why','Inspect the actual weighted source count',()=>page.getByRole('button',{name:'Why this prompt?',exact:true}).click(),async()=>{await expect(page.locator('.explanation')).toContainText('of 20 context units');});
+ await openEditor(page,steps,'editor');
+ await steps.action('edit-prompt','Edit a question above the old 600-character cap',()=>page.getByRole('button',{name:'Edit prompt',exact:true}).click(),async()=>{await expect(page.getByLabel('Prompt text',{exact:true})).toHaveValue(LONG);});
+ await steps.action('manual','Retain a long personal edit',()=>page.getByLabel('Prompt text',{exact:true}).fill(LONG+' A small detail?'),async()=>{await expect(page.getByLabel('Prompt text',{exact:true})).toHaveValue(LONG+' A small detail?');});
+ await steps.action('keep-prompt','Keep the edited question in the local draft',()=>page.getByRole('button',{name:'Save prompt',exact:true}).click(),async()=>{await expect(page.locator('.editable-prompt')).toHaveText(LONG+' A small detail?');});
+ await steps.action('write','Write a short reflection under the long question',()=>editor(page).fill('A welcome quiet moment.'),async()=>{await expect(editor(page)).toHaveText('A welcome quiet moment.');});
+ await steps.action('reload-draft','Recover the long question and reflection draft',()=>page.reload(),async()=>{await expectSynced(page);await expect(page.getByRole('button',{name:'Continue your reflection',exact:true})).toBeVisible();});
+ await openEditor(page,steps,'resume');
+ await steps.action('save-reflection','Save the long edited prompt without truncation',()=>page.getByRole('button',{name:'Save reflection',exact:true}).click(),async()=>{await expect(page.locator('.saved-card .entry-prompt')).toHaveText(LONG+' A small detail?');});
+ await steps.action('done','Return to the named journal',()=>page.getByRole('button',{name:'Done',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Sam’s Journal',exact:true})).toBeVisible();});
+ await steps.action('settings-local','Open Settings',()=>page.getByRole('navigation').getByRole('button',{name:'Settings',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Settings',exact:true})).toBeVisible();});
+ await steps.action('local-ai','Open AI connection settings',()=>page.getByRole('button',{name:/^AI settings/}).click(),async()=>{await expect(page.getByLabel('AI provider',{exact:true})).toHaveValue('gemini');});
+ await steps.action('local','Choose LM Studio',()=>page.getByLabel('AI provider',{exact:true}).selectOption('lm-studio'),async()=>{await expect(page.getByRole('region',{name:'AI model connection',exact:true}).getByLabel('LM Studio server URL')).toBeVisible();});
+ await steps.action('token','Enter a fictional device token',()=>page.getByRole('region',{name:'AI model connection',exact:true}).getByLabel('LM Studio API token').fill(TOKEN),async()=>{await expect(page.getByRole('region',{name:'AI model connection',exact:true}).getByLabel('LM Studio API token')).toHaveValue(TOKEN);});
+ await steps.action('connection','Save the explicit local connection',()=>page.getByRole('button',{name:'Save model settings',exact:true}).click(),async()=>{await expect(page.getByText(/Current provider: LM Studio/)).toBeVisible();});
+ await steps.action('today-local','Return to Today with saved prompt controls',()=>page.getByRole('navigation').getByRole('button',{name:'Today',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Reflection time, Sam!',exact:true})).toBeVisible();});
+ await steps.action('another-reflection','Open an independent reflection composer',()=>page.getByRole('button',{name:'Write another reflection',exact:true}).click(),async()=>{await expect(editor(page)).toBeVisible();});
+ await steps.action('generate-local','Apply the same instruction and context policy to the local provider',()=>page.getByRole('button',{name:'Generate AI prompt',exact:true}).click(),async()=>{await expect.poll(()=>requests.length).toBe(2);await expect(page.getByRole('complementary',{name:'Generated prompt option'})).toContainText(LONG);expect(requests[1].provider).toBe('lm-studio');expect(requests[1].system).toBe(requests[0].system);expect(requests[1].json.user).toEqual(requests[0].json.user);expect(requests[1].json.topics).toEqual(requests[0].json.topics);});
+ const log=await selectionLog(page),state=replay(log);expect(state.entries.find(e=>e.text==='A welcome quiet moment.')?.prompt).toBe(LONG+' A small detail?');expect(replay(log.slice(10),replay(log.slice(0,10)))).toEqual(state);expect(JSON.stringify(log)).not.toContain(TOKEN);
+ steps.generateDocs('Questionnaire-informed AI prompts','Explicit private-answer and journal consent reaches Gemini and LM Studio under the same Broad/200-word instruction. Long reflections use two of twenty context units; long received questions survive editing, draft recovery and saving. Token credentials never enter the event stream. Every action has a full-page zero-pixel screenshot and checks underneath.');
+});

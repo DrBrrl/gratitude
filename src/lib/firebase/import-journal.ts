@@ -37,7 +37,7 @@ export async function importJournal(archive: ImportArchive, selection: ImportSel
     if (cached && canonicalInput(cached.input)!==canonicalInput(plan.input)) throw new Error('This source record conflicts with an earlier import. Nothing was overwritten.');
     if (cached?.completedId || await completed(client,uid,plan)) {hooks.progress(++done);continue;}
     if (!active()) return {done,paused:true};
-    const claim:ImportAction={eventId:plan.confirmationId,type:'ImportRecordConfirmed',schemaVersion:1,payload:plan.input};
+    const claim:ImportAction={eventId:plan.confirmationId,type:'ImportRecordConfirmed',schemaVersion:(plan.input.source.prompt?.length??0)>600?2:1,payload:plan.input};
     await repository.commitAI(claim);
     if (!active()) return {done,paused:true};
     // Another client may have completed and edited/removed images since our first read.

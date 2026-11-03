@@ -12,8 +12,8 @@ export function availableBackups(state:Projection,removed:string[]=[],pendingPro
   return Object.entries(state.backups).filter(([,p])=>{const key=promptKey(p.text);if(excluded.has(key)||seen.has(key))return false;seen.add(key);return true;}).map(([id,p])=>({id,text:p.text}));
 }
 export async function importedBackup(text:string):Promise<Extract<BackupAction,{type:'BackupPromptImported'}>> {
-  const clean=text.trim();if(!clean||clean.length>600)throw new Error('Each prompt must contain 1–600 characters.');
-  return {eventId:`bp_${await sha256(clean)}`,type:'BackupPromptImported',schemaVersion:1,payload:{text:clean}};
+  const clean=text.trim();if(!clean||clean.length>4000)throw new Error('Each prompt must contain 1–4,000 characters.');
+  return {eventId:`bp_${await sha256(clean)}`,type:'BackupPromptImported',schemaVersion:clean.length>600?2:1,payload:{text:clean}};
 }
 /** A deliberately small OOXML importer: one text column, no formulas, macros or external data. */
 export function readPromptWorkbook(bytes:Uint8Array):string[] {
@@ -33,7 +33,7 @@ export function readPromptWorkbook(bytes:Uint8Array):string[] {
     if(!text)continue;
     const key=cell.getAttribute('r')?.match(/^[A-Z]+/)?.[0];if(!key||column&&key!==column)throw new Error('Use one prompt column.');column=key;
     if(!prompts.length&&['prompt','prompts','gratitude prompts'].includes(text.toLowerCase()))continue;
-    if(text.length>600)throw new Error('Each prompt must contain 1–600 characters.');
+    if(text.length>4000)throw new Error('Each prompt must contain 1–4,000 characters.');
     prompts.push(text);
   }
   if(!prompts.length)throw new Error('No prompts found.');

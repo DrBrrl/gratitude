@@ -1,4 +1,65 @@
 <script lang="ts">
+  import Onboarding from './Onboarding.svelte';
+  import Questionnaire from './Questionnaire.svelte';
+  import { ONBOARDING_VERSION, defaultAnswers, validAnswers, selectedDescriptions, answersInput, type OnboardingAnswers } from '../onboarding';
+  let answerDraft = $state<OnboardingAnswers>(defaultAnswers()), answerBase = $state<string|null>(null), answerReady = $state(false), answerBusy = $state(false), answerMessage = $state(''), clearAnswersOpen = $state(false);
+  $effect(() => {
+    if ((setupOpen || settingsPage === 'answers') && answerReady) {
+      const saved = { answers: $state.snapshot(answerDraft), answersId: answerBase, step:setupStep, colour:setupColour };
+      untrack(() => { void repository?.writeOnboardingDraft(saved); });
+    }
+  });
+  async function loadAnswers(savedDraft = true) {
+    const active = repository; if (!active) return;
+    answerReady = false; answerMessage = ''; clearAnswersOpen = false;
+    const stored = savedDraft ? await active.readOnboardingDraft() as {answers?:unknown;answersId?:unknown;step?:unknown;colour?:unknown}|null : null;
+    if (repository !== active || !setupOpen && settingsPage !== 'answers') return;
+    const raw = stored?.answers as Partial<OnboardingAnswers>|undefined;
+    const useDraft = !!raw && typeof raw.preferredName === 'string' && typeof raw.pronouns === 'string' && raw.preferredName.length<=160 && raw.pronouns.length<=160 && validAnswers({...raw,preferredName:'',pronouns:''}) && (stored?.answersId === null || typeof stored?.answersId === 'string');
+    answerDraft = structuredClone(useDraft ? stored!.answers as OnboardingAnswers : view.state.onboarding.answers);
+    answerBase = useDraft ? stored!.answersId as string|null : view.state.onboarding.answersId;
+    if(setupOpen){setupStep=useDraft && Number.isInteger(stored?.step) && Number(stored?.step)>=0 && Number(stored?.step)<8 ? Number(stored?.step):0;setupColour=useDraft && Number.isInteger(stored?.colour) && Number(stored?.colour)>=0 && Number(stored?.colour)<=26 && Number(stored?.colour)%2===0 ? Number(stored?.colour):view.state.appearance.colourIndex;}
+    answerReady = true;
+  }
+  async function saveAnswers(clear = false) {
+    if (!repository) return;
+    answerBusy = true; answerMessage = '';
+    try {
+      if (clear) await repository.commitAI({eventId:crypto.randomUUID(),type:'OnboardingAnswersCleared',schemaVersion:1,payload:{previousEventId:answerBase}});
+      else {
+        const answers = {...$state.snapshot(answerDraft),preferredName:answerDraft.preferredName.trim(),pronouns:answerDraft.pronouns.trim()};
+        if (!validAnswers(answers)) throw new Error('Check the answers and their limits before saving.');
+        await repository.commitAI({eventId:crypto.randomUUID(),type:'OnboardingAnswersConfirmed',schemaVersion:1,payload:{...answersInput(answers),previousEventId:answerBase}});
+      }
+      answerBase = view.state.onboarding.answersId; answerDraft = structuredClone(view.state.onboarding.answers);
+      await repository.writeOnboardingDraft(null); clearAnswersOpen = false; answerMessage = clear ? 'Your answers are cleared.' : 'Your answers are saved.';
+    } catch (cause) { answerMessage = cause instanceof Error ? cause.message : 'Could not save. Your draft is kept on this device.'; }
+    finally { answerBusy = false; }
+  }
+
+  let setupOpen=$state(false),setupStep=$state(0),setupColour=$state(0),setupOnline=$state(true);
+  async function openSetup(){choices={...view.state.ai.choices};setupOpen=true;await loadAnswers();window.scrollTo(0,0);}
+  async function finishSetup(skip=false){
+    if(!repository)return;
+    answerBusy=true;answerMessage='';
+    try {
+      if(!skip){
+        if(answerBase!==view.state.onboarding.answersId)throw new Error('Your answers changed on another device. Skip for now to review them in Settings; your draft is kept.');
+        const answers={...$state.snapshot(answerDraft),preferredName:answerDraft.preferredName.trim(),pronouns:answerDraft.pronouns.trim()};
+        if(!validAnswers(answers))throw new Error('Check the answers and their limits before saving.');
+        await repository.commitAI({eventId:crypto.randomUUID(),type:'OnboardingAnswersConfirmed',schemaVersion:1,payload:{...answersInput(answers),previousEventId:answerBase}});
+        answerBase=view.state.onboarding.answersId;
+        if(setupColour!==view.state.appearance.colourIndex)await chooseAccent(setupColour);
+      }
+      try{await repository.finishOnboarding(skip?'skipped':'completed');}
+      catch(cause){if(!view.onboardingPending)throw cause;}
+      setupOpen=false;answerReady=false;
+      if(!skip)await repository.writeOnboardingDraft(null);
+      await tick();window.scrollTo(0,0);
+    } catch(cause){answerMessage=cause instanceof Error?cause.message:'Could not save. Your draft is kept on this device.';}
+    finally{answerBusy=false;}
+  }
+
   import { isBackupRequest, isEditorRequest, requestEntryRefs } from '../domain';
   import { onMount, tick, untrack } from 'svelte';
   import { page } from '$app/state';
@@ -131,6 +192,7 @@
   // The repository replaces immutable projections. Avoid creating thousands of
   // reactive proxies for historical records which the UI never mutates.
   let view = $state.raw<JournalView>({ state: emptyProjection(), pending: null, status: '', error: '', ready: false });
+  const privateName = $derived(view.state.onboarding.answers.preferredName);
   const backups=$derived(availableBackups(view.state,view.backupRemoved,view.pending&&'promptId' in view.pending.payload?view.pending.payload.promptId:undefined));
   const refillStatus=$derived(!view.state.ai.choices.enabled||!view.state.ai.choices.backupEnabled?'':backups.length>=BACKUP_MINIMUM?`${backups.length} backups ready.`:refillMessage||'Ready to refill while this app is open and connected.');
   const accountProvider=$derived(view.state.ai.choices.provider);
@@ -151,7 +213,7 @@
   $effect(() => { if (discardOpen) discardDialog?.showModal(); else discardDialog?.close(); });
   let draftWrite = 0;
   let tab = $state<'today' | 'journal' | 'friends' | 'settings'>('today');
-  let chooseInitialPage = true;
+  let chooseInitialPage = $state(true);
   let signInDestination: 'journal' | null = null;
   function receiveView(value: JournalView) {
     if(value.state.ai.days[today]!==view.state.ai.days[today])dailyPromptError=null;
@@ -159,12 +221,13 @@
     gratitudePublisher?.update(value);
     // Choose the landing page once from the loaded projection. Later syncs must
     // not interrupt writing or an explicitly selected tab.
-    if (chooseInitialPage && value.ready && value.status === 'Synced') {
+    if (chooseInitialPage && value.ready && (value.status === 'Synced'||!navigator.onLine)) {
       chooseInitialPage = false;
       const requestedFriends=page.url.searchParams.get('open')==='friends';
       const requestedJournal = signInDestination === 'journal' || page.url.searchParams.get('afterSignIn') === 'journal';
       signInDestination = null;
       tab = requestedFriends ? 'friends' : requestedJournal ? 'journal' : page.route.id === '/settings' ? 'settings' : todayReflection(value.state.entries, today).entry ? 'journal' : 'today';
+      if(value.state.onboarding.version<ONBOARDING_VERSION && !value.onboardingPending)void openSetup();
       if (requestedJournal||requestedFriends) {
         const destination = new URL(page.url);
         destination.searchParams.delete('afterSignIn');destination.searchParams.delete('open');
@@ -209,13 +272,13 @@
   const entryDateError = $derived(!chosenEntryAt(editorDateTime) ? 'Choose a valid entry date and time.'
     : new Date(chosenEntryAt(editorDateTime)!) > currentInstant ? 'Choose a date and time that is now or earlier.' : '');
   const daily = $derived(todayReflection(view.state.entries, today));
-  const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft && (!!todayDraft.payload.text.trim() || entryPhotos(view.state, todayDraft.payload.entryId).length > 0 || todayDraft.schemaVersion === 6 && todayDraft.payload.entryAt !== null || (todayDraft.schemaVersion === 5 || todayDraft.schemaVersion === 6) && (todayDraft.payload.promptText !== null || todayDraft.payload.promptId !== (daily.entry?.promptId ?? view.state.ai.days[today] ?? STARTER_ID))));
+  const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft && (!!todayDraft.payload.text.trim() || entryPhotos(view.state, todayDraft.payload.entryId).length > 0 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7) && todayDraft.payload.entryAt !== null || (todayDraft.schemaVersion === 5 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7)) && (todayDraft.payload.promptText !== null || todayDraft.payload.promptId !== (daily.entry?.promptId ?? view.state.ai.days[today] ?? STARTER_ID))));
   const todayDraftEntry = $derived(hasTodayDraft ? view.state.entries.find(entry => entry.id === todayDraft?.payload.entryId) : undefined);
   const todayColour = $derived(colourForDay(today));
   const editorColour = $derived(colourForDay(validDay(editorDateTime.slice(0,10)) ? editorDateTime.slice(0,10) : editorEntryAt ? localDay(editorEntryAt) : today));
   let editorPromptId = $state(STARTER_ID);
   const currentPromptId = $derived((hasTodayDraft && todayDraft ? promptId(todayDraft) : daily.entry?.promptId ?? view.state.ai.days[today]) ?? STARTER_ID);
-  const currentPrompt = $derived(hasTodayDraft && todayDraft ? ((todayDraft.schemaVersion === 5 || todayDraft.schemaVersion === 6) ? todayDraft.payload.promptText : null) ?? resolvePrompt(view.state, promptId(todayDraft)) ?? todayDraftEntry?.prompt ?? STARTER_PROMPT : daily.entry?.prompt ?? resolvePrompt(view.state, currentPromptId) ?? STARTER_PROMPT);
+  const currentPrompt = $derived(hasTodayDraft && todayDraft ? ((todayDraft.schemaVersion === 5 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7)) ? todayDraft.payload.promptText : null) ?? resolvePrompt(view.state, promptId(todayDraft)) ?? todayDraftEntry?.prompt ?? STARTER_PROMPT : daily.entry?.prompt ?? resolvePrompt(view.state, currentPromptId) ?? STARTER_PROMPT);
   let editorManualPrompt = $state<string | null>(null);
   let editingPrompt = $state(false);
   let promptBuffer = $state('');
@@ -228,7 +291,7 @@
   const showPromptCandidate = $derived(promptCandidate && promptCandidate.eventId !== editorPromptId && promptCandidate.eventId !== dismissedPrompt);
   async function beginPromptEdit() { if (busy || !draftRestored) return; promptBuffer = editorPrompt; editingPrompt = true; await tick(); document.getElementById('prompt-text')?.focus(); }
   async function savePromptEdit() {
-    if (busy || !promptBuffer.trim() || promptBuffer.length > 600) return;
+    if (busy || !promptBuffer.trim() || promptBuffer.length > 4000) return;
     editorManualPrompt = promptBuffer; editingPrompt = false; await persistDraft();
   }
   async function generateEditorPrompt() {
@@ -451,6 +514,7 @@
     return () => { cancelled = true; };
   });
   onMount(() => {
+    setupOnline=navigator.onLine;
     const updateDay = () => { currentInstant = new Date(); zone = Intl.DateTimeFormat().resolvedOptions().timeZone; };
     const timer = window.setInterval(updateDay, 30_000);
     window.addEventListener('focus', updateDay);
@@ -471,7 +535,7 @@
   import PhotoPanel from '$lib/components/PhotoPanel.svelte';
   import PhotoImage from '$lib/components/PhotoImage.svelte';
   import Icon from '$lib/components/Icon.svelte';
-  const theme = $derived(accentTheme(user ? view.state.appearance.colourIndex : 0));
+  const theme = $derived(accentTheme(user ? setupOpen && answerReady ? setupColour : view.state.appearance.colourIndex : 0));
   $effect(() => {
     document.documentElement.style.setProperty('--accent', theme.colour);
     document.documentElement.style.setProperty('--accent-text-weight', theme.textWeight);
@@ -481,7 +545,7 @@
     if (!repository) throw new Error('Wait for your journal to open.');
     await repository.commitAI({ eventId: crypto.randomUUID(), type: 'AccentColourChosen', schemaVersion: 1, payload: { previousEventId: view.state.appearance.lastEventId, colourIndex } });
   }
-  let settingsPage = $state<'menu' | 'ai' | 'export' | 'privacy' | 'account' | 'import'>('menu');
+  let settingsPage = $state<'menu' | 'ai' | 'answers' | 'export' | 'privacy' | 'account' | 'import'>('menu');
   let exportFormat = $state<'markdown' | 'json'>('markdown');
   let showPromptInfo = $state(false);
   let editorOrigin = $state<{ tab: typeof tab; selectedId: string | null; savedId: string | null; label: string; scroll: number }>({ tab: 'today', selectedId: null, savedId: null, label: 'Today', scroll: 0 });
@@ -516,12 +580,12 @@
       const original = stored ? view.state.entries.find(item => item.id === stored.payload.entryId) : entry;
       editing = original ? { ...original, revision: stored?.payload.expectedRevision ?? original.revision } : null;
       editorPromptId = stored ? promptId(stored) : original?.promptId ?? (resolvePrompt(view.state, currentPromptId) ? currentPromptId : STARTER_ID);
-      editorManualPrompt = (stored?.schemaVersion === 5 || stored?.schemaVersion === 6) ? stored.payload.promptText : null;
+      editorManualPrompt = (stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7)) ? stored.payload.promptText : null;
       editingPrompt = false; dismissedPrompt = '';
       currentInstant = new Date();
-      editorDateTime = localDateTime((stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || stored?.schemaVersion === 6) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
+      editorDateTime = localDateTime((stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7)) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
       editorDateChanged = !!stored && 'entryAt' in stored.payload && stored.payload.entryAt !== null;
-      editorEntryAt = (stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || stored?.schemaVersion === 6) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant.toISOString();
+      editorEntryAt = (stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7)) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant.toISOString();
       text = stored?.payload.text ?? original?.text ?? '';
       draftStatus = stored ? 'Draft saved on this device' : '';
       draftWrite++; tab = 'today'; writing = true; savedId = null; selectedId = null;
@@ -536,7 +600,7 @@
     await openComposer(key, daily.entry);
   }
   async function newEntry() { if(dateFilter)await startDateReflection(dateFilter);else await openComposer(newEntryKey, undefined); }
-  async function openSettings(next: typeof settingsPage) { settingsPage = next; exportStatus = ''; preparedFile = null; aiMessage = ''; if (next === 'ai') choices = { ...view.state.ai.choices }; await tick(); window.scrollTo(0, 0); }
+  async function openSettings(next: typeof settingsPage) { settingsPage = next; exportStatus = ''; preparedFile = null; aiMessage = ''; if (next === 'ai') choices = { ...view.state.ai.choices }; if (next === 'answers') await loadAnswers(); await tick(); window.scrollTo(0, 0); }
 
   async function navigate(next: typeof tab) { if(flow || page.state.calendar || page.url.searchParams.has('calendar')){flow=null;appliedFlow='';dateFilter=null;try{sessionStorage.removeItem(navKey);}catch{}pushState(`${base}/journal/`,{...page.state,calendar:null});} chooseInitialPage = false; tab = next; selectedId = null; writing = false; savedId = null; settingsPage = 'menu'; aiMessage = '';dailyPromptError=null; feedbackOpen = false; await tick(); window.scrollTo(0, 0); }
   async function openEntry(entry: Entry) { if(flow){await appendFrame({kind:'entry',id:entry.id});return;} journalScroll = window.scrollY; selectedId = entry.id; await tick(); document.getElementById('entry-heading')?.focus(); window.scrollTo(0, 0); }
@@ -553,7 +617,7 @@
     const version = ++draftWrite;
     const eventId = draft?.eventId ?? crypto.randomUUID();
     if (editorManualPrompt !== null) editorPromptId = eventId;
-    draft = { eventId, type: 'ReflectionWritten', schemaVersion: 6, payload: {
+    draft = { eventId, type: 'ReflectionWritten', schemaVersion: editorManualPrompt && editorManualPrompt.length>600 ? 7 : 6, payload: {
       entryId: editing?.id ?? draft?.payload.entryId ?? crypto.randomUUID(), text,
       expectedRevision: editing?.revision ?? draft?.payload.expectedRevision ?? 0,
       promptId: editorPromptId, promptText: editorManualPrompt,
@@ -639,6 +703,7 @@
           modelConnection=defaultConnection();modelConnectionError='';photoModelConnection=defaultConnection();photoConnectionError='';
           if(next&&client) {try{modelConnection=readConnection(`${client.projectId}:${base}:${next.uid}`);}catch{modelConnection={...defaultConnection(),provider:'lm-studio'};modelConnectionError='Model settings could not be restored. Save your model connection in AI settings before generating.';}}
           if(next&&client){try{photoModelConnection=readConnection(photoConnectionScope(`${client.projectId}:${base}:${next.uid}`));}catch{photoConnectionError='Photo model settings could not be restored. Save the photo connection again.';}}
+          setupOpen=false;answerReady=false;answerDraft=defaultAnswers();
           user = next; todayDraft = null; todayDraftDay = ''; editorDraftKey = ''; text = ''; editing = null; error = ''; draft = null; draftLoaded = false; draftRestored = false; draftStatus = ''; draftWrite++; exportStatus = ''; preparedFile = null; exporting = false; tab = 'today'; selectedId = null; query = ''; writing = false; savedId = null; settingsPage = 'menu';
           view = { state: emptyProjection(), pending: null, status: '', error: '', ready: false };
           initialized = true;
@@ -677,12 +742,14 @@
         });
       } else initialized = true;
     } catch { initialized = true; error = 'Sign-in is unavailable. Please try again later.'; }
-    const online = () => {gratitudePublisher?.update(view);refiller.reset();void repository?.syncBackups();void repository?.syncPromptResult().catch(()=>{});void repository?.retry();};
-    const refillTimer=setInterval(()=>{const refill=refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting&&(view.state.ai.choices.backupProvider!=='lm-studio'||!!modelConnection.token||credentialStatus.ready),online:navigator.onLine,visible:document.visibilityState==='visible',busy:busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state);refillMessage=refiller.status;void refill.then(()=>{refillMessage=refiller.status;});},3000);
+    const online = () => { setupOnline=true; void repository?.syncOnboarding().catch(()=>{});gratitudePublisher?.update(view);refiller.reset();void repository?.syncBackups();void repository?.syncPromptResult().catch(()=>{});void repository?.retry();};
+    const refillTimer=setInterval(()=>{const refill=refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting&&(view.state.ai.choices.backupProvider!=='lm-studio'||!!modelConnection.token||credentialStatus.ready),online:navigator.onLine,visible:document.visibilityState==='visible',busy:setupOpen||busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state);refillMessage=refiller.status;void refill.then(()=>{refillMessage=refiller.status;});},3000);
+    const offline=()=>{setupOnline=false;};
+    window.addEventListener('offline',offline);
     window.addEventListener('online', online);
     const openHug=async(event:MessageEvent)=>{if(event.data?.type==='OPEN_HUG_FRIENDS'&&event.data.uid===user?.uid&&event.data.scope===new URL(`${base}/`,location.origin).href){if(writing&&text.trim())await persistDraft();await navigate('friends');}};
     navigator.serviceWorker?.addEventListener('message',openHug);
-    return () => { session++; stopAuth();pushController?.stop();navigator.serviceWorker?.removeEventListener('message',openHug); gratitudePublisher?.stop(); calendarThumbnailCache?.dispose(); credentialStore?.stop();photoCredentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online); };
+    return () => { session++; stopAuth();pushController?.stop();navigator.serviceWorker?.removeEventListener('message',openHug); gratitudePublisher?.stop(); calendarThumbnailCache?.dispose(); credentialStore?.stop();photoCredentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online);window.removeEventListener('offline',offline); };
   });
   async function signIn(journal = landing) {
     if (!initialized || busy) return;
@@ -743,10 +810,10 @@
       text = pending.payload.text;
       editing = view.state.entries.find((entry) => entry.id === pending.payload.entryId) ?? null;
       editorPromptId = promptId(pending);
-      editorManualPrompt = (pending.schemaVersion === 5 || pending.schemaVersion === 6) ? pending.payload.promptText : null; editingPrompt = false;
-      editorDraftKey = editing ? keyForEntry(editing) : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? newEntryKey : todayKey;
-      editorDateTime = localDateTime((pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? pending.payload.entryAt : currentInstant);
-      editorEntryAt = (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || pending.schemaVersion === 6) && !!pending.payload.entryAt ? pending.payload.entryAt : chosenEntryAt(editorDateTime)!;
+      editorManualPrompt = (pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7)) ? pending.payload.promptText : null; editingPrompt = false;
+      editorDraftKey = editing ? keyForEntry(editing) : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7)) && !!pending.payload.entryAt ? newEntryKey : todayKey;
+      editorDateTime = localDateTime((pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7)) && !!pending.payload.entryAt ? pending.payload.entryAt : currentInstant);
+      editorEntryAt = (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7)) && !!pending.payload.entryAt ? pending.payload.entryAt : chosenEntryAt(editorDateTime)!;
       editorDateChanged = 'entryAt' in pending.payload && pending.payload.entryAt !== null;
       draft = { ...pending, eventId: crypto.randomUUID() }; tab = 'today'; writing = true; await persistDraft();
     } catch (cause) { error = cause instanceof Error ? cause.message : 'Please try again.'; }
@@ -754,7 +821,7 @@
 </script>
 
 <svelte:head><title>{landing || !user?'Gratitude':'Your journal · Gratitude'}</title>{#if !landing}<meta name="robots" content="noindex" />{/if}</svelte:head>
-{#if landing || !user}
+{#if (landing && !setupOpen) || !user}
   <WelcomePage signedIn={!!user} onsignin={() => signIn(true)} signInDisabled={!initialized || busy} message={error}>
     {#snippet calendar()}
       {#if user && view.ready}<LandingCalendar index={dayIndex} {today} anchor={homeAnchor} onanchor={rememberAnchor} onchoose={selectDate} photos={calendarPhotos} />{#if view.status!=='Synced'}<p class="hint">Saved on this device · waiting to sync</p>{/if}
@@ -762,9 +829,28 @@
     {/snippet}
   </WelcomePage>
 {:else}
-<main class:composing={writing} class:friendsPage={tab==='friends'} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:calendarView={calendarShown}>
+<main data-onboarding-pending={!!view.onboardingPending} data-journal-ready={view.ready&&!chooseInitialPage} class:composing={writing} class:friendsPage={tab==='friends'} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:calendarView={calendarShown}>
   {#if !initialized}
     <p role="status" class="loading">Opening Gratitude…</p>
+  {:else if setupOpen}
+    {#if answerReady}
+      <Onboarding bind:answers={answerDraft} bind:step={setupStep} bind:colour={setupColour} busy={answerBusy||aiBusy||photoBusy} message={answerMessage} stale={answerBase!==view.state.onboarding.answersId&&!answerBusy} online={setupOnline} onfinish={()=>finishSetup()} onskip={()=>finishSetup(true)}>
+        {#snippet ai()}
+          <ModelSettings credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={answerBusy||uiReview} initialError={modelConnectionError} onchange={async connection=>{await confirmChoices({provider:connection.provider});modelConnection=connection;modelConnectionError='';}} />
+          <PhotoModelSettings provider={view.state.ai.choices.photoProvider??'prompt'} connection={photoModelConnection} scope={photoModelScope} credentialStatus={photoCredentialStatus} onsavetoken={savePhotoToken} onforgettoken={forgetPhotoToken} onsave={savePhotoModel} initialError={photoConnectionError} disabled={answerBusy||uiReview} />
+          <section class="glass preferences" aria-label="Onboarding AI choices">
+            <div class="preference"><span>AI prompts</span><button class="switch" role="switch" aria-checked={choices.enabled} aria-label="AI prompts" onclick={()=>choices.enabled=!choices.enabled} disabled={aiBusy||!aiAvailable||uiReview}><span></span></button></div>
+            <div class="preference"><span>Use prompt feedback</span><button class="switch" role="switch" aria-checked={choices.useFeedback} aria-label="Use prompt feedback" onclick={()=>choices.useFeedback=!choices.useFeedback} disabled={aiBusy||!personalContextAvailable}><span></span></button></div>
+            <div class="preference"><span>Use journal entries</span><button class="switch" role="switch" aria-checked={choices.useJournal} aria-label="Use journal entries" onclick={()=>choices.useJournal=!choices.useJournal} disabled={aiBusy||!personalContextAvailable}><span></span></button></div>
+            <p class="hint">AI and source sharing remain separate from your questionnaire answers. These switches take effect only when you save AI choices.</p>
+            <button class="outline" onclick={saveChoices} disabled={aiBusy||!aiAvailable||uiReview}>Save AI choices</button>{#if aiMessage}<p role="status" class="hint">{aiMessage}</p>{/if}
+          </section>
+          <details class="prompt-info"><summary>Backup prompt preferences</summary>{#if repository}<BackupPrompts {view} {repository} email={user?.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups} />{/if}<p class="hint">Choose the same provider to use your prompt model for backups. Local backups use your saved LM Studio prompt connection.</p></details>
+          <p class="hint">AI prompts are {view.state.ai.choices.enabled?'on':'off'}. Backup refills and journal/feedback sharing keep their existing choices; manage them in Settings → AI settings.</p>
+        {/snippet}
+        {#snippet friends()}{#if client&&user&&!uiReview}<Friends {client} uid={user.uid} journal={view} {pushController} pushState={hugPushState} profileOnly />{:else}<p class="hint">Use the Firebase preview to set up your public Friends profile.</p>{/if}{/snippet}
+      </Onboarding>
+    {:else}<p role="status">Opening your setup…</p>{/if}
   {:else}
     {#if calendarShown && frame?.kind==='calendar'}
       <button class="back" onclick={backFlow}><Icon name="back" />{flow && flow.trail.length>1?'Journal':flow?.root.tab==='today'?'Today':'Journal'}</button>
@@ -783,7 +869,7 @@
         <section class="tinted composer" style:--entry-colour={editorColour}>
           {#if editingPrompt}
             <label class="prompt-edit-label" for="prompt-text">Prompt</label>
-            <textarea id="prompt-text" class="prompt-text" aria-label="Prompt text" rows="3" maxlength="600" bind:value={promptBuffer}></textarea>
+            <textarea id="prompt-text" class="prompt-text" aria-label="Prompt text" rows="3" maxlength="4000" bind:value={promptBuffer}></textarea>
             <p class="hint">Prompt changes stay in this draft until you save the reflection.</p>
             <div class="prompt-actions"><button class="card-action" type="button" onclick={savePromptEdit} disabled={busy || !promptBuffer.trim()}>Save prompt</button><button class="card-action" type="button" onclick={() => editingPrompt = false}>Cancel prompt edit</button></div>
           {:else}
@@ -812,7 +898,7 @@
       {:else}
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
         <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} photos={calendarPhotos} />
-        <h1 class="today-heading">Reflection time</h1>
+        <h1 class="today-heading">{privateName ? `Reflection time, ${privateName}!` : 'Reflection time'}</h1>
         {#if view.ready}
           <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID ? 'Starter prompt' : currentResponse ? 'AI prompt' : 'Your prompt'}</span><h2>{currentPrompt}</h2></section>
           {#if !daily.entry}<BackupPicker prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||!draftLoaded||!!view.pending} />{/if}
@@ -828,7 +914,7 @@
           {/if}
           {#if view.aiResultPending}<section class="glass"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
           <button class="text-button today-secondary" onclick={() => navigate('journal')}>Browse your journal</button>
-          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<div class="glass explanation">{#if currentRequest}<p>This question was generated by {'provider' in currentRequest.payload ? 'LM Studio' : 'Gemini'}.{currentRequest.payload.contextMode === 'generic' ? ' No journal text, preferences or feedback was shared.' : ` It used your saved preferences, ${requestEntryRefs(currentRequest).length} saved reflections and ${currentRequest.payload.feedbackIds.length} pieces of feedback.`}</p>{:else if view.state.backups[currentPromptId]}<p>A personalised question from your saved backup prompts. No AI request was needed to choose it.</p>{:else if currentPromptId !== STARTER_ID}<p>You wrote this prompt. It is saved with your reflection.</p>{:else}<p>A simple starting point for noticing something good. You can write as little or as much as you like. This starter works without sending anything to AI.</p>{/if}<button class="underlined" onclick={openFeedback} disabled={!resolvePrompt(view.state, currentPromptId)}>Give prompt feedback</button>{#if feedbackOpen}<label class="ai-label" for="prompt-feedback">What would make prompts better for you?</label><textarea id="prompt-feedback" maxlength="500" rows="3" bind:value={feedbackText}></textarea><p class="hint">A short note in your own words. Clear the text to remove it from future personalization.</p><button class="outline" onclick={saveFeedback} disabled={aiBusy}>Save feedback</button>{/if}</div>{/if}</div>
+          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<div class="glass explanation">{#if currentRequest}<p>This question was generated by {'provider' in currentRequest.payload ? 'LM Studio' : 'Gemini'}.{currentRequest.payload.contextMode === 'generic' ? ' No journal text, preferences or feedback was shared.' : ` It used your saved preferences, ${requestEntryRefs(currentRequest).length} saved reflections (${view.state.ai.requestUnits[currentRequest.eventId]??requestEntryRefs(currentRequest).length} of 20 context units) and ${currentRequest.payload.feedbackIds.length} pieces of feedback.`}</p>{:else if view.state.backups[currentPromptId]}<p>A personalised question from your saved backup prompts. No AI request was needed to choose it.</p>{:else if currentPromptId !== STARTER_ID}<p>You wrote this prompt. It is saved with your reflection.</p>{:else}<p>A simple starting point for noticing something good. You can write as little or as much as you like. This starter works without sending anything to AI.</p>{/if}<button class="underlined" onclick={openFeedback} disabled={!resolvePrompt(view.state, currentPromptId)}>Give prompt feedback</button>{#if feedbackOpen}<label class="ai-label" for="prompt-feedback">What would make prompts better for you?</label><textarea id="prompt-feedback" maxlength="500" rows="3" bind:value={feedbackText}></textarea><p class="hint">A short note in your own words. Clear the text to remove it from future personalization.</p><button class="outline" onclick={saveFeedback} disabled={aiBusy}>Save feedback</button>{/if}</div>{/if}</div>
         {/if}
       {/if}
     {:else if tab === 'journal'}
@@ -844,7 +930,7 @@
           <button class="entry-action card-action" onclick={() => edit(selected)} disabled={!!view.pending || busy}><Icon name="edit" size={16} />Edit reflection</button>
         </article>
       {:else}
-        <h1 class="page-heading">Your journal</h1>
+        <h1 class="page-heading">{privateName ? `${privateName}’s Journal` : 'Your journal'}</h1>
         {#if dateFilter}<button class="back day-back" onclick={backFlow}><Icon name="back" />{flow?.trail.at(-2)?.kind==='calendar'?'Calendar':flow?.root.tab==='home'?'Home':flow?.root.tab==='today'?'Today':'Journal'}</button><h2 class="date-heading">{dayLabel(dateFilter)}</h2>{/if}
         <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} photos={calendarPhotos} />
         <button class="outline new-entry" onclick={newEntry} disabled={busy || !view.ready || !draftLoaded || !!view.pending}>New entry</button>
@@ -874,12 +960,24 @@
       {#if settingsPage === 'menu'}
         <h1 class="page-heading">Settings</h1>
         <div class="settings-menu">
-          {#each [{ id: 'ai', icon: 'sparkles', title: 'AI settings', subtitle: 'Answers, memory and sharing' }, { id: 'export', icon: 'file', title: 'Export journal', subtitle: 'Markdown or JSON' }, { id: 'import', icon: 'file', title: 'Import journal', subtitle: 'ZIP export, photos and dates' }, { id: 'privacy', icon: 'shield', title: 'Privacy & data', subtitle: 'Your journal, your control' }, { id: 'account', icon: 'account', title: 'Account', subtitle: user.email ?? 'Signed in' }] as item}
+          {#each [{ id: 'answers', icon: 'edit', title: 'Personalise your journal', subtitle: 'Your name, interests and prompts' }, { id: 'ai', icon: 'sparkles', title: 'AI settings', subtitle: 'Answers, memory and sharing' }, { id: 'export', icon: 'file', title: 'Export journal', subtitle: 'Markdown or JSON' }, { id: 'import', icon: 'file', title: 'Import journal', subtitle: 'ZIP export, photos and dates' }, { id: 'privacy', icon: 'shield', title: 'Privacy & data', subtitle: 'Your journal, your control' }, { id: 'account', icon: 'account', title: privateName ? `Account · ${privateName}` : 'Account', subtitle: user.email ?? 'Signed in' }] as item}
             <button class="glass settings-row" onclick={() => openSettings(item.id as typeof settingsPage)}><span class="row-icon" class:yellow={item.id === 'ai'}><Icon name={item.icon} size={30} /></span><span class="row-copy"><strong>{item.title}</strong><span>{item.subtitle}</span></span><Icon name="next" size={20} /></button>
           {/each}
         </div>
         <p class="app-credit">Gratitude · GPLv3</p>
         {#if uiReview}<details class="review-tools glass"><summary>UI review</summary><p class="hint">Fictional journal on this browser only.</p><button class="outline" onclick={() => resetReview?.()}>Restore sample journal</button><button class="text-button" onclick={() => resetReview?.(true)}>Show empty journal</button></details>{/if}
+      {:else if settingsPage === 'answers'}
+        <h1 class="page-heading">Personalise your journal</h1>
+        <p class="hint">All questions are optional and you can change your answers later!</p>
+        {#if answerReady}
+          {#if answerBase !== view.state.onboarding.answersId && !answerBusy}<section class="glass preferences"><p role="alert">Your answers changed on another device. Your draft is kept.</p><button class="outline" onclick={() => loadAnswers(false)} disabled={answerBusy}>Use latest saved answers instead of this draft</button></section>{/if}
+          <Questionnaire bind:answers={answerDraft} disabled={answerBusy} />
+          <label class="hint"><input type="checkbox" bind:checked={answerDraft.useAnswers} disabled={answerBusy} /> Use my questionnaire answers for AI prompts</label><p class="hint">Shares selected descriptions and any private name/pronouns with your chosen provider when requesting a prompt. AI, journal and feedback sharing have separate switches.</p>
+          <button class="primary" onclick={() => saveAnswers()} disabled={answerBusy || answerBase !== view.state.onboarding.answersId}>Save my answers</button>
+          <button class="text-button" onclick={() => clearAnswersOpen = true} disabled={answerBusy || !view.state.onboarding.answersId}>Clear answers</button>
+          {#if clearAnswersOpen}<section class="glass preferences" aria-label="Clear questionnaire answers"><h2>Clear your answers?</h2><p class="hint">This clears your private name, pronouns, topics and prompt controls, and stops sharing these answers with AI. Your journal, feedback, account colour and Friends profile stay.</p><button class="outline" onclick={() => saveAnswers(true)} disabled={answerBusy}>Confirm clear answers</button><button class="text-button" onclick={() => clearAnswersOpen = false}>Keep my answers</button></section>{/if}
+          {#if answerMessage}<p role="status" class="hint">{answerMessage}</p>{/if}
+        {:else}<p role="status">Opening your answers…</p>{/if}
       {:else if settingsPage === 'ai'}
         <h1 class="page-heading">AI settings</h1>
         <ModelSettings credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={aiBusy||generatingPrompt||!!view.aiResultPending||uiReview} initialError={modelConnectionError} onchange={async connection=>{if(!repository)throw new Error('Open your journal first.');await confirmChoices({provider:connection.provider});modelConnection=connection;modelConnectionError='';}} />
@@ -895,10 +993,10 @@
           <label class="ai-label" for="ai-guidance">What should prompts focus on or avoid? <span class="hint">Optional</span></label>
           <textarea id="ai-guidance" use:autoGrow={choices.guidance} bind:value={choices.guidance} aria-describedby="ai-guidance-limit" maxlength="500" rows="3" placeholder="For example: everyday moments; fewer questions about work"></textarea>
           <p id="ai-guidance-limit" class="hint guidance-limit">{choices.guidance.length} / 500 characters</p>
-          <details class="prompt-info"><summary>Prompt info</summary><p class="hint">Your saved preferences are shared when requesting a prompt. The switches above optionally include up to 20 earlier reflections (anniversaries, rediscoveries, and recent writing) and up to 20 original questions with their feedback. Entry dates determine selection; imports count by their original dates. {activeConnection.provider==='lm-studio'?'Your configured LM Studio server processes this context to generate your prompt.':'Google processes this context to generate your prompt.'}</p></details>
-        {:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
+          <details class="prompt-info"><summary>Prompt info</summary><p class="hint">Your saved preferences are shared when requesting a prompt. The switches above optionally include up to 20 units of earlier reflections (anniversaries, rediscoveries, and recent writing); reflections over 600 characters use two units and up to 20 original questions with their feedback. Entry dates determine selection; imports count by their original dates. {activeConnection.provider==='lm-studio'?'Your configured LM Studio server processes this context to generate your prompt.':'Google processes this context to generate your prompt.'}</p></details>
+        {:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction with your selected scope and word limit is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
-        <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {photoConnection.provider==='lm-studio'?'LM Studio':'Gemini'} processing for each photo.</p><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
+        <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {photoConnection.provider==='lm-studio'?'LM Studio':'Gemini'} processing for each photo.</p><p class="hint">Questionnaire answers: {view.state.onboarding.answers.useAnswers?'shared when AI prompts are enabled':'not shared'}.</p><dl class="hint"><dt>Private name</dt><dd>{view.state.onboarding.answers.preferredName||'Not provided'}</dd><dt>Pronouns</dt><dd>{view.state.onboarding.answers.pronouns||'Not provided'}</dd><dt>Selected descriptions</dt><dd>{#each selectedDescriptions(view.state.onboarding.answers) as description}<p>{description}</p>{:else}None{/each}</dd><dt>Prompt controls</dt><dd>{view.state.onboarding.answers.scope} · under {view.state.onboarding.answers.wordLimit} words</dd></dl><button class="outline" onclick={()=>openSettings('answers')}>Edit my answers</button><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
         {#if repository}<BackupPrompts {view} {repository} email={user.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups} />
         {#if view.state.ai.choices.backupProvider==='lm-studio' && accountProvider!=='lm-studio'}<details class="backup-connection"><summary>Local backup connection</summary><ModelSettings credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={localBackupConnection} scope={modelScope} connectionOnly disabled={aiBusy||uiReview} onchange={async connection=>{modelConnection=connection;modelConnectionError='';refiller.reset();}} /></details>{/if}
         {#if refillStatus}<p class="hint" role="status">{refillStatus}</p>{#if backups.length<BACKUP_MINIMUM}<button class="outline" onclick={()=>{refiller.reset();refillMessage='';}}>Retry backup refill</button>{/if}{/if}{/if}
@@ -920,7 +1018,7 @@
         <h1>Privacy & data</h1><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device. Daily AI prompt sharing starts off disabled in AI settings. Photo summaries are a separate choice for each photo.</p><button class="outline" onclick={() => openSettings('export')}>Export your journal</button></section>
         <section class="glass"><h2>Journal recovery</h2><p class="muted">Rebuild this device’s view from your saved account history.</p><button class="outline" onclick={() => repository?.rebuild().catch(() => error = 'Could not rebuild. Please reload and try again.')} disabled={busy}>Rebuild local view</button></section>
       {:else}
-        <h1>Account</h1><AccentPicker selected={view.state.appearance.colourIndex} disabled={!view.ready || busy} onchange={chooseAccent} /><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
+        <h1 class="page-heading">{privateName ? `Account · ${privateName}` : 'Account'}</h1><AccentPicker selected={view.state.appearance.colourIndex} disabled={!view.ready || busy} onchange={chooseAccent} /><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
       {/if}
     {/if}
     {#if view.aiResultPending && (writing || tab !== 'today' || savedEntry)}<section class="glass photo-recovery"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
@@ -934,7 +1032,8 @@
     {/key}
     {#if view.status !== 'Synced'}<p class="sync-status" role="status">{view.status}</p>{/if}
     <dialog bind:this={discardDialog} oncancel={event => { if (busy) event.preventDefault(); }} onclose={() => discardOpen = false} aria-labelledby="discard-title"><h2 id="discard-title">Discard this draft?</h2><p>Your saved reflections will remain in your journal.</p><button class="primary" onclick={() => discardOpen = false} disabled={busy}>Keep writing</button><button class="outline" onclick={discardDraft} disabled={busy}>Discard draft permanently</button></dialog>
-    {#if !writing}<nav class="glass" aria-label="Journal navigation">{#each [{ id: 'today', label: 'Today' }, { id: 'journal', label: 'Journal' }, { id: 'friends', label: 'Friends' }, { id: 'settings', label: 'Settings' }] as item}<button aria-label={item.id === 'friends' ? 'Friends & hugs' : undefined} aria-current={tab === item.id ? 'page' : undefined} onclick={() => navigate(item.id as typeof tab)}><Icon name={item.id === 'friends' ? 'heart' : item.id} size={28} filled={tab === item.id} /><span>{item.label}</span></button>{/each}</nav>{/if}
+    {#if view.onboardingPending && !setupOpen}<p class="hint" role="status">Setup is saved on this device; waiting to sync across devices.</p>{/if}
+    {#if !writing && !setupOpen}<nav class="glass" aria-label="Journal navigation">{#each [{ id: 'today', label: 'Today' }, { id: 'journal', label: 'Journal' }, { id: 'friends', label: 'Friends' }, { id: 'settings', label: 'Settings' }] as item}<button aria-label={item.id === 'friends' ? 'Friends & hugs' : undefined} aria-current={tab === item.id ? 'page' : undefined} onclick={() => navigate(item.id as typeof tab)}><Icon name={item.id === 'friends' ? 'heart' : item.id} size={28} filled={tab === item.id} /><span>{item.label}</span></button>{/each}</nav>{/if}
   {/if}
   {#if error || view.error}<p role="alert">{error || view.error}</p>{/if}
 </main>

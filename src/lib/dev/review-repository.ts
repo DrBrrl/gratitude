@@ -1,3 +1,4 @@
+import type { OnboardingAction } from '../onboarding';
 import type { ImportSelection } from '../import-archive';
 import { parseAction, replay, type Action, type ImportAction, type BackupAction, type AppearanceAction, type PhotoAction, type AIAction, type SourceAction, type JournalEvent } from '../domain';
 import type { JournalStore, JournalView } from '../firebase/repository';
@@ -11,6 +12,7 @@ export class ReviewRepository implements JournalStore {
   private events: JournalEvent[] = structuredClone(fixture) as JournalEvent[];
   private drafts: Record<string, Action> = {};
   private stopped = false;
+  private setupDraft: unknown = null;
   constructor(private notify: (view: JournalView) => void) {
     if (!import.meta.env.DEV) throw new Error('UI review is available only in the development server.');
   }
@@ -18,7 +20,7 @@ export class ReviewRepository implements JournalStore {
     if (!this.stopped) this.notify({ state: replay(this.events), pending: null, ready: true, status: 'Synced', error: '' });
   }
   private persist(events = this.events, drafts = this.drafts) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, drafts }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, drafts, setupDraft: this.setupDraft }));
     this.events = events; this.drafts = drafts;
   }
   async start() {
@@ -27,11 +29,15 @@ export class ReviewRepository implements JournalStore {
       try {
         const data = JSON.parse(saved);
         replay(data.events);
-        this.events = data.events; this.drafts = data.drafts ?? (data.draft ? { draft: data.draft } : {});
+        this.events = data.events; this.setupDraft = data.setupDraft ?? null; this.drafts = data.drafts ?? (data.draft ? { draft: data.draft } : {});
       } catch { localStorage.removeItem(STORAGE_KEY); }
     }
     this.emit();
   }
+  async finishOnboarding(outcome:'completed'|'skipped') { if(replay(this.events).onboarding.version<1) await this.save({eventId:crypto.randomUUID(),type:'OnboardingFinished',schemaVersion:1,payload:{version:1,outcome}}); }
+  async syncOnboarding() {}
+  async readOnboardingDraft() { return structuredClone(this.setupDraft); }
+  async writeOnboardingDraft(value: unknown | null) { this.setupDraft = structuredClone(value); this.persist(); }
   async readImportArchive(): Promise<ImportSelection | null> { return null; }
   async storeImportArchive() {}
   async cancelStagedPhoto() {}
@@ -59,7 +65,7 @@ export class ReviewRepository implements JournalStore {
     replay(events); // Real reducer enforces ordering and edit revisions.
     this.persist(events); this.emit();
   }
-  async commitAI(action: AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
+  async commitAI(action: AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
   async requestPrompt() { throw new Error('Use the Firebase preview to try Gemini. UI review stays entirely on this device.'); }
   async queueBackups(actions:BackupAction[]) {for(const action of actions)await this.save(action);}
   async queueBackup(action:BackupAction) {await this.save(action);}

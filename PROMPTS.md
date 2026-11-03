@@ -1548,3 +1548,9 @@ I actually don't know much about Hermes, i thought it was another local model wr
 ```text
 No need to focus on hermes at all :)
 ```
+
+## 2026-11-03 — Implement the reviewed onboarding
+
+```text
+Thank you! Shall we try coding up the onboarding now?
+```

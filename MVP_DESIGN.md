@@ -8,7 +8,7 @@ The `/journal/` route implements Google sign-in, save/edit against a fixed versi
 
 This slice uses `ReflectionWritten` with entry ID, original text, expected revision and starter ID. Sequence and server timestamp are infrastructure metadata; prompt text, entry revision and rainbow position are derived. The stream head and per-entry last-event pointer are transactionally maintained append indexes, reconstructable from the event stream. Rules derive the expected revision from the prior immutable event; no entry snapshots are stored in these indexes. Missing/damaged cloud indexes require controlled repair, while local projection caches can be discarded by the user. The complete MVP event vocabulary below remains planned; preserve or explicitly migrate this first schema when extending it.
 
-Later increments implement autosaved device drafts, search, consistent-head exports, recorded Gemini prompts and photo summaries. Source events now include photo attachment, summary request/response/failure, user description edits and removal; see the photo contract below. Full offline cold starts, onboarding and historical erasure remain planned.
+Subsequent increments added autosaved device drafts, search, consistent-head exports, recorded Gemini prompts and photo summaries. Source events now include photo attachment, summary request/response/failure, user description edits and removal; see the photo contract below. Optional onboarding, private prompt preferences and versioned skip/resume are now implemented; see [the implementation notes](ONBOARDING_DESIGN.md#implementation-notes). Offline reopening is available after an online visit caches the app and account; first-time offline setup and historical erasure remain planned.
 
 ## Event-sourcing contract
 

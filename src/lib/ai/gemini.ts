@@ -12,7 +12,7 @@ const appChecks = new WeakMap<FirebaseClient['app'], AppCheck>();
  * Auth/App Check still use the supported Firebase SDKs. No global fetch patching.
  */
 export function geminiGenerator(client: FirebaseClient): GeneratePrompt {
-  return context => generate(client, SYSTEM_PROMPT, [{ text: context }], 600);
+  return (context,options) => generate(client, options?.system??SYSTEM_PROMPT, [{ text: context }], options?.max??600);
 }
 
 async function generate(client: FirebaseClient, system: string, parts: unknown[], max: number) {

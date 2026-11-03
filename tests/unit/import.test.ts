@@ -29,7 +29,7 @@ test('bounded adapter validates source data and stable identity independently of
   assert.ok(validImportSource(sourceRecord(0)));
   assert.ok(!validImportSource({...sourceRecord(0),createdOnStr:'2024-02-30T14:00:00.000+10:00'}));
   assert.ok(!validImportSource({...sourceRecord(0),computedColour:0}));
-  for(const change of [{prompt:'x'.repeat(601)},{createdOnStr:'bad'},{updatedOn:1},{noteText:'',imagePath:null,driveImagePath:null}])await assert.rejects(plans({photos:[],changes:{0:change}}));
+  for(const change of [{prompt:'x'.repeat(4001)},{createdOnStr:'bad'},{updatedOn:1},{noteText:'',imagePath:null,driveImagePath:null}])await assert.rejects(plans({photos:[],changes:{0:change}}));
   await assert.rejects(plans({changes:{1:{noteId:'fictional-note-1'}}}),/duplicate/);
   await assert.rejects(plans({changes:{0:{imagePath:'missing.jpg'}}}),/missing/);
 });

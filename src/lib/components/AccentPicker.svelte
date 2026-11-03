@@ -1,6 +1,6 @@
 <script lang="ts">
   import { accentChoices } from '../appearance';
-  let { selected, disabled = false, onchange }: { selected: number; disabled?: boolean; onchange: (index: number) => Promise<void> } = $props();
+  let { selected, disabled = false, compact=false, preview=false, onchange }: { selected: number; disabled?: boolean; compact?:boolean; preview?:boolean; onchange: (index: number) => Promise<void> } = $props();
   let saving = $state(false), error = $state('');
   async function choose(index: number) {
     if (index === selected) return;
@@ -11,14 +11,14 @@
   }
 </script>
 <section class="accent-picker" aria-label="Accent colour">
-  <h2>Your favourite colour</h2>
-  <p>Choose the colour of your accents and smoke. Your journal keeps its date colours.</p>
+  {#if !compact}<h2>Your favourite colour</h2>
+  <p>Choose the colour of your accents and smoke. Your journal keeps its date colours.</p>{/if}
   <div class="swatches" role="group" aria-label="Choose your accent colour">
     {#each accentChoices as choice}
       <button type="button" aria-label={choice.name} aria-pressed={selected === choice.colourIndex} disabled={disabled || saving} style:--swatch={choice.colour} style:--swatch-ink={choice.inkColour} onclick={() => choose(choice.colourIndex)}><span aria-hidden="true">{selected === choice.colourIndex ? '✓' : ''}</span></button>
     {/each}
   </div>
-  <p class="hint" aria-live="polite">{saving ? 'Saving your colour…' : `${accentChoices.find(choice => choice.colourIndex === selected)?.name ?? 'Yellow'} · saved with your account`}</p>
+  <p class="hint" aria-live="polite">{saving ? 'Saving your colour…' : `${accentChoices.find(choice => choice.colourIndex === selected)?.name ?? 'Yellow'}${preview ? '' : ' · saved with your account'}`}</p>
   {#if error}<p role="alert">{error}</p>{/if}
 </section>
 <style>

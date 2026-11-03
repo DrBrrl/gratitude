@@ -55,10 +55,10 @@ service cloud.firestore {
         return e.type == 'ReflectionImported' ? e.payload.photoSlot == null : e.payload.text.matches('[\\s\\S]*[^\\s][\\s\\S]*');
       }
       function promptId(e) { return e.schemaVersion == 1 ? e.payload.starterId : e.payload.promptId; }
-      function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && (get(eventPath(id)).data.type in ['PromptResponseReceived', 'ImportRecordConfirmed', 'BackupPromptImported'] || get(eventPath(id)).data.type == 'ReflectionWritten' && get(eventPath(id)).data.schemaVersion in [5, 6] && get(eventPath(id)).data.payload.promptText is string && get(eventPath(id)).data.payload.promptId == id)); }
+      function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && (get(eventPath(id)).data.type in ['PromptResponseReceived', 'ImportRecordConfirmed', 'BackupPromptImported'] || get(eventPath(id)).data.type == 'ReflectionWritten' && get(eventPath(id)).data.schemaVersion in [5, 6, 7] && get(eventPath(id)).data.payload.promptText is string && get(eventPath(id)).data.payload.promptId == id)); }
       function unchangedEntryDate(e) {
         let previous = exists(pointerPath(e.payload.entryId)) ? get(eventPath(get(pointerPath(e.payload.entryId)).data.lastEventId)).data : e;
-        return e.schemaVersion == 6 || (e.schemaVersion in [3, 4, 5]
+        return e.schemaVersion in [6,7] || (e.schemaVersion in [3, 4, 5]
           ? e.payload.entryAt == previous.payload.get('entryAt', null)
           : previous.payload.get('entryAt', null) == null);
       }
@@ -69,19 +69,19 @@ service cloud.firestore {
             || (e.schemaVersion == 2 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId']) && knownPrompt(p.promptId))
             || (e.schemaVersion == 3 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt'])
               && knownPrompt(p.promptId) && p.entryAt is timestamp && p.entryAt <= request.time)
-            || (e.schemaVersion in [5, 6] && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot'])
-              && ((p.promptText == null && knownPrompt(p.promptId)) || (p.promptId == e.eventId && text(p.promptText, 600) && p.promptText.matches('[\\s\\S]*[^\\s][\\s\\S]*')))
+            || (e.schemaVersion in [5, 6, 7] && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot'])
+              && ((p.promptText == null && knownPrompt(p.promptId)) || (p.promptId == e.eventId && text(p.promptText, e.schemaVersion == 7 ? 4000 : 600) && p.promptText.matches('[\\s\\S]*[^\\s][\\s\\S]*')))
               && (p.entryAt == null || p.entryAt is timestamp && p.entryAt <= request.time)
               && (p.photoSlot == null || p.photoSlot is int && p.photoSlot >= 0 && p.photoSlot < 4))
             || (e.schemaVersion == 4 && p.keys().hasOnly(['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot'])
               && knownPrompt(p.promptId) && (p.entryAt == null || p.entryAt is timestamp && p.entryAt <= request.time)
               && (p.photoSlot == null || p.photoSlot is int && p.photoSlot >= 0 && p.photoSlot < 4)))
-          && (e.schemaVersion == 6 || !exists(pointerPath(p.entryId)) || get(pointerPath(p.entryId)).data.get('importId', null) == null)
+          && (e.schemaVersion in [6,7] || !exists(pointerPath(p.entryId)) || get(pointerPath(p.entryId)).data.get('importId', null) == null)
           && unchangedEntryDate(e)
           && validId(p.entryId) && text(p.text, 10000)
-          && (p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*') || e.schemaVersion in [4, 5, 6] && p.photoSlot is int && activePhoto(p.entryId, p.photoSlot))
+          && (p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*') || e.schemaVersion in [4, 5, 6, 7] && p.photoSlot is int && activePhoto(p.entryId, p.photoSlot))
           && p.expectedRevision is int && p.expectedRevision == nextRevision(p.entryId)
-          && (e.schemaVersion in [5, 6] || !exists(pointerPath(p.entryId)) || promptId(e) == promptId(get(eventPath(get(pointerPath(p.entryId)).data.lastEventId)).data))
+          && (e.schemaVersion in [5, 6, 7] || !exists(pointerPath(p.entryId)) || promptId(e) == promptId(get(eventPath(get(pointerPath(p.entryId)).data.lastEventId)).data))
           && getAfter(pointerPath(p.entryId)).data.lastEventId == e.eventId;
       }
       function validRef(ref) { return ref is map && ref.keys().hasOnly(['entryId', 'revision']) && validId(ref.entryId) && ref.revision is int && ref.revision > 0; }
@@ -105,19 +105,22 @@ service cloud.firestore {
           && joined.matches('^[a-zA-Z0-9_-]{1,80}( [a-zA-Z0-9_-]{1,80}){' + string(ids.size()-1) + '}$');
       }
       function validLocal(p) { return p.provider == 'lm-studio' && p.thinking == false && p.model is string && p.model.matches('^[a-zA-Z0-9][a-zA-Z0-9_.:/@+-]{0,79}$'); }
-      function validRequest(p, before, schema) {
+      function validRequest(p, before, version) {
+        let modern = version >= 13;
+        let schema = modern ? version - 10 : version;
         let choices = get(eventPath(before.choicesId)).data.payload;
         let mixed = schema in [3,4,5,6,7,8,9,10,11,12];
         let editor = schema in [2,4,6,10,12];
         let local = schema in [5,6,8,11,12];
-        return p.keys().hasOnly(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds'].concat(editor ? ['entryId', 'entryRevision'] : []).concat(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []).concat(local ? ['provider','model','thinking'] : []).concat(schema in [7,8] ? ['purpose'] : []).concat(schema >= 9 ? ['differentFromPromptId'] : []))
+        return p.keys().hasOnly((modern ? ['answersId'] : []).concat(['previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds']).concat(editor ? ['entryId', 'entryRevision'] : []).concat(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []).concat(local ? ['provider','model','thinking'] : []).concat(schema in [7,8] ? ['purpose'] : []).concat(schema >= 9 ? ['differentFromPromptId'] : []))
+          && (!modern || (p.answersId == null || validId(p.answersId)) && p.answersId == setupBefore().answersId)
           && (schema < 9 || validId(p.differentFromPromptId) && get(eventPath(p.differentFromPromptId)).data.type == 'PromptResponseReceived')
           && (!(schema in [7,8]) || p.purpose == 'backup' && choices.get('backupEnabled',false) == true && (before.requestId == null || request.time > get(eventPath(before.requestId)).data.recordedAt + duration.value(180,'s')))
           && (!local || validLocal(p)) && (!(editor) || validId(p.entryId) && p.entryRevision is int && p.entryRevision == nextRevision(p.entryId))
           && p.choicesId == before.choicesId && choices.enabled == true
           && (schema in [7,8] ? choices.get('backupProvider','lm-studio') : choices.get('provider','gemini')) == (local ? 'lm-studio' : 'gemini') && validDay(p.day)
-          && p.templateVersion in ['gratitude-v1', 'gratitude-v2'] && p.contextMode in ['generic', 'personal']
-          && (!(mixed) || p.selectorVersion == (schema >= 9 ? 'mixed-v2' : 'mixed-v1') && p.timeZone is string && p.timeZone.size() <= 100 && p.timeZone.matches('^[A-Za-z_+-]+(/[A-Za-z0-9_+-]+)*$') && p.selectionSeed is string && p.selectionSeed.matches('^[a-f0-9]{32}$'))
+          && (modern ? p.templateVersion == 'gratitude-v3' : p.templateVersion in ['gratitude-v1', 'gratitude-v2']) && p.contextMode in ['generic', 'personal']
+          && (!(mixed) || p.selectorVersion == (modern ? (schema >= 9 ? 'weighted-v2' : 'weighted-v1') : (schema >= 9 ? 'mixed-v2' : 'mixed-v1')) && p.timeZone is string && p.timeZone.size() <= 100 && p.timeZone.matches('^[A-Za-z_+-]+(/[A-Za-z0-9_+-]+)*$') && p.selectionSeed is string && p.selectionSeed.matches('^[a-f0-9]{32}$'))
           && (mixed ? p.entryRefs is map && p.entryRefs.size() <= 20 && validRefMap(p.entryRefs) : p.entryRefs is list && p.entryRefs.size() <= 5 && validRefs(p.entryRefs)) && p.feedbackIds is list && p.feedbackIds.size() <= 20
           && (p.feedbackIds.size() == 0 || p.feedbackIds.toSet().size() == p.feedbackIds.size() && validFeedbackIds(p.feedbackIds))
           && (p.contextMode != 'generic' || (p.entryRefs.size() == 0 && p.feedbackIds.size() == 0))
@@ -128,7 +131,7 @@ service cloud.firestore {
         let before = aiBefore();
         let after = getAfter(aiPath()).data;
         let result = e.type in ['PromptResponseReceived', 'AIRequestFailed'];
-        return (e.schemaVersion == 1 || e.type == 'AIChoicesConfirmed' && e.schemaVersion in [2,3,4] || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4,5,6,7,8,9,10,11,12]) && after.lastEventId == e.eventId
+        return (e.schemaVersion == 1 || e.type == 'PromptResponseReceived' && e.schemaVersion == 2 || e.type == 'AIChoicesConfirmed' && e.schemaVersion in [2,3,4] || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]) && after.lastEventId == e.eventId
           && after.choicesId == (e.type == 'AIChoicesConfirmed' ? e.eventId : before.choicesId)
           && after.requestId == (e.type == 'PromptRequested' ? e.eventId : e.type == 'PromptFeedbackSubmitted' ? before.requestId : null)
           && (result ? validId(p.requestId) && p.requestId == before.requestId : p.previousEventId == before.lastEventId)
@@ -138,7 +141,9 @@ service cloud.firestore {
               && (e.schemaVersion != 4 || p.photoProvider in ['prompt','gemini','lm-studio']) && p.enabled is bool && p.useJournal is bool && p.useFeedback is bool && text(p.guidance, 500))
             || (e.type == 'PromptRequested' && validRequest(p, before, e.schemaVersion))
             || (e.type == 'PromptResponseReceived' && p.keys().hasOnly(['requestId', 'text', 'model', 'finishReason'])
-              && e.eventId == p.requestId + '_response' && text(p.text, 600) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+              && (e.schemaVersion == 2) == (get(eventPath(p.requestId)).data.schemaVersion >= 13)
+              && (get(eventPath(p.requestId)).data.schemaVersion < 13 || get(eventPath(p.requestId)).data.payload.answersId == setupBefore().answersId)
+              && e.eventId == p.requestId + '_response' && text(p.text, e.schemaVersion == 2 ? 4000 : 600) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
               && text(p.model, 100) && p.model.size() > 0 && p.finishReason == 'STOP')
             || (e.type == 'AIRequestFailed' && p.keys().hasOnly(['requestId', 'reason'])
               && e.eventId == p.requestId + '_failure' && p.reason in ['unavailable', 'blocked', 'invalid-response'])
@@ -151,9 +156,9 @@ service cloud.firestore {
       function validBackup(e) {
         let p=e.payload;
         let id=e.type == 'BackupPromptImported' ? e.eventId : p.promptId;
-        return e.schemaVersion == 1 && getAfter(backupPath(id)).data.lastEventId == e.eventId &&
-          (e.type == 'BackupPromptImported' ? p.keys().hasAll(['text']) && p.keys().hasOnly(['text']) && e.eventId.matches('^bp_[a-f0-9]{64}$') && text(p.text,600) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
-          : e.type == 'BackupPromptRemoved' && p.keys().hasAll(['promptId']) && p.keys().hasOnly(['promptId']) && validId(p.promptId) && (exists(backupPath(p.promptId)) || get(eventPath(p.promptId)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.promptId)).data.payload.requestId)).data.schemaVersion in [7,8]));
+        return (e.schemaVersion == 1 || e.type == 'BackupPromptImported' && e.schemaVersion == 2) && getAfter(backupPath(id)).data.lastEventId == e.eventId &&
+          (e.type == 'BackupPromptImported' ? p.keys().hasAll(['text']) && p.keys().hasOnly(['text']) && e.eventId.matches('^bp_[a-f0-9]{64}$') && text(p.text,e.schemaVersion == 2 ? 4000 : 600) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+          : e.type == 'BackupPromptRemoved' && p.keys().hasAll(['promptId']) && p.keys().hasOnly(['promptId']) && validId(p.promptId) && (exists(backupPath(p.promptId)) || get(eventPath(p.promptId)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.promptId)).data.payload.requestId)).data.schemaVersion in [7,8,17,18]));
       }
       function photoPath(entryId, slot) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/photos/$(entryId + '_' + string(slot)); }
       function photoBefore(entryId, slot) { let pointer = get(photoPath(entryId, slot)); return pointer == null ? null : get(eventPath(pointer.data.lastEventId)).data; }
@@ -179,24 +184,24 @@ service cloud.firestore {
             || (e.type == 'PhotoSummaryFailed' && old.type == 'PhotoSummaryRequested' && e.eventId == p.previousEventId + '_failure' && p.reason in ['unavailable', 'blocked', 'invalid-response']));
       }
       function optionalText(value, max) { return value == null || text(value, max); }
-      function validSource(s) {
+      function validSource(s,maxPrompt) {
         return s is map && s.keys().hasAll(['id','noteId','noteText','createdOn','createdOnStr','updatedOn','updatedOnStr','noteColor','imagePath','driveImagePath','addressTo','prompt','promptId','moodId','backgroundId'])
           && s.keys().hasOnly(['id','noteId','noteText','createdOn','createdOnStr','updatedOn','updatedOnStr','noteColor','imagePath','driveImagePath','addressTo','prompt','promptId','moodId','backgroundId'])
           && s.id is int && s.id >= 0 && text(s.noteId, 80) && s.noteId.size() > 0 && text(s.noteText, 10000)
           && s.createdOn is int && s.createdOn >= 0 && s.updatedOn is int && s.updatedOn >= s.createdOn && s.updatedOn <= request.time.toMillis()
           && text(s.createdOnStr, 40) && text(s.updatedOnStr, 40) && s.noteColor is string && s.noteColor.matches('^#[0-9a-fA-F]{6}$')
           && optionalText(s.imagePath,512) && optionalText(s.driveImagePath,512) && text(s.addressTo,500)
-          && (s.prompt == null || text(s.prompt,600) && s.prompt.matches('[\\s\\S]*[^\\s][\\s\\S]*'))
+          && (s.prompt == null || text(s.prompt,maxPrompt) && s.prompt.matches('[\\s\\S]*[^\\s][\\s\\S]*'))
           && optionalText(s.promptId,80) && optionalText(s.moodId,80) && optionalText(s.backgroundId,80);
       }
       function sourceHasPhoto(s) { return s.imagePath != null && s.imagePath != '' || s.driveImagePath != null && s.driveImagePath != ''; }
       function validImport(e) {
         let p = e.payload;
-        return e.schemaVersion == 1 && p.sourceKey is string && p.sourceKey.matches('^[a-f0-9]{64}$')
+        return (e.schemaVersion == 1 || e.type == 'ImportRecordConfirmed' && e.schemaVersion == 2) && p.sourceKey is string && p.sourceKey.matches('^[a-f0-9]{64}$')
           && p.entryId == 'e_' + p.sourceKey
           && (e.type == 'ImportRecordConfirmed'
             ? p.keys().hasAll(['format','sourceKey','entryId','source','attachments']) && p.keys().hasOnly(['format','sourceKey','entryId','source','attachments'])
-              && e.eventId == 'ic_' + p.sourceKey && p.format == 'alternate-gratitude-zip-v1' && validSource(p.source)
+              && e.eventId == 'ic_' + p.sourceKey && p.format == 'alternate-gratitude-zip-v1' && validSource(p.source,e.schemaVersion == 2 ? 4000 : 600)
               && p.attachments is list && p.attachments.size() == (sourceHasPhoto(p.source) ? 1 : 0)
               && (p.attachments.size() == 0 || p.attachments[0] is map && p.attachments[0].keys().hasAll(['photoId','sourceDigest']) && p.attachments[0].keys().hasOnly(['photoId','sourceDigest']) && validId(p.attachments[0].photoId) && p.attachments[0].sourceDigest is string && p.attachments[0].sourceDigest.matches('^[a-f0-9]{64}$'))
               && (p.source.noteText.matches('[\\s\\S]*[^\\s][\\s\\S]*') || p.attachments.size() > 0)
@@ -218,6 +223,60 @@ service cloud.firestore {
           && (input.attachments.size() == 0 || activePhoto(p.entryId,0) && photoBefore(p.entryId,0).payload.photoId == input.attachments[0].photoId)
           && getAfter(importPath(p.sourceKey)).data.confirmationId == p.confirmationId && getAfter(importPath(p.sourceKey)).data.lastEventId == e.eventId
           && getAfter(pointerPath(p.entryId)).data.lastEventId == e.eventId && getAfter(pointerPath(p.entryId)).data.importId == p.confirmationId;
+      }
+      function setupPath() { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/onboarding/control; }
+      function setupBefore() { return exists(setupPath()) ? get(setupPath()).data : {'lastEventId':null,'answersId':null,'version':0,'outcomeId':null}; }
+      function setupText(value, max, optional) {
+        return value is string && value == value.trim() && value.matches('^[^\u001f]{' + (optional ? '0' : '1') + ',' + string(max) + '}$');
+      }
+      // Round-trip equality prevents string coercion and embedded delimiters.
+      // The excluded delimiter keeps each literal field inside its own bound.
+      function setupStrings(values, max) {
+        let joined = values.join('\u001f');
+        let edge = '[^\\s\u001f\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]';
+        let piece = edge + '([^\u001f]{0,' + string(max-2) + '}' + edge + ')?';
+        return values.size() == 0 || joined.split('\u001f') == values
+          && joined.matches('^' + piece + '(\u001f' + piece + '){' + string(values.size()-1) + '}$');
+      }
+      function validSetupAnswers(p) {
+        let catalogue = ['nature','community','art','books','music','movies','science','wildlife','family','pets','friends','food','home','movement','learning','discovery','technology'];
+        let custom = p.customOrder;
+        return p.keys().hasAll(['previousEventId','catalogueVersion','preferredName','pronouns','selectedTopics','descriptions','customLabels','customDescriptions','selectedCustomTopics','customOrder','scope','wordLimit','useAnswers'])
+          && p.keys().hasOnly(['previousEventId','catalogueVersion','preferredName','pronouns','selectedTopics','descriptions','customLabels','customDescriptions','selectedCustomTopics','customOrder','scope','wordLimit','useAnswers'])
+          && p.catalogueVersion == 1 && setupText(p.preferredName,80,true) && setupText(p.pronouns,80,true)
+          && p.selectedTopics is list && p.selectedTopics.size() <= 17 && p.selectedTopics.toSet().hasOnly(catalogue) && p.selectedTopics.toSet().size() == p.selectedTopics.size()
+          && p.descriptions is map && p.descriptions.keys().hasAll(catalogue) && p.descriptions.keys().hasOnly(catalogue) && setupStrings(p.descriptions.values(),149)
+          && custom is list && custom.size() <= 20 && custom.toSet().size() == custom.size() && validFeedbackIds(custom)
+          && (custom.size() == 0 || custom.join(' ').matches('^custom_[a-zA-Z0-9_-]{0,73}( custom_[a-zA-Z0-9_-]{0,73}){' + string(custom.size()-1) + '}$'))
+          && p.customLabels is map && p.customLabels.keys().hasAll(custom) && p.customLabels.keys().hasOnly(custom) && setupStrings(p.customLabels.values(),60)
+          && p.customDescriptions is map && p.customDescriptions.keys().hasAll(custom) && p.customDescriptions.keys().hasOnly(custom) && setupStrings(p.customDescriptions.values(),150)
+          && p.selectedCustomTopics is list && p.selectedCustomTopics.toSet().size() == p.selectedCustomTopics.size() && p.selectedCustomTopics.toSet().hasOnly(custom)
+          && p.scope in ['narrow','intermediate','broad'] && p.wordLimit is int && p.wordLimit >= 50 && p.wordLimit <= 200 && p.wordLimit % 10 == 0 && p.useAnswers is bool;
+      }
+      function validSetup(e) {
+        let p = e.payload;
+        let before = setupBefore();
+        return e.schemaVersion == 1 && getAfter(setupPath()).data.lastEventId == e.eventId
+          && (e.type == 'OnboardingFinished'
+            ? p.keys().hasAll(['version','outcome']) && p.keys().hasOnly(['version','outcome']) && p.version == 1 && p.version > before.version && p.outcome in ['completed','skipped']
+            : p.previousEventId == before.answersId && (e.type == 'OnboardingAnswersCleared'
+              ? p.keys().hasAll(['previousEventId']) && p.keys().hasOnly(['previousEventId'])
+              : e.type == 'OnboardingAnswersConfirmed' && validSetupAnswers(p)));
+      }
+      match /onboarding/{id} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && generation == 'v1' && id == 'control' && validSetupHead();
+        allow delete: if false;
+        function validSetupHead() {
+          let n = request.resource.data;
+          let b = setupBefore();
+          let e = getAfter(eventPath(n.lastEventId)).data;
+          return n.keys().hasAll(['lastEventId','answersId','version','outcomeId']) && n.keys().hasOnly(['lastEventId','answersId','version','outcomeId'])
+            && validId(n.lastEventId) && !exists(eventPath(n.lastEventId)) && e.type in ['OnboardingAnswersConfirmed','OnboardingAnswersCleared','OnboardingFinished']
+            && n.answersId == (e.type == 'OnboardingFinished' ? b.answersId : e.eventId)
+            && n.version == (e.type == 'OnboardingFinished' ? e.payload.version : b.version)
+            && n.outcomeId == (e.type == 'OnboardingFinished' ? e.eventId : b.outcomeId);
+        }
       }
       function appearancePath() { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/appearance/control; }
       function validAppearance(e) {
@@ -243,7 +302,7 @@ service cloud.firestore {
           && request.resource.data.eventId == eventId && request.resource.data.recordedAt == request.time
           && request.resource.data.sequence == nextSequence()
           && getAfter(root()).data.sequence == request.resource.data.sequence && getAfter(root()).data.lastEventId == eventId
-          && (request.resource.data.type == 'AccentColourChosen' ? validAppearance(request.resource.data) : request.resource.data.type in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(request.resource.data) : request.resource.data.type in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(request.resource.data) : request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
+          && (request.resource.data.type in ['OnboardingAnswersConfirmed','OnboardingAnswersCleared','OnboardingFinished'] ? validSetup(request.resource.data) : request.resource.data.type == 'AccentColourChosen' ? validAppearance(request.resource.data) : request.resource.data.type in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(request.resource.data) : request.resource.data.type in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(request.resource.data) : request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
         allow update, delete: if false;
       }
       match /ai/{id} {
@@ -291,7 +350,7 @@ service cloud.firestore {
             ? resource == null && request.resource.data.importId == getAfter(eventPath(request.resource.data.lastEventId)).data.payload.confirmationId
             : (resource == null || resource.data.get('importId',null) == null
               ? !request.resource.data.keys().hasAny(['importId'])
-              : request.resource.data.importId == resource.data.importId && getAfter(eventPath(request.resource.data.lastEventId)).data.schemaVersion == 6));
+              : request.resource.data.importId == resource.data.importId && getAfter(eventPath(request.resource.data.lastEventId)).data.schemaVersion in [6,7]));
         allow delete: if false;
       }
     }

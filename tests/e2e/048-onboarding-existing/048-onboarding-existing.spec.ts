@@ -1,0 +1,25 @@
+import {test,expect as baseExpect} from '@playwright/test';
+import {TestStepHelper} from '../helpers/test-step-helper';
+import {FIXTURE_TIME,signIn,seedHistory,expectSynced} from '../helpers/journal-session';
+import {selectionLog} from '../helpers/ai-selection-fixture';
+import {replay} from '../../../src/lib/domain';
+const expect=baseExpect.configure({timeout:15000});
+test('an existing populated journal resumes setup, can skip offline, and keeps its unconfirmed private draft',async({page,context},info)=>{
+ test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(360000);
+ const steps=new TestStepHelper(page,info,{paintStaticPage:true});await page.clock.setFixedTime(new Date(FIXTURE_TIME));
+ await page.request.delete('http://127.0.0.1:19099/emulator/v1/projects/demo-gratitude/accounts');
+ await steps.action('open','Open Journal before sign-in',()=>page.goto('./journal/'),async()=>{await expect(page.getByRole('link',{name:'Sign in',exact:true})).toBeVisible();});
+ await signIn(page,info,steps,'existing-setup',false,'Today',false,undefined,'',false);
+ await seedHistory(page,[{text:'A fictional old entry.',recordedAt:'2024-05-01T01:00:00Z'},{text:'A second fictional memory.',recordedAt:'2025-06-02T01:00:00Z'}]);
+ await steps.action('legacy-visit','Offer this rollout to a populated existing journal',()=>page.reload(),async()=>{await expect(page.getByRole('progressbar',{name:'Onboarding progress'})).toBeVisible();const state=replay(await selectionLog(page));expect(state.entries).toHaveLength(2);expect(state.onboarding.version).toBe(0);});
+ await steps.action('start','Start with optional private identity',()=>page.getByRole('button',{name:'Let’s get started',exact:true}).click(),async()=>{await expect(page.getByLabel('What would you like to be called?')).toHaveValue('');});
+ await steps.action('private-draft','Keep a private answer unconfirmed',()=>page.getByLabel('What would you like to be called?').fill('Morgan'),async()=>{await expect(page.getByLabel('What would you like to be called?')).toHaveValue('Morgan');});
+ await steps.action('narrow','Use the questionnaire at 320 CSS pixels',()=>page.setViewportSize({width:320,height:844}),async()=>{expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);});
+ await steps.action('offline','Keep writing when the connection goes away',()=>context.setOffline(true),async()=>{await expect(page.getByRole('button',{name:'Skip for now',exact:true})).toBeEnabled();});
+ await steps.action('offline-skip','Durably skip on this device while offline',()=>page.getByRole('button',{name:'Skip for now',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Reflection time',exact:true})).toBeVisible();await expect(page.getByText('Setup is saved on this device; waiting to sync across devices.',{exact:true})).toBeVisible();});
+ await steps.action('reconnect','Synchronize the explicit skip after reconnect',()=>context.setOffline(false),async()=>{await expect(page.getByText('Setup is saved on this device; waiting to sync across devices.',{exact:true})).toHaveCount(0);await expectSynced(page);const state=replay(await selectionLog(page));expect(state.onboarding.outcome).toBe('skipped');expect(state.entries).toHaveLength(2);expect(state.onboarding.answers.preferredName).toBe('');});
+ await steps.action('reload','Keep the rollout dismissed across visits',()=>page.reload(),async()=>{await expectSynced(page);await expect(page.getByRole('progressbar')).toHaveCount(0);});
+ await steps.action('settings','Open Settings',()=>page.getByRole('navigation').getByRole('button',{name:'Settings',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Settings',exact:true})).toBeVisible();});
+ await steps.action('restore-answers','Recover the unconfirmed private draft for later editing',()=>page.getByRole('button',{name:/^Personalise your journal/}).click(),async()=>{await expect(page.getByLabel('What would you like to be called?')).toHaveValue('Morgan');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);});
+ steps.generateDocs('Existing journals and offline setup','Existing histories receive the same optional welcome. A 320px device can keep writing offline; its explicit skip is persisted and then synchronized, while unconfirmed identity stays in the local draft and never changes the journal greeting. Every action has an unmasked full-page zero-pixel comparison.');
+});

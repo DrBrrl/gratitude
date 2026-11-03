@@ -321,3 +321,11 @@ CI runs scenario 025 in `local-ai` and scenario 026 in `prompt-feedback`, separa
 Draft-save and export-ready confirmations in scenarios 004/005 use the fifteen-second persistence budget rather than the two-second input-response budget. Opening an editor awaits both an enabled control and the actual recovered draft. Give local emulators adequate CPU before diagnosing timing failures during broad parallel refreshes; do not compensate with screenshot masks or pixel tolerance.
 
 Scenario 024 allows thirty seconds for each twenty-source prompt request and its received-result commits, including the dated editor. These multi-commit requests remained in their real Finding a prompt… or received-result outbox states at fifteen seconds locally; the assertions wait for the actual result. Content assertions, provider mocks, action budgets and screenshot comparison rules are unchanged.
+
+## Onboarding coverage
+
+Walkthroughs [045](tests/e2e/045-private-answers/README.md)–[048](tests/e2e/048-onboarding-existing/README.md) cover private answers on two devices, the complete optional setup, cloud/local instruction and context, long-question editing and recovery, existing histories, 320px reflow and durable offline skipping. Other signed-in scenarios explicitly skip the welcome through the real UI and capture both the welcome and the resulting page. Source fixtures append after that real skip event instead of overwriting its sequence. The CI `onboarding` suite runs all four scenarios on mobile and desktop.
+
+## Removing obsolete baselines
+
+Wait until generation succeeds before pruning old image names. Parse image references from both generated README variants, including their `./screenshots/` prefix. Abort if a walkthrough yields zero references or any referenced image is missing; review the candidate list before deletion. Preserve raw comparator output before another Playwright run clears its output directory. Restored or renamed raw PNGs still require ordinary zero-tolerance comparisons; recovery does not justify editing pixels, masking or increasing tolerance.
