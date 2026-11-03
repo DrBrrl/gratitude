@@ -37,3 +37,6 @@ __pycache__/
 
 # Temporary Google Actions credentials
 gha-creds-*.json
+
+# Local Functions encryption keyring (never publish credentials)
+functions/.secret.local

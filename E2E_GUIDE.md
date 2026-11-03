@@ -329,3 +329,7 @@ Walkthroughs [045](tests/e2e/045-private-answers/README.md)–[048](tests/e2e/04
 ## Removing obsolete baselines
 
 Wait until generation succeeds before pruning old image names. Parse image references from both generated README variants, including their `./screenshots/` prefix. Abort if a walkthrough yields zero references or any referenced image is missing; review the candidate list before deletion. Preserve raw comparator output before another Playwright run clears its output directory. Restored or renamed raw PNGs still require ordinary zero-tolerance comparisons; recovery does not justify editing pixels, masking or increasing tolerance.
+
+## Additional model services
+
+Scenarios [049](tests/e2e/049-local-services/README.md) , [050](tests/e2e/050-personal-cloud/README.md) and [051](tests/e2e/051-compatible-service/README.md) exercise native discovery, separate photo settings, final-text prompts, explicit cloud terms, cross-browser keyless restoration and deletion. They intercept fictional provider/callable boundaries; `tests/relay` separately exercises actual encrypted storage and authorization against Firestore. The CI push-backend job runs relay tests after notification delivery tests. No live inference or real keys belong in these fixtures.

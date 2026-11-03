@@ -1554,3 +1554,19 @@ No need to focus on hermes at all :)
 ```text
 Thank you! Shall we try coding up the onboarding now?
 ```
+
+## 2026-11-03 — Include additional services and personal cloud keys
+
+In reply to whether implementation should include local-service adapters and personal cloud-key connections:
+
+```text
+Include local services and personal cloud keys
+```
+
+## 2026-11-03 — Host the personal-key relay
+
+In reply to where the personal-key relay should run:
+
+```text
+Use the existing Firebase projects
+```

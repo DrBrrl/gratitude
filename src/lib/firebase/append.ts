@@ -1,7 +1,7 @@
 import { isOnboardingAction } from '../onboarding.ts';
 import { stableJSON } from '../import-source.ts';
 import { doc, getDocFromServer, runTransaction, serverTimestamp, Timestamp, type Firestore, type DocumentData } from 'firebase/firestore';
-import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, isLocalRequest, isBackupRequest, isBackupAction, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey, photoProvider } from '../domain.ts';
+import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, isLocalRequest, requestProvider, isBackupRequest, isBackupAction, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey, photoProvider } from '../domain.ts';
 import {BACKUP_LEASE_MS} from '../backup-prompts.ts';
 
 export function decodeEvent(data: DocumentData): JournalEvent {
@@ -71,15 +71,16 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
           const control=await tx.get(doc(db,`${stream.path}/ai/control`));
           const choicesId=control.get('choicesId');
           const choices=choicesId?await tx.get(doc(db,`${stream.path}/events/${choicesId}`)):null;
-          if(photoProvider({provider:choices?.get('payload.provider')??'gemini',photoProvider:choices?.get('payload.photoProvider')} as Parameters<typeof photoProvider>[0])!==(action.schemaVersion===1?'gemini':action.payload.provider) || action.schemaVersion===3 && action.payload.choicesId!==choicesId) throw new Error('AI provider changed. Review your model settings.');
+          if(photoProvider({provider:choices?.get('payload.provider')??'gemini',photoProvider:choices?.get('payload.photoProvider')} as Parameters<typeof photoProvider>[0])!==(action.schemaVersion===1?'gemini':action.payload.provider) || action.schemaVersion>=3 && 'choicesId' in action.payload && action.payload.choicesId!==choicesId) throw new Error('AI provider changed. Review your model settings.');
         }
         if(action.type==='PhotoSummaryResponseReceived' && latest.exists()) {
           const original=await tx.get(doc(db,`${stream.path}/events/${latest.get('lastEventId')}`));
-          if(original.get('schemaVersion')===3) {
+          if(original.get('schemaVersion')>=3) {
             const control=await tx.get(doc(db,`${stream.path}/ai/control`));
             if(control.get('choicesId')!==original.get('payload.choicesId')) throw new Error('Photo model settings changed. The late summary was discarded.');
           }
         }
+        if(action.type==='PhotoSummaryRequested'&&action.schemaVersion===4||action.type==='PhotoSummaryResponseReceived'&&latest.exists()){const source=action.type==='PhotoSummaryRequested'?action:(await tx.get(doc(db,`${stream.path}/events/${latest.get('lastEventId')}`))).data();if(source?.schemaVersion===4){const p=source.payload;const bound=await tx.get(doc(db,`users/${uid}/privateConnections/${p.connectionId}`));if(bound.get('provider')!==p.provider||bound.get('model')!==p.model||bound.get('revision')!==p.connectionRevision)throw new Error('Model connection changed or was removed.');}}
         if ((latest.get('lastEventId') ?? null) !== action.payload.previousEventId) throw new Error('This photo changed on another device. Reload before trying again.');
         metadata = { lastEventId: action.eventId };
       } else {
@@ -87,6 +88,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
         metadata = nextControl(control, action);
         if(action.type==='PromptRequested' && 'answersId' in action.payload || action.type==='PromptResponseReceived'){
           const request=action.type==='PromptRequested'?action:decodeEvent((await tx.get(doc(db,`${stream.path}/events/${action.payload.requestId}`))).data()!) as Extract<SourceAction,{type:'PromptRequested'}>;
+          if('connectionId' in request.payload){const bound=await tx.get(doc(db,`users/${uid}/privateConnections/${request.payload.connectionId}`));if(bound.get('provider')!==request.payload.provider||bound.get('model')!==request.payload.model||bound.get('revision')!==request.payload.connectionRevision)throw new Error('Model connection changed or was removed.');}
           if('answersId' in request.payload){const setup=await tx.get(doc(db,`${stream.path}/onboarding/control`));if((setup.get('answersId')??null)!==request.payload.answersId)throw new Error('Questionnaire answers changed.');}
           if(action.type==='PromptResponseReceived' && (action.schemaVersion===2)!==(request.schemaVersion>=13))throw new Error('Prompt response schema does not match its request.');
         }
@@ -94,7 +96,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
           if('differentFromPromptId' in action.payload){const prior=await tx.get(doc(db,`${stream.path}/events/${action.payload.differentFromPromptId}`));if(prior.get('type')!=='PromptResponseReceived')throw new Error('Previous generated prompt is unavailable.');}
           if (action.payload.choicesId !== control.choicesId) throw new Error('AI consent changed. Please try again.');
           const choices = await tx.get(doc(db, `${stream.path}/events/${action.payload.choicesId}`));
-          if ((isBackupRequest(action)?choices.get('payload.backupProvider'):(choices.get('payload.provider')??'gemini'))!==(isLocalRequest(action)?'lm-studio':'gemini')) throw new Error('AI provider changed. Review your model settings.');
+          if ((isBackupRequest(action)?choices.get('payload.backupProvider'):(choices.get('payload.provider')??'gemini'))!==requestProvider(action)) throw new Error('AI provider changed. Review your model settings.');
           if(isBackupRequest(action)) {
             if(!choices.get('payload.backupEnabled')) throw new Error('Backup generation is disabled.');
             if(control.requestId) {const pending=await tx.get(doc(db,`${stream.path}/events/${control.requestId}`));if(pending.exists() && Date.now()-pending.get('recordedAt').toMillis()<BACKUP_LEASE_MS) throw new Error('Another prompt is being generated.');}

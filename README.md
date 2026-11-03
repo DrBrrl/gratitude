@@ -16,11 +16,11 @@ The repository contains a Svelte 5 / SvelteKit application with a responsive dar
 - Receive prompts that become more relevant over time, with control over personalization.
 - Revisit past reflections in a private journal.
 
-The journal offers a bundled starter prompt and optional Gemini or LM Studio prompts. Preview and production builds use paid Gemini, with personalization controlled by each user’s saved sharing choices. See [VISION.md](VISION.md) for the project’s intended end state.
+The journal offers a bundled starter prompt and optional AI prompts through its supported cloud and local connections. Preview and production builds use paid Gemini, with personalization controlled by each user’s saved sharing choices. See [VISION.md](VISION.md) for the project’s intended end state.
 
 Signed-in users without an outcome for this onboarding version see an optional eight-step setup on their next visit. **Skip for now** keeps saved settings and returns to the intended page; unfinished private answers resume on this device. Completion/skip syncs across devices, and offline skips queue durably. Private name/pronouns, seventeen editable interest descriptions, custom topics, Narrow/Intermediate/Broad scope and a 50–200-word limit can be edited or cleared under **Settings → Personalise your journal**, also linked from AI settings. Clearing current answers disables their sharing but does not erase historical events.
 
-Questionnaire sharing starts off and requires explicit confirmation. Only selected descriptions and provided identity reach the chosen AI when personal context is allowed; labels, internal IDs, Google identity, account colour and credentials stay out. Completing setup enables no AI or public profile. AI connections/choices and Friends profiles have their own explicit saves. Runtime onboarding supports managed Gemini and LM Studio; Ollama, compatible servers and personal cloud keys remain separate proposals.
+Questionnaire sharing starts off and requires explicit confirmation. Only selected descriptions and provided identity reach the chosen AI when personal context is allowed; labels, internal IDs, Google identity, account colour and credentials stay out. Completing setup enables no AI or public profile. AI connections/choices and Friends profiles have their own explicit saves. Runtime onboarding supports managed Gemini, LM Studio, native Ollama, a bounded text-only compatibility adapter and personal Gemini keys through an authenticated relay. [AI connection setup](AI_CONNECTIONS_SETUP.md) explains model discovery, separate photo choices and write-only cloud-key storage. Named general-purpose profiles and other cloud vendors remain proposals.
 
 New requests use the saved scope/word limit and a twenty-unit history budget: reflections above 600 characters cost two units. Entry dates govern the anniversary/rediscovery/recent pools, including imported writing. **Why this prompt?** shows the actual count and units. New questions can contain up to 4,000 UTF-16 code units; malformed, incomplete and over-word-limit answers are rejected without automatic corrective requests. Older request versions and saved questions retain their original behaviour and text.
 
@@ -129,7 +129,7 @@ Streaks count saved logical entry dates in the viewing device's timezone. An unf
 ## Project records
 
 - [LM_STUDIO_SETUP.md](LM_STUDIO_SETUP.md): local model configuration, private HTTPS, credentials, provider consent and replay.
-- [AI_PROVIDER_DESIGN.md](AI_PROVIDER_DESIGN.md): proposed named connections, additional local services and personal cloud keys; the model picker and independent prompt/photo connections are implemented.
+- [AI_PROVIDER_DESIGN.md](AI_PROVIDER_DESIGN.md): implemented service adapters, independent prompt/photo choices and personal Gemini relay; broader named profiles and additional cloud providers remain proposed.
 - [AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md): implemented instruction and twenty-reflection selection, with a deferred curated-notes idea.
 - [IMPORT_PLAN.md](IMPORT_PLAN.md): implemented alternate ZIP import, provenance, limits and recovery contract.
 - [STREAKS_DESIGN.md](STREAKS_DESIGN.md): implemented gentle streak rules, calendar interactions, return navigation and verification.

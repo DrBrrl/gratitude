@@ -1,3 +1,4 @@
+import {PROVIDERS,validExternalTarget,type AIProvider,type ExternalTarget} from './ai/connection-contract.ts';
 import { emptyOnboarding, applyOnboarding, isOnboardingAction, validOnboardingAction, type OnboardingAction, type OnboardingState } from './onboarding.ts';
 import { validLocalTarget, type LocalModelTarget } from './ai/local-contract.ts';
 import { dayInZone } from './civil-date.ts';
@@ -19,10 +20,10 @@ export type Action = Envelope<'ReflectionWritten', ReflectionPayload & { starter
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 5>
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 6|7>;
 type LegacyAIChoices = { enabled: boolean; useJournal: boolean; useFeedback: boolean; guidance: string };
-type ProviderChoice = {provider:'gemini'|'lm-studio'};
-export type AIChoices = LegacyAIChoices & ProviderChoice & { backupEnabled?: boolean; backupProvider?: 'gemini'|'lm-studio'; photoProvider?: 'prompt'|'gemini'|'lm-studio' };
+type ProviderChoice = {provider:AIProvider};
+export type AIChoices = LegacyAIChoices & ProviderChoice & { backupEnabled?: boolean; backupProvider?: AIProvider; photoProvider?: 'prompt'|AIProvider; promptConnectionId?:string|null; photoConnectionId?:string|null; backupConnectionId?:string|null };
 type Previous = { previousEventId: string | null };
-export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & LegacyAIChoices> | Envelope<'AIChoicesConfirmed', Previous & LegacyAIChoices & ProviderChoice,2> | Envelope<'AIChoicesConfirmed', Previous & Required<Omit<AIChoices,'photoProvider'>>,3> | Envelope<'AIChoicesConfirmed', Previous & Required<AIChoices>,4>;
+export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & LegacyAIChoices> | Envelope<'AIChoicesConfirmed', Previous & LegacyAIChoices & ProviderChoice,2> | Envelope<'AIChoicesConfirmed', Previous & Required<Omit<AIChoices,'photoProvider'|'promptConnectionId'|'photoConnectionId'|'backupConnectionId'>>,3> | Envelope<'AIChoicesConfirmed', Previous & Required<Omit<AIChoices,'promptConnectionId'|'photoConnectionId'|'backupConnectionId'>>,4> | Envelope<'AIChoicesConfirmed', Previous & Required<AIChoices>,5>;
 type RequestPayload = Previous & { choicesId: string; day: string; templateVersion: PromptTemplateVersion;
   contextMode: 'generic' | 'personal'; feedbackIds: string[] };
 type LegacyRequestPayload = RequestPayload & { entryRefs: { entryId: string; revision: number }[] };
@@ -33,7 +34,10 @@ type LegacyRequestAction = Envelope<'PromptRequested', LegacyRequestPayload> | E
   | Envelope<'PromptRequested', SelectorPayload & {purpose:'backup'}, 7> | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget & {purpose:'backup'}, 8>
   | Envelope<'PromptRequested', SelectorPayload & {differentFromPromptId:string},9> | Envelope<'PromptRequested', SelectorPayload & {differentFromPromptId:string;entryId:string;entryRevision:number},10>
   | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget & {differentFromPromptId:string},11> | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget & {differentFromPromptId:string;entryId:string;entryRevision:number},12>;
-export type RequestAction = LegacyRequestAction
+
+type ExternalPayload<V extends 5|6|8|11|12> = Omit<Extract<LegacyRequestAction,{schemaVersion:V}>['payload'],keyof LocalModelTarget> & ExternalTarget & {answersId:string|null};
+type ExternalRequestAction = Envelope<'PromptRequested', ExternalPayload<5>,23> | Envelope<'PromptRequested', ExternalPayload<6>,24> | Envelope<'PromptRequested', ExternalPayload<8>,25> | Envelope<'PromptRequested', ExternalPayload<11>,26> | Envelope<'PromptRequested', ExternalPayload<12>,27>;
+export type RequestAction = LegacyRequestAction | ExternalRequestAction
   | (Omit<Extract<LegacyRequestAction,{schemaVersion:3}>, 'schemaVersion'|'payload'> & {schemaVersion:13;payload:Extract<LegacyRequestAction,{schemaVersion:3}>['payload'] & {answersId:string|null}})
   | (Omit<Extract<LegacyRequestAction,{schemaVersion:4}>, 'schemaVersion'|'payload'> & {schemaVersion:14;payload:Extract<LegacyRequestAction,{schemaVersion:4}>['payload'] & {answersId:string|null}})
   | (Omit<Extract<LegacyRequestAction,{schemaVersion:5}>, 'schemaVersion'|'payload'> & {schemaVersion:15;payload:Extract<LegacyRequestAction,{schemaVersion:5}>['payload'] & {answersId:string|null}})
@@ -45,10 +49,11 @@ export type RequestAction = LegacyRequestAction
   | (Omit<Extract<LegacyRequestAction,{schemaVersion:11}>, 'schemaVersion'|'payload'> & {schemaVersion:21;payload:Extract<LegacyRequestAction,{schemaVersion:11}>['payload'] & {answersId:string|null}})
   | (Omit<Extract<LegacyRequestAction,{schemaVersion:12}>, 'schemaVersion'|'payload'> & {schemaVersion:22;payload:Extract<LegacyRequestAction,{schemaVersion:12}>['payload'] & {answersId:string|null}})
 ;
-export const requestSchema = (request: RequestAction) => request.schemaVersion >= 13 ? request.schemaVersion - 10 : request.schemaVersion;
-export function isEditorRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 2|4|6|10|12|14|16|20|22}> { return [2,4,6,10,12].includes(requestSchema(request)); }
+export const requestSchema = (request: RequestAction) => request.schemaVersion >=23 ? ({23:5,24:6,25:8,26:11,27:12} as Record<number,number>)[request.schemaVersion] : request.schemaVersion >= 13 ? request.schemaVersion - 10 : request.schemaVersion;
+export function isEditorRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 2|4|6|10|12|14|16|20|22|24|27}> { return [2,4,6,10,12].includes(requestSchema(request)); }
 export function isMixedRequest(request: RequestAction): request is Exclude<RequestAction, {schemaVersion:1|2}> { return request.schemaVersion >= 3; }
-export function isLocalRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion:5|6|8|11|12|15|16|18|21|22}> { return [5,6,8,11,12].includes(requestSchema(request)); }
+export function isLocalRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion:5|6|8|11|12|15|16|18|21|22|23|24|25|26|27}> { return [5,6,8,11,12].includes(requestSchema(request)); }
+export function requestProvider(request:RequestAction):AIProvider{return isLocalRequest(request)?request.payload.provider:'gemini';}
 export function isBackupRequest(request: RequestAction) { return [7,8].includes(requestSchema(request)); }
 /** New wire maps enforce unique IDs and use canonical positive-decimal revision strings. */
 export function requestEntryRefs(request: RequestAction): {entryId:string;revision:number}[] {
@@ -64,6 +69,7 @@ export type PhotoAction = Envelope<'PhotoAttached', { entryId: string; slot: num
   | Envelope<'PhotoSummaryRequested', PhotoTarget>
   | Envelope<'PhotoSummaryRequested', PhotoTarget & LocalModelTarget, 2>
   | Envelope<'PhotoSummaryRequested', PhotoTarget & {choicesId:string;provider:'gemini'|'lm-studio';model:string|null;thinking:false}, 3>
+  | Envelope<'PhotoSummaryRequested', PhotoTarget & ExternalTarget & {choicesId:string},4>
   | Envelope<'PhotoSummaryEdited', PhotoTarget & { text: string }>
   | Envelope<'PhotoSummaryResponseReceived', PhotoTarget & { text: string; model: string; finishReason: 'STOP' }>
   | Envelope<'PhotoSummaryFailed', PhotoTarget & { reason: 'unavailable' | 'blocked' | 'invalid-response' }>;
@@ -128,33 +134,36 @@ export function parseAction(input: unknown): SourceAction {
       || (v.schemaVersion === 5 || v.schemaVersion === 6 || v.schemaVersion === 7) && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.promptText === null || p.promptId === v.eventId && string(p.promptText, v.schemaVersion===7?4000:600)) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4)
       || v.schemaVersion === 4 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4))
       && id(p.entryId) && string(p.text, 10_000, (v.schemaVersion === 4 || v.schemaVersion === 5 || v.schemaVersion === 6 || v.schemaVersion === 7)) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
-  } else if (v.schemaVersion === 1 || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22].includes(v.schemaVersion as number) && v.type === 'PromptRequested' || [2,3].includes(v.schemaVersion as number) && v.type==='PhotoSummaryRequested' || [2,3,4].includes(v.schemaVersion as number) && v.type==='AIChoicesConfirmed' || v.schemaVersion===2 && v.type==='PromptResponseReceived') {
+  } else if (v.schemaVersion === 1 || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27].includes(v.schemaVersion as number) && v.type === 'PromptRequested' || [2,3,4].includes(v.schemaVersion as number) && v.type==='PhotoSummaryRequested' || [2,3,4,5].includes(v.schemaVersion as number) && v.type==='AIChoicesConfirmed' || v.schemaVersion===2 && v.type==='PromptResponseReceived') {
     const previous = p.previousEventId === null || id(p.previousEventId);
     const day = typeof p.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.day) && !isNaN(Date.parse(p.day));
     switch (v.type) {
       case 'PhotoAttached': case 'PhotoRemoved': case 'PhotoSummaryRequested': case 'PhotoSummaryEdited': case 'PhotoSummaryResponseReceived': case 'PhotoSummaryFailed': {
-        const extra = v.type === 'PhotoSummaryRequested' && Number(v.schemaVersion)>=2 ? ['provider','model','thinking',...(v.schemaVersion===3?['choicesId']:[])] : v.type === 'PhotoSummaryEdited' ? ['text'] : v.type === 'PhotoSummaryResponseReceived' ? ['text', 'model', 'finishReason'] : v.type === 'PhotoSummaryFailed' ? ['reason'] : [];
+        const extra = v.type === 'PhotoSummaryRequested' && Number(v.schemaVersion)>=2 ? ['provider','model','thinking',...(Number(v.schemaVersion)>=3?['choicesId']:[]),...(v.schemaVersion===4?['connectionId','connectionRevision']:[])] : v.type === 'PhotoSummaryEdited' ? ['text'] : v.type === 'PhotoSummaryResponseReceived' ? ['text', 'model', 'finishReason'] : v.type === 'PhotoSummaryFailed' ? ['reason'] : [];
         valid = keys(p, ['entryId', 'slot', 'photoId', 'previousEventId', ...extra]) && id(p.entryId) && id(p.photoId)
           && Number.isInteger(p.slot) && Number(p.slot) >= 0 && Number(p.slot) < 4 && previous && (v.type === 'PhotoAttached' || id(p.previousEventId))
-          && (v.type !== 'PhotoSummaryRequested' || v.schemaVersion===1 || v.schemaVersion===2 && validLocalTarget(p) || v.schemaVersion===3 && id(p.choicesId) && (p.provider==='gemini' && p.model===null && p.thinking===false || validLocalTarget(p)))
+          && (v.type !== 'PhotoSummaryRequested' || v.schemaVersion===1 || v.schemaVersion===2 && validLocalTarget(p) || v.schemaVersion===4 && id(p.choicesId) && validExternalTarget(p) || v.schemaVersion===3 && id(p.choicesId) && (p.provider==='gemini' && p.model===null && p.thinking===false || validLocalTarget(p)))
           && (v.type !== 'PhotoSummaryEdited' || string(p.text, 1000, true))
           && (v.type !== 'PhotoSummaryResponseReceived' || string(p.text, 1000) && string(p.model, 100) && p.finishReason === 'STOP' && v.eventId === `${p.previousEventId}_response`)
           && (v.type !== 'PhotoSummaryFailed' || ['unavailable','blocked','invalid-response'].includes(String(p.reason)) && v.eventId === `${p.previousEventId}_failure`); break;
       }
-      case 'AIChoicesConfirmed': valid = keys(p, ['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance',...(Number(v.schemaVersion)>=2?['provider']:[]),...(Number(v.schemaVersion)>=3?['backupEnabled','backupProvider']:[]),...(v.schemaVersion===4?['photoProvider']:[])]) && previous
-        && (Number(v.schemaVersion)<2 || ['gemini','lm-studio'].includes(String(p.provider))) && (Number(v.schemaVersion)<3 || typeof p.backupEnabled==='boolean' && ['gemini','lm-studio'].includes(String(p.backupProvider))) && (v.schemaVersion!==4 || ['prompt','gemini','lm-studio'].includes(String(p.photoProvider)))
+      case 'AIChoicesConfirmed': valid = keys(p, ['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance',...(Number(v.schemaVersion)>=2?['provider']:[]),...(Number(v.schemaVersion)>=3?['backupEnabled','backupProvider']:[]),...(Number(v.schemaVersion)>=4?['photoProvider']:[]),...(v.schemaVersion===5?['promptConnectionId','photoConnectionId','backupConnectionId']:[])]) && previous
+        && (Number(v.schemaVersion)<2 || (v.schemaVersion===5?PROVIDERS:['gemini','lm-studio']).includes(String(p.provider) as AIProvider)) && (Number(v.schemaVersion)<3 || typeof p.backupEnabled==='boolean' && (v.schemaVersion===5?PROVIDERS:['gemini','lm-studio']).includes(String(p.backupProvider) as AIProvider)) && (Number(v.schemaVersion)<4 || (v.schemaVersion===5?['prompt',...PROVIDERS]:['prompt','gemini','lm-studio']).includes(String(p.photoProvider)))
+        && (v.schemaVersion!==5 || typeof p.provider==='string'&&typeof p.backupProvider==='string'&&typeof p.photoProvider==='string')
+        && (v.schemaVersion!==5 || ['promptConnectionId','photoConnectionId','backupConnectionId'].every(key=>p[key]===null||id(p[key])))
         && typeof p.enabled === 'boolean' && typeof p.useJournal === 'boolean' && typeof p.useFeedback === 'boolean' && string(p.guidance, 500, true); break;
       case 'PromptRequested': {
         const modern=Number(v.schemaVersion)>=13;
-        const schema=modern?Number(v.schemaVersion)-10:Number(v.schemaVersion);
+        const external=Number(v.schemaVersion)>=23;
+        const schema=external?({23:5,24:6,25:8,26:11,27:12} as Record<number,number>)[Number(v.schemaVersion)]:modern?Number(v.schemaVersion)-10:Number(v.schemaVersion);
         const mixed = [3,4,5,6,7,8,9,10,11,12].includes(schema);
         const local = schema===5 || schema===6 || schema===8 || schema===11 || schema===12;
         const editor = schema === 2 || schema === 4 || schema===6 || schema===10 || schema===12;
-        valid = keys(p, [...(modern?['answersId']:[]),'previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(editor ? ['entryId', 'entryRevision'] : []), ...(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []), ...(local ? ['provider','model','thinking'] : []),...([7,8].includes(schema)?['purpose']:[]),...(schema>=9?['differentFromPromptId']:[])])
+        valid = keys(p, [...(modern?['answersId']:[]),...(external?['connectionId','connectionRevision']:[]),'previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(editor ? ['entryId', 'entryRevision'] : []), ...(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []), ...(local ? ['provider','model','thinking'] : []),...([7,8].includes(schema)?['purpose']:[]),...(schema>=9?['differentFromPromptId']:[])])
           && (!modern || (p.answersId===null||id(p.answersId)))
           && (schema<9 || id(p.differentFromPromptId))
           && (![7,8].includes(schema) || p.purpose==='backup')
-          && (!local || validLocalTarget(p))
+          && (!local || (external?validExternalTarget(p):validLocalTarget(p)))
           && (!editor || id(p.entryId) && Number.isSafeInteger(p.entryRevision) && Number(p.entryRevision) >= 0) && previous
           && (!mixed || p.selectorVersion === (modern?(schema>=9?'weighted-v2':'weighted-v1'):(schema>=9?'mixed-v2':SELECTOR_VERSION)) && validSelection(p as unknown as Parameters<typeof validSelection>[0]))
           && id(p.choicesId) && day && (modern ? p.templateVersion==='gratitude-v3' : ['gratitude-v1', TEMPLATE_VERSION].includes(String(p.templateVersion))) && ['generic', 'personal'].includes(String(p.contextMode))
@@ -216,7 +225,8 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
     const entry: Entry = { id: p.entryId, text: input.source.noteText, prompt: input.source.prompt ?? NO_PROMPT, promptId: receipt.confirmationId, entryAt: new Date(input.source.createdOn).toISOString(), recordedAt: event.recordedAt, revision: 1, colour: state.entries.length % 7, origin: { ...input, confirmationId: receipt.confirmationId } };
     return { ...next, entries: [...state.entries, entry], imports: { ...state.imports, [p.sourceKey]: { ...receipt, completedId: action.eventId } } };
   }
-  if (action.type==='PhotoSummaryRequested' && ((action.schemaVersion===1?'gemini':action.payload.provider)!==photoProvider(state.ai.choices) || action.schemaVersion===3 && action.payload.choicesId!==state.ai.control.choicesId)) throw new Error('AI provider changed. Review your model settings.');
+  if(action.type==='PhotoSummaryRequested'&&action.schemaVersion===4&&action.payload.connectionId!==(state.ai.choices.photoProvider==='prompt'?state.ai.choices.promptConnectionId:state.ai.choices.photoConnectionId))throw new Error('AI photo connection changed.');
+  if (action.type==='PhotoSummaryRequested' && ((action.schemaVersion===1?'gemini':action.payload.provider)!==photoProvider(state.ai.choices) || action.schemaVersion>=3 && 'choicesId' in action.payload && action.payload.choicesId!==state.ai.control.choicesId)) throw new Error('AI provider changed. Review your model settings.');
   if (isPhotoAction(action)) return applyPhoto(next, action);
   if (action.type === 'ReflectionWritten') {
     const existing = state.entries.find(entry => entry.id === action.payload.entryId);
@@ -240,14 +250,15 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
   switch (action.type) {
     case 'AIChoicesConfirmed': {
       const { enabled, useJournal, useFeedback, guidance } = action.payload;
-      ai.choices = { enabled, useJournal, useFeedback, guidance,provider:action.schemaVersion>=2?('provider' in action.payload?action.payload.provider:'gemini'):'gemini',...('backupEnabled' in action.payload?{backupEnabled:action.payload.backupEnabled,backupProvider:action.payload.backupProvider}:{}),...('photoProvider' in action.payload?{photoProvider:action.payload.photoProvider}:{}) }; ai.failure = null; break;
+      ai.choices = { enabled, useJournal, useFeedback, guidance,provider:action.schemaVersion>=2?('provider' in action.payload?action.payload.provider:'gemini'):'gemini',...('backupEnabled' in action.payload?{backupEnabled:action.payload.backupEnabled,backupProvider:action.payload.backupProvider}:{}),...('photoProvider' in action.payload?{photoProvider:action.payload.photoProvider}:{}),...('promptConnectionId' in action.payload?{promptConnectionId:action.payload.promptConnectionId,photoConnectionId:action.payload.photoConnectionId,backupConnectionId:action.payload.backupConnectionId}:{}) }; ai.failure = null; break;
     }
     case 'PromptRequested': {
       const p = action.payload, refs = requestEntryRefs(action);
       if('answersId' in p && p.answersId!==state.onboarding.answersId)throw new Error('Questionnaire answers changed.');
       if('differentFromPromptId' in p&&!state.ai.responses[p.differentFromPromptId])throw new Error('Previous generated prompt is unavailable.');
       if (isEditorRequest(action) && (state.entries.find(entry => entry.id === action.payload.entryId)?.revision ?? 0) !== action.payload.entryRevision) throw new Error('This reflection changed before the prompt request.');
-      if ((isLocalRequest(action)?'lm-studio':'gemini')!==(isBackupRequest(action)?ai.choices.backupProvider:ai.choices.provider)) throw new Error('AI provider changed. Review your model settings.');
+      if ('connectionId' in action.payload && action.payload.connectionId!==(isBackupRequest(action)?ai.choices.backupConnectionId:ai.choices.promptConnectionId))throw new Error('AI connection changed.');
+      if (requestProvider(action)!==(isBackupRequest(action)?ai.choices.backupProvider:ai.choices.provider)) throw new Error('AI provider changed. Review your model settings.');
       if (isBackupRequest(action) && !ai.choices.backupEnabled) throw new Error('Backup generation is disabled.');
       if (!ai.choices.enabled || p.choicesId !== ai.control.choicesId) throw new Error('AI consent is no longer current.');
       if (p.contextMode === 'generic' && (refs.length || p.feedbackIds.length)
@@ -296,7 +307,7 @@ function applyPhoto(state: Projection, action: PhotoAction): Projection {
     if (!old || old.removed || old.photoId !== p.photoId) throw new Error('This photo was removed or replaced.');
     photo = { ...old, lastEventId: action.eventId };
     if (action.type === 'PhotoRemoved') photo.removed = true;
-    if (action.type === 'PhotoSummaryRequested') {photo.status = 'pending';photo.requestChoicesId=action.schemaVersion===3?action.payload.choicesId:undefined;}
+    if (action.type === 'PhotoSummaryRequested') {photo.status = 'pending';photo.requestChoicesId=action.schemaVersion>=3&&'choicesId' in action.payload?action.payload.choicesId:undefined;}
     if(action.type==='PhotoSummaryResponseReceived' && photo.requestChoicesId && photo.requestChoicesId!==state.ai.control.choicesId) throw new Error('Photo model settings changed. The late summary was discarded.');
     if (action.type === 'PhotoSummaryEdited') { photo.summary = action.payload.text; photo.origin = 'user'; photo.status = 'idle'; }
     if (action.type === 'PhotoSummaryResponseReceived' || action.type === 'PhotoSummaryFailed') {
@@ -314,4 +325,4 @@ function applyPhoto(state: Projection, action: PhotoAction): Projection {
 export function resolvePrompt(state: Projection, id: string): string | undefined { return id === STARTER_ID ? STARTER_PROMPT : state.prompts[id] ?? state.ai.responses[id]?.payload.text; }
 
 /** Legacy accounts share the prompt connection until an explicit photo choice. */
-export function photoProvider(choices:AIChoices):'gemini'|'lm-studio' { return !choices.photoProvider||choices.photoProvider==='prompt'?choices.provider:choices.photoProvider; }
+export function photoProvider(choices:AIChoices):AIProvider { return !choices.photoProvider||choices.photoProvider==='prompt'?choices.provider:choices.photoProvider; }

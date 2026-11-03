@@ -10,7 +10,7 @@
   const features=[
     ['Find a starting point','Ask an AI for a gratitude prompt. If you choose to share your topics of interest, past reflections, or feedback, the AI can use them to offer a more personalised prompt. You can also choose a saved backup prompt that you upload in advance without waiting for AI.'],
     ['Make the prompt yours','Edit any prompt, whether AI generated or not, ask for a different one to be generated, or write your own.'],
-    ['Choose your AI','You can use your local LM Studio setup or the default Gemini model to generate prompts.'],
+    ['Choose your AI','You can use your own cloud model, local LLM setup, or the default Gemini model to generate prompts.'],
     ['Keep a picture with the moment','You can add photos and, if you want, ask AI to generate an image description for them. You can edit the description and use it in search later.'],
     ['Come back to a day','Write more than once a day, or retroactively add a reflection for a previous date. Backfilling a missed day fills that gap in your gratitude streak.'],
     ['See what you’ve noticed','Browse your calendar and colourful journal or search for a specific memory. Export your journal as as Markdown or JSON whenever you like.'],

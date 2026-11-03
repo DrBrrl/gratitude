@@ -1,3 +1,4 @@
+import {providerName} from './connection-contract.ts';
 import {availableBackups,BACKUP_MINIMUM,BACKUP_LEASE_MS,CLOUD_REFILL_INTERVAL} from '../backup-prompts.ts';
 import type {Projection} from '../domain.ts';
 export type RefillInput={state:Projection;ready:boolean;online:boolean;visible:boolean;busy:boolean;removed?:string[];pendingPrompt?:string};
@@ -20,14 +21,14 @@ export class BackupRefiller {
     const pending=state.ai.control.requestId;
     // The server independently enforces a three-minute claim; a live foreground request wins.
     if(pending && this.now()-Date.parse(state.ai.requestedAt[pending]??'')<BACKUP_LEASE_MS){this.status='Waiting for the current prompt request.';return;}
-    if(choices.backupProvider==='gemini' && Object.values(state.ai.requests).some(r=>!('provider' in r.payload) && this.now()-Date.parse(state.ai.requestedAt[r.eventId])<CLOUD_REFILL_INTERVAL))return;
-    this.running=true;this.status=`Preparing a backup with ${choices.backupProvider==='lm-studio'?'LM Studio':'Gemini'}…`;
+    if(['gemini','personal-gemini'].includes(choices.backupProvider??'lm-studio') && Object.values(state.ai.requests).some(r=>(!('provider' in r.payload)||r.payload.provider==='personal-gemini') && this.now()-Date.parse(state.ai.requestedAt[r.eventId])<CLOUD_REFILL_INTERVAL))return;
+    this.running=true;this.status=`Preparing a backup with ${providerName(choices.backupProvider??'lm-studio')}…`;
     try{
       await this.generate();
       const after=availableBackups(latest(),input.removed,input.pendingPrompt).length;
       if(after<=count)this.duplicates++;else this.duplicates=0;
       this.failures=0;this.status=this.duplicates>=3?'Refill paused: the model repeated existing prompts. Retry when you are ready.':`${after} backups ready.`;
     }catch{this.failures++;this.status=this.failures>=3?'Refill paused. Check the selected model connection, then retry.':'Backup refill is waiting for the selected AI. Your saved prompts are ready to use.';}
-    finally{this.running=false;this.next=this.now()+(this.failures?Math.min(30*60_000,60_000*5**(this.failures-1)):choices.backupProvider==='gemini'?CLOUD_REFILL_INTERVAL:3000);}
+    finally{this.running=false;this.next=this.now()+(this.failures?Math.min(30*60_000,60_000*5**(this.failures-1)):['gemini','personal-gemini'].includes(choices.backupProvider??'lm-studio')?CLOUD_REFILL_INTERVAL:3000);}
   }
 }

@@ -2,9 +2,12 @@ import {PHOTO_SYSTEM_PROMPT} from './instructions.ts';
 import type {GenerateSummary} from './local-contract.ts';
 import { SYSTEM_PROMPT, type GeneratePrompt } from './context.ts';
 
+import {PROVIDERS,providerName,validModel,isExternalProvider,externalTarget,type ModelConnection} from './connection-contract.ts';
+import {discoverServiceModels,generateService} from './local-services.ts';
+import {parseChatResponse} from './chat-response.ts';
+export type {ModelConnection} from './connection-contract.ts';
 import {DEFAULT_LOCAL_MODEL} from './local-contract.ts';
 export {DEFAULT_LOCAL_MODEL} from './local-contract.ts';
-export type ModelConnection = { provider: 'gemini' | 'lm-studio'; baseUrl: string; model: string; token: string };
 export type LocalCapabilities = { vision: boolean; supportsThinking: boolean; reasoningOff: boolean; contextLength: number | null; loaded: boolean };
 export type LocalModelInfo = { id: string; loaded: boolean; capabilities: LocalCapabilities | null; error: string | null };
 export const defaultConnection = (): ModelConnection => ({provider:'gemini',baseUrl:'http://127.0.0.1:8080',model:DEFAULT_LOCAL_MODEL,token:''});
@@ -15,9 +18,11 @@ export function serverOrigin(value: string) {
   return url.origin;
 }
 export function validateConnection(input:ModelConnection):ModelConnection {
-  if (!['gemini','lm-studio'].includes(input.provider)) throw new Error('Choose an AI provider.');
-  if (!/^[a-zA-Z0-9][a-zA-Z0-9_.:/@+-]{0,79}$/.test(input.model.trim())) throw new Error('Enter a model API identifier of up to 80 characters.');
+  if (!PROVIDERS.includes(input.provider)) throw new Error('Choose an AI provider.');
+  if(input.provider==='gemini'&&!input.baseUrl)return defaultConnection();
+  if (!validModel(input.model.trim())) throw new Error('Enter a model API identifier of up to 80 characters.');
   if(input.token.length>4096 || /[\r\n]/.test(input.token)) throw new Error('Enter a valid LM Studio API token.');
+  if(input.provider==='personal-gemini'){if(input.token)throw new Error('Cloud keys must be saved through the private relay.');return {...input,baseUrl:'',model:input.model.trim(),token:''};}
   return {...input,baseUrl:serverOrigin(input.baseUrl),model:input.model.trim(),token:input.token.trim()};
 }
 function headers(connection:ModelConnection) {
@@ -35,6 +40,7 @@ async function request(connection:ModelConnection,path:string,body?:unknown,fetc
 export async function discoverLocalModels(input:ModelConnection,fetcher:typeof fetch=fetch):Promise<LocalModelInfo[]> {
   // Discovery needs the destination/token, not an already valid model choice.
   const connection=validateConnection({...input,model:DEFAULT_LOCAL_MODEL});
+  if(connection.provider==='ollama'||connection.provider==='openai-compatible')return discoverServiceModels(connection,fetcher);
   const data=await request(connection,'/api/v1/models',undefined,fetcher);
   if(!Array.isArray(data?.models)) throw new Error('LM Studio model discovery is unavailable. Use a current LM Studio version.');
   const result=new Map<string,LocalModelInfo>();
@@ -52,28 +58,24 @@ export async function discoverLocalModels(input:ModelConnection,fetcher:typeof f
   }
   return [...result.values()];
 }
-export function selectedLocalCapabilities(models:LocalModelInfo[],id:string):LocalCapabilities {
+export function selectedLocalCapabilities(models:LocalModelInfo[],id:string,service='LM Studio'):LocalCapabilities {
   const model=models.find(item=>item.id===id);
-  if(!model) throw new Error('The selected model is not available in LM Studio. Check its API identifier.');
+  if(!model) throw new Error(`The selected model is not available in ${service}. Check its API identifier.`);
   if(model.error) throw new Error(model.error);
   return model.capabilities!;
 }
 export async function probeLocalModel(input:ModelConnection,fetcher:typeof fetch=fetch):Promise<LocalCapabilities> {
   const connection=validateConnection(input);
-  return selectedLocalCapabilities(await discoverLocalModels(connection,fetcher),connection.model);
+  return selectedLocalCapabilities(await discoverLocalModels(connection,fetcher),connection.model,providerName(connection.provider));
 }
 export function parseLocalResponse(data:any,max:number) {
-  const choice=data?.choices?.[0],message=choice?.message;
-  if(!Array.isArray(data?.choices)||data.choices.length!==1||choice.finish_reason!=='stop'||message?.role!=='assistant'||message.tool_calls?.length) throw new Error('invalid-response');
-  const text=message.content,model=data.model;
-  // Keep final content exactly. Reasoning has its own field and never enters the journal.
-  if(typeof text!=='string'||!text.trim()||text.length>max||/<\/?think>|<\|channel[>|]|<\|turn[>|]|<channel\|>|<turn\|>/i.test(text)||typeof model!=='string'||!model.trim()||model.length>100) throw new Error('invalid-response');
-  return {text,model,finishReason:'STOP' as const};
+  return parseChatResponse(data,max);
 }
 export async function generateLocal(input:ModelConnection,system:string,content:unknown,max:number,fetcher:typeof fetch=fetch) {
   const connection=validateConnection(input),capabilities=await probeLocalModel(connection,fetcher);
   if(Array.isArray(content)&&!capabilities.vision) throw new Error('The selected local model does not support photos. You can attach the photo without AI or write its summary.');
   if(max>1000&&capabilities.contextLength&&new TextEncoder().encode(system+JSON.stringify(content)).length+2048>capabilities.contextLength)throw new Error('This context may exceed the selected model’s loaded context. Increase its context length or reduce sharing before retrying.');
+  if(connection.provider==='ollama'||connection.provider==='openai-compatible')return generateService(connection,capabilities,system,content,max,fetcher);
   // Native discovery calls non-thinking 'off'; chat/completions calls it 'none'.
   const payload={model:connection.model,messages:[{role:'system',content:system},{role:'user',content}],stream:false,max_tokens:max===600?512:max>1000?2048:768,
     ...(capabilities.supportsThinking?{chat_template_kwargs:{enable_thinking:false}}:{}),...(capabilities.reasoningOff?{reasoning_effort:'none'}:{})};
@@ -81,28 +83,41 @@ export async function generateLocal(input:ModelConnection,system:string,content:
 }
 export function localGenerator(connection:ModelConnection):GeneratePrompt {
   const captured=validateConnection(connection);
-  return Object.assign((context:string,options?:import('./context').PromptOptions)=>generateLocal(captured,options?.system??SYSTEM_PROMPT,context,options?.max??600),{target:{provider:'lm-studio' as const,model:captured.model,thinking:false as const}});
+  return Object.assign((context:string,options?:import('./context').PromptOptions)=>generateLocal(captured,options?.system??SYSTEM_PROMPT,context,options?.max??600),{target:isExternalProvider(captured.provider)?externalTarget(captured):{provider:'lm-studio' as const,model:captured.model,thinking:false as const}});
 }
 
 // Scope device preferences and tab credentials to the signed-in account/deployment.
 // Optional account sync lives separately in ModelCredentialStore.
 const key=(scope:string)=>`gratitude:model:${scope}`;
 const accountKey=(scope:string)=>`gratitude:model-account:${scope}`;
-export function wasAccountConnection(scope:string,secrets:Storage=sessionStorage){return !!secrets.getItem(accountKey(scope))&&!!secrets.getItem(key(scope));}
+export function wasAccountConnection(scope:string,secrets:Storage=sessionStorage){const marker=secrets.getItem(accountKey(scope));if(!marker)return false;if(marker.startsWith('[')){try{const value=JSON.parse(marker);return Array.isArray(value)&&['ollama','openai-compatible'].includes(value[0])&&typeof value[1]==='string';}catch{return false;}}return !!secrets.getItem(key(scope));}
 export function readConnection(scope:string,storage:Storage=localStorage,secrets:Storage=sessionStorage):ModelConnection {
   const saved=JSON.parse(storage.getItem(key(scope))??'null');
   return saved?validateConnection({...saved,token:secrets.getItem(key(scope))??''}):defaultConnection();
 }
+export function readProviderConnection(scope:string,provider:import('./connection-contract.ts').AIProvider,storage:Storage=localStorage,secrets:Storage=sessionStorage):ModelConnection {
+  const providerScope=JSON.stringify(['provider',scope,provider]);
+  const saved=storage.getItem(key(providerScope));
+  if(saved)return {...readConnection(providerScope,storage,secrets),provider};
+  const previous=readConnection(scope,storage,secrets);
+  if(previous.provider===provider||provider==='gemini'||provider==='lm-studio'&&previous.provider==='gemini'&&!PROVIDERS.some(value=>storage.getItem(key(JSON.stringify(['provider',scope,value])))))return {...previous,provider};
+  return {...defaultConnection(),provider,baseUrl:provider==='personal-gemini'?'':provider==='ollama'?'http://127.0.0.1:11434':'http://127.0.0.1:8080',model:provider==='personal-gemini'?'':provider==='ollama'?'':'',token:''};
+}
 export function saveConnection(scope:string,input:ModelConnection,storage:Storage=localStorage,secrets:Storage=sessionStorage,fromAccount=false) {
   const connection=validateConnection(input),{token,...preferences}=connection;
   const previous=secrets.getItem(key(scope));
+  const prior=storage.getItem(key(scope));
+  if(prior){const parsed=JSON.parse(prior);const provider=parsed.provider==='gemini'&&connection.provider!=='gemini'&&!PROVIDERS.some(value=>storage.getItem(key(JSON.stringify(['provider',scope,value]))))?'lm-studio':parsed.provider;if(provider&&provider!=='gemini'){const previousSlot=key(JSON.stringify(['provider',scope,provider]));storage.setItem(previousSlot,JSON.stringify({...parsed,provider}));if(previous)secrets.setItem(previousSlot,previous);else secrets.removeItem(previousSlot);}}
   storage.setItem(key(scope),JSON.stringify(preferences));
+  if(connection.provider!=='gemini'){const slot=key(JSON.stringify(['provider',scope,connection.provider]));storage.setItem(slot,JSON.stringify(preferences));if(token)secrets.setItem(slot,token);else secrets.removeItem(slot);}
   if(token) secrets.setItem(key(scope),token);else secrets.removeItem(key(scope));
-  if(fromAccount&&token)secrets.setItem(accountKey(scope),connection.baseUrl);
-  else if(previous!==token||secrets.getItem(accountKey(scope))!==connection.baseUrl||!token)secrets.removeItem(accountKey(scope));
+  const boundMarker=JSON.stringify([connection.provider,connection.baseUrl]);
+  const marker=secrets.getItem(accountKey(scope));
+  if(fromAccount&&(token||connection.provider==='ollama'||connection.provider==='openai-compatible'))secrets.setItem(accountKey(scope),connection.provider==='lm-studio'?connection.baseUrl:boundMarker);
+  else if((previous??'')!==token||(marker!==connection.baseUrl&&marker!==boundMarker)||(!token&&connection.provider==='lm-studio'))secrets.removeItem(accountKey(scope));
   return connection;
 }
-export function clearConnectionToken(scope:string,secrets:Storage=sessionStorage) {secrets.removeItem(key(scope));secrets.removeItem(accountKey(scope));}
+export function clearConnectionToken(scope:string,secrets:Storage=sessionStorage) {secrets.removeItem(key(scope));secrets.removeItem(accountKey(scope));for(const provider of PROVIDERS)secrets.removeItem(key(JSON.stringify(['provider',scope,provider])));}
 
 export function localPhotoGenerator(input:ModelConnection,read:()=>Promise<Blob>):GenerateSummary {
  const connection=validateConnection(input);
@@ -110,7 +125,7 @@ export function localPhotoGenerator(input:ModelConnection,read:()=>Promise<Blob>
    const blob=await read(),bytes=new Uint8Array(await blob.arrayBuffer());let binary='';
    for(let offset=0;offset<bytes.length;offset+=8192) binary+=String.fromCharCode(...bytes.subarray(offset,offset+8192));
    return generateLocal(connection,PHOTO_SYSTEM_PROMPT,[{type:'text',text:'Describe this photo.'},{type:'image_url',image_url:{url:`data:image/jpeg;base64,${btoa(binary)}`}}],1000);
- },{target:{provider:'lm-studio' as const,model:connection.model,thinking:false as const}});
+ },{target:isExternalProvider(connection.provider)?externalTarget(connection):{provider:'lm-studio' as const,model:connection.model,thinking:false as const}});
 }
 
 /** Keep task slots distinct even when an account ID contains a delimiter. */

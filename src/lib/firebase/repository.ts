@@ -1,3 +1,5 @@
+import {isExternalProvider,providerName,type ExternalTarget} from '../ai/connection-contract.ts';
+import {checkModelBinding} from './model-binding.ts';
 import type { OnboardingAction } from '../onboarding';
 import type { GenerateSummary } from '../ai/local-contract';
 import type { ImportSelection } from '../import-archive';
@@ -249,14 +251,14 @@ export class JournalRepository {
       if (this.stopped || control.get('requestId') !== request.eventId || control.get('choicesId') !== request.payload.choicesId) throw new Error('AI sharing choices changed.');
       if('answersId' in request.payload){const setup=await getDocFromServer(doc(this.client.db,`users/${this.uid}/streams/${GENERATION}/onboarding/control`));if((setup.get('answersId')??null)!==request.payload.answersId)throw new Error('Questionnaire answers changed.');}
       let output;
-      try { const options=promptOptions(snapshot,request);output = await generate(boundContext(buildContext(snapshot, request),options),options);validatePromptOutput(output,options); }
+      try {if('connectionId' in request.payload)await checkModelBinding(this.client.db,this.uid,request.payload); const options={...promptOptions(snapshot,request),requestId:request.eventId};output = await generate(boundContext(buildContext(snapshot, request),options),options);validatePromptOutput(output,options); }
       catch (cause) {
         if (this.stopped) return;
         const reason = cause instanceof Error && ['blocked', 'invalid-response'].includes(cause.message) ? cause.message as 'blocked' | 'invalid-response' : 'unavailable';
         await this.commitAI({ eventId: `${request.eventId}_failure`, type: 'AIRequestFailed', schemaVersion: 1, payload: { requestId: request.eventId, reason } });
         if(request.schemaVersion>=13&&reason==='invalid-response')throw new Error('The model returned an empty, incomplete or over-limit prompt. Try another request or use a saved backup prompt.');
         if(cause instanceof Error&&cause.message.startsWith('Your selected AI context'))throw cause;
-        if(generate.target) throw new Error(reason==='invalid-response'?'LM Studio returned an incomplete or invalid prompt. Try again or use the starter prompt.':cause instanceof Error?cause.message:'Could not reach LM Studio.');
+        if(generate.target) throw new Error(reason==='invalid-response'?`${providerName(generate.target.provider)} returned an incomplete or invalid prompt. Try again or use the starter prompt.`:cause instanceof Error?cause.message:'Could not reach LM Studio.');
         throw new Error('No new prompt arrived. You can try again or use the starter prompt.');
       }
       if (this.stopped) return;
@@ -324,7 +326,7 @@ export class JournalRepository {
     try { await this.commitAI(result); }
     catch (cause) {
       // Revocation/replacement invalidates a late result. Network failures retain it.
-      if (!(cause instanceof Error) || !(/no longer current|Questionnaire answers changed/.test(cause.message))) throw cause;
+      if (!(cause instanceof Error) || !(/no longer current|Questionnaire answers changed|Model connection changed/.test(cause.message))) throw cause;
       await this.db.delete('outbox', 'ai-result'); this.aiResult = null; this.emit();
       throw new Error('That request was replaced or AI sharing changed. The late prompt was discarded.');
     }
@@ -339,7 +341,7 @@ export class JournalRepository {
     if (!photo || photo.removed) throw new Error('This photo is no longer attached.');
     if (Object.values(this.photoResults).some(action => action.payload.entryId === entryId && action.payload.slot === slot)) throw new Error('Sync the received summary first.');
     const eventId=crypto.randomUUID(),payload={entryId,slot,photoId:photo.photoId,previousEventId:photo.lastEventId};
-    const request: PhotoAction = this.state.ai.choices.photoProvider!==undefined ? {eventId,type:'PhotoSummaryRequested',schemaVersion:3,payload:{...payload,choicesId:this.state.ai.control.choicesId!,provider:generate.target?.provider??'gemini',model:generate.target?.model??null,thinking:false}} : generate.target ? {eventId,type:'PhotoSummaryRequested',schemaVersion:2,payload:{...payload,...generate.target}} : {eventId,type:'PhotoSummaryRequested',schemaVersion:1,payload};
+    const request: PhotoAction = generate.target&&isExternalProvider(generate.target.provider)?{eventId,type:'PhotoSummaryRequested',schemaVersion:4,payload:{...payload,...generate.target as ExternalTarget,choicesId:this.state.ai.control.choicesId!}}:this.state.ai.choices.photoProvider!==undefined ? {eventId,type:'PhotoSummaryRequested',schemaVersion:3,payload:{...payload,choicesId:this.state.ai.control.choicesId!,provider:generate.target?.provider as 'gemini'|'lm-studio'??'gemini',model:generate.target?.model??null,thinking:false}} : generate.target ? {eventId,type:'PhotoSummaryRequested',schemaVersion:2,payload:{...payload,...generate.target as import('../ai/local-contract.ts').LocalModelTarget}} : {eventId,type:'PhotoSummaryRequested',schemaVersion:1,payload};
     this.photoRequests.add(key); this.emit();
     try {
       const result = await this.commitAI(request);
@@ -349,19 +351,19 @@ export class JournalRepository {
       const aiControl=await getDocFromServer(doc(this.client.db,`users/${this.uid}/streams/${GENERATION}/ai/control`));
       const choicesId=aiControl.get('choicesId');
       const choices=choicesId?await getDocFromServer(doc(this.client.db,`users/${this.uid}/streams/${GENERATION}/events/${choicesId}`)):null;
-      if(photoProvider({provider:choices?.get('payload.provider')??'gemini',photoProvider:choices?.get('payload.photoProvider')} as Parameters<typeof photoProvider>[0])!==(generate.target?.provider??'gemini') || request.schemaVersion===3 && choicesId!==request.payload.choicesId) throw new Error('AI provider changed. Review your model settings.');
+      if(photoProvider({provider:choices?.get('payload.provider')??'gemini',photoProvider:choices?.get('payload.photoProvider')} as Parameters<typeof photoProvider>[0])!==(generate.target?.provider??'gemini') || request.schemaVersion>=3 && 'choicesId' in request.payload && choicesId!==request.payload.choicesId) throw new Error('AI provider changed. Review your model settings.');
       let output;
-      try { output = await generate(); }
+      try {if('connectionId' in request.payload)await checkModelBinding(this.client.db,this.uid,request.payload); output = await generate(request.eventId); }
       catch (cause) {
         if (this.stopped || this.state.photos[key]?.lastEventId !== request.eventId) return;
         const reason = cause instanceof Error && ['blocked', 'invalid-response'].includes(cause.message) ? cause.message as 'blocked' | 'invalid-response' : 'unavailable';
         await this.commitAI({ eventId: `${request.eventId}_failure`, type: 'PhotoSummaryFailed', schemaVersion: 1,
           payload: { entryId, slot, photoId: photo.photoId, previousEventId: request.eventId, reason } });
-        if(generate.target) throw new Error(reason==='invalid-response'?'LM Studio returned an incomplete or invalid image summary.':cause instanceof Error?cause.message:'Could not reach LM Studio.');
+        if(generate.target) throw new Error(reason==='invalid-response'?`${providerName(generate.target.provider)} returned an incomplete or invalid image summary.`:cause instanceof Error?cause.message:'Could not reach LM Studio.');
         return;
       }
       if (this.stopped) return;
-      if(request.schemaVersion===3&&this.state.ai.control.choicesId!==request.payload.choicesId) throw new Error('Photo model settings changed. The late summary was discarded.');
+      if(request.schemaVersion>=3&&'choicesId' in request.payload&&this.state.ai.control.choicesId!==request.payload.choicesId) throw new Error('Photo model settings changed. The late summary was discarded.');
       const response: PhotoAction = { eventId: `${request.eventId}_response`, type: 'PhotoSummaryResponseReceived', schemaVersion: 1,
         payload: { entryId, slot, photoId: photo.photoId, previousEventId: request.eventId, ...output } };
       this.photoResults[request.eventId] = response;
@@ -374,7 +376,7 @@ export class JournalRepository {
     if (!action) return;
     try { await this.commitAI(action); }
     catch (cause) {
-      if (!(cause instanceof Error) || !cause.message.includes('photo changed on another device')&&!cause.message.includes('Photo model settings changed')) throw cause;
+      if (!(cause instanceof Error) || !cause.message.includes('photo changed on another device')&&!cause.message.includes('Photo model settings changed')&&!cause.message.includes('Model connection changed')) throw cause;
       // A manual correction, removal or newer request wins; never overwrite it.
     }
     delete this.photoResults[requestId];

@@ -1,7 +1,10 @@
 <script lang="ts">
-  import {defaultConnection,saveConnection,wasAccountConnection,discoverLocalModels,selectedLocalCapabilities,type ModelConnection,type LocalCapabilities,type LocalModelInfo} from '$lib/ai/lm-studio';
+  import {defaultConnection,saveConnection,readProviderConnection,wasAccountConnection,discoverLocalModels,selectedLocalCapabilities,type ModelConnection,type LocalCapabilities,type LocalModelInfo} from '$lib/ai/lm-studio';
+  import {providerName,isLocalService,isExternalProvider,type AIProvider} from '../ai/connection-contract';
+  import type {FirebaseClient} from '../firebase/client';
+  import PersonalKeySettings from './PersonalKeySettings.svelte';
   import type {CredentialStatus} from '../firebase/model-credential';
-  let {purpose='prompts',heading='AI model',regionLabel='AI model connection',saveMessage='',credentialStatus={ready:false,saved:false,error:''},onsavetoken,onforgettoken,connection,scope,disabled=false,connectionOnly=false,initialError='',onchange}:{purpose?:'prompts'|'photos';heading?:string;regionLabel?:string;saveMessage?:string;credentialStatus?:CredentialStatus;onsavetoken?:(connection:ModelConnection)=>Promise<void>;onforgettoken?:()=>Promise<void>;connection:ModelConnection;scope:string;disabled?:boolean;connectionOnly?:boolean;initialError?:string;onchange:(connection:ModelConnection)=>Promise<void>}=$props();
+  let {client=null,purpose='prompts',heading='AI model',regionLabel='AI model connection',saveMessage='',credentialStatus={ready:false,saved:false,error:''},onsavetoken,onforgettoken,connection,scope,disabled=false,connectionOnly=false,initialError='',onchange}:{client?:FirebaseClient|null;purpose?:'prompts'|'photos';heading?:string;regionLabel?:string;saveMessage?:string;credentialStatus?:CredentialStatus;onsavetoken?:(connection:ModelConnection)=>Promise<void>;onforgettoken?:()=>Promise<void>;connection:ModelConnection;scope:string;disabled?:boolean;connectionOnly?:boolean;initialError?:string;onchange:(connection:ModelConnection)=>Promise<void>}=$props();
   const field=$props.id();
   let draft=$state<ModelConnection>(defaultConnection()),busy=$state(false),message=$state(''),failed=$state(false),capabilities=$state<LocalCapabilities|null>(null);
   let models=$state<LocalModelInfo[]>([]),manualModel=$state(false),discoveredFor=$state('');
@@ -23,67 +26,69 @@
     finally{busy=false;}
   }
   function describeModel(){
-    try{capabilities=selectedLocalCapabilities(models,draft.model);failed=false;message=`Connected to LM Studio. ${capabilities.loaded?'Model loaded.':'Model available; the first request may load it.'} ${capabilities.vision?'Photo summaries supported.':'Text prompts only.'}${capabilities.contextLength?` Loaded context: ${capabilities.contextLength.toLocaleString('en-AU')} tokens.`:''}`;}
+    try{capabilities=selectedLocalCapabilities(models,draft.model,providerName(draft.provider));failed=false;message=`Connected to ${providerName(draft.provider)}. ${capabilities.loaded?'Model loaded.':'Model available; the first request may load it.'} ${capabilities.vision?'Photo summaries supported.':'Text prompts only.'}${capabilities.contextLength?` Loaded context: ${capabilities.contextLength.toLocaleString('en-AU')} tokens.`:''}`;}
     catch(error){failed=true;capabilities=null;message=error instanceof Error?error.message:'Choose an available model.';}
   }
   async function rememberToken(){
     busy=true;failed=false;message='';
-    try{if(!onsavetoken)throw new Error('Account token sync is unavailable.');await onsavetoken($state.snapshot(draft));message='Token and server connection saved to your account.';}
+    try{if(!onsavetoken)throw new Error('Account token sync is unavailable.');await onsavetoken($state.snapshot(draft));message=draft.provider==='lm-studio'?'Token and server connection saved to your account.':'Service, server, model and optional proxy token saved to your account.';}
     catch{failed=true;message='Could not save the account token. Use HTTPS (or localhost), enter a token and check your connection.';}
     finally{busy=false;}
   }
   async function forgetToken(){
     busy=true;failed=false;message='';
-    try{if(!onforgettoken)throw new Error('Account token sync is unavailable.');await onforgettoken();message='Saved token forgotten. Connected devices clear it when they sync. Revoke it in LM Studio to disable it everywhere.';}
+    try{if(!onforgettoken)throw new Error('Account token sync is unavailable.');await onforgettoken();message=draft.provider==='lm-studio'?'Saved token forgotten. Connected devices clear it when they sync. Revoke it in LM Studio to disable it everywhere.':'Account connection sync stopped. Revoke any token at its proxy to disable copies on offline devices.';}
     catch{failed=true;message='Could not forget the saved token. Reconnect and try again.';}
     finally{busy=false;}
   }
   async function save() {
     busy=true;message='';failed=false;
-    try {const input=draft.provider==='gemini'?{...connection,provider:'gemini' as const}:$state.snapshot(draft);const keepRemembered=credentialStatus.saved&&!!onsavetoken&&input.provider==='lm-studio'&&input.baseUrl===connection.baseUrl&&input.token===connection.token&&wasAccountConnection(scope);const saved=saveConnection(scope,input);await onchange(saved);if(keepRemembered)await onsavetoken!(saved);failed=false;message=saveMessage||(connectionOnly?'Local connection saved on this device.':'Provider saved to your account; connection settings saved on this device.');}
+    try {const input=draft.provider==='gemini'?{...connection,provider:'gemini' as const}:$state.snapshot(draft);const keepRemembered=credentialStatus.saved&&!!onsavetoken&&isLocalService(input.provider)&&input.baseUrl===connection.baseUrl&&input.token===connection.token&&wasAccountConnection(scope);const saved=saveConnection(scope,input);await onchange(saved);if(keepRemembered)await onsavetoken!(saved);failed=false;message=saveMessage||(connectionOnly?'Local connection saved on this device.':'Provider saved to your account; connection settings saved on this device.');}
     catch(error){failed=true;message=error instanceof Error?error.message:'Could not save model settings on this device.';}
     finally{busy=false;}
   }
 </script>
 <section class="glass model-settings" aria-label={regionLabel} aria-busy={busy}>
   <h2>{heading}</h2>
-  <p class="hint">Current provider: {connection.provider==='lm-studio'?'LM Studio':'Gemini'}. Provider choice syncs across devices. The connection stays on this device unless you choose account token sync.</p>
+  <p class="hint">Current provider: {providerName(connection.provider)}. {connection.provider==='personal-gemini'?'This private cloud connection follows your account without restoring the key to your browser.':'Provider choice syncs across devices. The connection stays on this device unless you choose account token sync.'}</p>
   {#if !connectionOnly}<label for={`${field}-model-provider`}>AI provider</label>
-  <select id={`${field}-model-provider`} bind:value={draft.provider} disabled={disabled||busy} onchange={()=>{message='';capabilities=null;}}>
-    <option value="gemini">Gemini</option><option value="lm-studio">LM Studio · local model</option>
+  <select id={`${field}-model-provider`} bind:value={draft.provider} disabled={disabled||busy} onchange={()=>{message='';capabilities=null;models=[];discoveredFor='';const provider=draft.provider;draft=readProviderConnection(scope,provider);}}>
+    <option value="gemini">Gemini</option><option value="lm-studio">LM Studio · local model</option><option value="ollama">Ollama · local model</option><option value="openai-compatible">Verified compatible local server</option><option value="personal-gemini">My Gemini API key</option>
   </select>{/if}
-  {#if draft.provider==='lm-studio'}
-    <label for={`${field}-local-server`}>LM Studio server URL</label>
+  {#if isLocalService(draft.provider)}
+    <label for={`${field}-local-server`}>{draft.provider==='lm-studio'?'LM Studio server URL':'Server address'}</label>
     <input id={`${field}-local-server`} type="url" bind:value={draft.baseUrl} oninput={()=>{draft.token='';capabilities=null;models=[];message='';}} disabled={disabled||busy} placeholder="http://127.0.0.1:8080" autocomplete="off" />
     <p class="hint">Use your computer’s reachable HTTPS or LAN address to access your local model on other devices.</p>
-    <p class="hint">Enable CORS in LM Studio. An HTTPS address works across browsers and devices; Tailscale Serve can forward it to this computer’s local server.</p>
+    {#if draft.provider!=='lm-studio'}<p class="hint">{draft.provider==='ollama'?'Allow this app’s origin in OLLAMA_ORIGINS. Native Ollama does not authenticate a placeholder API key; optional tokens must be enforced by your proxy. Cloud-routed models are not supported here.':'This text-only adapter requires models to declare completion: true and thinking: false in their capabilities metadata. Unknown capabilities are unavailable; it does not promise support for every chat server.'}</p>{:else}<p class="hint">Enable CORS in LM Studio. An HTTPS address works across browsers and devices; Tailscale Serve can forward it to this computer’s local server.</p>{/if}
     <label for={`${field}-local-model`}>Model API identifier</label>
     {#if showPicker}
       <select id={`${field}-local-model`} value={draft.model} disabled={disabled||busy} onchange={(event)=>{const id=event.currentTarget.value;if(!id){manualModel=true;message='';capabilities=null;}else{draft.model=id;describeModel();}}}>
-        {#if !models.some(item=>item.id===draft.model)}<option value={draft.model} disabled>{draft.model} · not available</option>{/if}
+        {#if !models.some(item=>item.id===draft.model)}<option value={draft.model} disabled>{draft.model?draft.model+' · not available':'Choose a model…'}</option>{/if}
         {#each models as model (model.id)}<option value={model.id} disabled={!!model.error}>{model.id} · {model.error?'thinking off unavailable':model.loaded?'loaded':'available'}</option>{/each}
         <option value="">Enter an identifier manually…</option>
       </select>
     {:else}
       <input id={`${field}-local-model`} bind:value={draft.model} oninput={()=>{capabilities=null;message='';}} disabled={disabled||busy} autocomplete="off" spellcheck="false" />
     {/if}
-    <label for={`${field}-local-token`}>LM Studio API token</label>
+    <label for={`${field}-local-token`}>{draft.provider==='lm-studio'?'LM Studio API token':'Proxy authentication token (optional)'}</label>
     <input id={`${field}-local-token`} type="password" bind:value={draft.token} oninput={()=>{models=[];capabilities=null;message='';}} disabled={disabled||busy} autocomplete="off" />
     <details class="token-sync"><summary>Account token sync</summary>
       <p class="hint">By default, the token is saved in this browser tab. Account token sync can make it available in other tabs and on your other devices, together with its server address and model.</p>
-      <p class="hint">Use a dedicated token with MCP permissions denied. Firebase project administrators and this app can access the token. It stays out of journal events and exports.</p>
-      <p class="hint">{credentialStatus.saved?'A connection is saved to your account.':'No account connection loaded.'} Forgetting removes the saved copy for online devices; revoke the token in LM Studio to disable copies on offline devices.</p>
-      <button class="outline" type="button" onclick={rememberToken} disabled={disabled||busy||!credentialStatus.ready||!draft.token||!onsavetoken}>Remember token in my account</button>
-      {#if credentialStatus.saved}<button class="outline" type="button" onclick={forgetToken} disabled={disabled||busy}>Forget saved token</button>{/if}
+      <p class="hint">{draft.provider==='lm-studio'?'Use a dedicated token with MCP permissions denied.':'Use a dedicated inference-only proxy token if your proxy requires authentication. Native Ollama has no API token to revoke.'} Firebase project administrators and this app can access the token. It stays out of journal events and exports.</p>
+      <p class="hint">{credentialStatus.saved?'A connection is saved to your account.':'No account connection loaded.'} {draft.provider==='lm-studio'?'Forgetting removes the saved copy for online devices; revoke the token in LM Studio to disable copies on offline devices.':'Stopping sync removes the account copy. Other devices can retain their private server settings; revoke optional tokens at your proxy to disable them everywhere.'}</p>
+      <button class="outline" type="button" onclick={rememberToken} disabled={disabled||busy||!credentialStatus.ready||(draft.provider==='lm-studio'&&!draft.token)||!onsavetoken}>{draft.provider==='lm-studio'?'Remember token in my account':'Remember connection in my account'}</button>
+      {#if credentialStatus.saved}<button class="outline" type="button" onclick={forgetToken} disabled={disabled||busy}>{draft.provider==='lm-studio'?'Forget saved token':'Stop account connection sync'}</button>{/if}
       {#if credentialStatus.error}<p class="hint" role="status">{credentialStatus.error}</p>{/if}
     </details>
     <p class="hint">Model thinking is off. Your saved journal and attachments sync through Firebase and photos only go to this server when you choose to summarize them.</p>
     {#if purpose==='photos'}<p class="hint">Choose a vision-capable model for photo descriptions. No journal text or prompt context is sent.</p>{/if}
     <button class="outline" type="button" onclick={testConnection} disabled={disabled||busy}>{busy?'Checking connection…':'Test connection'}</button>
+  {:else if draft.provider==='personal-gemini'}
+    <PersonalKeySettings {client} connection={draft} disabled={disabled||busy} onchange={async saved=>{await onchange(saved);draft=saved;}} />
   {:else}
     <p class="hint">Gemini uses this site’s managed Firebase AI connection.</p>
   {/if}
-  <button class="outline" type="button" onclick={save} disabled={disabled||busy||!scope}>Save model settings</button>
+  {#if draft.provider!=='personal-gemini'}<button class="outline" type="button" onclick={save} disabled={disabled||busy||!scope||((draft.provider==='ollama'||draft.provider==='openai-compatible')&&!capabilities)}>Save model settings</button>{/if}
   {#if message}<p class="hint connection-message" role={failed?'alert':'status'}>{message}</p>{/if}
 </section>
 <style>

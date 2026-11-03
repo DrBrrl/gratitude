@@ -64,8 +64,10 @@ jobs:
       fail-fast: false
       matrix:
         project: [mobile-chromium, desktop-chromium]
-        suite: [journal, drafts, ai, ai-recovery, ai-context, local-ai, prompt-feedback, backups, credentials, model-picker, photo-model, appearance, photos, editor, import, calendar, calendar-edit, friends, community, friend-hugs, push-notifications, onboarding]
+        suite: [journal, drafts, ai, ai-recovery, ai-context, local-ai, prompt-feedback, backups, credentials, model-picker, photo-model, appearance, photos, editor, import, calendar, calendar-edit, friends, community, friend-hugs, push-notifications, onboarding, providers]
         include:
+          - suite: providers
+            scenarios: tests/e2e/(049-|05[01]-)
           - suite: onboarding
             scenarios: tests/e2e/04[5-8]-
           - suite: journal
@@ -169,7 +171,7 @@ jobs:
       - name: Verify private registration and replay-safe background delivery
         run: >-
           nix develop -c bash scripts/firebase-test.sh
-          'TZ=UTC node --test tests/firebase/push.test.mjs && node --test tests/push/delivery.test.mjs'
+          'TZ=UTC node --test tests/firebase/push.test.mjs && node --test tests/push/delivery.test.mjs && node --test tests/relay/*.test.mjs'
 
   publish:
     needs: [build, firebase, import-scale, push]

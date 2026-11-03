@@ -1,10 +1,20 @@
 # AI connections and personal API keys
 
-This is a proposal for review. The LM Studio model picker, independent prompt/photo connections, task slots and explicit shared-model option described below are already implemented in the base app. Additional services, named connection profiles and personal cloud keys remain proposed; this design PR does not implement them. No relay, billing configuration or new cloud resources are provisioned.
+The runtime now implements the existing Gemini/LM Studio choices, native Ollama, a bounded text-only compatibility adapter and personal Gemini keys through an authenticated encrypted Firebase relay. Prompt/photo task slots and independent backup-provider preferences remain in use. General-purpose named profiles, device overrides and additional cloud vendors below remain proposals. See [the operational setup guide](AI_CONNECTIONS_SETUP.md) and [Firebase status](FIREBASE_SETUP.md) for the actual deployed environments.
+
+## Implemented provider increment
+
+- New `AIChoicesConfirmed` schema 5 captures literal provider/task connection IDs. Prompt request versions 23–27 and photo request version 4 capture an opaque connection revision and selected model. Older schemas retain their original provider limits and interpretation. Source events contain no endpoints, credentials, availability observations or computed capability flags.
+- Owner-only mutable connection metadata pins each dispatch and received result; replacing a server, model or cloud key invalidates an old revision. Existing local token sync gains a service-aware schema without changing legacy records. Credentials stay separate from replay and exports.
+- Native Ollama uses current thinking metadata, loaded-context observations and a dedicated native payload. Thinking must explicitly support `false`; cloud-routed models and unknown thinking controls are unavailable. The compatibility adapter requires an explicit non-thinking text capability contract and never assumes vision or universal vendor compatibility.
+- Personal Gemini keys use the existing Firebase projects, as explicitly selected by the user. A dedicated callable validates the signed-in owner, source request and current revisions, stores authenticated ciphertext with a Secret Manager keyring, bounds/rate-limits calls, prevents duplicate dispatch and permits key removal during inference. Keys are write-only through the app API and never restored to another browser. Generic context is the default until the user acknowledges their own project’s terms.
+- Personal Gemini retains the model’s thinking defaults, like the existing managed Gemini path; only final text is returned. Its literal request records `thinking: provider-default`, rather than falsely claiming the local-service thinking-off preference is enforced by Google. Local adapters continue recording and enforcing `thinking: false`.
+- New provider/browser walkthroughs use fictional boundaries; emulator tests cover real Rules, encrypted storage, cross-owner denial, quota errors and in-flight deletion. Operational deployment evidence belongs in `FIREBASE_SETUP.md`.
+
 
 ## Starting point
 
-Gratitude currently supports managed Gemini through Firebase AI Logic and a direct browser connection to LM Studio. AI sharing choices and provider selection follow the account. An LM Studio connection stays on the device unless the user explicitly remembers its bound server/model/token in private account settings. [LM_STUDIO_SETUP.md](LM_STUDIO_SETUP.md) documents those controls and their trust boundary.
+Before this increment, Gratitude supported managed Gemini through Firebase AI Logic and a direct browser connection to LM Studio. AI sharing choices and provider selection follow the account. An LM Studio connection stays on the device unless the user explicitly remembers its bound server/model/token in private account settings. [LM_STUDIO_SETUP.md](LM_STUDIO_SETUP.md) documents those controls and their trust boundary.
 
 The current adapter discovers models using LM Studio’s native `GET /api/v1/models`, then generates using `POST /v1/chat/completions`. A server exposing chat completions alone cannot use that discovery code. Provider choices, request schemas, backup refill choices and Firestore Rules currently enumerate Gemini and LM Studio; adding a dropdown option alone would leave persistence and replay incomplete. Evidence: `src/lib/ai/lm-studio.ts`, `src/lib/domain.ts`, `src/lib/firebase/model-credential.ts` and `firestore.rules`.
 
@@ -46,9 +56,9 @@ Separate the product’s service name, protocol adapter, transport route and cho
 | --- | --- | --- |
 | Managed Gemini | Existing Firebase AI Logic gateway | Preserve current implementation and default |
 | LM Studio | Browser to private HTTPS/loopback; native discovery and chat completions | Preserve current inference and add the implemented model picker |
-| Ollama | Browser to private HTTPS/loopback; native model metadata/chat adapter | First proposed additional local service |
+| Ollama | Browser to private HTTPS/loopback; native model metadata/chat adapter | Implemented native local service |
 | Other OpenAI-compatible local server | Browser to an explicitly configured server; a versioned chat-completions adapter | Candidate opt-in compatibility mode; verify each supported server/model |
-| Personal Gemini key | Trusted relay to Google’s native Gemini API | First proposed personal cloud service |
+| Personal Gemini key | Trusted relay to Google’s native Gemini API | Implemented personal cloud service |
 | Other personal cloud key | Trusted relay with a dedicated provider adapter | Select the next provider after confirming demand and its API/terms |
 
 Ollama documents only a subset of OpenAI compatibility. Its native chat API has its own thinking control and metadata contract; do not send LM Studio’s `chat_template_kwargs` blindly. Its local API does not enforce the placeholder OpenAI-client API key, so secure network access independently and do not present that field as authentication. Hosted browser access also requires an allowed app origin. See [OpenAI compatibility](https://docs.ollama.com/api/openai-compatibility), [chat and thinking controls](https://docs.ollama.com/api/chat), and [origin/network configuration](https://docs.ollama.com/faq).
@@ -61,7 +71,7 @@ Initially accept a server origin, matching the existing LM Studio form; normaliz
 
 ### Onboarding review: additional local services
 
-The current PR remains a design review. Adding Ollama is a bounded provider feature for the later implementation: the existing shared context and recorded-response design can stay, while discovery, requests, settings and Rules gain service-aware versions. It is more than changing the URL in the LM Studio form, whose discovery and thinking controls are specific to that service.
+The reviewed proposal described adding Ollama as a bounded provider feature: the existing shared context and recorded-response design can stay, while discovery, requests, settings and Rules gain service-aware versions. It is more than changing the URL in the LM Studio form, whose discovery and thinking controls are specific to that service.
 
 In onboarding and AI settings, **Local model server** opens a connection with separate **Service**, **Server address** and **Model API identifier** fields. Proposed service choices are **LM Studio**, **Ollama** and **Other OpenAI-compatible server**. A selected model belongs to that service/server; changing either invalidates old discovery and capability results. Prompts, photo descriptions and backups retain independent task choices and their explicit same-connection option.
 
@@ -80,7 +90,7 @@ Implementation work must include:
 - Service/server/model-bound private credentials, explicit optional account sync and independent task restoration. No credentials or computed discovery observations enter the event stream or exports.
 - Functional and zero-tolerance screenshot walkthroughs for discovery, model choice, unsupported photos/thinking, authentication failure, outages, same/separate task connections and restored settings. Shared outgoing prompt/context policy must match across Gemini, LM Studio and Ollama; no silent provider fallback.
 
-This can fit the onboarding implementation if kept to these tested local adapters. Personal cloud-key relays, general agent gateways and an unrestricted claim to support every compatible server remain separate decisions. No local-provider runtime implementation or infrastructure change is made by this design revision.
+This increment implements the native adapter and bounded compatibility contract above, plus the explicitly authorized personal Gemini relay. General agent gateways, named-profile management and unrestricted compatibility claims remain outside this increment.
 
 ## Personal keys and hosting
 
@@ -114,14 +124,14 @@ Capture the approved context and source references, target connection revision, 
 
 AI responses remain external-input events containing exact final text and reported model against their request. Replaying or rebuilding cached projections never performs network discovery or AI calls. Model lists, availability, streaks and usage remain projections or operational caches. Full and cached replay must agree even if the original server/key no longer exists. Existing daily/editor/photo/backup events and imported entries remain compatible. Deploy new Firestore Rules/schema support before enabling new request types; keep strict provider/choice/revision checks rather than accepting arbitrary payloads.
 
-## Proposed implementation increments
+## Provider increments and remaining work
 
 1. **Connection profiles:** generalize the implemented prompt/photo slots into named connections without copying secrets into events; add independent prompt/photo/backup assignments, explicit profile selection/device override, and task-specific credential/capability validation. Preserve existing account token sync and no-fallback behaviour.
-2. **Ollama:** add a native adapter with discovery, private HTTPS/origin setup, thinking-off handling and text prompts. Add vision only after a verified capability path and photo disclosure.
-3. **Compatibility mode:** verify a chosen second local server against documented discovery, final-response, reasoning and photo contracts. List tested combinations; unsupported models get a clear message.
-4. **Personal Gemini keys:** choose who hosts the optional relay, agree its cost/secret-retention limits, then implement authenticated key onboarding, request dispatch, deletion and self-hosting documentation. This step requires the relay deployment decision before provisioning.
+2. **Ollama, implemented:** native discovery, private HTTPS/origin guidance, explicit thinking-off metadata, text generation and capability-checked photos with disclosure.
+3. **Compatibility mode, bounded contract implemented:** require declared completion/non-thinking capabilities and final-text chat semantics; photos remain unsupported. Dedicated vendor adapters and real-engine verification remain further work. No general vendor support is claimed.
+4. **Personal Gemini keys, implemented:** the user selected the existing Firebase projects and their normal costs. Both environments have the authenticated encrypted relay deployed. Write-only key onboarding, generic-by-default terms acknowledgement, source/revision guards, bounded dispatch, deletion and operation/rotation guidance are implemented.
 5. **Additional cloud service:** select a provider, review its terms and build its explicit adapter on the same relay contract.
 
 Each implementation increment should demonstrate a working feature with focused unit/Rules tests and mobile/desktop E2E walkthroughs. Cover failed discovery, multiple/empty lists, unloaded models, stale responses after switching servers/accounts, credentials bound to destinations, missing profiles on another device, photo capability failure, quota errors, no fallback, independent refill and cached/full replay. In particular, test prompts on laptop A and photos on laptop B, two models on one host, a text-only prompt model plus a vision photo model, task-specific outages and restoring both selections on another device. Use fictional keys/context and intercepted provider boundaries; no live paid inference or personal journals in CI. Follow every user action with a full-page screenshot comparison, without masks and with `maxDiffPixels: 0`, `threshold: 0`; generate checks beneath each screenshot.
 
-Open decisions for implementation review: which second local service to verify after Ollama; whether profiles should sync names/destinations by default; who operates and pays for a personal-key relay; and which cloud service follows Gemini. The model picker and independent prompt/photo slots can ship while these broader choices are reviewed.
+Remaining decisions: which vendor-specific local adapter to verify next; whether future named profiles should sync names/destinations by default; and which cloud service follows personal Gemini. Relay hosting in the existing Firebase projects is settled. Current task slots and optional local connection sync remain in use while broader profile management is proposed.

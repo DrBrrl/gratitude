@@ -1,8 +1,9 @@
 <script lang="ts">
+  import {providerName,type AIProvider} from '../ai/connection-contract';
   import type {JournalStore,JournalView} from '../firebase/repository';
   import {availableBackups,readPromptWorkbook,importedBackup,BACKUP_MINIMUM} from '../backup-prompts';
-  let {view,repository,email,disabled=false,onconfigure}:{view:JournalView;repository:JournalStore;email:string;disabled?:boolean;onconfigure:(enabled:boolean,provider:'gemini'|'lm-studio')=>Promise<void>}=$props();
-  let enabled=$state(false),provider=$state<'gemini'|'lm-studio'>('lm-studio');
+  let {view,repository,email,disabled=false,onconfigure}:{view:JournalView;repository:JournalStore;email:string;disabled?:boolean;onconfigure:(enabled:boolean,provider:AIProvider)=>Promise<void>}=$props();
+  let enabled=$state(false),provider=$state<AIProvider>('lm-studio');
   let editing=$state(false),busy=$state(false),message=$state(''),selected=$state<string[]>([]);
   const available=$derived(availableBackups(view.state,view.backupRemoved));
   async function choose(event:Event){message='';selected=[];const file=(event.currentTarget as HTMLInputElement).files?.[0];if(!file)return;try{selected=readPromptWorkbook(new Uint8Array(await file.arrayBuffer()));}catch(cause){message=cause instanceof Error?cause.message:'Could not read this workbook.';}}
@@ -13,11 +14,11 @@
   <h2>Backup prompts</h2>
   <p>{available.length} personalised {available.length===1?'prompt':'prompts'} ready on this device.</p>
   <p class="hint">Use one of these saved prompts on Today or in your reflection, with no wait for an AI call. Saving a reflection uses that prompt; skipping keeps it available. Remove prompts by clicking "I won't use this prompt" when it is presented to you; it will be removed from the reserve.</p>
-  <p class="hint">Refill: {view.state.ai.choices.backupEnabled?'automatic with '+(view.state.ai.choices.backupProvider==='lm-studio'?'LM Studio':'Gemini'):'off'}.</p>
+  <p class="hint">Refill: {view.state.ai.choices.backupEnabled?'automatic with '+(providerName(view.state.ai.choices.backupProvider??'lm-studio')):'off'}.</p>
   {#if !editing}<button class="outline" onclick={()=>{enabled=view.state.ai.choices.backupEnabled??false;provider=view.state.ai.choices.backupProvider??'lm-studio';editing=true;}} disabled={disabled||busy}>Backup preferences</button>
   {:else}
     <label class="choice"><input type="checkbox" bind:checked={enabled} />Automatically refill below {BACKUP_MINIMUM}</label>
-    <label class="choice" for="backup-provider">Generate backups with</label><select id="backup-provider" bind:value={provider}><option value="lm-studio">Local LLM · LM Studio</option><option value="gemini">Cloud LLM · Gemini</option></select>
+    <label class="choice" for="backup-provider">Generate backups with</label><select id="backup-provider" bind:value={provider}><option value="lm-studio">Local LLM · LM Studio</option><option value="gemini">Cloud LLM · Gemini</option><option value="ollama">Local LLM · Ollama</option><option value="openai-compatible">Compatible local server</option><option value="personal-gemini">Cloud LLM · My Gemini key</option></select>
     <p class="hint">While Gratitude is open and connected, generate one prompt at a time using your saved sharing choices and the same rules as an ordinary prompt. Cloud refills are paced. No automatic fallback to another provider. Local credentials stay on this device.</p>
     <button class="outline" onclick={configure} disabled={busy||disabled}>Save backup preferences</button><button class="text-button" onclick={()=>editing=false}>Cancel</button>
   {/if}

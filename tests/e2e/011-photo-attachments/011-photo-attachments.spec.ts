@@ -1,5 +1,7 @@
 import { expect as playwrightExpect, test } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdtemp, writeFile, rm } from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import { unzipSync, strFromU8 } from 'fflate';
 import { TestStepHelper } from '../helpers/test-step-helper';
 import { startJournal, openEditor, editor, expectSynced, expectDecodedPhotos, navigate } from '../helpers/journal-session';
@@ -31,7 +33,7 @@ test('attach private photos, correct searchable AI descriptions and retain them 
   await steps.action('bad-type', 'Reject an unsupported attachment without losing the reflection', () => page.getByLabel('Add photo', { exact: true }).setInputFiles({ name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('Not a photo') }), async () => {
     await expect(page.getByText('Choose a JPEG, PNG or WebP photo.')).toBeVisible();
   });
-  await steps.action('too-large', 'Reject a photo larger than the upload limit', () => page.getByLabel('Add photo', { exact: true }).setInputFiles({ name: 'large.png', mimeType: 'image/png', buffer: Buffer.alloc(10 * 1024 * 1024 + 1) }, { timeout: 15_000 }), async () => {
+  await steps.action('too-large', 'Reject a photo larger than the upload limit', async () => {const directory=await mkdtemp(join(tmpdir(),'gratitude-photo-limit-'));try{const path=join(directory,'large.png');await writeFile(path,Buffer.alloc(10 * 1024 * 1024 + 1));await page.getByLabel('Add photo',{exact:true}).setInputFiles(path,{timeout:15_000});}finally{await rm(directory,{recursive:true,force:true});}}, async () => {
     await expect(page.getByText('Choose a photo smaller than 10 MB.')).toBeVisible();
   });
   await steps.action('pick', 'Select a photo and inspect the AI disclosure', () => page.getByLabel('Add photo', { exact: true }).setInputFiles('tests/fixtures/yellow-mug.png'), async () => {

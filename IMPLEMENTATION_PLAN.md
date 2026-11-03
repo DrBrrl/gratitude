@@ -67,7 +67,7 @@ Restore valid checkpoints and fetch only the confirmed tail. Commit cached event
 
 **Implemented onboarding:** [ONBOARDING_DESIGN.md](ONBOARDING_DESIGN.md#implementation-notes) records the optional next-visit flow, private answers and greetings, separate AI/Friends saves, account colour preview, editable interest descriptions/custom rows, three prompt scopes and a 50–200-word limit. Answer-sharing permission is explicit; completion/skip syncs across devices and an offline skip has a durable local outbox. New versioned requests use a twenty-unit context budget across 8/7/5 pools; entries over 600 UTF-16 code units cost two. New question carriers support 4,000 code units, with legacy replay preserved. Walkthroughs 045–048 cover the working features.
 
-The [additional local-service adapters](AI_PROVIDER_DESIGN.md#onboarding-review-additional-local-services) and personal cloud-key connections remain proposals. Runtime setup reuses managed Gemini and LM Studio, including the existing separate photo-model choice. No unsupported provider is advertised as a working option.
+Runtime setup now adds native Ollama, a bounded text-only compatibility contract and personal Gemini keys through an owner-authenticated encrypted relay, while preserving existing managed Gemini/LM Studio and separate photo choices. See [connection setup](AI_CONNECTIONS_SETUP.md) for supported capabilities and backend operation. General-purpose named profiles and additional cloud vendors remain proposals.
 
 **Deliverable:** optional questions, explicit sharing controls, daily prompt view, starter fallback, skip/resume, durable editor, save/edit, freeform feedback, rainbow history, full entry and search.
 

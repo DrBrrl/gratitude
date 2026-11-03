@@ -22,7 +22,11 @@
     "ui": {
       "enabled": false
     },
-    "singleProjectMode": true
+    "singleProjectMode": true,
+    "functions": {
+      "host": "127.0.0.1",
+      "port": 15001
+    }
   },
   "functions": [
     {
@@ -32,7 +36,10 @@
       "ignore": [
         "node_modules",
         ".git",
-        "*-debug.log"
+        "*-debug.log",
+        ".secret.local",
+        ".env",
+        ".env.*"
       ]
     }
   ]
