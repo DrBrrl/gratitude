@@ -6,7 +6,7 @@
  const field=$props.id();
  let key=$state(''),model=$state(''),allowPersonal=$state(false),models=$state<string[]>([]),busy=$state(false),message=$state(''),failed=$state(false);
  let saved=$state<ModelConnection|null>(null);
- $effect(()=>{const current=connection.provider==='personal-gemini'&&connection.connectionId?{...connection}:null;saved=current;model=current?.model??'';allowPersonal=current?.allowPersonal??false;key='';models=[];});
+ $effect(()=>{const current=connection.provider==='personal-gemini'&&connection.connectionId&&connection.connectionRevision?{...connection}:null;saved=current;model=current?.model??'';allowPersonal=current?.allowPersonal??false;key='';models=[];});
  async function act(operation:'test'|'save'|'delete'){
   if(!client)return;busy=true;message='';failed=false;
   try{
