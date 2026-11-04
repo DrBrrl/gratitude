@@ -89,8 +89,11 @@ test('new provider requests bind the exact answers revision, preserve long outpu
     await appendReflection(db,uid,confirmed('ai-answers',null,{pronouns:'they/them',selectedTopics:['music'],useAnswers:true,wordLimit:200}));
     await appendReflection(db,uid,{eventId:'ai-choice',type:'AIChoicesConfirmed',schemaVersion:3,payload:{previousEventId:null,enabled:true,useJournal:true,useFeedback:true,guidance:'Quiet moments',provider,backupEnabled:true,backupProvider:provider}});
     let state=replay(await history(db,uid));const selection={timeZone:'Australia/Hobart',selectionSeed:'0123456789abcdef0123456789abcdef'};
-    const request=makeRequest(state,'2026-10-01','personal','new-request',undefined,selection,target);assert.ok(request.schemaVersion>=13);
-    await appendReflection(db,uid,request);assert.ok(promptOptions(state,request).system.includes('under 200 words'));assert.deepEqual(JSON.parse(buildContext(state,request)).topics,['Music and sounds: listening, playing, singing.']);
+    const historical=makeRequest(state,'2026-10-01','personal','historical-request',undefined,selection,target);historical.payload.templateVersion='gratitude-v3';
+    await appendReflection(db,uid,historical);await appendReflection(db,uid,{eventId:'historical-request_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:historical.eventId,text:'A previously generated question?',model:'fictional/model',finishReason:'STOP'}});
+    state=replay(await history(db,uid));assert.equal(state.ai.responses['historical-request_response'].payload.text,'A previously generated question?');
+    const request=makeRequest(state,'2026-10-01','personal','new-request',undefined,selection,target);assert.ok(request.schemaVersion>=13);assert.equal(request.payload.templateVersion,'gratitude-v4');
+    await appendReflection(db,uid,request);const instruction=promptOptions(state,request).system,context=buildContext(state,request);assert.ok(instruction.includes('under 200 words'));assert.deepEqual(JSON.parse(context).topics,['Music and sounds: listening, playing, singing.']);assert.equal('user' in JSON.parse(context),false);assert.ok(!instruction.includes('Sam')&&!instruction.includes('they/them')&&!context.includes('Sam')&&!context.includes('they/them'));
     const text=Array.from({length:100},()=> 'Wonderful').join(' ')+'?';assert.ok(text.length>600);
     await appendReflection(db,uid,{eventId:'new-request_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:request.eventId,text,model:'fictional/model',finishReason:'STOP'}});
     state=replay(await history(db,uid));const next=makeRequest(state,'2026-10-01','personal','late',undefined,selection,target);

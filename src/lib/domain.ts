@@ -10,7 +10,7 @@ export const PROJECTION_VERSION = 14;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
-export type PromptTemplateVersion = 'gratitude-v1' | typeof TEMPLATE_VERSION | 'gratitude-v3';
+export type PromptTemplateVersion = 'gratitude-v1' | typeof TEMPLATE_VERSION | 'gratitude-v3' | 'gratitude-v4';
 type Envelope<T extends string, P, V extends number = 1> = { eventId: string; type: T; schemaVersion: V; payload: P };
 type ReflectionPayload = { entryId: string; text: string; expectedRevision: number };
 export type Action = Envelope<'ReflectionWritten', ReflectionPayload & { starterId: typeof STARTER_ID }>
@@ -166,7 +166,7 @@ export function parseAction(input: unknown): SourceAction {
           && (!local || (external?validExternalTarget(p):validLocalTarget(p)))
           && (!editor || id(p.entryId) && Number.isSafeInteger(p.entryRevision) && Number(p.entryRevision) >= 0) && previous
           && (!mixed || p.selectorVersion === (modern?(schema>=9?'weighted-v2':'weighted-v1'):(schema>=9?'mixed-v2':SELECTOR_VERSION)) && validSelection(p as unknown as Parameters<typeof validSelection>[0]))
-          && id(p.choicesId) && day && (modern ? p.templateVersion==='gratitude-v3' : ['gratitude-v1', TEMPLATE_VERSION].includes(String(p.templateVersion))) && ['generic', 'personal'].includes(String(p.contextMode))
+          && id(p.choicesId) && day && (modern ? ['gratitude-v3','gratitude-v4'].includes(String(p.templateVersion)) : ['gratitude-v1', TEMPLATE_VERSION].includes(String(p.templateVersion))) && ['generic', 'personal'].includes(String(p.contextMode))
           && (mixed ? !!p.entryRefs && typeof p.entryRefs === 'object' && !Array.isArray(p.entryRefs) && Object.keys(p.entryRefs).length <= 20
             && Object.entries(p.entryRefs).every(([key,value])=>id(key) && typeof value === 'string' && /^[1-9][0-9]{0,14}$/.test(value) && Number.isSafeInteger(Number(value)))
             : Array.isArray(p.entryRefs) && p.entryRefs.length <= 5 && p.entryRefs.every(ref => ref && keys(ref, ['entryId', 'revision']) && id(ref.entryId) && Number.isSafeInteger(ref.revision) && ref.revision > 0))

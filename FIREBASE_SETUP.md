@@ -28,11 +28,11 @@ For local live testing, copy the values from the chosen public configuration int
 
 ## Where to put a Gemini API key
 
-**The current application does not accept or need a supplied Gemini/Google AI Studio key.** Firebase AI Logic manages Gemini authorization using a Google-managed service account. The existing GitHub `GEMINI_API_KEY` secret is unused; adding or replacing that secret will not change the app. [Firebase's key guidance](https://firebase.google.com/docs/ai-logic/faq-and-troubleshooting)
+**Managed Gemini needs no supplied key.** Firebase AI Logic manages its authorization using a Google-managed service account. To use your own Google AI Studio key, choose **Settings → AI settings → AI model → My Gemini API key** and use the private password field; the authenticated relay stores it encrypted. See [AI connection setup](AI_CONNECTIONS_SETUP.md). The existing GitHub `GEMINI_API_KEY` secret is unused; adding or replacing that secret will not change either connection. [Firebase's key guidance](https://firebase.google.com/docs/ai-logic/faq-and-troubleshooting)
 
 | Configuration | Where it belongs |
 | --- | --- |
-| Gemini / Google AI Studio API key | No input in this integration. Do not paste it into chat, the app, Git-tracked files or a `VITE_*` variable. |
+| Personal Gemini / Google AI Studio API key | The private **My Gemini API key** form, with an explicit save through the relay. Keep it out of chat, Git-tracked files and `VITE_*` variables. |
 | Public Firebase web API key | Already in `config/firebase-preview.json` and `config/firebase-production.json`; local development uses `VITE_FIREBASE_API_KEY` in ignored `.env.local`. This is a different credential. |
 | Public App Check site key | Already in those configuration files; local live AI also needs the App Check development setup below. |
 
@@ -187,3 +187,7 @@ By 2026-11-04, both preview and production projects have the tested service-awar
 The client derives its trusted callable from the configured Firebase project and fixed region; local-server URLs cannot receive Firebase authentication. Keys are encrypted in server-only `users/{uid}/privateModelKeys/{id}` documents, with owner/project/revision-bound AES-GCM authentication and a Secret Manager keyring. Owner-readable `privateConnections` metadata contains only provider/model/revision and the explicit personal-data acknowledgement. Client writes cannot impersonate personal cloud records or read ciphertext. The dedicated runtime has Firestore/account-read access and access to its encryption keyring; administrators remain a trust boundary.
 
 New request/choice versions retain opaque bindings, and old schemas remain frozen. Replaced connections and changed source permissions block dispatch/late acceptance. Native Ollama stays browser-to-private-server; the bounded compatibility adapter is text-only. Existing local token records remain valid, and new service-aware credential records permit explicit optional connection sync without pretending native Ollama enforces a placeholder token. See [AI_CONNECTIONS_SETUP.md](AI_CONNECTIONS_SETUP.md) for the supported contracts, private network setup, key onboarding, limits, deletion, rotation and reproducible deployment commands.
+
+### 2026-11-04 — Private questionnaire identity
+
+Both projects have the compatible Rules update accepting `gratitude-v4` on current request carriers, alongside historical `gratitude-v3`. All 45 local Firebase tests pass. New browser requests exclude private name and pronouns from instruction and questionnaire context; selected topic descriptions retain their independent sharing choice. No Functions, credentials or journal records were changed by these Rules-only deployments.

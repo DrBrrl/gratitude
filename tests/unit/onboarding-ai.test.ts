@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import { externalTarget } from '../../src/lib/ai/connection-contract.ts';
 import {replay,parseAction,STARTER_ID,type SourceAction,type JournalEvent,type Projection} from '../../src/lib/domain.ts';
 import {defaultAnswers,answersInput} from '../../src/lib/onboarding.ts';
 import {makeRequest,buildContext,promptOptions,validatePromptOutput,boundContext,SYSTEM_PROMPT} from '../../src/lib/ai/context.ts';
@@ -19,8 +20,8 @@ test('new controls apply to both providers, all scopes and every request purpose
   for(const entryId of [undefined,'draft'])for(const backup of [false,true]){
    const request=makeRequest(state,'2026-10-27','personal','r',entryId,selection,target,backup);
    assert.deepEqual(parseAction(request),request);assert.ok(request.schemaVersion>=13);
-   const options=promptOptions(state,request);assert.ok(options.system.includes(`under ${wordLimit} words`));assert.ok(options.system.includes('for "Sam" (pronouns: "they/them")'));assert.equal(options.max,4000);assert.ok(options.system.includes({narrow:'one specific subject',intermediate:'one or two main subjects',broad:'wider theme'}[scope]));
-   const context=JSON.parse(buildContext(state,request));assert.deepEqual(context.topics,['Music and sounds: listening, playing, singing.']);assert.deepEqual(context.user,{preferredName:'Sam',pronouns:'they/them'});assert.ok(!JSON.stringify(request).includes('Sam'));
+   const options=promptOptions(state,request);assert.ok(options.system.includes(`under ${wordLimit} words`));assert.ok(options.system.includes('for the user'));assert.ok(!options.system.includes('Sam')&&!options.system.includes('they/them'));assert.equal(options.max,4000);assert.ok(options.system.includes({narrow:'one specific subject',intermediate:'one or two main subjects',broad:'wider theme'}[scope]));
+   const context=JSON.parse(buildContext(state,request));assert.deepEqual(context.topics,['Music and sounds: listening, playing, singing.']);assert.equal('user' in context,false);assert.ok(!JSON.stringify(request).includes('Sam'));
   }
  }
  const state=setup();state.onboarding={...state.onboarding,answersId:null,version:0};const old=makeRequest(state,'2026-10-27','personal','legacy',undefined,selection);
@@ -30,9 +31,42 @@ test('sharing and blank identity never infer personal data; generic requests ret
  for(const preferredName of ['', 'Sam'])for(const pronouns of ['', 'they/them'])for(const useAnswers of [false,true])for(const mode of ['generic','personal'] as const){
   const state=setup({preferredName,pronouns,useAnswers,wordLimit:200}),r=makeRequest(state,'2026-10-27',mode,'r',undefined,selection),system=promptOptions(state,r).system;
   const content=buildContext(state,r),shared=mode==='personal'&&useAnswers;
-  assert.equal(system.includes('"Sam"'),shared&&!!preferredName);assert.equal(system.includes('"they/them"'),shared&&!!pronouns);assert.ok(system.includes('under 200 words'));
-  if(mode==='personal'){const context=JSON.parse(content);assert.equal('user'in context,shared);assert.equal('topics'in context,shared);if(shared)assert.deepEqual(context.user,{...(preferredName?{preferredName}:{}),...(pronouns?{pronouns}:{})});}
+  assert.equal(system.includes('"Sam"'),false);assert.equal(system.includes('"they/them"'),false);assert.ok(system.includes('under 200 words'));
+  if(mode==='personal'){const context=JSON.parse(content);assert.equal('user'in context,false);assert.equal('topics'in context,shared);assert.ok(!content.includes('Sam')&&!content.includes('they/them'));}
   else assert.ok(!content.includes('Sam')&&!content.includes('Music')&&!content.includes('Quiet moments'));
+ }
+});
+test('new replacement prompts exclude private identity while historical v3 requests retain their original template',()=>{
+ let state=setup();
+ const request=makeRequest(state,'2026-10-27','personal','first',undefined,selection);
+ assert.equal(request.payload.templateVersion,'gratitude-v4');
+ const legacy=parseAction({...request,payload:{...request.payload,templateVersion:'gratitude-v3'}});
+ assert.ok(legacy.type==='PromptRequested');
+ assert.ok(promptOptions(state,legacy).system.includes('for "Sam" (pronouns: "they/them")'));
+ assert.deepEqual(JSON.parse(buildContext(state,legacy)).user,{preferredName:'Sam',pronouns:'they/them'});
+ state=apply(state,request);
+ state=apply(state,{eventId:'first_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'first',text:'What ordinary sound did you enjoy?',model:'fictional/model',finishReason:'STOP'}});
+ const replacement=makeRequest(state,'2026-10-27','personal','replacement',undefined,selection,undefined,false,'first_response');
+ const context=JSON.parse(buildContext(state,replacement)),system=promptOptions(state,replacement).system;
+ assert.ok(context.differentPromptRequest.startsWith('The user has requested a different prompt.'));
+ assert.ok(!JSON.stringify(context).includes('Sam')&&!JSON.stringify(context).includes('they/them'));
+ assert.ok(!system.includes('Sam')&&!system.includes('they/them'));
+ assert.equal('user' in context,false);
+ assert.throws(()=>parseAction({...request,payload:{...request.payload,templateVersion:'gratitude-v5'}}));
+});
+test('private identity stays out of prompt, editor and backup context for every external service',()=>{
+ for(const provider of ['ollama','openai-compatible','personal-gemini'] as const){
+  let state=setup();
+  state=apply(state,{eventId:'external-choices',type:'AIChoicesConfirmed',schemaVersion:5,payload:{previousEventId:state.ai.control.lastEventId,enabled:true,useJournal:true,useFeedback:true,guidance:'Quiet moments',provider,backupEnabled:true,backupProvider:provider,photoProvider:'prompt',promptConnectionId:'private-connection',backupConnectionId:'private-connection',photoConnectionId:null}});
+  const target=externalTarget({provider,model:'fictional/model',baseUrl:'https://fictional-local.example',token:'',connectionId:'private-connection',connectionRevision:'revision'});
+  for(const entryId of [undefined,'draft'])for(const backup of [false,true]){
+   const request=makeRequest(state,'2026-10-27','personal','external',entryId,selection,target,backup);
+   assert.deepEqual(parseAction(request),request);assert.equal(request.payload.templateVersion,'gratitude-v4');
+   const context=JSON.parse(buildContext(state,request)),system=promptOptions(state,request).system;
+   assert.equal('user' in context,false);assert.deepEqual(context.topics,['Music and sounds: listening, playing, singing.']);
+   assert.ok(!JSON.stringify(context).includes('Sam')&&!JSON.stringify(context).includes('they/them'));
+   assert.ok(!system.includes('Sam')&&!system.includes('they/them'));
+  }
  }
 });
 test('twenty-unit selection uses complete trimmed UTF-16 text and preserves old all-short draws',()=>{
@@ -52,7 +86,7 @@ test('twenty-unit selection uses complete trimmed UTF-16 text and preserves old 
   assert.equal(selectedEntries(selectReflections(unicodeState,{...input,weighted:true})).length,expected);
  }
  const r=makeRequest(state,'2026-10-27','personal','weighted',undefined,selection),json=JSON.parse(buildContext(state,r));
- assert.equal(r.payload.templateVersion,'gratitude-v3');assert.ok(Object.values(json.reflections).flat().length<20);
+ assert.equal(r.payload.templateVersion,'gratitude-v4');assert.ok(Object.values(json.reflections).flat().length<20);
  // A two-unit reflection contributes only the first 1,000 code units, never full unbounded writing.
  state=write(state,'huge','2020-01-01','z'.repeat(2000));const sparse={...state,entries:state.entries.filter(e=>e.id==='huge')};
  const one=JSON.parse(buildContext(sparse,makeRequest(sparse,'2026-10-27','personal','one',undefined,selection)));assert.equal(one.reflections.rediscovery[0].text.length,1000);
