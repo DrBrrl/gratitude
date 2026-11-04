@@ -15,7 +15,7 @@
     ['Choose your AI','You can use your own cloud model, local LLM setup, or the default Gemini model to generate prompts.'],
     ['Keep a picture with the moment','You can add photos and, if you want, ask AI to generate an image description for them. You can edit the description and use it in search later.'],
     ['Come back to a day','Write more than once a day, or retroactively add a reflection for a previous date. Backfilling a missed day fills that gap in your gratitude streak.'],
-    ['See what you’ve noticed','Browse your calendar and colourful journal or search for a specific memory. Export your journal as as Markdown or JSON whenever you like.'],
+    ['See what you’ve noticed','Browse your calendar and colourful journal or search for a specific memory. Export your journal as Markdown or JSON whenever you like.'],
     ['Share a little encouragement','Find friends and send a hug to remind them to practice gratitude! Your journal entries stay private.']
   ];
   function move(next:number){step=next;window.scrollTo(0,0);}
