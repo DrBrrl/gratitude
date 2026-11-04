@@ -1594,3 +1594,10 @@ Also i think i was wrong about getting the user's name and pronouns in the AI pr
 ```text
 Copy should be updated to: "Your name and pronouns (up to 80 chatacters) are used privately in your journal. Both fields are optional."
 ```
+
+
+## 2026-11-04 — GitHub rebase-and-merge error
+
+```text
+Tried to perform a rebase and merge and got "The server is currently unable to perform this operation. Please try again later."
+```
