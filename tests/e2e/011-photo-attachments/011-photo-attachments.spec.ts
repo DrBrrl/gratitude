@@ -39,6 +39,9 @@ test('attach private photos, correct searchable AI descriptions and retain them 
   await steps.action('pick', 'Select a photo and inspect the AI disclosure', () => page.getByLabel('Add photo', { exact: true }).setInputFiles('tests/fixtures/yellow-mug.png'), async () => {
     await expect(page.getByRole('img', { name: 'Attachment preview' })).toBeVisible({ timeout: 15_000 });
     await expect(page.getByRole('button', { name: 'Attach & summarize', exact: true })).toBeEnabled();
+    const summarize=await page.getByRole('button',{name:'Attach & summarize',exact:true}).boundingBox(),without=await page.getByRole('button',{name:'Attach without AI',exact:true}).boundingBox(),cancel=await page.getByRole('button',{name:'Cancel photo',exact:true}).boundingBox();
+    expect(summarize).not.toBeNull();expect(without).not.toBeNull();expect(cancel).not.toBeNull();
+    expect(summarize!.height).toBe(without!.height);expect(summarize!.height).toBe(cancel!.height);expect(without!.y-summarize!.y-summarize!.height).toBeGreaterThanOrEqual(8);
     await expect(page.getByRole('button', { name: 'Save reflection', exact: true })).toBeDisabled();
   });
   await steps.action('reload-selection', 'Recover the selected photo after reloading the unsaved draft', () => page.reload(), async () => { await expectSynced(page); });

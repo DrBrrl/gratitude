@@ -1570,3 +1570,27 @@ In reply to where the personal-key relay should run:
 ```text
 Use the existing Firebase projects
 ```
+
+## 2026-11-04 — Refine onboarding interests, continuation and review copy
+
+```text
+Amaaaaaaaaaaaaze! :) I have been through the questionnaire and have a few things to change. On the Your interests page, let's add a paragraph below the one ending in "whenever you like" that says: "When you choose to share your topics of interest with the AI, the descriptions of your selected topics are sent through to be used in the creation of gratitude prompts. You can edit these descriptions to better represent your interests using the edit button or leave them as they are. If you'd like to add any topics that aren't represented below, there is an input for this below the table!" Then, from the Your AI page onwards, the button at the bottom says "Continue/set up later". I'd prefer for this button to be Continue when the information on the page is all filled in, and Set up Later when the information isn't all filled in. Finally, on the Ready to reflect? page, let's get the topic titles rather than the descriptions in that list, and have them displayed "xxx, xxx, xxx, xxx". The prompt scope selection should be capitalised (Intermediate instead of intermediate). I think that's everything!
+```
+
+## 2026-11-04 — Today prompt actions and photo attachment spacing
+
+```text
+Also, on the today page, let's make "Find me a prompt" be "Generate a prompt", and put "Choose a backup prompt" below "Generate a prompt". And when one adds a photo to a reflection, the "Attach & summarise" button should have a bit less vertical padding (matching the "Attach without AI" and "Cancel photo" buttons), with a little bit of space between the top button and the bottom two - right now they are stuck together
+```
+
+## 2026-11-04 — Keep private identity out of AI context
+
+```text
+Also i think i was wrong about getting the user's name and pronouns in the AI prompt. Let's remove them from the json and the AI prompt.
+```
+
+## 2026-11-04 — Private name and pronouns copy
+
+```text
+Copy should be updated to: "Your name and pronouns (up to 80 chatacters) are used privately in your journal. Both fields are optional."
+```
