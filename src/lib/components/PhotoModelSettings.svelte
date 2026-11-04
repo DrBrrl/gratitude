@@ -2,10 +2,20 @@
   import type {AIProvider} from '../ai/connection-contract';
   import type {FirebaseClient} from '../firebase/client';
   import ModelSettings from './ModelSettings.svelte';
-  import {readProviderConnection,defaultConnection,type ModelConnection} from '../ai/lm-studio';
+  import {readProviderConnection,defaultConnection,validateConnection,type ModelConnection} from '../ai/lm-studio';
   import type {CredentialStatus} from '../firebase/model-credential';
-  let {cloudConnections=null,client=null,provider='prompt',connection,scope,credentialStatus,disabled=false,initialError='',onsave,onsavetoken,onforgettoken}:{cloudConnections?:Record<string,ModelConnection>|null;client?:FirebaseClient|null;provider?:'prompt'|AIProvider;connection:ModelConnection;scope:string;credentialStatus:CredentialStatus;disabled?:boolean;initialError?:string;onsave:(provider:'prompt'|AIProvider,connection?:ModelConnection)=>Promise<void>;onsavetoken:(connection:ModelConnection)=>Promise<void>;onforgettoken:()=>Promise<void>}=$props();
+  let {cloudConnections=null,client=null,provider='prompt',connection,scope,credentialStatus,disabled=false,initialError='',onsave,onsavetoken,onforgettoken,oncomplete}:{cloudConnections?:Record<string,ModelConnection>|null;client?:FirebaseClient|null;provider?:'prompt'|AIProvider;connection:ModelConnection;scope:string;credentialStatus:CredentialStatus;disabled?:boolean;initialError?:string;onsave:(provider:'prompt'|AIProvider,connection?:ModelConnection)=>Promise<void>;onsavetoken:(connection:ModelConnection)=>Promise<void>;onforgettoken:()=>Promise<void>;oncomplete?:(complete:boolean)=>void}=$props();
   let open=$state(false),choice=$state<'prompt'|AIProvider>('prompt'),busy=$state(false),message=$state('');
+  let detailComplete=$state(false);
+  $effect(()=>{
+    if(!oncomplete)return;
+    let complete=choice==='prompt'||choice==='gemini';
+    if(!complete){
+      if(open)complete=detailComplete;
+      else try{const selected=validateConnection(forChoice());complete=!!selected.connectionId&&!!selected.connectionRevision;}catch{/* Separate photo connection is incomplete. */}
+    }
+    oncomplete(complete&&!busy);
+  });
   const id=$props.id();
   $effect(()=>{choice=provider;});
   function forChoice():ModelConnection{if(choice==='prompt')return connection;if(choice===connection.provider)return connection;try{return readProviderConnection(scope,choice);}catch{return {...defaultConnection(),provider:choice,token:'',model:choice==='lm-studio'?defaultConnection().model:'',baseUrl:choice==='ollama'?'http://127.0.0.1:11434':choice==='personal-gemini'?'':defaultConnection().baseUrl};}}
@@ -22,7 +32,7 @@
       <option value="lm-studio">Separate LM Studio connection</option><option value="ollama">Separate Ollama connection</option><option value="openai-compatible">Separate compatible local server</option><option value="personal-gemini">Separate personal Gemini key</option>
     </select>
     {#if choice!=='prompt'&&choice!=='gemini'}
-      <ModelSettings {client} {cloudConnections} purpose="photos" heading="Photo model" regionLabel="Photo model connection" saveMessage="Photo model choice saved to your account; connection settings saved on this device." connection={forChoice()} {scope} {credentialStatus} {onsavetoken} {onforgettoken} {initialError} connectionOnly disabled={disabled||busy} onchange={async saved=>{await onsave(saved.provider,saved);}} />
+      <ModelSettings {client} {cloudConnections} purpose="photos" heading="Photo model" regionLabel="Photo model connection" saveMessage="Photo model choice saved to your account; connection settings saved on this device." connection={forChoice()} {scope} {credentialStatus} {onsavetoken} {onforgettoken} {initialError} connectionOnly disabled={disabled||busy} oncomplete={complete=>detailComplete=complete} onchange={async saved=>{await onsave(saved.provider,saved);}} />
     {:else}
       <p class="hint">{choice==='prompt'?'Photo summaries will use the same server, model and credentials as prompts. Choose a vision-capable model to describe photos.':'Photo summaries will use this site’s managed Gemini connection, independently of prompts.'} Only the selected photo is sent when you request a summary.</p>
       <button class="outline" onclick={save} disabled={disabled||busy}>Save photo model</button>

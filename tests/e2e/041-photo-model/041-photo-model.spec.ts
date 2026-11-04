@@ -67,7 +67,7 @@ test('prompts and photos use independent computers and models, with an explicit 
   });
  }finally{await context.close();steps.setPage(page);}
  await steps.action('today','Open Today',()=>page.getByRole('navigation').getByRole('button',{name:'Today',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Reflection time',exact:true})).toBeVisible();});
- await steps.action('generate','Generate a prompt on the writing computer',()=>page.getByRole('button',{name:'Find me a prompt',exact:true}).click(),async()=>{await expect(page.locator('.daily-prompt h2')).toHaveText(QUESTION);expect(prompts).toBe(1);expect(photos+sharedPhotos+cloud).toBe(0);});
+ await steps.action('generate','Generate a prompt on the writing computer',()=>page.getByRole('button',{name:'Generate a prompt',exact:true}).click(),async()=>{await expect(page.locator('.daily-prompt h2')).toHaveText(QUESTION);expect(prompts).toBe(1);expect(photos+sharedPhotos+cloud).toBe(0);});
  await openEditor(page,steps,'editor');
  await steps.action('draft','Keep the draft out of image requests',()=>editor(page).fill('PRIVATE_DRAFT: A small moment worth remembering.'),async()=>{await expect(page.getByText('Draft saved on this device',{exact:true})).toBeVisible();});
  await steps.action('photo','Choose a fictional image',()=>page.getByLabel('Add photo',{exact:true}).setInputFiles('tests/fixtures/yellow-mug.png'),async()=>{await expect(page.getByText(`If you choose to summarize this photo, it goes directly to your LM Studio server at ${PHOTO_SERVER}.`,{exact:false})).toBeVisible();});

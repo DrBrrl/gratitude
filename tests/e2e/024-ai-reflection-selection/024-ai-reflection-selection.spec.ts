@@ -23,7 +23,7 @@ test('personalised generation mixes twenty logical-date reflections and replays 
   await steps.action('feedback-consent','Choose to share explicit prompt feedback',()=>page.getByRole('switch',{name:'Use prompt feedback'}).click(),async()=>{await expect(page.getByRole('switch',{name:'Use prompt feedback'})).toHaveAttribute('aria-checked','true');});
   await saveChoices(page,steps,'save-choices');
   await navigate(page,steps,'today','Today');
-  await steps.action('generate','Generate using twenty saved reflections selected by logical date',()=>page.getByRole('button',{name:'Find me a prompt',exact:true}).click(),async()=>{
+  await steps.action('generate','Generate using twenty saved reflections selected by logical date',()=>page.getByRole('button',{name:'Generate a prompt',exact:true}).click(),async()=>{
     // This commits a request with twenty source references, then its received result.
     await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT,{timeout:30_000});expect(contexts).toHaveLength(1);
     const c=contexts[0];expect(Object.values(c.reflections).map(g=>g.length)).toEqual([8,7,0,5]);

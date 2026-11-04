@@ -7,6 +7,7 @@ const expect=baseExpect.configure({timeout:15000});
 test('an existing populated journal resumes setup, can skip offline, and keeps its unconfirmed private draft',async({page,context},info)=>{
  test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(360000);
  const steps=new TestStepHelper(page,info,{paintStaticPage:true});await page.clock.setFixedTime(new Date(FIXTURE_TIME));
+ await context.route(/https:\/\/(unpkg\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//,route=>route.abort());
  await page.request.delete('http://127.0.0.1:19099/emulator/v1/projects/demo-gratitude/accounts');
  await steps.action('open','Open Journal before sign-in',()=>page.goto('./journal/'),async()=>{await expect(page.getByRole('link',{name:'Sign in',exact:true})).toBeVisible();});
  await signIn(page,info,steps,'existing-setup',false,'Today',false,undefined,'',false);

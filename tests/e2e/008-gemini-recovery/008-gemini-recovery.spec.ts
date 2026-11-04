@@ -11,7 +11,7 @@ test('interrupted inference, provider failure, response outbox and consent revoc
   await startJournal(page, info, steps, 'gemini-recovery');
   await aiSettings(page, steps, 'configure'); await toggleAI(page, steps, 'enable', true); await saveChoices(page, steps, 'save-choices');
   await navigate(page, steps, 'today', 'Today');
-  await steps.action('request', 'Request a prompt and wait for the provider', () => page.getByRole('button', { name: 'Find me a prompt', exact: true }).click(), async () => {
+  await steps.action('request', 'Request a prompt and wait for the provider', () => page.getByRole('button', { name: 'Generate a prompt', exact: true }).click(), async () => {
     await expect.poll(() => calls, { timeout: 15_000 }).toBe(1); await expect(page.getByRole('button', { name: 'Finding a prompt…' })).toBeDisabled();
   });
   await steps.action('interrupt', 'Reload while inference is unfinished', () => page.reload(), async () => {
@@ -24,7 +24,7 @@ test('interrupted inference, provider failure, response outbox and consent revoc
     await expect(page.getByText('No new prompt arrived. You can try again or use the starter prompt.')).toBeVisible({ timeout: 15_000 }); expect(calls).toBe(2);
   });
   await steps.action('fallback', 'Choose the bundled starter after the failure', () => page.getByRole('button', { name: 'Use starter prompt' }).click(), async () => {
-    await expect(page.locator('.badge')).toHaveText('Starter prompt'); await expect(page.getByRole('button', { name: 'Find me a prompt', exact: true })).toBeEnabled({ timeout: 15_000 }); expect(calls).toBe(2);
+    await expect(page.locator('.badge')).toHaveText('Starter prompt'); await expect(page.getByRole('button', { name: 'Generate a prompt', exact: true })).toBeEnabled({ timeout: 15_000 }); expect(calls).toBe(2);
   });
   await page.unroute(AI_ENDPOINT);
   await page.route(AI_ENDPOINT, async route => {
@@ -33,7 +33,7 @@ test('interrupted inference, provider failure, response outbox and consent revoc
     await context.setOffline(true);
     await respond(route);
   });
-  await steps.action('received-offline', 'Receive a prompt just as the connection drops', () => page.getByRole('button', { name: 'Find me a prompt', exact: true }).click(), async () => {
+  await steps.action('received-offline', 'Receive a prompt just as the connection drops', () => page.getByRole('button', { name: 'Generate a prompt', exact: true }).click(), async () => {
     await expect(page.getByRole('button', { name: 'Sync received prompt' })).toBeEnabled({ timeout: 15_000 }); expect(calls).toBe(3);
     await expect(page.locator('.daily-prompt h2')).not.toHaveText(FIRST_PROMPT);
   }, 'The received response is durable on this device and is not displayed as a saved prompt yet');

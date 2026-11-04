@@ -172,7 +172,7 @@ Edit prompt and Generate AI prompt share an equal-width, full-card row with a 12
 
 ## Card-coloured controls and welcome copy
 
-Prompt actions, View entry and the full-entry Edit reflection action inherit their coloured card’s border hue and soft inner/outer glow. Add photo and Find me a prompt use a mostly transparent light-grey fill. The landing page welcomes visitors with “Let us find joy in the small things” and “A space to practice being thankful every day”. The introduction uses the available content width and wraps naturally on narrow screens; the pace/streak tagline is removed.
+Prompt actions, View entry and the full-entry Edit reflection action inherit their coloured card’s border hue and soft inner/outer glow. Add photo and Generate a prompt use a mostly transparent light-grey fill. Today places Choose a backup prompt below Generate a prompt. Photo selection uses the same compact button height for Attach & summarize, Attach without AI and Cancel photo, with an 8px gap between the first button and the lower row. The landing page welcomes visitors with “Let us find joy in the small things” and “A space to practice being thankful every day”. The introduction uses the available content width and wraps naturally on narrow screens; the pace/streak tagline is removed.
 
 
 ## Week boxes, scrolling calendar and gentle streaks

@@ -3,16 +3,16 @@
   import { base } from '$app/paths';
   import type { FirebaseClient } from '$lib/firebase/client';
   import { FriendsRepository, saveFriendProfile, appendFriendAction, type DiscoveredProfile, type FriendsView } from '$lib/friends/repository';
-  import { canHug, huggedToday, emptyProfile, usernameKey, type PairType, type PairProjection } from '$lib/friends/domain';
+  import { canHug, huggedToday, emptyProfile, usernameKey, validateProfile, type PairType, type PairProjection } from '$lib/friends/domain';
   import Icon from './Icon.svelte';
   import HugNotifications from './HugNotifications.svelte';
   import type {PushController,PushState} from '../push/controller';
   import type { JournalView } from '../firebase/repository';
   import { saveGratitudeSharing, publishGratitude } from '../friends/sharing';
-  import { gratitudeDays, streakSummary, communityStreak, emptySharing } from '../friends/streaks';
+  import { gratitudeDays, streakSummary, communityStreak, emptySharing, validTimeZone } from '../friends/streaks';
   import { dayInZone } from '../civil-date';
 
-  let { client, uid, journal, pushController, pushState, profileOnly=false }: { profileOnly?:boolean; client: FirebaseClient; uid: string; journal: JournalView; pushController:PushController|null;pushState:PushState } = $props();
+  let { client, uid, journal, pushController, pushState, profileOnly=false, oncomplete }: { profileOnly?:boolean; oncomplete?:(complete:boolean)=>void; client: FirebaseClient; uid: string; journal: JournalView; pushController:PushController|null;pushState:PushState } = $props();
   let repository: FriendsRepository | null = null;
   let view = $state.raw<FriendsView>({ sharing: emptySharing(''), gratitude: {}, streaksLoading: false, profile: emptyProfile(''), pairs: {}, peers: {}, ready: false, synced: false, error: '' });
   const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -28,6 +28,12 @@
   let now = $state(Date.now());
   const utcOffset = $derived(-new Date(now).getTimezoneOffset());
   const disabled = $derived(busy || !view.synced);
+  $effect(()=>{
+    if(!oncomplete)return;
+    let complete=false;
+    try{validateProfile({username,displayName,discoverable});complete=!shareStreaks||validTimeZone(sharingZone);}catch{/* Optional profile fields are incomplete. */}
+    oncomplete(complete&&view.ready&&!busy&&!error);
+  });
   function peer(pair: PairProjection) { return pair.members.find(id => id !== uid)!; }
   function name(id: string) { return view.peers[id]?.displayName || 'Friend'; }
   function handle(id: string) { return view.peers[id]?.username ? `@${view.peers[id].username}` : 'Profile unavailable'; }

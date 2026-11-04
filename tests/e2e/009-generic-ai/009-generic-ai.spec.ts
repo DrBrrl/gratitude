@@ -17,7 +17,7 @@ test('generic configuration never shares personal journal context', async ({ pag
   await toggleAI(page, steps, 'enable', true); await saveChoices(page, steps, 'save-choices');
   expect(requests).toHaveLength(0);
   await navigate(page, steps, 'today', 'Today');
-  await steps.action('generate', 'Request a prompt without personal context', () => page.getByRole('button', { name: 'Find me a prompt', exact: true }).click(), async () => {
+  await steps.action('generate', 'Request a prompt without personal context', () => page.getByRole('button', { name: 'Generate a prompt', exact: true }).click(), async () => {
     await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT, { timeout: 15_000 }); expect(requests).toHaveLength(1);
     const request = JSON.parse(requests[0]);
     expect(request.contents).toEqual([{ role: 'user', parts: [{ text: 'Offer a fresh question about an ordinary everyday moment. No personal context is supplied.' }] }]);

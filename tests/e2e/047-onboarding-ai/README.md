@@ -2,7 +2,7 @@
 
 # Questionnaire-informed AI prompts
 
-Explicit private-answer and journal consent reaches Gemini and LM Studio under the same Broad/200-word instruction. Long reflections use two of twenty context units; long received questions survive editing, draft recovery and saving. Token credentials never enter the event stream. Every action has a full-page zero-pixel screenshot and checks underneath.
+Only explicitly shared topic descriptions and journal context reach Gemini and LM Studio under the same Broad/200-word instruction; private name and pronouns stay out of both instruction and JSON while continuing to personalise the app. Long reflections use two of twenty context units; long received questions survive editing, draft recovery and saving. Token credentials never enter the event stream. Every action has a full-page zero-pixel screenshot and checks underneath.
 
 Viewport: mobile-chromium.
 

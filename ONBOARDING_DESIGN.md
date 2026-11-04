@@ -4,10 +4,11 @@ Implemented onboarding specification, developed from Jamie’s “Onboarding + p
 
 ## Implementation notes
 
+- Your interests explains how selected descriptions inform AI prompts and where to edit or add topics. The review shows selected catalogue/custom topic titles as comma-separated text and the capitalised scope label; descriptions remain the AI context. AI/Friends continuation reads **Continue** when the displayed connection/profile fields are valid and **Set up Later** while incomplete. This label does not save forms, enable AI or make requests; separate save controls still apply.
 - The optional eight-step flow interrupts new/existing accounts once per version, resumes local drafts, supports offline skip with a durable outbox and restores the intended destination. AI/Friends steps reuse the real separately saved forms. Account colour is previewed until confirmation; skipping retains the saved accent. No onboarding tab is added.
 - Private answers and permission are committed together in `OnboardingAnswersConfirmed` schema 1, or reset atomically with `OnboardingAnswersCleared`. `OnboardingFinished` schema 1 records the literal completed/skipped choice. The source uses literal description/label maps, explicit custom-row order and selection to fit Firestore’s Rules expression budget. Permission lives with answers instead of adding an AI-choices version.
 - Questionnaire character counters use Unicode code points, matching server validation. Built-ins are 1–149 and custom descriptions 1–150; identity is optional up to 80, labels up to 60 and custom rows up to twenty. Legacy question/text limits remain UTF-16. With no private name the existing **Reflection time** heading is retained; named headings use **Reflection time, Sam!**, **Sam’s Journal** and **Account · Sam**.
-- Projection version 14 caches the current answers, rollout outcome and computed request context costs; full replay reconstructs them. New request schemas 13–22 mirror legacy purposes 3–12 while adding an answers revision, `gratitude-v3` template and `weighted-v1`/`weighted-v2` selector. Old versions retain their original contracts. No inference runs during replay or setup.
+- Projection version 14 caches the current answers, rollout outcome and computed request context costs; full replay reconstructs them. New request schemas 13–22 mirror legacy purposes 3–12 while adding an answers revision, the `gratitude-v4` template for new requests and `weighted-v1`/`weighted-v2` selector. Old versions retain their original contracts. No inference runs during replay or setup.
 - Response schema 2, manual reflection schema 7, backup import schema 2 and alternate-format import confirmation schema 2 carry questions up to 4,000 UTF-16 code units. Short existing imports keep their original schema and identity. Prompt adapters use sufficient output budgets; explicit requests validate the selected under-N-word limit and bound complete context to 160,000 code units including instruction. LM Studio additionally checks a conservative UTF-8 byte upper bound plus output allowance against a known loaded context; unknown capacity still depends on the server accepting the request.
 - Settings exposes confirmed answers, descriptions and controls, separate sharing permission, edit and clear. JSON exports include confirmed answers; Markdown retains the journal-only format. Clear removes current use, not historical plaintext.
 - Supported runtime connections now include managed Gemini, LM Studio, native Ollama, a bounded compatible-server contract and personal Gemini keys through an authenticated encrypted relay. See [connection setup](AI_CONNECTIONS_SETUP.md). The welcome’s own-cloud/local/default choices now have working forms; named general-purpose profiles and other cloud vendors remain proposals. AI and Friends can be set up later, and continuing never implicitly enables sharing or generation.
@@ -79,9 +80,9 @@ Placeholder: **(First name)**
 
 Placeholder: **e.g. she/they**
 
-Your name and pronouns are used privately in your journal, and are optionally sent to the AI for use in prompt generation.
+Your name and pronouns (up to 80 chatacters) are used privately in your journal. Both fields are optional.
 
-Both fields are optional, proposed limit 80 UTF-16 code units each, with visible limits and a clear action. Do not infer either from Google, a public profile, a photo or journal entries. Saved private identity personalises the interface independently of whether the user permits sending it to AI:
+Both fields are optional, proposed limit 80 UTF-16 code units each, with visible limits and a clear action. Do not infer either from Google, a public profile, a photo or journal entries. Saved private identity personalises the interface and is excluded from AI instructions and questionnaire context:
 
 | Screen | With preferred name Sam | Without a preferred name |
 | --- | --- | --- |
@@ -91,7 +92,7 @@ Both fields are optional, proposed limit 80 UTF-16 code units each, with visible
 
 Keep existing heading styles and sizes. Render names as text, escaping markup; preserve the user’s chosen spelling. Do not display pronouns in these headings or invent them when absent. Clearing a name restores the fallback labels. A pronouns-only answer does not create a name.
 
-Private identity is separate from the public Friends display name and unique username. Saving it neither creates a public profile nor grants AI permission. The review screen previews the nonblank fields to be shared and asks explicitly whether to use questionnaire answers.
+Private identity is separate from the public Friends display name and unique username. Saving it neither creates a public profile nor grants AI permission. The review screen shows private identity alongside selected topic titles, and asks explicitly whether to share the selected topic descriptions.
 
 ### Favourite colour
 
@@ -134,7 +135,7 @@ The pencil opens that row’s description editor with Save/Cancel and a counter.
 
 The bottom Other row accepts a user-chosen label and a description of 1–150 code units. Once a complete custom topic is added, retain it as its own selectable/editable row and append another blank Other row so more can be added. Blank placeholders are never saved or sent. Proposed implementation bounds for review: custom labels up to 60 code units and up to twenty custom topics; explain the limit when reached. Custom rows also support removal. Repeated labels do not merge distinct rows; immutable user-created IDs distinguish them internally.
 
-No topics are preselected for a new questionnaire. Continue works with any number, including none; three remains a recommendation. Persist explicit selected IDs, user-edited descriptions and custom labels/descriptions against a versioned built-in catalogue. Show current descriptions on review and in AI settings. Send **only selected descriptions**, never their labels or internal IDs, under `topics` in AI JSON when answers sharing is allowed. Treat edited/custom descriptions as untrusted data. Existing freeform guidance remains available with its current 500-character limit.
+No topics are preselected for a new questionnaire. Continue works with any number, including none; three remains a recommendation. Persist explicit selected IDs, user-edited descriptions and custom labels/descriptions against a versioned built-in catalogue. Show selected topic titles as comma-separated text on review, and current descriptions in the topic table and AI settings. Send **only selected descriptions**, never their labels or internal IDs, under `topics` in AI JSON when answers sharing is allowed. Treat edited/custom descriptions as untrusted data. Existing freeform guidance remains available with its current 500-character limit.
 
 ### Prompt scope
 
@@ -178,9 +179,7 @@ Write exactly one short gratitude prompt for the user to write a reflection (und
 
 Intermediate/Broad replaces just the two scope sentences with its clause. Preserve the other existing instruction text. Do not add topic text, journal writing or feedback to the system instruction.
 
-When the user explicitly shares private identity with the selected AI, substitute the shared name for fixed-template references to “the user”, including “for the user”, “claims about the user” and “personalise the prompt to the user”. Include shared pronouns with that name. For example, the first sentence becomes `Write exactly one short gratitude prompt for "Sam" (pronouns: "they/them") to write a reflection (under 80 words).` Other references become `claims about "Sam"` and `personalise the prompt to "Sam"`. Use any shared pronouns in authored references; do not infer gender or mechanically conjugate arbitrary free-text pronoun strings.
-
-Encode identity values as quoted literal data, preserving the fixed task and instruction/data boundary. Substitution is limited to authored template slots, including the authored “another prompt” request sentence; never search-and-replace journal excerpts, feedback or received prompts. Name-only omits pronouns; pronouns-only retains “the user” with its explicit pronoun annotation; no shared identity retains the generic instruction. Identity is also present in the permitted JSON below. This supersedes the initial proposal’s blanket ban on identity in the instruction; it does not grant permission to infer or expose identity when sharing is off.
+New requests use `gratitude-v4`: every authored reference remains “the user”, including the replacement-prompt request sentence. Private name and pronouns never enter the new instruction or questionnaire JSON, even when topic sharing is on. Earlier template versions remain reproducible for historical inspection; received prompts retain their exact text and replay never repeats inference.
 
 Example personal context, using fictional data and all relevant sources enabled:
 
@@ -188,7 +187,6 @@ Example personal context, using fictional data and all relevant sources enabled:
 {
   "referenceDate": "2026-10-27",
   "timeZone": "Australia/Hobart",
-  "user": { "preferredName": "Sam", "pronouns": "they/them" },
   "topics": ["Landscapes, geographical features, weather, plants, being outside.", "Neighbours, groups, generosity, small kindnesses.", "Music and sounds: listening, playing, singing."],
   "preferences": "Everyday moments; fewer questions about work",
   "reflections": {
@@ -228,9 +226,9 @@ Test 599/600/601, entries above 1,200, whitespace and UTF-16 boundaries; each ca
 
 ### Sharing and editing
 
-- Add **Use my questionnaire answers** as a separate, initially unchecked personal-context choice. It governs preferred name, pronouns and selected topic descriptions, including edited and custom descriptions. Show those answers in **What informs your prompts**, with **Edit my answers** and **Clear answers**. The preview identifies the selected provider that will receive them.
+- Add **Use my questionnaire answers** as a separate, initially unchecked personal-context choice. It governs selected topic descriptions, including edited and custom descriptions. Private identity stays in the journal. Show the selected descriptions in **What informs your prompts**, with **Edit my answers** and **Clear answers**. The preview identifies the selected provider that will receive them.
 - AI enabled, journal sharing, feedback sharing, backup refilling and Friends sharing retain their independent controls. Completing onboarding does not switch any on. Preserve returning users’ explicit choices; the new answers-sharing permission starts off.
-- With answers sharing off, omit `user` and `topics` entirely. With individual identity fields blank, omit them rather than supplying inferred values. Account email, Google identity, public display name, username, favourite colour and credentials never enter this JSON.
+- With answers sharing off, omit `topics` entirely. New prompt JSON always omits `user`, preferred name and pronouns. Account email, Google identity, public display name, username, favourite colour and credentials never enter this JSON.
 - Scope and word limit are explicit generation controls. Propose honoring them even without personal context. Generic mode would therefore accept these two bounded formatting controls, while still excluding names, pronouns, topics, guidance, reflections and feedback. This is a documented change to today’s fixed generic instruction, requiring updated disclosure and tests; do not send the example personal JSON in generic mode.
 - AI settings can edit prompt controls and private answers after onboarding; favourite colour stays editable in Account and public identity in Friends. Saving answers does not generate a question. An explicit request uses the latest confirmed choices.
 - Clearing answers resets private identity, selections, description edits, custom topics and prompt controls to empty/80/Narrow and disables answers sharing. It leaves journal entries, feedback, separate freeform guidance, account colour and public Friends profile intact. An append-only clear removes current use, not plaintext from historical source events; historical erasure remains the separate planned feature.
@@ -264,7 +262,7 @@ The current Gemini/LM Studio adapters accept at most **600 characters**, and LM 
 - Propose a new **4,000 UTF-16 code-unit** question bound for new schema versions, with deliberate provider token budgets sufficient for the 200-word option. This is a storage/output bound, not a promise that every model respects the requested length. Test both providers with long fictional results rather than treating tokens, characters and words as equivalent.
 - Update response validation, Rules, manual/imported/backup question carriers where needed, draft recovery, prompt editing, search, export/import and feedback pairs to accept and preserve the new questions. Legacy schema bounds remain unchanged; longer questions cannot be smuggled into old events. Audit photo-summary paths separately; their existing bound is unrelated.
 - Specify one testable UI definition of a word: nonempty whitespace-separated tokens after trimming. Reject blank, truncated, over-character-limit or over-word-limit final answers with a useful error and an explicit retry option. Do not silently shorten a model answer or automatically bill for repeated corrective requests. Preserve accepted text exactly in its response event.
-- Recalculate context budgets: twenty feedback pairs with 4,000-character questions and 500-character feedback can contribute up to 90,000 characters before the weighted reflection excerpts (at most 12,000 code units), selected topic descriptions (at most 5,533 under the proposed row limits), identity, other fields, escaping and JSON overhead. The current 22,500-character preferences/feedback estimate would no longer hold. Bound the complete request, check provider capacity and report an unsupported context honestly; do not silently drop consented context or slice serialized JSON into invalid data.
+- Recalculate context budgets: twenty feedback pairs with 4,000-character questions and 500-character feedback can contribute up to 90,000 characters before the weighted reflection excerpts (at most 12,000 code units), selected topic descriptions (at most 5,533 under the proposed row limits), other fields, escaping and JSON overhead. The current 22,500-character preferences/feedback estimate would no longer hold. Bound the complete request, check provider capacity and report an unsupported context honestly; do not silently drop consented context or slice serialized JSON into invalid data.
 
 ## Delivery slices for a later implementation PR
 
@@ -272,7 +270,7 @@ The current Gemini/LM Studio adapters accept at most **600 characters**, and LM 
 | --- | --- | --- |
 | 1. Stored answers and inspection | Optional private answers, editable descriptions/custom topics, personalised headings and clear/edit in AI settings. | Validators/Rules, exact copy, description boundaries, owner isolation, conflicts, full/cached replay and second-device restoration; AI permission does not govern private UI labels. |
 | 2. Welcome and questionnaire | Interrupt new and existing users once per onboarding version; reviewed copy, topic table, AI setup and Friends profile steps. | Existing empty/populated accounts, skip/resume, Back/cancel, reload, saved settings preserved, separate profile/credential saves, accessibility, 320px/200% reflow and return destination. |
-| 3. Prompt controls and permission | Three scopes, identity-aware instruction and descriptions-only topics for both providers, including generic formatting. | Exact outgoing instruction/JSON for every sharing and partial-identity combination, longer output bounds, legacy responses, stale consent/answer rejection and photo isolation. |
+| 3. Prompt controls and permission | Three scopes, anonymous instruction and descriptions-only topics for both providers, including generic formatting. | Exact outgoing instruction/JSON for every sharing and partial-identity combination, longer output bounds, legacy responses, stale consent/answer rejection and photo isolation. |
 | 4. Weighted reflection context | Twenty units with costs one/two at the 600/601 boundary and category budgets 8/7/5. | Category/fallback examples above, seeded ordering and replacement freshness, revision/Rules compatibility, actual excerpt limits and cloud/local/daily/editor parity. |
 | 5. Reserve and portability | Refill follows the same confirmed preferences/weighted selection; JSON preserves explicit answers and longer questions. | Existing reserve unchanged, fresh refill uses new settings, offline recovery, long-question import/export, immutable feedback pairs and no private answers/system appendix in Markdown journal export. |
 

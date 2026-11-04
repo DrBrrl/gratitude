@@ -50,7 +50,7 @@ test('LM Studio prompts and photos use explicit local credentials and replay wit
  await steps.action('share','Allow chosen saved reflections to inform local prompts',()=>page.getByRole('switch',{name:'Use journal entries',exact:true}).click(),async()=>{await expect(page.getByRole('switch',{name:'Use journal entries',exact:true})).toHaveAttribute('aria-checked','true');});
  await saveChoices(page,steps,'save-sharing');
  await navigate(page,steps,'today','Today');
- await steps.action('generate','Generate a gratitude prompt directly through LM Studio',()=>page.getByRole('button',{name:'Find me a prompt',exact:true}).click(),async()=>{
+ await steps.action('generate','Generate a gratitude prompt directly through LM Studio',()=>page.getByRole('button',{name:'Generate a prompt',exact:true}).click(),async()=>{
    await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST);expect(submissions).toHaveLength(1);expect(cloud).toBe(0);
    const context=JSON.parse(submissions[0].messages[1].content);expect(context.referenceDate).toBe('2026-10-01');expect(Object.values(context.reflections).flat()).toHaveLength(2);
  },'The local model receives the approved JSON and exact instruction with thinking disabled; Gemini is not called');

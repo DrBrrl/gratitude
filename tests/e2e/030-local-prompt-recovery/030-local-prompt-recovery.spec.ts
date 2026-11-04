@@ -26,7 +26,7 @@ test('local API validation failures are visible beside the request control and r
  await steps.action('token','Enter a fictional tab-only credential',()=>page.getByLabel('LM Studio API token').fill('fictional-recovery-token'),async()=>{await expect(page.getByLabel('LM Studio API token')).toHaveValue('fictional-recovery-token');});
  await steps.action('save-model','Save the local connection and provider choice',()=>page.getByRole('button',{name:'Save model settings',exact:true}).click(),async()=>{await expect(page.getByText('Provider saved to your account; connection settings saved on this device.',{exact:true})).toBeVisible();});
  await toggleAI(page,steps,'enable',true);await saveChoices(page,steps,'choices');await navigate(page,steps,'today','Today');
- await steps.action('rejected','Show a rejected request next to its retry button',()=>page.getByRole('button',{name:'Find me a prompt',exact:true}).click(),async()=>{
+ await steps.action('rejected','Show a rejected request next to its retry button',()=>page.getByRole('button',{name:'Generate a prompt',exact:true}).click(),async()=>{
   const notice=page.locator('.prompt-request-error');await expect(notice).toHaveText('LM Studio could not complete this request. Check the loaded model and its context length.');
   const retry=page.getByRole('button',{name:'Try another request',exact:true});await expect(retry).toBeEnabled();
   const noticeBox=await notice.boundingBox(),buttonBox=await retry.boundingBox();expect(noticeBox).not.toBeNull();expect(buttonBox).not.toBeNull();expect(buttonBox!.y-(noticeBox!.y+noticeBox!.height)).toBeLessThan(40);

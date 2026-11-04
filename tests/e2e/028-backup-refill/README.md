@@ -266,6 +266,7 @@ Viewport: mobile-chromium.
 **Verifications:**
 
 - [x] The starter remains selected; no background response replaces it
+- [x] Generate a prompt appears above Choose a backup prompt
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Choose from the complete reserve

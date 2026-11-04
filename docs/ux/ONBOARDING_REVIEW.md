@@ -1,5 +1,6 @@
 # Onboarding mockups for review
 
+Current runtime refinements: review uses comma-separated topic titles and a capitalised scope; AI/Friends continuation reflects form completeness. New AI requests exclude private name and pronouns from both the instruction and JSON. The concept boards below retain the earlier design review; the executable walkthroughs show the current copy and behaviour.
 Five mobile design boards cover fourteen screens and states for the [onboarding proposal](../../ONBOARDING_DESIGN.md). They use the dark glass, neutral ink lighting, yellow accent and four-point wordmark star from the current app. These original image-generated concepts illustrate the layout; the [actual browser walkthrough](../../tests/e2e/046-onboarding/README.md) now shows the running implementation. [Implementation notes](../../ONBOARDING_DESIGN.md#implementation-notes) identify the final copy, behaviour and supported-provider differences.
 
 The examples use fictional Sam, an explicitly entered public profile and a fictional local-model address. Selected answers illustrate choices the person has already made, not preselected questionnaire defaults. AI and its source-sharing choices start off for a new account; existing accounts keep their saved choices. Only the final Today screen has the normal four-tab navigation.

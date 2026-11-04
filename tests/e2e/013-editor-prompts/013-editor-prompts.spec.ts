@@ -21,7 +21,7 @@ test('generate and write prompts for additional entries and edits without changi
   await toggleAI(page, steps, 'enable', true);
   await saveChoices(page, steps, 'choices');
   await navigate(page, steps, 'today', 'Today');
-  await steps.action('daily-prompt', 'Generate Today’s original prompt', () => page.getByRole('button', { name: 'Find me a prompt', exact: true }).click(), async () => { await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT); });
+  await steps.action('daily-prompt', 'Generate Today’s original prompt', () => page.getByRole('button', { name: 'Generate a prompt', exact: true }).click(), async () => { await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT); });
   await openEditor(page, steps, 'first-editor');
   await steps.action('first-text', 'Write today’s first reflection', () => editor(page).fill('A friend brought me tea.'), async () => { await expectEditor(page, 'A friend brought me tea.'); });
   await steps.action('first-save', 'Save today’s first reflection with its original question', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => { await expect(page.locator('.saved-card .entry-prompt')).toHaveText(FIRST_PROMPT); await expectSynced(page); });

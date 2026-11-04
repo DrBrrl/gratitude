@@ -141,18 +141,63 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Continue to Your prompts
+## Select a second catalogue topic
 
-![Continue to Your prompts](./screenshots/015-prompts-mobile-chromium.png)
+![Select a second catalogue topic](./screenshots/015-technology-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Choose an open prompt scope
+## Name an additional interest
 
-![Choose an open prompt scope](./screenshots/016-broad-mobile-chromium.png)
+![Name an additional interest](./screenshots/016-custom-label-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Describe the additional interest for AI context
+
+![Describe the additional interest for AI context](./screenshots/017-custom-description-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Add the custom interest
+
+![Add the custom interest](./screenshots/018-custom-add-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Select the custom interest for the final summary
+
+![Select the custom interest for the final summary](./screenshots/019-custom-select-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Continue to Your prompts
+
+![Continue to Your prompts](./screenshots/020-prompts-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Choose the Intermediate prompt scope
+
+![Choose the Intermediate prompt scope](./screenshots/021-intermediate-mobile-chromium.png)
 
 **Verifications:**
 
@@ -161,7 +206,52 @@ Viewport: mobile-chromium.
 
 ## Continue to Your AI
 
-![Continue to Your AI](./screenshots/017-ai-mobile-chromium.png)
+![Continue to Your AI](./screenshots/022-ai-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Start an optional personal-key connection without a key
+
+![Start an optional personal-key connection without a key](./screenshots/023-incomplete-ai-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to the complete managed connection
+
+![Return to the complete managed connection](./screenshots/024-complete-ai-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Review the optional photo connection
+
+![Review the optional photo connection](./screenshots/025-photo-options-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Start a separate photo key without its required fields
+
+![Start a separate photo key without its required fields](./screenshots/026-incomplete-photo-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep the complete prompt connection for photos
+
+![Keep the complete prompt connection for photos](./screenshots/027-same-photo-mobile-chromium.png)
 
 **Verifications:**
 
@@ -170,7 +260,43 @@ Viewport: mobile-chromium.
 
 ## Continue to Your friends profile
 
-![Continue to Your friends profile](./screenshots/018-friends-mobile-chromium.png)
+![Continue to Your friends profile](./screenshots/028-friends-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Fill the optional friend-facing name
+
+![Fill the optional friend-facing name](./screenshots/029-friend-name-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Complete the optional public profile fields
+
+![Complete the optional public profile fields](./screenshots/030-friend-username-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep incomplete or invalid profile fields optional
+
+![Keep incomplete or invalid profile fields optional](./screenshots/031-invalid-username-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Leave the public username unfilled without saving a profile
+
+![Leave the public username unfilled without saving a profile](./screenshots/032-leave-profile-mobile-chromium.png)
 
 **Verifications:**
 
@@ -179,7 +305,7 @@ Viewport: mobile-chromium.
 
 ## Continue to Ready to reflect?
 
-![Continue to Ready to reflect?](./screenshots/019-review-mobile-chromium.png)
+![Continue to Ready to reflect?](./screenshots/033-review-mobile-chromium.png)
 
 **Verifications:**
 
@@ -188,7 +314,7 @@ Viewport: mobile-chromium.
 
 ## Explicitly allow selected answers in future AI requests
 
-![Explicitly allow selected answers in future AI requests](./screenshots/020-share-mobile-chromium.png)
+![Explicitly allow selected answers in future AI requests](./screenshots/034-share-mobile-chromium.png)
 
 **Verifications:**
 
@@ -197,7 +323,7 @@ Viewport: mobile-chromium.
 
 ## Confirm the questionnaire without inference or a public profile
 
-![Confirm the questionnaire without inference or a public profile](./screenshots/021-finish-mobile-chromium.png)
+![Confirm the questionnaire without inference or a public profile](./screenshots/035-finish-mobile-chromium.png)
 
 **Verifications:**
 
@@ -206,7 +332,7 @@ Viewport: mobile-chromium.
 
 ## See the private journal greeting
 
-![See the private journal greeting](./screenshots/022-journal-mobile-chromium.png)
+![See the private journal greeting](./screenshots/036-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -215,7 +341,7 @@ Viewport: mobile-chromium.
 
 ## Keep the completion across reload
 
-![Keep the completion across reload](./screenshots/023-finished-reload-mobile-chromium.png)
+![Keep the completion across reload](./screenshots/037-finished-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -224,7 +350,7 @@ Viewport: mobile-chromium.
 
 ## Open a second device
 
-![Open a second device](./screenshots/024-second-device-mobile-chromium.png)
+![Open a second device](./screenshots/038-second-device-mobile-chromium.png)
 
 **Verifications:**
 
@@ -233,7 +359,7 @@ Viewport: mobile-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/025-google-popup-mobile-chromium.png)
+![Choose Google sign-in](./screenshots/039-google-popup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -242,7 +368,7 @@ Viewport: mobile-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/026-signed-in-mobile-chromium.png)
+![Complete sign-in and open Today](./screenshots/040-signed-in-mobile-chromium.png)
 
 **Verifications:**
 

@@ -29,7 +29,7 @@ test('consent, personalized prompts, freeform feedback and immutable journal his
   await saveChoices(page, steps, 'save-choices');
   expect(requests).toHaveLength(0);
   await navigate(page, steps, 'today', 'Today');
-  await steps.action('generate', 'Request the first AI prompt', () => page.getByRole('button', { name: 'Find me a prompt', exact: true }).click(), async () => {
+  await steps.action('generate', 'Request the first AI prompt', () => page.getByRole('button', { name: 'Generate a prompt', exact: true }).click(), async () => {
     await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT, { timeout: 15_000 }); expect(requests).toHaveLength(1);
     expect(JSON.parse(requests[0]).systemInstruction).toEqual({parts:[{text:SYSTEM_PROMPT}]});
     expect(requests[0]).toContain('Everyday moments'); expect(requests[0]).toContain('reflections');
@@ -70,7 +70,7 @@ test('consent, personalized prompts, freeform feedback and immutable journal his
   });
   await saveChoices(page, steps, 'save-journal-context');
   await navigate(page, steps, 'new-day', 'Today');
-  await steps.action('next-prompt', 'Request a new day’s prompt using the chosen context', () => page.getByRole('button', { name: 'Find me a prompt', exact: true }).click(), async () => {
+  await steps.action('next-prompt', 'Request a new day’s prompt using the chosen context', () => page.getByRole('button', { name: 'Generate a prompt', exact: true }).click(), async () => {
     await expect(page.locator('.daily-prompt h2')).toHaveText(SECOND_PROMPT, { timeout: 15_000 }); expect(requests).toHaveLength(2);
     expect(JSON.parse(JSON.parse(requests[1]).contents[0].parts[0].text).promptFeedback).toEqual([{prompt:FIRST_PROMPT,feedback:'More questions about sounds, please.'}]);
     expect(requests[1]).toContain('More questions about sounds, please.'); expect(requests[1]).toContain('Someone held the door');

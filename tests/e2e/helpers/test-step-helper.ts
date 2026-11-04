@@ -13,6 +13,17 @@ export class TestStepHelper {
 
   setPage(page: Page) { this.page = page; }
 
+  private async rangeLayout(page: Page, name: string) {
+    const layout = await page.evaluate(() => {
+      const rect = (node: Element) => { const r = node.getBoundingClientRect(); return { x:r.x,y:r.y+scrollY,width:r.width,height:r.height }; };
+      return { viewport:{width:innerWidth,height:innerHeight,scrollY,scale:visualViewport?.scale,offset:visualViewport?.offsetTop}, controls:Array.from(document.querySelectorAll('input[type="range"]')).map(node => {
+        const style=getComputedStyle(node),next=node.nextElementSibling;
+        return {rect:rect(node),parent:node.parentElement?rect(node.parentElement):null,next:next?rect(next):null,font:style.font,lineHeight:style.lineHeight,zoom:style.zoom,nextFont:next?getComputedStyle(next).font:null};
+      }) };
+    });
+    if(layout.controls.length)await this.info.attach(name,{body:JSON.stringify(layout),contentType:'application/json'});
+  }
+
   async step(name: string, description: string, verifications: Verification[], capturePage = this.page) {
     const id = `${String(this.steps.length).padStart(3, '0')}-${name.replace(/[^a-z0-9-]/gi, '-')}`;
     const filename = `${id}-${this.info.project.name}.png`;
@@ -60,6 +71,7 @@ export class TestStepHelper {
         }));
         // Numeric geometry only, never input values or journal/credential text.
         await this.info.attach(`${id}-layout`, { body: JSON.stringify(layout), contentType: 'application/json' });
+        await this.rangeLayout(capturePage, `${id}-range-before`);
       }
       // Visible calendar photos are authenticated, asynchronous content. Await
       // their real download/decoding (or unavailable state), never hide them.
@@ -77,6 +89,7 @@ export class TestStepHelper {
           maxDiffPixels: 0, threshold: 0
         });
       } finally {
+        if(this.options.paintStaticPage)await this.rangeLayout(capturePage, `${id}-range-after`);
         await capturePage.evaluate(({ x, y }) => window.scrollTo({ left: x, top: y, behavior: 'instant' }), scroll);
         await capturePage.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
       }

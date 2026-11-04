@@ -2,10 +2,11 @@
  import type {FirebaseClient} from '../firebase/client';
  import {personalGeminiRequest} from '../ai/personal-gemini';
  import type {ModelConnection} from '../ai/connection-contract';
- let {client,connection,disabled=false,onchange}:{client:FirebaseClient|null;connection:ModelConnection;disabled?:boolean;onchange:(value:ModelConnection)=>Promise<void>}=$props();
+ let {client,connection,disabled=false,onchange,oncomplete}:{client:FirebaseClient|null;connection:ModelConnection;disabled?:boolean;onchange:(value:ModelConnection)=>Promise<void>;oncomplete?:(complete:boolean)=>void}=$props();
  const field=$props.id();
  let key=$state(''),model=$state(''),allowPersonal=$state(false),models=$state<string[]>([]),busy=$state(false),message=$state(''),failed=$state(false);
  let saved=$state<ModelConnection|null>(null);
+ $effect(()=>{oncomplete?.(!!client&&!!model&&!!(key||saved)&&!busy&&!failed);});
  $effect(()=>{const current=connection.provider==='personal-gemini'&&connection.connectionId&&connection.connectionRevision?{...connection}:null;saved=current;model=current?.model??'';allowPersonal=current?.allowPersonal??false;key='';models=[];});
  async function act(operation:'test'|'save'|'delete'){
   if(!client)return;busy=true;message='';failed=false;
