@@ -1601,3 +1601,10 @@ Copy should be updated to: "Your name and pronouns (up to 80 chatacters) are use
 ```text
 Tried to perform a rebase and merge and got "The server is currently unable to perform this operation. Please try again later."
 ```
+
+
+## 2026-11-05 — Onboarding export copy correction
+
+```text
+Typo! "See what you’ve noticed: Browse your calendar and colourful journal or search for a specific memory. Export your journal as as Markdown or JSON whenever you like." - should be as markdown, not as as.
+```
