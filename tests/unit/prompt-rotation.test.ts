@@ -1,3 +1,4 @@
+import {commitDraft,draftSaveActions,type ReflectionDraft} from '../../src/lib/reflection-draft.ts';
 import {makeRequest} from '../../src/lib/ai/context.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
@@ -34,7 +35,7 @@ test('accepted starters rest for thirty civil days including DST and leap days; 
  const backdated=replay(logOf([accepted(p.id,'2026-11-04'),accepted(p.id,'2026-10-01')]));
  assert.equal(backdated.rotation.accepted[p.id],'2026-11-04','late offline actions cannot shorten an existing rest');
 });
-test('accepting a backup consumes the original even when its saved prompt text is edited or its draft is discarded',async()=>{
+test('historical acceptance events retain their original consumption semantics through replay',async()=>{
  const b=await importedBackup('Which fictional sound helped?'),id=b.eventId;
  const edited:SourceAction={eventId:'edited-reflection',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:'entry',expectedRevision:0,text:'A fictional kettle.',promptId:'edited-reflection',promptText:'Which quiet sound helped me?',entryAt:null,photoSlot:null}};
  const log=logOf([b,viewed(id),accepted(id),edited]),state=replay(log);
@@ -81,4 +82,33 @@ test('a late AI response stays recorded without replacing a newer daily starter 
  const fresh=makeRequest(state,day,'generic','fresh',undefined,{timeZone:'Australia/Hobart',selectionSeed:'b'.repeat(32)});
  actions.push(fresh,{eventId:'fresh_response',type:'PromptResponseReceived',schemaVersion:1,payload:{requestId:'fresh',text:'A newly requested question?',model:'fictional-model',finishReason:'STOP'}});
  assert.equal(replay(logOf(actions)).ai.days[day],'fresh_response');
+});
+
+
+test('draft selection and wording edits do not consume a prompt; saving consumes its original identity',async()=>{
+ const b=await importedBackup('What fictional detail helped?'),id=b.eventId;
+ const draft:ReflectionDraft={eventId:'manual-version',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:'entry',expectedRevision:0,text:'A fictional blue cup.',promptId:'manual-version',promptText:'My edited question?',entryAt:null,photoSlot:null},selectedPromptId:id};
+ const actions:SourceAction[]=[b,viewed(id)];
+ assert.equal(availableBackups(replay(logOf(actions))).length,1,'discarding the device draft appends no consumption');
+ assert.equal(replay(logOf(actions)).rotation.accepted[id],undefined);
+ assert.equal(draftSaveActions(draft).acceptance,null,'a local draft has no save-day use');
+ const pending={...draft,saveDay:day,saveAttempted:false};
+ const {reflection,acceptance}=draftSaveActions(pending);
+ assert.equal('selectedPromptId' in reflection,false);assert.equal('saveDay' in reflection,false);assert.equal('saveAttempted' in reflection,false);
+ assert.equal(acceptance?.type,'PromptAccepted');
+ await commitDraft(pending,async action=>{actions.push(action);});
+ const state=replay(logOf(actions));assert.equal(availableBackups(state).length,0);assert.equal(state.entries[0].prompt,'My edited question?');assert.equal(state.rotation.acceptedText[id],b.payload.text);
+ assert.deepEqual(replay(logOf(actions).slice(3),replay(logOf(actions).slice(0,3))),state);
+});
+
+test('a failed reflection save cannot consume its prompt; an interrupted consumption retries both stable identities',async()=>{
+ const p=catalogue[0],draft:ReflectionDraft={eventId:'saved-starter',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:'entry',expectedRevision:0,text:'A fictional morning.',promptId:p.id,promptText:null,entryAt:null,photoSlot:null},selectedPromptId:p.id,saveDay:day};
+ const persisted:SourceAction[]=[];
+ await assert.rejects(()=>commitDraft(draft,async action=>{assert.equal(action.type,'ReflectionWritten');throw new Error('save failed');}));assert.equal(persisted.length,0);
+ await assert.rejects(()=>commitDraft(draft,async action=>{if(action.type==='PromptAccepted')throw new Error('network interrupted');persisted.push(action);}));
+ assert.equal(replay(logOf(persisted)).entries.length,1);assert.equal(replay(logOf(persisted)).rotation.accepted[p.id],undefined);
+ await commitDraft(draft,async action=>{if(!persisted.some(prior=>prior.eventId===action.eventId))persisted.push(action);});
+ assert.equal(persisted.length,2);assert.equal(replay(logOf(persisted)).rotation.accepted[p.id],day);
+ assert.equal(choosePrompt([p],replay(logOf(persisted)).rotation,'2026-12-04','starter'),null);
+ assert.equal(choosePrompt([p],replay(logOf(persisted)).rotation,'2026-12-05','starter')?.id,p.id);
 });

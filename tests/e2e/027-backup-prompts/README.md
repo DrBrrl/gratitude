@@ -2,7 +2,7 @@
 
 # Private backup prompts and offline recovery
 
-Import a fictional 102-question workbook, cycle and select without inference, consume on acceptance, remove offline, cold-reload the cached app and recover the draft before syncing. Every action has an unmasked full-page comparison at zero pixel tolerance with checks below.
+Import a fictional 102-question workbook, cycle and select without inference, consume on save, remove offline, cold-reload the cached app and recover the draft before syncing. Every action has an unmasked full-page comparison at zero pixel tolerance with checks below.
 
 Viewport: mobile-chromium.
 
@@ -259,9 +259,9 @@ Viewport: mobile-chromium.
 - [x] Changing or reselecting a prompt does not erase writing in the existing local draft
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Save the reflection without consuming the accepted question twice
+## Consume only the final selected question when saving
 
-![Save the reflection without consuming the accepted question twice](./screenshots/028-save-mobile-chromium.png)
+![Consume only the final selected question when saving](./screenshots/028-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -409,7 +409,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] 98 questions remain; complete and cached-prefix replay agree and no inference occurred
+- [x] 99 questions remain; complete and cached-prefix replay agree and no inference occurred
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Prepare fictional private source input without changing the canonical stream

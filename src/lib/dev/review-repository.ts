@@ -1,3 +1,5 @@
+import {commitDraft,type ReflectionDraft} from '../reflection-draft';
+import {localDay} from '../journal';
 import {type RotationAction} from '../domain';
 import type { OnboardingAction } from '../onboarding';
 import type { ImportSelection } from '../import-archive';
@@ -11,7 +13,7 @@ export const reviewUser = { uid: 'ui-review', email: 'jamie@example.test' };
 /** Development-only adapter: persist raw events, always derive the view by replay. */
 export class ReviewRepository implements JournalStore {
   private events: JournalEvent[] = structuredClone(fixture) as JournalEvent[];
-  private drafts: Record<string, Action> = {};
+  private drafts: Record<string, ReflectionDraft> = {};
   private stopped = false;
   private setupDraft: unknown = null;
   constructor(private notify: (view: JournalView) => void) {
@@ -52,9 +54,10 @@ export class ReviewRepository implements JournalStore {
     if (draft && this.events.some(event => event.eventId === draft.eventId)) { await this.clearDraft(key); return null; }
     return structuredClone(draft ?? null);
   }
-  async writeDraft(draft: Action, key = 'draft') { this.persist(this.events, { ...this.drafts, [key]: structuredClone(draft) }); }
+  async writeDraft(draft: ReflectionDraft, key = 'draft') { this.persist(this.events, { ...this.drafts, [key]: structuredClone(draft) }); }
   async clearDraft(key = 'draft') { const drafts = { ...this.drafts }; delete drafts[key]; this.persist(this.events, drafts); }
-  async save(input: SourceAction) {
+  async save(input: SourceAction | ReflectionDraft) {
+    if(input.type==='ReflectionWritten' && 'selectedPromptId' in input){await commitDraft({...input,saveDay:localDay(new Date())},action=>this.save(action));return;}
     if (this.stopped) throw new Error('Open the review session again.');
     const action = parseAction(input);
     const prior = this.events.find((event) => event.eventId === action.eventId);

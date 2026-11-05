@@ -31,3 +31,9 @@ The supplied personal workbook is excluded from the repository. Its raw question
 ## Verification
 
 Unit tests cover replay, 102 imports, consumption, removal, duplicate variants, legacy opt-in behavior, malformed sources, provider separation, pacing, failure limits and stale claims. The Firebase integration suite checks source privacy, exact retries, concurrent-device claims, the independent local provider, consumption, removal and staged-input permissions. Walkthroughs 027/028 use fictional questions, workbook contents, provider outputs and credentials. Each action is followed by a full-page screenshot comparison with no masking and zero pixel tolerance; generated checks appear below the screenshot.
+
+## Draft discard and original prompt identity
+
+Choosing a backup keeps its original ID only in the device draft, including through manual prompt edits and reload. Replacing that choice or discarding the unsaved draft does not consume it. Already-offered questions still follow the same-day no-repeat rule.
+
+Save retains the reflection and its intended prompt use together in the durable local pending record. The reflection is appended first, then the existing literal `PromptAccepted` action for the original question and local save day. Stable action IDs make retries idempotent. The pending record is cleared only after both writes have reached the local projection; failure before the reflection cannot consume a question. A never-attempted offline save can be returned to the editor and discarded. If a save may already have reached the server, recovery checks before abandoning its prompt-use intent. This local provenance is not included in events or exports, and old acceptance events retain their original meaning.
