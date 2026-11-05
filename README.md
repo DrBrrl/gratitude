@@ -1,6 +1,6 @@
 # Gratitude
 
-Gratitude is a responsive single-page application (SPA) for daily gratitude reflection. Its intended daily experience starts with an AI-generated prompt the user can respond to. Over time, it should learn which prompts suit that person and adapt to their preferences and feedback.
+Gratitude is a responsive single-page application (SPA) for daily gratitude reflection. Each day starts with a starter prompt; users can also generate an AI prompt or choose a personalised backup. Over time, it should learn which prompts suit that person and adapt to their preferences and feedback.
 
 The aim is to make reflection approachable, personal, and useful—whether someone has a few words to share or wants to write at length.
 
