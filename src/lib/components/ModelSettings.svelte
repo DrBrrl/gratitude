@@ -27,9 +27,11 @@
     const next={...connection},signature=JSON.stringify([scope,next]);
     untrack(()=>{
       if(signature===observedConnection)return;
+      const modelChanged=draft.model!==next.model;
       observedConnection=signature;draft=next;
       // Saving a selection changes its binding/revision, not the connected server's model list.
       if(discoveredFor!==connectionKey(next)){capabilities=null;models=[];discoveredFor='';manualModel=false;}
+      else if(modelChanged&&models.length)describeModel();
     });
   });
   $effect(()=>{if(initialError){message=initialError;failed=true;}});
