@@ -1651,3 +1651,9 @@ For PR 24, is it possible for the prompt to not get consumed if the draft is com
 ```text
 Just to confirm - you're doing all the things i asked for in the one PR? :)
 ```
+
+## 2026-11-05 — Match AI settings model discovery to onboarding
+
+```text
+It's occured to me also that it woud be good for the AI settings in the app to mirror the way it is in the onboarding settings - where the models on a local macine are exposed so that you get a dropdown of available models once you've connected to the machine instead of only being able to type ones in that might be wrong! Add that to whatever PR you feel like :D
+```
