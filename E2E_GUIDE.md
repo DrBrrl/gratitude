@@ -337,3 +337,10 @@ Wait until generation succeeds before pruning old image names. Parse image refer
 ## Additional model services
 
 Scenarios [049](tests/e2e/049-local-services/README.md) , [050](tests/e2e/050-personal-cloud/README.md) and [051](tests/e2e/051-compatible-service/README.md) exercise native discovery, separate photo settings, final-text prompts, explicit cloud terms, cross-browser keyless restoration and deletion. They intercept fictional provider/callable boundaries; `tests/relay` separately exercises actual encrypted storage and authorization against Firestore. The CI push-backend job runs relay tests after notification delivery tests. No live inference or real keys belong in these fixtures.
+
+
+## Starter and reserve rotation
+
+Scenarios [052](tests/e2e/052-prompt-rotation/README.md) and [053](tests/e2e/053-starter-cooldown/README.md) cover category changes, same-day uniqueness, offline offer/acceptance recovery, wording edits, consumption before save and the exact thirty-day eligibility boundary. Every UI action has a full-page, unmasked zero-pixel comparison and generated checks beneath its image. The dedicated `prompt-rotation` CI jobs run both viewports.
+
+`scripts/firebase-test.sh` supplies a fixed `VITE_PROMPT_RANDOM_SEED` as a fixture input for prompt draws; normal and published builds omit it. It does not replace content, alter credentials or override browser-wide randomness. The helper waits for the actual offer to finish persisting on the device and, when online, for its source outbox to sync before capture. Offline screenshots retain visible content and durable queued actions. Existing backup walkthroughs now assert random unseen offers and consumption at acceptance rather than sequential indices or consumption at save.

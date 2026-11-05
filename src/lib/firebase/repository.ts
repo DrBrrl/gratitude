@@ -1,3 +1,4 @@
+import {isRotationAction,type RotationAction} from '../domain';
 import {isExternalProvider,providerName,type ExternalTarget} from '../ai/connection-contract.ts';
 import {checkModelBinding} from './model-binding.ts';
 import type { OnboardingAction } from '../onboarding';
@@ -15,7 +16,7 @@ import { erasePhoto, type StagedPhoto } from '../photos';
 import {availableBackups,importedBackup,BACKUP_MINIMUM} from '../backup-prompts';
 
 type Checkpoint = { state: Projection; digest: string };
-export type JournalView = { state: Projection; pending: Action | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean; backupRemoved?: string[]; backupStatus?: string; backupImporting?: boolean; onboardingPending?:boolean };
+export type JournalView = { state: Projection; pending: Action | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean; backupRemoved?: string[]; backupStatus?: string; backupImporting?: boolean; rotationPending?:boolean; onboardingPending?:boolean };
 async function digest(state: Projection) {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(state)));
   return [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, '0')).join('');
@@ -37,7 +38,7 @@ export class JournalRepository {
   private pendingAnchor: { id: string; sequence: number } | null = null;
   private aiResult: ResponseAction | null = null;
   private generating = false;
-  private backupActions:BackupAction[]=[];
+  private backupActions:(BackupAction|RotationAction)[]=[];
   private backupSyncing=false;
   private backupQueue=Promise.resolve();
   private backupImporting=true;
@@ -50,7 +51,7 @@ export class JournalRepository {
   private error = '';
   constructor(private client: FirebaseClient, private uid: string, private notify: (view: JournalView) => void) {}
   private emit() {
-    if (!this.stopped) this.notify({ state: this.state, pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, onboardingPending:!!this.setupFinish, backupImporting:this.backupImporting||this.backupActions.some(a=>a.type==='BackupPromptImported'),backupRemoved:this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),backupStatus:this.backupStatus, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
+    if (!this.stopped) this.notify({ state: this.backupActions.filter(isRotationAction).reduce((state,action)=>state.rotation.offers.some(o=>o.eventId===action.eventId)||action.type==='PromptAccepted'&&state.rotation.accepted[action.payload.promptId]>=action.payload.day?state:applyEvent(state,{...action,sequence:state.cursor+1,recordedAt:new Date().toISOString()}),this.state), rotationPending:this.backupActions.some(isRotationAction), pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, onboardingPending:!!this.setupFinish, backupImporting:this.backupImporting||this.backupActions.some(a=>a.type==='BackupPromptImported'),backupRemoved:this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),backupStatus:this.backupStatus, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
   }
   async start() {
     const generation = ++this.listenerGeneration;
@@ -70,7 +71,7 @@ export class JournalRepository {
     if (checkpoint) {
       try {
         const s = checkpoint.state;
-        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.requestUnits || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance || !s.onboarding ||
+        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.requestUnits || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance || !s.onboarding || !s.rotation || !Array.isArray(s.rotation.offers) || !s.rotation.accepted || !s.rotation.acceptedText || !s.rotation.requests ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
           if (!s.lastEventId) throw new Error('Invalid checkpoint anchor');
@@ -225,7 +226,7 @@ export class JournalRepository {
     });
     return this.draftChain;
   }
-  async commitAI(action: AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
+  async commitAI(action: RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
     if (!this.ready || this.stopped || !navigator.onLine) throw new Error('Connect and wait for your journal to sync first.');
     const result = await appendReflection(this.client.db, this.uid, action);
     // Await the confirmed projection, never invoke an AI adapter from a listener.
@@ -285,7 +286,7 @@ export class JournalRepository {
     }catch{this.backupStatus='Could not sync imported backups. Reconnect and reload to retry.';}
     finally{this.backupImporting=false;this.emit();}
   }
-  private updateBackupOutbox(change:(actions:BackupAction[])=>BackupAction[]) {
+  private updateBackupOutbox(change:(actions:(BackupAction|RotationAction)[])=>(BackupAction|RotationAction)[]) {
     const next=this.backupQueue.catch(()=>{}).then(async()=>{
       if(this.stopped)throw new Error('This journal session has closed.');
       const actions=change(this.backupActions);
@@ -294,13 +295,13 @@ export class JournalRepository {
     });
     this.backupQueue=next;return next;
   }
-  async queueBackup(action:BackupAction) { await this.queueBackups([action]); }
-  async queueBackups(input:BackupAction[]) {
+  async queueBackup(action:BackupAction|RotationAction) { await this.queueBackups([action],!isRotationAction(action)); }
+  async queueBackups(input:(BackupAction|RotationAction)[],waitForSync=true) {
     await this.updateBackupOutbox(actions=>{
       const known=new Set(actions.map(action=>action.eventId));
       return [...actions,...input.filter(action=>{if(known.has(action.eventId))return false;known.add(action.eventId);return true;})];
     });
-    this.emit();if(navigator.onLine)await this.syncBackups();
+    this.emit();if(navigator.onLine){const syncing=this.syncBackups();if(waitForSync)await syncing;else void syncing;}
   }
   async syncBackups() {
     if(this.backupSyncing||!navigator.onLine||this.stopped)return;this.backupSyncing=true;

@@ -11,6 +11,8 @@ export async function editorText(page: Page) {
 }
 export async function expectEditor(page: Page, text: string) { await expect.poll(() => editorText(page)).toBe(text); }
 export async function expectSynced(page: Page) {
+  await expect(page.locator('main[data-prompt-offer-busy=true]')).toHaveCount(0,{timeout:15000});
+  if(await page.evaluate(()=>navigator.onLine))await expect(page.locator('main[data-prompt-rotation-pending=true]')).toHaveCount(0,{timeout:15000});
   await expect(page.getByRole('navigation', { name: 'Journal navigation' })).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('main[data-onboarding-pending=true]')).toHaveCount(0,{timeout:15000});
   await expect(page.locator('.sync-status')).toHaveCount(0, { timeout: 15_000 });
