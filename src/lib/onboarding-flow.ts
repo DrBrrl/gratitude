@@ -8,3 +8,9 @@ export function readSetupAI(value:unknown):SetupAIChoices|null{
  if(Object.keys(p).length!==4||!Object.keys(p).every(k=>['enabled','useJournal','useFeedback','guidance'].includes(k))||typeof p.enabled!=='boolean'||typeof p.useJournal!=='boolean'||typeof p.useFeedback!=='boolean'||typeof p.guidance!=='string'||p.guidance.length>500)return null;
  return {enabled:p.enabled,useJournal:p.useJournal,useFeedback:p.useFeedback,guidance:p.guidance};
 }
+
+/** Earlier drafts put AI after preferences; keep answers but revisit the new AI choice. */
+export function resumeSetupStep(step:unknown,version:unknown):number{
+ if(typeof step!=='number'||!Number.isInteger(step)||step<0||step>7)return 0;
+ return version===2?step:Math.min(step,3);
+}

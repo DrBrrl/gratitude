@@ -2,7 +2,7 @@
   import type {ReflectionDraft} from '../reflection-draft';
   import {STARTER_CATALOGUE} from '../starter-catalogue';
   import {choosePrompt,starterPrompt,promptRandom,type PromptKind} from '../prompt-rotation';
-  import {readSetupAI} from '../onboarding-flow';
+  import {readSetupAI,resumeSetupStep} from '../onboarding-flow';
   import Onboarding from './Onboarding.svelte';
   import Questionnaire from './Questionnaire.svelte';
   import { ONBOARDING_VERSION, defaultAnswers, validAnswers, selectedDescriptions, SCOPE_OPTIONS, answersInput, type OnboardingAnswers } from '../onboarding';
@@ -10,20 +10,20 @@
   let setupPromptComplete=$state(false),setupPhotoComplete=$state(false),setupFriendsComplete=$state(false),setupPromptReady=$state(false),setupAIReviewed=$state(false);
   $effect(() => {
     if ((setupOpen || settingsPage === 'answers') && answerReady) {
-      const saved = { answers: $state.snapshot(answerDraft), answersId: answerBase, step:setupStep, colour:setupColour,...(setupOpen?{repeating:setupRepeated,aiReviewed:setupAIReviewed,aiChoices:{enabled:choices.enabled,useJournal:choices.useJournal,useFeedback:choices.useFeedback,guidance:choices.guidance}}:{}) };
+      const saved = { flowVersion:2, answers: $state.snapshot(answerDraft), answersId: answerBase, step:setupStep, colour:setupColour,...(setupOpen?{repeating:setupRepeated,aiReviewed:setupAIReviewed,aiChoices:{enabled:choices.enabled,useJournal:choices.useJournal,useFeedback:choices.useFeedback,guidance:choices.guidance}}:{}) };
       untrack(() => { void repository?.writeOnboardingDraft(saved); });
     }
   });
   async function loadAnswers(savedDraft = true) {
     const active = repository; if (!active) return;
     answerReady = false; answerMessage = ''; clearAnswersOpen = false;
-    const stored = savedDraft ? await active.readOnboardingDraft() as {answers?:unknown;answersId?:unknown;step?:unknown;colour?:unknown;aiChoices?:unknown;aiReviewed?:unknown}|null : null;
+    const stored = savedDraft ? await active.readOnboardingDraft() as {answers?:unknown;answersId?:unknown;step?:unknown;flowVersion?:unknown;colour?:unknown;aiChoices?:unknown;aiReviewed?:unknown}|null : null;
     if (repository !== active || !setupOpen && settingsPage !== 'answers') return;
     const raw = stored?.answers as Partial<OnboardingAnswers>|undefined;
     const useDraft = !!raw && typeof raw.preferredName === 'string' && typeof raw.pronouns === 'string' && raw.preferredName.length<=160 && raw.pronouns.length<=160 && validAnswers({...raw,preferredName:'',pronouns:''}) && (stored?.answersId === null || typeof stored?.answersId === 'string');
     answerDraft = structuredClone(useDraft ? stored!.answers as OnboardingAnswers : view.state.onboarding.answers);
     answerBase = useDraft ? stored!.answersId as string|null : view.state.onboarding.answersId;
-    if(setupOpen){setupStep=useDraft && Number.isInteger(stored?.step) && Number(stored?.step)>=0 && Number(stored?.step)<8 ? Number(stored?.step):0;setupColour=useDraft && Number.isInteger(stored?.colour) && Number(stored?.colour)>=0 && Number(stored?.colour)<=26 && Number(stored?.colour)%2===0 ? Number(stored?.colour):view.state.appearance.colourIndex;}
+    if(setupOpen){setupStep=useDraft?resumeSetupStep(stored?.step,stored?.flowVersion):0;setupColour=useDraft && Number.isInteger(stored?.colour) && Number(stored?.colour)>=0 && Number(stored?.colour)<=26 && Number(stored?.colour)%2===0 ? Number(stored?.colour):view.state.appearance.colourIndex;}
     if(setupOpen){const restored=useDraft?readSetupAI(stored?.aiChoices):null;if(restored)choices={...view.state.ai.choices,...restored};setupAIReviewed=useDraft&&typeof stored?.aiReviewed==='boolean'?stored.aiReviewed:setupStep>3;if(setupAIReviewed&&!choices.enabled&&(setupStep===4||setupStep===5))setupStep=6;}
     answerReady = true;
   }
