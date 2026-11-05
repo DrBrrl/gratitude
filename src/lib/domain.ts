@@ -1,3 +1,4 @@
+import {emptyRotation,starterPrompt,type RotationState} from './prompt-rotation.ts';
 import {PROVIDERS,validExternalTarget,type AIProvider,type ExternalTarget} from './ai/connection-contract.ts';
 import { emptyOnboarding, applyOnboarding, isOnboardingAction, validOnboardingAction, type OnboardingAction, type OnboardingState } from './onboarding.ts';
 import { validLocalTarget, type LocalModelTarget } from './ai/local-contract.ts';
@@ -6,7 +7,7 @@ import { SELECTOR_VERSION, validSelection } from './ai/selection.ts';
 import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 14;
+export const PROJECTION_VERSION = 15;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
@@ -82,17 +83,19 @@ export type ImportReceipt = { confirmationId: string; input: ImportInput; comple
 export type BackupAction = Envelope<'BackupPromptImported', {text:string},1|2> | Envelope<'BackupPromptRemoved', {promptId:string}>;
 export function isBackupAction(action:SourceAction): action is BackupAction { return action.type==='BackupPromptImported' || action.type==='BackupPromptRemoved'; }
 export type AppearanceAction = Envelope<'AccentColourChosen', Previous & { colourIndex: number }>;
-export type SourceAction = OnboardingAction | AppearanceAction | Action | AIAction | PhotoAction | ImportAction | BackupAction;
+export type RotationAction = Envelope<'PromptViewed', {day:string;promptId:string;surface:'today'|'editor'|'backup'}> | Envelope<'PromptAccepted',{day:string;promptId:string}>;
+export function isRotationAction(action:SourceAction):action is RotationAction{return action.type==='PromptViewed'||action.type==='PromptAccepted';}
+export type SourceAction = RotationAction | OnboardingAction | AppearanceAction | Action | AIAction | PhotoAction | ImportAction | BackupAction;
 export function isPhotoAction(action: SourceAction): action is PhotoAction { return action.type.startsWith('Photo'); }
 export type JournalEvent = SourceAction & { sequence: number; recordedAt: string };
 /** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 14; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 15; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     requestUnits: Record<string,number>; requestedAt: Record<string,string>; usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
-export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, onboarding: emptyOnboarding(), appearance: { colourIndex: 0, lastEventId: null }, backups: {}, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
+export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, rotation:emptyRotation(), onboarding: emptyOnboarding(), appearance: { colourIndex: 0, lastEventId: null }, backups: {}, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
   control: emptyControl(), choices: { enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' },
   requests: {}, requestUnits:{}, requestedAt:{}, responses: {}, usage: {}, days: {}, feedback: [], failure: null
 } }; }
@@ -127,6 +130,8 @@ export function parseAction(input: unknown): SourceAction {
     valid = [1,2].includes(Number(v.schemaVersion)) && validImportInput(p,v.schemaVersion===2?4000:600) && v.eventId === `ic_${p.sourceKey}`;
   } else if (v.type === 'ReflectionImported') {
     valid = v.schemaVersion === 1 && keys(p, ['sourceKey','confirmationId','entryId','expectedRevision','photoSlot']) && typeof p.sourceKey === 'string' && /^[a-f0-9]{64}$/.test(p.sourceKey) && p.entryId === `e_${p.sourceKey}` && p.expectedRevision === 0 && v.eventId === `iw_${p.sourceKey}` && p.confirmationId === `ic_${p.sourceKey}` && (p.photoSlot === null || p.photoSlot === 0);
+  } else if (v.type==='PromptViewed'||v.type==='PromptAccepted') {
+    valid=v.schemaVersion===1&&keys(p,v.type==='PromptViewed'?['day','promptId','surface']:['day','promptId'])&&typeof p.day==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(p.day)&&Number.isFinite(Date.parse(p.day+'T12:00:00Z'))&&new Date(p.day+'T12:00:00Z').toISOString().slice(0,10)===p.day&&id(p.promptId)&&(v.type==='PromptViewed'?['today','editor','backup'].includes(String(p.surface))&&v.eventId===`v${p.day}_${String(p.surface)[0]}${p.promptId}`:v.eventId===`a_${p.day}_${p.promptId}`);
   } else if (v.type === 'ReflectionWritten') {
     valid = (v.schemaVersion === 1 && keys(p, ['entryId', 'text', 'expectedRevision', 'starterId']) && p.starterId === STARTER_ID
       || v.schemaVersion === 2 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId']) && id(p.promptId)
@@ -200,7 +205,16 @@ export function nextControl(control: AIControl, action: AIAction): AIControl {
 export function applyEvent(state: Projection, event: JournalEvent): Projection {
   const action = parseAction({ eventId: event.eventId, type: event.type, schemaVersion: event.schemaVersion, payload: event.payload });
   if (event.sequence !== state.cursor + 1 || !Number.isFinite(Date.parse(event.recordedAt))) throw new Error('Incomplete or invalid event stream');
-  const next = { ...state, cursor: event.sequence, lastEventId: event.eventId };
+  const next = { ...state, cursor: event.sequence, lastEventId: event.eventId,rotation:action.type==='PromptRequested'?{...state.rotation,requests:{...state.rotation.requests,[action.eventId]:event.sequence}}:state.rotation };
+  if(isRotationAction(action)){
+    const {promptId,day}=action.payload,starter=starterPrompt(promptId),backup=state.backups[promptId];
+    if(!starter&&!backup)throw new Error('Unknown rotation prompt.');
+    if(action.type==='PromptViewed'){
+      if(!!starter===(action.payload.surface==='backup'))throw new Error('Prompt source and surface disagree.');
+      return {...next,ai:action.payload.surface==='today'?{...state.ai,days:{...state.ai.days,[day]:promptId}}:state.ai,rotation:{...state.rotation,offers:[...state.rotation.offers,{eventId:action.eventId,day,promptId,kind:starter?'starter':'backup',surface:action.payload.surface,sequence:event.sequence,text:starter?.text??backup!.text}]}};
+    }
+    return {...next,rotation:{...state.rotation,acceptedText:{...state.rotation.acceptedText,[promptId]:starter?.text??backup!.text},accepted:{...state.rotation.accepted,[promptId]:day> (state.rotation.accepted[promptId]??'')?day:state.rotation.accepted[promptId]}},backups:backup?{...state.backups,[promptId]:{...backup,used:true}}:state.backups};
+  }
   if (isOnboardingAction(action)) return { ...next, onboarding: applyOnboarding(state.onboarding, action) };
   if (action.type === 'AccentColourChosen') {
     if (action.payload.previousEventId !== state.appearance.lastEventId) throw new Error('Your accent colour changed on another device. Please choose again.');
@@ -281,7 +295,7 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
       const usage = Object.fromEntries([...new Set(requestEntryRefs(request).map(ref=>ref.entryId))].map(entryId=>[entryId, {count:(ai.usage[entryId]?.count??0)+1,lastSequence:event.sequence}]));
       ai.usage = { ...ai.usage, ...usage };
       if (isBackupRequest(request)) return {...next, ai:{...ai,failure:null},backups:{...state.backups,[action.eventId]:{text:action.payload.text,removed:false}}};
-      if (!isEditorRequest(request)) ai.days = { ...ai.days, [request.payload.day]: action.eventId }; ai.failure = null; break;
+      if (!isEditorRequest(request)&&!state.rotation.offers.some(o=>o.surface==='today'&&o.day===request.payload.day&&o.sequence>(state.rotation.requests[request.eventId]??0))) ai.days = { ...ai.days, [request.payload.day]: action.eventId }; ai.failure = null; break;
     }
     case 'AIRequestFailed': ai.failure = action; break;
     case 'StarterPromptChosen': ai.days = { ...ai.days, [action.payload.day]: STARTER_ID }; ai.failure = null; break;
@@ -322,7 +336,7 @@ function applyPhoto(state: Projection, action: PhotoAction): Projection {
 }
 
 /** Resolve an immutable AI response or a user-written prompt from source history. */
-export function resolvePrompt(state: Projection, id: string): string | undefined { return id === STARTER_ID ? STARTER_PROMPT : state.prompts[id] ?? state.ai.responses[id]?.payload.text; }
+export function resolvePrompt(state: Projection, id: string): string | undefined { return id === STARTER_ID ? STARTER_PROMPT : starterPrompt(id)?.text ?? state.prompts[id] ?? state.ai.responses[id]?.payload.text; }
 
 /** Legacy accounts share the prompt connection until an explicit photo choice. */
 export function photoProvider(choices:AIChoices):AIProvider { return !choices.photoProvider||choices.photoProvider==='prompt'?choices.provider:choices.photoProvider; }

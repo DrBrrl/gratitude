@@ -70,12 +70,20 @@ service cloud.firestore {
         return e.type == 'ReflectionImported' ? e.payload.photoSlot == null : e.payload.text.matches('[\\s\\S]*[^\\s][\\s\\S]*');
       }
       function promptId(e) { return e.schemaVersion == 1 ? e.payload.starterId : e.payload.promptId; }
-      function knownPrompt(id) { return id == 'small-moment-v1' || (validId(id) && (get(eventPath(id)).data.type in ['PromptResponseReceived', 'ImportRecordConfirmed', 'BackupPromptImported'] || get(eventPath(id)).data.type == 'ReflectionWritten' && get(eventPath(id)).data.schemaVersion in [5, 6, 7] && get(eventPath(id)).data.payload.promptText is string && get(eventPath(id)).data.payload.promptId == id)); }
+      function cataloguePrompt(id) { return id is string && id.matches('^starter-v1-(00[1-9]|0[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$'); }
+      function knownPrompt(id) { return cataloguePrompt(id) || id == 'small-moment-v1' || (validId(id) && (get(eventPath(id)).data.type in ['PromptResponseReceived', 'ImportRecordConfirmed', 'BackupPromptImported'] || get(eventPath(id)).data.type == 'ReflectionWritten' && get(eventPath(id)).data.schemaVersion in [5, 6, 7] && get(eventPath(id)).data.payload.promptText is string && get(eventPath(id)).data.payload.promptId == id)); }
       function unchangedEntryDate(e) {
         let previous = exists(pointerPath(e.payload.entryId)) ? get(eventPath(get(pointerPath(e.payload.entryId)).data.lastEventId)).data : e;
         return e.schemaVersion in [6,7] || (e.schemaVersion in [3, 4, 5]
           ? e.payload.entryAt == previous.payload.get('entryAt', null)
           : previous.payload.get('entryAt', null) == null);
+      }
+      function validRotation(e) {
+        let p=e.payload;
+        return e.schemaVersion == 1 && p.keys().hasAll(e.type == 'PromptViewed' ? ['day','promptId','surface'] : ['day','promptId']) && p.keys().hasOnly(e.type == 'PromptViewed' ? ['day','promptId','surface'] : ['day','promptId']) && validDay(p.day) && validId(p.promptId)
+          && (e.type == 'PromptViewed' ? p.surface in ['today','editor','backup'] && (cataloguePrompt(p.promptId) ? p.surface != 'backup' : p.surface == 'backup') && e.eventId == 'v' + p.day + '_' + (p.surface == 'today' ? 't' : p.surface == 'editor' ? 'e' : 'b') + p.promptId : e.eventId == 'a_' + p.day + '_' + p.promptId)
+          && (cataloguePrompt(p.promptId) || get(eventPath(p.promptId)).data.type == 'BackupPromptImported' || get(eventPath(p.promptId)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.promptId)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25])
+          && getAfter(/databases/$(database)/documents/users/$(uid)/streams/$(generation)/rotation/control).data.lastEventId == e.eventId;
       }
       function validReflection(e) {
         let p = e.payload;
@@ -329,8 +337,16 @@ service cloud.firestore {
           && request.resource.data.eventId == eventId && request.resource.data.recordedAt == request.time
           && request.resource.data.sequence == nextSequence()
           && getAfter(root()).data.sequence == request.resource.data.sequence && getAfter(root()).data.lastEventId == eventId
-          && (request.resource.data.type in ['OnboardingAnswersConfirmed','OnboardingAnswersCleared','OnboardingFinished'] ? validSetup(request.resource.data) : request.resource.data.type == 'AccentColourChosen' ? validAppearance(request.resource.data) : request.resource.data.type in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(request.resource.data) : request.resource.data.type in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(request.resource.data) : request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
+          && (request.resource.data.type in ['PromptViewed','PromptAccepted'] ? validRotation(request.resource.data) : request.resource.data.type in ['OnboardingAnswersConfirmed','OnboardingAnswersCleared','OnboardingFinished'] ? validSetup(request.resource.data) : request.resource.data.type == 'AccentColourChosen' ? validAppearance(request.resource.data) : request.resource.data.type in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(request.resource.data) : request.resource.data.type in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(request.resource.data) : request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
         allow update, delete: if false;
+      }
+      match /rotation/{id} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && generation == 'v1' && id == 'control'
+          && request.resource.data.keys().hasOnly(['lastEventId']) && validId(request.resource.data.lastEventId)
+          && !exists(eventPath(request.resource.data.lastEventId))
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.type in ['PromptViewed','PromptAccepted'];
+        allow delete: if false;
       }
       match /ai/{id} {
         allow read: if owns(uid);

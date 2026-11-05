@@ -16,7 +16,7 @@ The repository contains a Svelte 5 / SvelteKit application with a responsive dar
 - Receive prompts that become more relevant over time, with control over personalization.
 - Revisit past reflections in a private journal.
 
-The journal offers a bundled starter prompt and optional AI prompts through its supported cloud and local connections. Preview and production builds use paid Gemini, with personalization controlled by each user’s saved sharing choices. See [VISION.md](VISION.md) for the project’s intended end state.
+The journal offers 255 bundled starter prompts across seventeen categories and optional AI prompts through its supported cloud and local connections. Preview and production builds use paid Gemini, with personalization controlled by each user’s saved sharing choices. See [VISION.md](VISION.md) for the project’s intended end state.
 
 Signed-in users without an outcome for this onboarding version see an optional eight-step setup on their next visit. **Skip for now** keeps saved settings and returns to the intended page; unfinished private answers resume on this device. Completion/skip syncs across devices, and offline skips queue durably. Private name/pronouns, seventeen editable interest descriptions, custom topics, Narrow/Intermediate/Broad scope and a 50–200-word limit can be edited or cleared under **Settings → Personalise your journal**, also linked from AI settings. Clearing current answers disables their sharing but does not erase historical events.
 
@@ -25,6 +25,16 @@ Questionnaire sharing starts off and requires explicit confirmation. Only select
 New requests use the saved scope/word limit and a twenty-unit history budget: reflections above 600 characters cost two units. Entry dates govern the anniversary/rediscovery/recent pools, including imported writing. **Why this prompt?** shows the actual count and units. New questions can contain up to 4,000 UTF-16 code units; malformed, incomplete and over-word-limit answers are rejected without automatic corrective requests. Older request versions and saved questions retain their original behaviour and text.
 
 [Onboarding design and implementation notes](ONBOARDING_DESIGN.md) explain storage, permissions, compatibility and remaining provider work. [Fourteen concept mockups](docs/ux/ONBOARDING_REVIEW.md) accompany the executable walkthroughs [045](tests/e2e/045-private-answers/README.md), [046](tests/e2e/046-onboarding/README.md), [047](tests/e2e/047-onboarding-ai/README.md) and [048](tests/e2e/048-onboarding-existing/README.md).
+
+## Starter and backup prompt rotation
+
+Today starts with a random starter from the supplied seventeen-category catalogue. **Another starter prompt** chooses an unseen category first, then permits category reuse while avoiding adjacent repeats where alternatives remain. A prompt is never deliberately offered twice on the same local day, across Today, independent composers and the backup chooser. Reopening an existing draft or the current daily card restores its existing choice.
+
+Choosing **Write a response** accepts its starter. Accepted originals rest for thirty local calendar days, even if their wording is edited or their draft is later discarded. They become eligible again on day thirty. Independent entries and backfills have their own starter choices; they do not replace Today’s card. Exhausting eligible starters leaves backup selection, AI generation and writing a custom prompt available.
+
+Backups remain a separate **Choose a backup prompt** control. Opening it and choosing **Show another** samples unseen questions randomly rather than walking the stored list. Viewing alone does not consume a backup. **Use this backup** consumes it immediately, independently of saving, wording edits or draft removal; the ordinary minimum-reserve refill can therefore start at acceptance. Exact text aliases share the same no-repeat/rest eligibility. Exhausted daily choices do not silently wrap to an earlier offer.
+
+Literal viewed and accepted prompt identities, local days and viewing surfaces are source actions; shuffled pools, eligible categories, expiry dates and counts are projections. Choices persist on the device before display and sync through the private event stream. Replay restores the actual offers without sampling again. Cached projections upgrade once to version 15; historical starter IDs and saved question text remain unchanged. The v1 catalogue in `src/lib/starter-catalogue.ts` is immutable for historical replay.
 
 ## Development
 

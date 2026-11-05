@@ -1,4 +1,6 @@
 <script lang="ts">
+  import {STARTER_CATALOGUE} from '../starter-catalogue';
+  import {choosePrompt,starterPrompt,promptRandom,type PromptKind} from '../prompt-rotation';
   import Onboarding from './Onboarding.svelte';
   import Questionnaire from './Questionnaire.svelte';
   import { ONBOARDING_VERSION, defaultAnswers, validAnswers, selectedDescriptions, SCOPE_OPTIONS, answersInput, type OnboardingAnswers } from '../onboarding';
@@ -149,8 +151,46 @@
     if(bound){photoModelConnection=bound;photoConnectionError='';}
   }
   let refillMessage=$state('');
+  let offering=$state(false),starterAttemptDay=$state(''),starterOwner=$state(''),starterMessage=$state('');
+  let offerChain:Promise<unknown>=Promise.resolve();
+  function offerPrompt(kind:PromptKind){const active=repository,day=today;const next=offerChain.then(()=>repository===active&&today===day?offerPromptNow(kind):null);offerChain=next.catch(()=>{});return next;}
+  $effect(()=>{const owner=user?.uid??'';if(owner!==starterOwner){starterOwner=owner;starterAttemptDay='';}});
+  async function offerPromptNow(kind:PromptKind){
+    const active=repository,offeredDay=today;
+    if(!active)return null;
+    const pool=kind==='starter'?STARTER_CATALOGUE:backups;
+    const chosen=choosePrompt([...pool],view.state.rotation,today,kind,promptRandom);
+    if(!chosen)return null;
+    const surface=kind==='backup'?'backup':writing||tab!=='today'||busy?'editor':'today';
+    await active.queueBackup({eventId:`v${offeredDay}_${surface[0]}${chosen.id}`,type:'PromptViewed',schemaVersion:1,payload:{day:offeredDay,promptId:chosen.id,surface}});
+    return repository===active&&today===offeredDay?chosen:null;
+  }
+  async function offerBackup(){return offerPrompt('backup');}
+  async function acceptPrompt(id:string){
+    if(!repository||!starterPrompt(id)&&!view.state.backups[id]||view.state.rotation.accepted[id]===today)return;
+    await repository.queueBackup({eventId:`a_${today}_${id}`,type:'PromptAccepted',schemaVersion:1,payload:{day:today,promptId:id}});
+  }
+  async function anotherStarter(){
+    if(offering)return;
+    const active=repository,offeredDay=today;
+    const replaceEmpty=todayDraftDay===today&&!!todayDraft&&!hasTodayDraft;
+    offering=true;error='';starterMessage='';
+    try{
+      const chosen=await offerPrompt('starter');if(repository!==active||today!==offeredDay)return;starterAttemptDay=today;
+      if(!chosen){starterMessage='No unseen starter prompts are available today. Try a backup, generate a prompt, or write your own.';return;}
+      if(writing){await acceptPrompt(chosen.id);editorPromptId=chosen.id;editorManualPrompt=null;await persistDraft();}
+      else if(replaceEmpty&&todayDraft){
+        todayDraft={...todayDraft,schemaVersion:6,payload:{...todayDraft.payload,promptId:chosen.id,promptText:null,entryAt:'entryAt'in todayDraft.payload?todayDraft.payload.entryAt:null,photoSlot:'photoSlot'in todayDraft.payload?todayDraft.payload.photoSlot:null}};
+        await repository!.writeDraft($state.snapshot(todayDraft),todayKey);
+      }
+    }catch(cause){error=cause instanceof Error?cause.message:'Could not keep this prompt offer. Please try again.';}finally{offering=false;}
+  }
+  $effect(()=>{
+    if(repository&&view.ready&&!busy&&!setupOpen&&!landing&&!calendarShown&&!savedId&&!selectedId&&tab==='today'&&!writing&&!daily.entry&&!hasTodayDraft&&(!view.state.ai.days[today]||view.state.ai.days[today]===STARTER_ID)&&!todayStarter&&!offering&&starterAttemptDay!==today&&(view.status==='Synced'||!navigator.onLine))void anotherStarter();
+  });
   async function selectBackup(id:string){
     if(!repository||!resolvePrompt(view.state,id))return;
+    await acceptPrompt(id);
     if(writing){editorPromptId=id;editorManualPrompt=null;await persistDraft();}
     else{
       const previous=todayDraftDay===today?todayDraft:null;
@@ -301,12 +341,13 @@
   const entryDateError = $derived(!chosenEntryAt(editorDateTime) ? 'Choose a valid entry date and time.'
     : new Date(chosenEntryAt(editorDateTime)!) > currentInstant ? 'Choose a date and time that is now or earlier.' : '');
   const daily = $derived(todayReflection(view.state.entries, today));
-  const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft && (!!todayDraft.payload.text.trim() || entryPhotos(view.state, todayDraft.payload.entryId).length > 0 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7) && todayDraft.payload.entryAt !== null || (todayDraft.schemaVersion === 5 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7)) && (todayDraft.payload.promptText !== null || todayDraft.payload.promptId !== (daily.entry?.promptId ?? view.state.ai.days[today] ?? STARTER_ID))));
+  const todayStarter=$derived(view.state.rotation.offers.filter(o=>o.day===today&&o.kind==='starter'&&o.surface==='today').at(-1)?.promptId);
+  const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft && (!!todayDraft.payload.text.trim() || entryPhotos(view.state, todayDraft.payload.entryId).length > 0 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7) && todayDraft.payload.entryAt !== null || (todayDraft.schemaVersion === 5 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7)) && (todayDraft.payload.promptText !== null || todayDraft.payload.promptId !== (daily.entry?.promptId ?? (view.state.ai.days[today]===STARTER_ID?todayStarter:view.state.ai.days[today]) ?? todayStarter ?? STARTER_ID))));
   const todayDraftEntry = $derived(hasTodayDraft ? view.state.entries.find(entry => entry.id === todayDraft?.payload.entryId) : undefined);
   const todayColour = $derived(colourForDay(today));
   const editorColour = $derived(colourForDay(validDay(editorDateTime.slice(0,10)) ? editorDateTime.slice(0,10) : editorEntryAt ? localDay(editorEntryAt) : today));
   let editorPromptId = $state(STARTER_ID);
-  const currentPromptId = $derived((hasTodayDraft && todayDraft ? promptId(todayDraft) : daily.entry?.promptId ?? view.state.ai.days[today]) ?? STARTER_ID);
+  const currentPromptId = $derived((hasTodayDraft && todayDraft ? promptId(todayDraft) : daily.entry?.promptId ?? (view.state.ai.days[today]===STARTER_ID?todayStarter:view.state.ai.days[today]) ?? todayStarter) ?? STARTER_ID);
   const currentPrompt = $derived(hasTodayDraft && todayDraft ? ((todayDraft.schemaVersion === 5 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7)) ? todayDraft.payload.promptText : null) ?? resolvePrompt(view.state, promptId(todayDraft)) ?? todayDraftEntry?.prompt ?? STARTER_PROMPT : daily.entry?.prompt ?? resolvePrompt(view.state, currentPromptId) ?? STARTER_PROMPT);
   let editorManualPrompt = $state<string | null>(null);
   let editingPrompt = $state(false);
@@ -341,9 +382,9 @@
   const currentResponse = $derived(view.state.ai.responses[currentPromptId]);
   const currentRequest = $derived(currentResponse ? view.state.ai.requests[currentResponse.payload.requestId] : null);
   const pendingDailyRequest = $derived(view.state.ai.control.requestId ? view.state.ai.requests[view.state.ai.control.requestId] : null);
-  const dailyRequestPending = $derived(pendingDailyRequest && !isBackupRequest(pendingDailyRequest) && !isEditorRequest(pendingDailyRequest) && pendingDailyRequest.payload.day === today);
+  const dailyRequestPending = $derived(pendingDailyRequest && !view.state.rotation.offers.some(o=>o.surface==='today'&&o.day===today&&o.sequence>(view.state.rotation.requests[pendingDailyRequest.eventId]??0)) && !isBackupRequest(pendingDailyRequest) && !isEditorRequest(pendingDailyRequest) && pendingDailyRequest.payload.day === today);
   const failedDailyRequest = $derived(view.state.ai.failure ? view.state.ai.requests[view.state.ai.failure.payload.requestId] : null);
-  const dailyRequestFailed = $derived(failedDailyRequest && !isBackupRequest(failedDailyRequest) && !isEditorRequest(failedDailyRequest) && failedDailyRequest.payload.day === today);
+  const dailyRequestFailed = $derived(failedDailyRequest && !view.state.rotation.offers.some(o=>o.surface==='today'&&o.day===today&&o.sequence>(view.state.rotation.requests[failedDailyRequest.eventId]??0)) && !isBackupRequest(failedDailyRequest) && !isEditorRequest(failedDailyRequest) && failedDailyRequest.payload.day === today);
   let aiBusy = $state(false);
   let generatingPrompt = $state(false);
   let aiMessage = $state('');
@@ -363,20 +404,15 @@
   async function generatePrompt() {
     const active = repository;
     if (!active || !client) return;
-    const requestedDay=today;
+    const requestedDay=today,initialStarter=todayStarter;
     generatingPrompt = true; aiMessage = '';dailyPromptError=null;
     try { await active.requestPrompt(requestedDay, personalContextAvailable ? 'personal' : 'generic', promptGenerator(),undefined,false,currentResponse?.eventId); }
-    catch (cause) { if (repository === active) dailyPromptError={day:requestedDay,text:cause instanceof Error ? cause.message : 'Could not request a prompt.'}; }
+    catch (cause) { if (repository === active && todayStarter===initialStarter) dailyPromptError={day:requestedDay,text:cause instanceof Error ? cause.message : 'Could not request a prompt.'}; }
     finally { if (repository === active) generatingPrompt = false; }
   }
   async function useStarter() {
-    if (!repository) return;
     dailyPromptError=null;
-    aiBusy = true; aiMessage = '';
-    try { await repository.commitAI({ eventId: crypto.randomUUID(), type: 'StarterPromptChosen', schemaVersion: 1,
-      payload: { previousEventId: view.state.ai.control.lastEventId, day: today, starterId: STARTER_ID } }); }
-    catch (cause) { aiMessage = cause instanceof Error ? cause.message : 'Could not choose the starter prompt.'; }
-    finally { aiBusy = false; }
+    await anotherStarter();
   }
   async function syncPrompt() {
     aiBusy = true; aiMessage = '';
@@ -590,12 +626,15 @@
   const todayLabel = $derived(new Intl.DateTimeFormat('en-AU', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${today}T12:00:00`)));
   function shortDate(value: string) { return new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long' }).format(new Date(value)); }
   function entryDateTime(value: string) { return new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value)); }
-  async function openComposer(key: string, entry: Entry | undefined, recordHistory=true) {
+  async function openComposer(key: string, entry: Entry | undefined, recordHistory=true,initialPromptId?:string) {
     const active = repository;
     if (!active) return;
     busy = true; error = ''; aiMessage = '';
     try {
       let stored = await active.readDraft(key);
+      let manualEmpty=false;
+      if(!stored&&!entry&&!initialPromptId){const offered=await offerPrompt('starter');if(offered){initialPromptId=offered.id;await acceptPrompt(offered.id);}else manualEmpty=true;}
+      if(!stored&&!entry&&initialPromptId===STARTER_ID&&!todayStarter)manualEmpty=true;
       // Pick up a migrated draft previously stored under the entry's identity.
       if (!stored && entry && key === todayKey) {
         stored = await active.readDraft(`draft:entry:${entry.id}`);
@@ -608,8 +647,8 @@
       draft = stored;
       const original = stored ? view.state.entries.find(item => item.id === stored.payload.entryId) : entry;
       editing = original ? { ...original, revision: stored?.payload.expectedRevision ?? original.revision } : null;
-      editorPromptId = stored ? promptId(stored) : original?.promptId ?? (resolvePrompt(view.state, currentPromptId) ? currentPromptId : STARTER_ID);
-      editorManualPrompt = (stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7)) ? stored.payload.promptText : null;
+      editorPromptId = stored ? promptId(stored) : original?.promptId ?? initialPromptId ?? (resolvePrompt(view.state, currentPromptId) ? currentPromptId : STARTER_ID);
+      editorManualPrompt = manualEmpty?'[No prompt]':(stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7)) ? stored.payload.promptText : null;
       editingPrompt = false; dismissedPrompt = '';
       currentInstant = new Date();
       editorDateTime = localDateTime((stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7)) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
@@ -625,8 +664,10 @@
     finally { busy = false; }
   }
   async function beginWriting() {
+    if(offering)return;
+    if(!daily.entry)await acceptPrompt(currentPromptId);
     const key = daily.entry && (!hasTodayDraft || todayDraft?.payload.entryId === daily.entry.id) ? keyForEntry(daily.entry) : todayKey;
-    await openComposer(key, daily.entry);
+    await openComposer(key, daily.entry,true,currentPromptId);
   }
   async function newEntry() { if(dateFilter)await startDateReflection(dateFilter);else await openComposer(newEntryKey, undefined); }
   async function openSettings(next: typeof settingsPage) { settingsPage = next; exportStatus = ''; preparedFile = null; aiMessage = ''; if (next === 'ai') choices = { ...view.state.ai.choices }; if (next === 'answers') await loadAnswers(); await tick(); window.scrollTo(0, 0); }
@@ -860,7 +901,7 @@
     {/snippet}
   </WelcomePage>
 {:else}
-<main data-onboarding-pending={!!view.onboardingPending} data-journal-ready={view.ready&&!chooseInitialPage} class:composing={writing} class:friendsPage={tab==='friends'} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:calendarView={calendarShown}>
+<main data-prompt-offer-busy={offering||view.ready&&!!user&&!setupOpen&&!landing&&!calendarShown&&!savedId&&!selectedId&&tab==='today'&&!writing&&!daily.entry&&!hasTodayDraft&&!todayStarter&&(!view.state.ai.days[today]||view.state.ai.days[today]===STARTER_ID)&&starterAttemptDay!==today} data-prompt-rotation-pending={!!view.rotationPending} data-onboarding-pending={!!view.onboardingPending} data-journal-ready={view.ready&&!chooseInitialPage} class:composing={writing} class:friendsPage={tab==='friends'} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:calendarView={calendarShown}>
   {#if !initialized}
     <p role="status" class="loading">Opening Gratitude…</p>
   {:else if setupOpen}
@@ -911,7 +952,8 @@
           {#if showPromptCandidate && promptCandidate}
             <aside class="prompt-option" aria-label="Generated prompt option"><p class="hint">Generated option</p><p class="writing-prompt">{promptCandidate.payload.text}</p><div class="prompt-actions"><button class="card-action" type="button" onclick={useEditorPrompt} disabled={busy || editingPrompt}>Use this prompt</button><button class="card-action" type="button" onclick={() => dismissedPrompt = promptCandidate!.eventId}>Keep current prompt</button></div></aside>
           {/if}
-          <BackupPicker prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||editingPrompt} />
+          <button class="outline card-action" onclick={anotherStarter} disabled={busy||editingPrompt||offering}>Another starter prompt</button>
+          <BackupPicker onoffer={offerBackup} prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||editingPrompt} />
           <ReflectionEditor value={text} oninput={value => void persistDraft(value)} disabled={busy || !draftRestored} />
         </section>
         {#if client && repository}<PhotoPanel connection={photoConnection} connectionError={photoConnectionProblem} {client} {repository} {view} uid={user.uid} entryId={draft?.payload.entryId ?? editing?.id ?? null} ensureEntry={ensurePhotoEntry} colour={editorColour} disabled={busy || !draftRestored} draft={!editing} onbusy={value => photoBusy = value} />{/if}
@@ -931,21 +973,23 @@
         <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} photos={calendarPhotos} />
         <h1 class="today-heading">{privateName ? `Reflection time, ${privateName}!` : 'Reflection time'}</h1>
         {#if view.ready}
-          <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID ? 'Starter prompt' : currentResponse ? 'AI prompt' : 'Your prompt'}</span><h2>{currentPrompt}</h2></section>
-          <button class="primary today-response" onclick={beginWriting} disabled={busy || !draftLoaded || todayDraftDay !== today}>{hasTodayDraft || daily.entry ? 'Continue your reflection' : 'Write a response'}</button>
+          <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID || starterPrompt(currentPromptId) ? 'Starter prompt' : view.state.backups[currentPromptId] ? 'Backup prompt' : currentResponse ? 'AI prompt' : 'Your prompt'}{#if starterPrompt(currentPromptId)} · {starterPrompt(currentPromptId)!.category}{/if}</span><h2>{currentPromptId===STARTER_ID&&!daily.entry&&!hasTodayDraft&&!todayStarter?(starterAttemptDay===today?'No starter prompts remain today. You can write your own prompt.':'Choosing a starter prompt…'):currentPrompt}</h2></section>
+          <button class="primary today-response" onclick={beginWriting} disabled={busy || offering || !draftLoaded || todayDraftDay !== today || currentPromptId===STARTER_ID&&!todayStarter&&!daily.entry&&!hasTodayDraft&&starterAttemptDay!==today}>{hasTodayDraft || daily.entry ? 'Continue your reflection' : 'Write a response'}</button>
+          {#if starterMessage}<p class="hint" role="status">{starterMessage}</p>{/if}
+          {#if !daily.entry && !hasTodayDraft}<button class="outline" onclick={anotherStarter} disabled={busy||offering||!view.ready}>{offering?'Finding a starter…':'Another starter prompt'}</button>{/if}
           {#if daily.entry}<button class="outline additional-response" onclick={newEntry} disabled={busy || !draftLoaded || !!view.pending}>Write another reflection</button>{/if}
           {#if !daily.entry && !hasTodayDraft && !generatingPrompt && (dailyPromptError?.day===today || dailyRequestFailed)}<p class="ai-message hint prompt-request-error" role="status">{dailyPromptError?.day===today ? dailyPromptError.text : view.state.ai.failure?.payload.reason==='invalid-response' ? 'The AI returned an incomplete or invalid prompt. Try again or choose a backup prompt.' : 'No new prompt arrived. Check your AI connection, try again, or choose a backup prompt.'}</p>{/if}
           {#if !daily.entry && !hasTodayDraft}
             {#if view.state.ai.choices.enabled}
-              <button class="outline ai-generate" onclick={generatePrompt} disabled={aiBusy || generatingPrompt || !!view.aiResultPending || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : dailyRequestPending || dailyRequestFailed ? 'Try another request' : currentResponse ? 'Another prompt' : 'Generate a prompt'}</button>
+              <button class="outline ai-generate" onclick={generatePrompt} disabled={aiBusy || generatingPrompt || offering || !!view.rotationPending || !!view.aiResultPending || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : dailyRequestPending || dailyRequestFailed ? 'Try another request' : currentResponse ? 'Another prompt' : 'Generate a prompt'}</button>
               {#if dailyRequestPending && !generatingPrompt && !view.aiResultPending}<p class="hint">A request is unfinished. It will not restart by itself. Try another request or use the starter.</p>{/if}
               {#if currentResponse || dailyRequestPending || dailyRequestFailed}<button class="text-button today-secondary" onclick={useStarter} disabled={aiBusy}>Use starter prompt</button>{/if}
             {:else}<button class="text-button today-secondary" onclick={async () => { await navigate('settings'); await openSettings('ai'); }}>Set up AI prompts</button>{/if}
           {/if}
-          {#if !daily.entry}<BackupPicker prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||!draftLoaded||!!view.pending} />{/if}
+          {#if !daily.entry}<BackupPicker onoffer={offerBackup} prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||!draftLoaded||!!view.pending} />{/if}
           {#if view.aiResultPending}<section class="glass"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
           <button class="text-button today-secondary" onclick={() => navigate('journal')}>Browse your journal</button>
-          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<div class="glass explanation">{#if currentRequest}<p>This question was generated by {'provider' in currentRequest.payload ? serviceName(currentRequest.payload.provider) : 'Gemini'}.{currentRequest.payload.contextMode === 'generic' ? ' No journal text, preferences or feedback was shared.' : ` It used your saved preferences, ${requestEntryRefs(currentRequest).length} saved reflections (${view.state.ai.requestUnits[currentRequest.eventId]??requestEntryRefs(currentRequest).length} of 20 context units) and ${currentRequest.payload.feedbackIds.length} pieces of feedback.`}</p>{:else if view.state.backups[currentPromptId]}<p>A personalised question from your saved backup prompts. No AI request was needed to choose it.</p>{:else if currentPromptId !== STARTER_ID}<p>You wrote this prompt. It is saved with your reflection.</p>{:else}<p>A simple starting point for noticing something good. You can write as little or as much as you like. This starter works without sending anything to AI.</p>{/if}<button class="underlined" onclick={openFeedback} disabled={!resolvePrompt(view.state, currentPromptId)}>Give prompt feedback</button>{#if feedbackOpen}<label class="ai-label" for="prompt-feedback">What would make prompts better for you?</label><textarea id="prompt-feedback" maxlength="500" rows="3" bind:value={feedbackText}></textarea><p class="hint">A short note in your own words. Clear the text to remove it from future personalization.</p><button class="outline" onclick={saveFeedback} disabled={aiBusy}>Save feedback</button>{/if}</div>{/if}</div>
+          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<div class="glass explanation">{#if starterPrompt(currentPromptId)}<p>A starter prompt from the {starterPrompt(currentPromptId)!.category} collection. It works without AI or a connection. Accepted starters rest for 30 days.</p>{:else if currentRequest}<p>This question was generated by {'provider' in currentRequest.payload ? serviceName(currentRequest.payload.provider) : 'Gemini'}.{currentRequest.payload.contextMode === 'generic' ? ' No journal text, preferences or feedback was shared.' : ` It used your saved preferences, ${requestEntryRefs(currentRequest).length} saved reflections (${view.state.ai.requestUnits[currentRequest.eventId]??requestEntryRefs(currentRequest).length} of 20 context units) and ${currentRequest.payload.feedbackIds.length} pieces of feedback.`}</p>{:else if view.state.backups[currentPromptId]}<p>A personalised question from your saved backup prompts. No AI request was needed to choose it.</p>{:else if currentPromptId !== STARTER_ID}<p>You wrote this prompt. It is saved with your reflection.</p>{:else}<p>A simple starting point for noticing something good. You can write as little or as much as you like. This starter works without sending anything to AI.</p>{/if}<button class="underlined" onclick={openFeedback} disabled={!resolvePrompt(view.state, currentPromptId)}>Give prompt feedback</button>{#if feedbackOpen}<label class="ai-label" for="prompt-feedback">What would make prompts better for you?</label><textarea id="prompt-feedback" maxlength="500" rows="3" bind:value={feedbackText}></textarea><p class="hint">A short note in your own words. Clear the text to remove it from future personalization.</p><button class="outline" onclick={saveFeedback} disabled={aiBusy}>Save feedback</button>{/if}</div>{/if}</div>
         {/if}
       {/if}
     {:else if tab === 'journal'}

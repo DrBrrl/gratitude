@@ -1,7 +1,7 @@
 import { isOnboardingAction } from '../onboarding.ts';
 import { stableJSON } from '../import-source.ts';
 import { doc, getDocFromServer, runTransaction, serverTimestamp, Timestamp, type Firestore, type DocumentData } from 'firebase/firestore';
-import { GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, isLocalRequest, requestProvider, isBackupRequest, isBackupAction, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey, photoProvider } from '../domain.ts';
+import { isRotationAction, GENERATION, parseAction, promptId, emptyControl, nextControl, STARTER_ID, isEditorRequest, isLocalRequest, requestProvider, isBackupRequest, isBackupAction, requestEntryRefs, type SourceAction, type JournalEvent, isPhotoAction, photoKey, photoProvider } from '../domain.ts';
 import {BACKUP_LEASE_MS} from '../backup-prompts.ts';
 
 export function decodeEvent(data: DocumentData): JournalEvent {
@@ -15,7 +15,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
   const action = parseAction(input);
   const stream = doc(db, `users/${uid}/streams/${GENERATION}`);
   const event = doc(db, `${stream.path}/events/${action.eventId}`);
-  const pointer = doc(db, isOnboardingAction(action) ? `${stream.path}/onboarding/control` : action.type === 'AccentColourChosen' ? `${stream.path}/appearance/control` : action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
+  const pointer = doc(db, isRotationAction(action)?`${stream.path}/rotation/control`:isOnboardingAction(action) ? `${stream.path}/onboarding/control` : action.type === 'AccentColourChosen' ? `${stream.path}/appearance/control` : action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
   const resultFromPrior = (value: DocumentData) => {
     const decoded = decodeEvent(value);
     const original = parseAction({ eventId: decoded.eventId, type: decoded.type, schemaVersion: decoded.schemaVersion, payload: decoded.payload });
@@ -28,7 +28,8 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
       const [prior,head,latest] = await Promise.all([tx.get(event),tx.get(stream),tx.get(pointer)]);
       if (prior.exists()) return resultFromPrior(prior.data());
       let metadata: Record<string, unknown>;
-      if (isOnboardingAction(action)) {
+      if(isRotationAction(action)){metadata={lastEventId:action.eventId};
+      } else if (isOnboardingAction(action)) {
         const answersId = latest.get('answersId') ?? null;
         const version = latest.get('version') ?? 0;
         if (action.type === 'OnboardingFinished' ? action.payload.version <= version : action.payload.previousEventId !== answersId) {

@@ -5,4 +5,6 @@ set -euo pipefail
 firebase_test_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 # The clock override only changes Java emulator processes, never the app or browser.
 export PATH="$GRATITUDE_TEST_JAVA_BIN:$firebase_test_root/node_modules/.bin:$PATH"
+# Fix only prompt-selection entropy for browser fixtures; published builds do not use this shell.
+export VITE_PROMPT_RANDOM_SEED="${VITE_PROMPT_RANDOM_SEED:-gratitude-browser-fixture-v1}"
 exec firebase emulators:exec --project demo-gratitude --only auth,firestore,storage "$@"

@@ -1,3 +1,4 @@
+import {isRotationAction,type RotationAction} from '../domain';
 import type { OnboardingAction } from '../onboarding';
 import type { ImportSelection } from '../import-archive';
 import { parseAction, replay, type Action, type ImportAction, type BackupAction, type AppearanceAction, type PhotoAction, type AIAction, type SourceAction, type JournalEvent } from '../domain';
@@ -65,10 +66,10 @@ export class ReviewRepository implements JournalStore {
     replay(events); // Real reducer enforces ordering and edit revisions.
     this.persist(events); this.emit();
   }
-  async commitAI(action: AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
+  async commitAI(action: RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
   async requestPrompt() { throw new Error('Use the Firebase preview to try Gemini. UI review stays entirely on this device.'); }
-  async queueBackups(actions:BackupAction[]) {for(const action of actions)await this.save(action);}
-  async queueBackup(action:BackupAction) {await this.save(action);}
+  async queueBackups(actions:(BackupAction|RotationAction)[]) {for(const action of actions)await this.save(action);}
+  async queueBackup(action:BackupAction|RotationAction) {await this.save(action);}
   async syncBackups() {}
   async syncPromptResult() {}
   async requestPhotoSummary() { throw new Error('Use the Firebase preview to summarize photos.'); }

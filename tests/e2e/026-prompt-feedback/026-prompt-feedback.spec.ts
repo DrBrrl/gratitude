@@ -3,7 +3,7 @@ import {TestStepHelper} from '../helpers/test-step-helper';
 import {startJournal,navigate,expectSynced} from '../helpers/journal-session';
 import {aiSettings,saveChoices,toggleAI,AI_ENDPOINT,respond,FIRST_PROMPT,SECOND_PROMPT} from '../helpers/gemini';
 import {selectionLog} from '../helpers/ai-selection-fixture';
-import {replay,STARTER_PROMPT} from '../../../src/lib/domain';
+import {replay} from '../../../src/lib/domain';
 const expect=baseExpect.configure({timeout:15_000});
 const ORIGINAL='I prefer questions about sounds. '.repeat(9)+'Please avoid questions about work.';
 const REVISED='Gentle questions about everyday sounds, please.';
@@ -21,6 +21,7 @@ test('prompt feedback pairs are visible, editable, removable and shared only by 
     await steps.action(`${id}-close`,'Close the prompt explanation after saving feedback',()=>page.getByRole('button',{name:'Why this prompt?',exact:true}).click(),async()=>{await expect(page.locator('.explanation')).toHaveCount(0);});
   }
   await startJournal(page,info,steps,'feedback-pairs');
+  const STARTER_PROMPT=(await page.locator('.daily-prompt h2').textContent())!;
   await writeFeedback(ORIGINAL,'starter');
   await aiSettings(page,steps,'initial');
   await steps.step('visible-off','Review the starter question and its complete note while sharing is off',[{description:'What informs your prompts shows both halves of the saved pair and its sharing status',check:async()=>{await expect(pair(STARTER_PROMPT).locator('.feedback-text')).toHaveText(ORIGINAL);await expect(page.getByText(/Feedback sharing is off\./)).toBeVisible();expect(contexts).toHaveLength(0);}}]);

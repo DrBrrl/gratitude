@@ -2,7 +2,7 @@
 
 Gratitude is a responsive single-page application for daily gratitude reflection, accessible on phones, tablets, and desktops.
 
-Users receive a daily AI-generated gratitude prompt and can write and save a response. The AI learns how to prompt each user appropriately over time, adapting to their preferences and feedback.
+Users receive a daily starter prompt or choose an AI-generated gratitude prompt and can write and save a response. Starter prompts span varied categories, avoid same-day repetitions, and rest for thirty days after use. Personalised backups are offered randomly and leave the reserve when accepted, including when their wording is edited. The AI learns how to prompt each user appropriately over time, adapting to their preferences and feedback.
 
 Users can revisit previous reflections, request an alternative prompt, or skip a day. They control what information informs personalization and can inspect, reset, or disable it.
 
