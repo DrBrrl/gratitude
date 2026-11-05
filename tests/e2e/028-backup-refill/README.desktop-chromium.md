@@ -278,9 +278,9 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Select a question without invoking either model
+## Accept the reserve prompt and wait for its automatic replacement
 
-![Select a question without invoking either model](./screenshots/030-choose-desktop-chromium.png)
+![Accept the reserve prompt and wait for its automatic replacement](./screenshots/030-choose-desktop-chromium.png)
 
 **Verifications:**
 
