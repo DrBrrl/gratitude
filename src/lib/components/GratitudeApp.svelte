@@ -311,7 +311,7 @@
       const requestedJournal = signInDestination === 'journal' || page.url.searchParams.get('afterSignIn') === 'journal';
       signInDestination = null;
       tab = requestedFriends ? 'friends' : requestedJournal ? 'journal' : page.route.id === '/settings' ? 'settings' : todayReflection(value.state.entries, today).entry ? 'journal' : 'today';
-      if(value.repeatOnboarding)void openSetup({manual:true});else if(value.state.onboarding.version<ONBOARDING_VERSION && !value.onboardingPending)void openSetup();
+      if(value.repeatOnboarding){tab='settings';settingsPage='answers';void openSetup({manual:true});}else if(value.state.onboarding.version<ONBOARDING_VERSION && !value.onboardingPending)void openSetup();
       if (requestedJournal||requestedFriends) {
         const destination = new URL(page.url);
         destination.searchParams.delete('afterSignIn');destination.searchParams.delete('open');
