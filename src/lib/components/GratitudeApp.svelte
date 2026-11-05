@@ -936,8 +936,8 @@
           {#if aiMessage}<p role="status" class="hint">{aiMessage}</p>{/if}
         {/snippet}
         {#snippet sharing()}
-          <div class="preference"><span>Use journal entries</span><button class="switch" role="switch" aria-checked={choices.useJournal} aria-label="Use journal entries" onclick={()=>choices.useJournal=!choices.useJournal} disabled={aiBusy||!personalContextAvailable&&!choices.useJournal}><span></span></button></div>
-          <div class="preference"><span>Use prompt feedback</span><button class="switch" role="switch" aria-checked={choices.useFeedback} aria-label="Use prompt feedback" onclick={()=>choices.useFeedback=!choices.useFeedback} disabled={aiBusy||!personalContextAvailable&&!choices.useFeedback}><span></span></button></div>
+          <div class="preference"><span>Use journal entries</span><button class="switch" role="switch" aria-checked={choices.useJournal} aria-label="Use journal entries" onclick={()=>choices.useJournal=!choices.useJournal} disabled={answerBusy||aiBusy||!personalContextAvailable&&!choices.useJournal}><span></span></button></div>
+          <div class="preference"><span>Use prompt feedback</span><button class="switch" role="switch" aria-checked={choices.useFeedback} aria-label="Use prompt feedback" onclick={()=>choices.useFeedback=!choices.useFeedback} disabled={answerBusy||aiBusy||!personalContextAvailable&&!choices.useFeedback}><span></span></button></div>
         {/snippet}
         {#snippet friends()}{#if client&&user&&!uiReview}<Friends {client} uid={user.uid} journal={view} {pushController} pushState={hugPushState} profileOnly oncomplete={complete=>setupFriendsComplete=complete} />{:else}<p class="hint">Use the Firebase preview to set up your public Friends profile.</p>{/if}{/snippet}
       </Onboarding>
