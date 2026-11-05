@@ -43,8 +43,8 @@
 
 {#if part === 'all' || part === 'interests'}
   <section class="interests" aria-label="Topics to reflect on">
-    <p class="hint">What topics would you like to reflect on? Choosing at least three topics to give the AI a starting point is recommended. You can change these topics whenever you like.</p>
-    {#if part==='interests'}<p class="hint">When you choose to share your topics of interest with the AI, the descriptions of your selected topics are sent through to be used in the creation of gratitude prompts. You can edit these descriptions to better represent your interests using the edit button or leave them as they are. If you'd like to add any topics that aren't represented below, there is an input for this below the table!</p>{/if}
+    <p class="hint">{part==='interests'?'Which':'What'} topics would you like to reflect on? Choosing at least three topics to give the AI a starting point is recommended. You can change these topics whenever you like.</p>
+    {#if part==='interests'}<p class="hint">The <strong>topic description</strong> is sent through to the AI for prompt generation. Feel free to edit the description so that it reflects your understanding of the topic at any time. There is space for you to add any topics you'd like that aren't on the list at the bottom of the table!</p>{/if}
     <table class="glass topics">
       <colgroup><col class="topic-column" /><col /><col class="edit-column" /></colgroup>
       <thead><tr><th scope="col">Topic</th><th scope="col">Description</th><th scope="col"><span class="sr-only">Edit</span></th></tr></thead>
@@ -84,8 +84,8 @@
 {/if}
 
 {#if part === 'all' || part === 'prompts'}
-  <section class="glass answers-section" aria-label="Prompt scope">
-    <h2>Prompt scope</h2>
+  <section class="glass answers-section" aria-label={part==='prompts'?'AI generated prompt scope':'Prompt scope'}>
+    <h2>{part==='prompts'?'AI generated prompt scope':'Prompt scope'}</h2>{#if part==='prompts'}<p class="hint">The AI will be asked to generate prompts based on your preference for scope.</p>{/if}
     {#each SCOPE_OPTIONS as [value, label, description] (value)}
       <label class="scope" class:active={answers.scope === value}>
         <input type="radio" name={`${field}-scope`} {value} bind:group={answers.scope} {disabled} />

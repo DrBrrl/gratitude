@@ -2,27 +2,29 @@
   import type {ReflectionDraft} from '../reflection-draft';
   import {STARTER_CATALOGUE} from '../starter-catalogue';
   import {choosePrompt,starterPrompt,promptRandom,type PromptKind} from '../prompt-rotation';
+  import {readSetupAI} from '../onboarding-flow';
   import Onboarding from './Onboarding.svelte';
   import Questionnaire from './Questionnaire.svelte';
   import { ONBOARDING_VERSION, defaultAnswers, validAnswers, selectedDescriptions, SCOPE_OPTIONS, answersInput, type OnboardingAnswers } from '../onboarding';
   let answerDraft = $state<OnboardingAnswers>(defaultAnswers()), answerBase = $state<string|null>(null), answerReady = $state(false), answerBusy = $state(false), answerMessage = $state(''), clearAnswersOpen = $state(false);
-  let setupPromptComplete=$state(false),setupPhotoComplete=$state(false),setupFriendsComplete=$state(false);
+  let setupPromptComplete=$state(false),setupPhotoComplete=$state(false),setupFriendsComplete=$state(false),setupPromptReady=$state(false),setupAIReviewed=$state(false);
   $effect(() => {
     if ((setupOpen || settingsPage === 'answers') && answerReady) {
-      const saved = { answers: $state.snapshot(answerDraft), answersId: answerBase, step:setupStep, colour:setupColour };
+      const saved = { answers: $state.snapshot(answerDraft), answersId: answerBase, step:setupStep, colour:setupColour,...(setupOpen?{repeating:setupRepeated,aiReviewed:setupAIReviewed,aiChoices:{enabled:choices.enabled,useJournal:choices.useJournal,useFeedback:choices.useFeedback,guidance:choices.guidance}}:{}) };
       untrack(() => { void repository?.writeOnboardingDraft(saved); });
     }
   });
   async function loadAnswers(savedDraft = true) {
     const active = repository; if (!active) return;
     answerReady = false; answerMessage = ''; clearAnswersOpen = false;
-    const stored = savedDraft ? await active.readOnboardingDraft() as {answers?:unknown;answersId?:unknown;step?:unknown;colour?:unknown}|null : null;
+    const stored = savedDraft ? await active.readOnboardingDraft() as {answers?:unknown;answersId?:unknown;step?:unknown;colour?:unknown;aiChoices?:unknown;aiReviewed?:unknown}|null : null;
     if (repository !== active || !setupOpen && settingsPage !== 'answers') return;
     const raw = stored?.answers as Partial<OnboardingAnswers>|undefined;
     const useDraft = !!raw && typeof raw.preferredName === 'string' && typeof raw.pronouns === 'string' && raw.preferredName.length<=160 && raw.pronouns.length<=160 && validAnswers({...raw,preferredName:'',pronouns:''}) && (stored?.answersId === null || typeof stored?.answersId === 'string');
     answerDraft = structuredClone(useDraft ? stored!.answers as OnboardingAnswers : view.state.onboarding.answers);
     answerBase = useDraft ? stored!.answersId as string|null : view.state.onboarding.answersId;
     if(setupOpen){setupStep=useDraft && Number.isInteger(stored?.step) && Number(stored?.step)>=0 && Number(stored?.step)<8 ? Number(stored?.step):0;setupColour=useDraft && Number.isInteger(stored?.colour) && Number(stored?.colour)>=0 && Number(stored?.colour)<=26 && Number(stored?.colour)%2===0 ? Number(stored?.colour):view.state.appearance.colourIndex;}
+    if(setupOpen){const restored=useDraft?readSetupAI(stored?.aiChoices):null;if(restored)choices={...view.state.ai.choices,...restored};setupAIReviewed=useDraft&&typeof stored?.aiReviewed==='boolean'?stored.aiReviewed:setupStep>3;if(setupAIReviewed&&!choices.enabled&&(setupStep===4||setupStep===5))setupStep=6;}
     answerReady = true;
   }
   async function saveAnswers(clear = false) {
@@ -41,8 +43,20 @@
     finally { answerBusy = false; }
   }
 
-  let setupOpen=$state(false),setupStep=$state(0),setupColour=$state(0),setupOnline=$state(true);
-  async function openSetup(){choices={...view.state.ai.choices};setupOpen=true;await loadAnswers();window.scrollTo(0,0);}
+  let setupOpen=$state(false),setupStep=$state(0),setupColour=$state(0),setupOnline=$state(true),setupRepeated=$state(false);
+  async function openSetup({manual=false,restart=false}:{manual?:boolean;restart?:boolean}={}){answerReady=false;choices={...view.state.ai.choices};setupRepeated=manual;setupOpen=true;await loadAnswers();if(restart){setupStep=0;setupAIReviewed=false;setupColour=view.state.appearance.colourIndex;choices={...view.state.ai.choices};}window.scrollTo(0,0);}
+  async function continueSetupAI():Promise<'ai'|'starter'|'stay'>{
+    answerMessage='';
+    if(!choices.enabled)return 'starter';
+    if(!setupPromptComplete||!setupPhotoComplete){choices.enabled=false;return 'starter';}
+    if(!setupPromptReady){answerMessage='Save your AI model connection before continuing, or turn AI prompts off to use starters for now.';return 'stay';}
+    return 'ai';
+  }
+  async function saveSetupAI(){
+    const patch=readSetupAI({enabled:choices.enabled,useJournal:choices.useJournal,useFeedback:choices.useFeedback,guidance:choices.guidance});
+    if(!patch)throw new Error('Check your AI choices before saving.');
+    if(Object.entries(patch).some(([key,value])=>view.state.ai.choices[key as keyof AIChoices]!==value))await confirmChoices(patch);
+  }
   async function finishSetup(skip=false){
     if(!repository)return;
     answerBusy=true;answerMessage='';
@@ -51,14 +65,19 @@
         if(answerBase!==view.state.onboarding.answersId)throw new Error('Your answers changed on another device. Skip for now to review them in Settings; your draft is kept.');
         const answers={...$state.snapshot(answerDraft),preferredName:answerDraft.preferredName.trim(),pronouns:answerDraft.pronouns.trim()};
         if(!validAnswers(answers))throw new Error('Check the answers and their limits before saving.');
+        await saveSetupAI();
         await repository.commitAI({eventId:crypto.randomUUID(),type:'OnboardingAnswersConfirmed',schemaVersion:1,payload:{...answersInput(answers),previousEventId:answerBase}});
         answerBase=view.state.onboarding.answersId;
         if(setupColour!==view.state.appearance.colourIndex)await chooseAccent(setupColour);
       }
-      try{await repository.finishOnboarding(skip?'skipped':'completed');}
+      try{if(view.state.onboarding.version<ONBOARDING_VERSION)await repository.finishOnboarding(skip?'skipped':'completed');}
       catch(cause){if(!view.onboardingPending)throw cause;}
-      setupOpen=false;answerReady=false;
+      const repeated=setupRepeated;
+      if(skip)choices={...view.state.ai.choices};
+      if(skip&&repeated){const stored=await repository.readOnboardingDraft();if(stored&&typeof stored==='object')await repository.writeOnboardingDraft({...stored,repeating:false});}
+      setupOpen=false;answerReady=false;setupRepeated=false;
       if(!skip)await repository.writeOnboardingDraft(null);
+      if(repeated&&tab==='settings'&&settingsPage==='answers')await loadAnswers(skip);
       await tick();window.scrollTo(0,0);
     } catch(cause){answerMessage=cause instanceof Error?cause.message:'Could not save. Your draft is kept on this device.';}
     finally{answerBusy=false;}
@@ -292,7 +311,7 @@
       const requestedJournal = signInDestination === 'journal' || page.url.searchParams.get('afterSignIn') === 'journal';
       signInDestination = null;
       tab = requestedFriends ? 'friends' : requestedJournal ? 'journal' : page.route.id === '/settings' ? 'settings' : todayReflection(value.state.entries, today).entry ? 'journal' : 'today';
-      if(value.state.onboarding.version<ONBOARDING_VERSION && !value.onboardingPending)void openSetup();
+      if(value.repeatOnboarding)void openSetup({manual:true});else if(value.state.onboarding.version<ONBOARDING_VERSION && !value.onboardingPending)void openSetup();
       if (requestedJournal||requestedFriends) {
         const destination = new URL(page.url);
         destination.searchParams.delete('afterSignIn');destination.searchParams.delete('open');
@@ -771,7 +790,7 @@
           modelConnection=defaultConnection();modelConnectionError='';photoModelConnection=defaultConnection();photoConnectionError='';
           if(next&&client) {try{modelConnection=readConnection(`${client.projectId}:${base}:${next.uid}`);}catch{modelConnection={...defaultConnection(),provider:'lm-studio'};modelConnectionError='Model settings could not be restored. Save your model connection in AI settings before generating.';}}
           if(next&&client){try{photoModelConnection=readConnection(photoConnectionScope(`${client.projectId}:${base}:${next.uid}`));}catch{photoConnectionError='Photo model settings could not be restored. Save the photo connection again.';}}
-          setupOpen=false;answerReady=false;answerDraft=defaultAnswers();
+          setupOpen=false;setupRepeated=false;answerReady=false;answerDraft=defaultAnswers();
           user = next; todayDraft = null; todayDraftDay = ''; editorDraftKey = ''; text = ''; editing = null; error = ''; draft = null; draftLoaded = false; draftRestored = false; draftStatus = ''; draftWrite++; exportStatus = ''; preparedFile = null; exporting = false; tab = 'today'; selectedId = null; query = ''; writing = false; savedId = null; settingsPage = 'menu';
           view = { state: emptyProjection(), pending: null, status: '', error: '', ready: false };
           initialized = true;
@@ -904,19 +923,21 @@
     <p role="status" class="loading">Opening Gratitude…</p>
   {:else if setupOpen}
     {#if answerReady}
-      <Onboarding bind:answers={answerDraft} bind:step={setupStep} bind:colour={setupColour} busy={answerBusy||aiBusy||photoBusy} message={answerMessage} stale={answerBase!==view.state.onboarding.answersId&&!answerBusy} online={setupOnline} aiComplete={setupPromptComplete&&setupPhotoComplete} friendsComplete={setupFriendsComplete} onfinish={()=>finishSetup()} onskip={()=>finishSetup(true)}>
+      <Onboarding bind:answers={answerDraft} bind:step={setupStep} bind:colour={setupColour} busy={answerBusy||aiBusy||photoBusy} message={answerMessage} stale={answerBase!==view.state.onboarding.answersId&&!answerBusy} online={setupOnline} aiComplete={setupPromptComplete&&setupPhotoComplete} friendsComplete={setupFriendsComplete} aiEnabled={choices.enabled} bind:aiReviewed={setupAIReviewed} onAIContinue={continueSetupAI} onfinish={()=>finishSetup()} onskip={()=>finishSetup(true)}>
         {#snippet ai()}
-          <ModelSettings {client} cloudConnections={connectionMetadata} credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={answerBusy||uiReview} initialError={modelConnectionError} onchange={selectPromptConnection} oncomplete={complete=>setupPromptComplete=complete} />
+          <section class="glass preferences" aria-label="Onboarding AI choices"><div class="preference"><span>AI prompts</span><button class="switch" role="switch" aria-checked={choices.enabled} aria-label="AI prompts" onclick={()=>choices.enabled=!choices.enabled} disabled={aiBusy||answerBusy||uiReview}><span></span></button></div></section>
+          {#if choices.enabled}
+          <ModelSettings {client} cloudConnections={connectionMetadata} credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={answerBusy||uiReview} initialError={modelConnectionError} onchange={selectPromptConnection} oncomplete={complete=>setupPromptComplete=complete} onready={ready=>setupPromptReady=ready} />
           <PhotoModelSettings {client} cloudConnections={connectionMetadata} provider={view.state.ai.choices.photoProvider??'prompt'} connection={view.state.ai.choices.photoProvider==='personal-gemini'?photoConnection:photoModelConnection} scope={photoModelScope} credentialStatus={photoCredentialStatus} onsavetoken={savePhotoToken} onforgettoken={forgetPhotoToken} onsave={savePhotoModel} initialError={photoConnectionError} disabled={answerBusy||uiReview} oncomplete={complete=>setupPhotoComplete=complete} />
-          <section class="glass preferences" aria-label="Onboarding AI choices">
-            <div class="preference"><span>AI prompts</span><button class="switch" role="switch" aria-checked={choices.enabled} aria-label="AI prompts" onclick={()=>choices.enabled=!choices.enabled} disabled={aiBusy||!aiAvailable||uiReview}><span></span></button></div>
-            <div class="preference"><span>Use prompt feedback</span><button class="switch" role="switch" aria-checked={choices.useFeedback} aria-label="Use prompt feedback" onclick={()=>choices.useFeedback=!choices.useFeedback} disabled={aiBusy||!personalContextAvailable}><span></span></button></div>
-            <div class="preference"><span>Use journal entries</span><button class="switch" role="switch" aria-checked={choices.useJournal} aria-label="Use journal entries" onclick={()=>choices.useJournal=!choices.useJournal} disabled={aiBusy||!personalContextAvailable}><span></span></button></div>
-            <p class="hint">AI and source sharing remain separate from your questionnaire answers. These switches take effect only when you save AI choices.</p>
-            <button class="outline" onclick={saveChoices} disabled={aiBusy||!aiAvailable||uiReview}>Save AI choices</button>{#if aiMessage}<p role="status" class="hint">{aiMessage}</p>{/if}
-          </section>
+          <section class="glass preferences"><label class="ai-label" for="setup-guidance">What should prompts focus on or avoid? <span class="hint">Optional</span></label><textarea id="setup-guidance" bind:value={choices.guidance} maxlength="500" rows="3"></textarea></section>
           <details class="prompt-info"><summary>Backup prompt preferences</summary>{#if repository}<BackupPrompts {view} {repository} email={user?.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups} />{/if}<p class="hint">Choose the same provider to use your prompt model for backups. {isExternalProvider(activeConnection.provider)?'Backups use the saved connection for their selected service.':'Local backups use your saved LM Studio prompt connection.'}</p></details>
-          <p class="hint">AI prompts are {view.state.ai.choices.enabled?'on':'off'}. Backup refills and journal/feedback sharing keep their existing choices; manage them in Settings → AI settings.</p>
+          <p class="hint">Save your model connection here. AI and sharing choices are saved when you finish setup; no prompt is generated during the questionnaire. Choose Set up Later to use starters if required connection details are incomplete.</p>
+          {:else}<p class="hint">Continue with starter prompts. You can set up AI later in Settings → AI Settings.</p>{/if}
+          {#if aiMessage}<p role="status" class="hint">{aiMessage}</p>{/if}
+        {/snippet}
+        {#snippet sharing()}
+          <div class="preference"><span>Use journal entries</span><button class="switch" role="switch" aria-checked={choices.useJournal} aria-label="Use journal entries" onclick={()=>choices.useJournal=!choices.useJournal} disabled={aiBusy||!personalContextAvailable&&!choices.useJournal}><span></span></button></div>
+          <div class="preference"><span>Use prompt feedback</span><button class="switch" role="switch" aria-checked={choices.useFeedback} aria-label="Use prompt feedback" onclick={()=>choices.useFeedback=!choices.useFeedback} disabled={aiBusy||!personalContextAvailable&&!choices.useFeedback}><span></span></button></div>
         {/snippet}
         {#snippet friends()}{#if client&&user&&!uiReview}<Friends {client} uid={user.uid} journal={view} {pushController} pushState={hugPushState} profileOnly oncomplete={complete=>setupFriendsComplete=complete} />{:else}<p class="hint">Use the Firebase preview to set up your public Friends profile.</p>{/if}{/snippet}
       </Onboarding>
@@ -1041,6 +1062,7 @@
         {#if uiReview}<details class="review-tools glass"><summary>UI review</summary><p class="hint">Fictional journal on this browser only.</p><button class="outline" onclick={() => resetReview?.()}>Restore sample journal</button><button class="text-button" onclick={() => resetReview?.(true)}>Show empty journal</button></details>{/if}
       {:else if settingsPage === 'answers'}
         <h1 class="page-heading">Personalise your journal</h1>
+        <button class="outline" onclick={()=>openSetup({manual:true,restart:true})} disabled={answerBusy||!answerReady||!!view.onboardingPending||answerBase!==view.state.onboarding.answersId}>Repeat onboarding</button>
         <p class="hint">All questions are optional and you can change your answers later!</p>
         {#if answerReady}
           {#if answerBase !== view.state.onboarding.answersId && !answerBusy}<section class="glass preferences"><p role="alert">Your answers changed on another device. Your draft is kept.</p><button class="outline" onclick={() => loadAnswers(false)} disabled={answerBusy}>Use latest saved answers instead of this draft</button></section>{/if}

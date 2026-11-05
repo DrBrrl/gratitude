@@ -71,7 +71,7 @@ jobs:
           - suite: providers
             scenarios: tests/e2e/(049-|05[01]-)
           - suite: onboarding
-            scenarios: tests/e2e/04[5-8]-
+            scenarios: tests/e2e/(04[5-8]-|05[45]-)
           - suite: journal
             scenarios: tests/e2e/(00[1-3]|010-|031-)
           - suite: friends

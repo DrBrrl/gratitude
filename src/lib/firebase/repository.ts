@@ -18,7 +18,7 @@ import { erasePhoto, type StagedPhoto } from '../photos';
 import {availableBackups,importedBackup,BACKUP_MINIMUM} from '../backup-prompts';
 
 type Checkpoint = { state: Projection; digest: string };
-export type JournalView = { state: Projection; pending: ReflectionDraft | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean; backupRemoved?: string[]; backupStatus?: string; backupImporting?: boolean; rotationPending?:boolean; onboardingPending?:boolean };
+export type JournalView = { state: Projection; pending: ReflectionDraft | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean; backupRemoved?: string[]; backupStatus?: string; backupImporting?: boolean; rotationPending?:boolean; repeatOnboarding?:boolean; onboardingPending?:boolean };
 async function digest(state: Projection) {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(state)));
   return [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, '0')).join('');
@@ -29,6 +29,7 @@ export class JournalRepository {
   private pending: ReflectionDraft | null = null;
   private setupFinish: Extract<OnboardingAction,{type:'OnboardingFinished'}>|null=null;
   private setupSyncing=false;
+  private repeatOnboarding=false;
   private stopped = false;
   private listenerGeneration = 0;
   private sending = false;
@@ -53,7 +54,7 @@ export class JournalRepository {
   private error = '';
   constructor(private client: FirebaseClient, private uid: string, private notify: (view: JournalView) => void) {}
   private emit() {
-    if (!this.stopped) this.notify({ state: this.backupActions.filter(isRotationAction).reduce((state,action)=>state.rotation.offers.some(o=>o.eventId===action.eventId)||action.type==='PromptAccepted'&&state.rotation.accepted[action.payload.promptId]>=action.payload.day?state:applyEvent(state,{...action,sequence:state.cursor+1,recordedAt:new Date().toISOString()}),this.state), rotationPending:this.backupActions.some(isRotationAction), pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, onboardingPending:!!this.setupFinish, backupImporting:this.backupImporting||this.backupActions.some(a=>a.type==='BackupPromptImported'),backupRemoved:this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),backupStatus:this.backupStatus, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
+    if (!this.stopped) this.notify({ state: this.backupActions.filter(isRotationAction).reduce((state,action)=>state.rotation.offers.some(o=>o.eventId===action.eventId)||action.type==='PromptAccepted'&&state.rotation.accepted[action.payload.promptId]>=action.payload.day?state:applyEvent(state,{...action,sequence:state.cursor+1,recordedAt:new Date().toISOString()}),this.state), repeatOnboarding:this.repeatOnboarding, rotationPending:this.backupActions.some(isRotationAction), pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, onboardingPending:!!this.setupFinish, backupImporting:this.backupImporting||this.backupActions.some(a=>a.type==='BackupPromptImported'),backupRemoved:this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),backupStatus:this.backupStatus, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
   }
   async start() {
     const generation = ++this.listenerGeneration;
@@ -62,6 +63,7 @@ export class JournalRepository {
       upgrade(db) { db.createObjectStore('cache'); db.createObjectStore('outbox'); }
     });
     if (this.stopped) { this.db.close(); return; }
+    this.repeatOnboarding=(await this.db.get('outbox','onboarding-draft'))?.repeating===true;
     this.setupFinish=await this.db.get('outbox','onboarding-finish')??null;
     this.pending = await this.db.get('outbox', 'pending') ?? null;
     this.backupActions=await this.db.get('outbox','backup-actions')??[];
@@ -239,6 +241,8 @@ export class JournalRepository {
     this.draftChain = this.draftChain.then(async () => {
       if (value === null) await this.db.delete('outbox', 'onboarding-draft');
       else await this.db.put('outbox', value, 'onboarding-draft');
+      const repeat=!!value&&typeof value==='object'&&'repeating'in value&&value.repeating===true;
+      if(repeat!==this.repeatOnboarding){this.repeatOnboarding=repeat;this.emit();}
     });
     return this.draftChain;
   }
