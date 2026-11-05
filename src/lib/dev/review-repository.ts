@@ -1,4 +1,4 @@
-import {isRotationAction,type RotationAction} from '../domain';
+import {type RotationAction} from '../domain';
 import type { OnboardingAction } from '../onboarding';
 import type { ImportSelection } from '../import-archive';
 import { parseAction, replay, type Action, type ImportAction, type BackupAction, type AppearanceAction, type PhotoAction, type AIAction, type SourceAction, type JournalEvent } from '../domain';

@@ -24,7 +24,7 @@ test('interrupted inference, provider failure, response outbox and consent revoc
     await expect(page.getByText('No new prompt arrived. You can try again or use the starter prompt.')).toBeVisible({ timeout: 15_000 }); expect(calls).toBe(2);
   });
   await steps.action('fallback', 'Choose the bundled starter after the failure', () => page.getByRole('button', { name: 'Use starter prompt' }).click(), async () => {
-    await expect(page.locator('.badge')).toHaveText('Starter prompt'); await expect(page.getByRole('button', { name: 'Generate a prompt', exact: true })).toBeEnabled({ timeout: 15_000 }); expect(calls).toBe(2);
+    await expect(page.locator('.badge')).toContainText('Starter prompt'); await expect(page.getByRole('button', { name: 'Generate a prompt', exact: true })).toBeEnabled({ timeout: 15_000 }); expect(calls).toBe(2);
   });
   await page.unroute(AI_ENDPOINT);
   await page.route(AI_ENDPOINT, async route => {

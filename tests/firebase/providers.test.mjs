@@ -42,3 +42,20 @@ test('replacing a local revision rejects new and late forged requests independen
  await assertFails(setDoc(doc(db,`users/${uid}/privateSettings/lmStudio`),{schemaVersion:2,provider:'ollama',baseUrl:'https://fictional.example',model:'fictional/text',token:'',connectionId:'connection',connectionRevision:'one',updatedAt:serverTimestamp()}));
  await setDoc(doc(db,`users/${uid}/privateSettings/lmStudio`),{schemaVersion:2,provider:'ollama',baseUrl:'https://fictional.example',model:'fictional/text',token:'',connectionId:'connection',connectionRevision:'two',updatedAt:serverTimestamp()});
 });
+test('personal-cloud follow-up requests with journal context fit Rules validation after prompt rotation actions',async()=>{
+ const uid='provider-follow-up',db=client(uid),log=[];
+ const save=async action=>{const receipt=await appendReflection(db,uid,action);log.push({...action,sequence:receipt.sequence,recordedAt:at});};
+ await environment.withSecurityRulesDisabled(admin=>setDoc(doc(admin.firestore(),`users/${uid}/privateConnections/connection`),{schemaVersion:1,provider:'personal-gemini',model,revision:'revision',allowPersonal:true,updatedAt:serverTimestamp()}));
+ await save({eventId:'setup',type:'OnboardingFinished',schemaVersion:1,payload:{version:1,outcome:'skipped'}});
+ await save({eventId:'v2026-10-01_tstarter-v1-001',type:'PromptViewed',schemaVersion:1,payload:{day:'2026-10-01',promptId:'starter-v1-001',surface:'today'}});
+ await save({eventId:'reflection',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:'entry',expectedRevision:0,text:'A fictional kettle and a friendly hello.',promptId:'starter-v1-001',promptText:null,entryAt:'2026-09-30T01:00:00.000Z',photoSlot:null}});
+ const action=choices('personal-gemini');action.payload.useJournal=true;await save(action);
+ const target={provider:'personal-gemini',model,thinking:'provider-default',connectionId:'connection',connectionRevision:'revision'};
+ await save(makeRequest(replay(log),'2026-10-01','personal','first',undefined,selection,target));
+ await save({eventId:'first_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'first',text:'What fictional kindness did you appreciate?',model,finishReason:'STOP'}});
+ const next=makeRequest(replay(log),'2026-10-01','personal','follow-up',undefined,selection,target,false,'first_response');
+ assert.equal(next.schemaVersion,26);assert.equal(Object.keys(next.payload.entryRefs).length,1);
+ await save(next);
+ await save({eventId:'follow-up_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'follow-up',text:'What fictional detail made you smile?',model,finishReason:'STOP'}});
+ assert.equal(replay(log).ai.days['2026-10-01'],'follow-up_response');
+});

@@ -6,7 +6,7 @@ test('paragraph writing, plain-text paste, undo and settings navigation', async 
   test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(180_000);
   const steps = new TestStepHelper(page, info);
   await startJournal(page, info, steps, 'editor');
-  await steps.action('why', 'Read why this starter prompt is shown', () => page.getByRole('button', { name: 'Why this prompt?' }).click(), async () => { await expect(page.locator('.explanation')).toContainText('This starter works without sending anything to AI.'); });
+  await steps.action('why', 'Read why this starter prompt is shown', () => page.getByRole('button', { name: 'Why this prompt?' }).click(), async () => { await expect(page.locator('.explanation')).toContainText('It works without AI or a connection.'); });
   await openEditor(page, steps, 'open-editor');
   await steps.action('first', 'Write the first paragraph', () => editor(page).pressSequentially('A quiet cup of tea.'), async () => { await expectEditor(page, 'A quiet cup of tea.'); });
   await steps.action('enter', 'Start a new paragraph with one Enter', () => editor(page).press('Enter'), async () => { await expectEditor(page, 'A quiet cup of tea.\n'); });

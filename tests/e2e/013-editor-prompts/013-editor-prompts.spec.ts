@@ -1,3 +1,4 @@
+import {STARTER_CATALOGUE} from '../../../src/lib/starter-catalogue';
 import { expect as playwrightExpect, test, type Route } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 import { editor, expectEditor, expectSynced, navigate, openEditor, startJournal } from '../helpers/journal-session';
@@ -9,7 +10,7 @@ const LATER = 'What small kindness would I like to remember?';
 test('generate and write prompts for additional entries and edits without changing Today', async ({ page, context }, info) => {
   test.skip(process.env.E2E_FIREBASE !== 'true', 'Requires Firebase emulators'); test.setTimeout(600_000);
   const steps = new TestStepHelper(page, info);
-  let requests = 0;
+  let requests = 0,secondaryStarter='';
   let held: Route | undefined;
   await page.route(AI_ENDPOINT, async route => {
     requests++;
@@ -27,8 +28,8 @@ test('generate and write prompts for additional entries and edits without changi
   await steps.action('first-save', 'Save today’s first reflection with its original question', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => { await expect(page.locator('.saved-card .entry-prompt')).toHaveText(FIRST_PROMPT); await expectSynced(page); });
   await steps.action('first-done', 'Finish the first reflection', () => page.getByRole('button', { name: 'Done', exact: true }).click(), async () => { await expect(page.locator('article.card')).toHaveCount(1); });
   await navigate(page, steps, 'return-today', 'Today');
-  await steps.action('another', 'Start another reflection today', () => page.getByRole('button', { name: 'Write another reflection', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Generate AI prompt', exact: true })).toBeEnabled(); await expect(page.getByRole('button', { name: 'Edit prompt text', exact: true })).toHaveText(FIRST_PROMPT); });
-  await steps.action('editor-ai', 'Generate a question inside the reflection editor', () => page.getByRole('button', { name: 'Generate AI prompt', exact: true }).click(), async () => { await expect(page.getByRole('complementary', { name: 'Generated prompt option' })).toContainText(SECOND_PROMPT); await expect(page.getByRole('button', { name: 'Edit prompt text', exact: true })).toHaveText(FIRST_PROMPT); expect(requests).toBe(2); });
+  await steps.action('another', 'Start another reflection today', () => page.getByRole('button', { name: 'Write another reflection', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Generate AI prompt', exact: true })).toBeEnabled(); secondaryStarter=(await page.getByRole('button',{name:'Edit prompt text',exact:true}).textContent())!;expect(STARTER_CATALOGUE.map(p=>p.text)).toContain(secondaryStarter); });
+  await steps.action('editor-ai', 'Generate a question inside the reflection editor', () => page.getByRole('button', { name: 'Generate AI prompt', exact: true }).click(), async () => { await expect(page.getByRole('complementary', { name: 'Generated prompt option' })).toContainText(SECOND_PROMPT); await expect(page.getByRole('button', { name: 'Edit prompt text', exact: true })).toHaveText(secondaryStarter); expect(requests).toBe(2); });
   await steps.action('use-ai', 'Choose the generated question for this reflection', () => page.getByRole('button', { name: 'Use this prompt', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Edit prompt text', exact: true })).toHaveText(SECOND_PROMPT); });
   await steps.action('second-text', 'Write a second independent reflection', () => editor(page).fill('I enjoyed birdsong through the window.'), async () => { await expect(page.getByText('Draft saved on this device', { exact: true })).toBeVisible(); });
   await steps.action('reload-draft', 'Reload with the selected question and response safely in the draft', () => page.reload(), async () => { await expectSynced(page); await expect(page.locator('article.card')).toHaveCount(1); expect(requests).toBe(2); });
