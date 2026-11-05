@@ -1293,3 +1293,9 @@ Both screens already share ModelSettings. Its picker was deliberately hidden for
 The personal-cloud Rules regression now exercises twenty explicit feedback pairs alongside journal context, matching the sharing switches exposed by onboarding Review. The expanded authenticated provider suite passed all three cases in an isolated emulator project namespace; metadata/binding checks remain intact and the maximum feedback list stays within the Rules expression budget.
 
 Starter-only confirmation preserves previously confirmed AI-sharing preferences instead of applying hidden changes from an earlier unconfirmed draft. The same rule applies to questionnaire-sharing consent. Scenario 054 resumes such a draft and checks that none of those hidden permissions or guidance is newly confirmed; the full-page UI remains the real starter-only flow.
+
+### 2026-11-05 — Glass form geometry after the revised interests introduction
+
+Two ordinary mobile captures differed from the original generated custom-topic surface by the same 5,116 pixels. Regenerating that mobile surface matched the next ordinary capture and a rebuild, but the subsequent desktop comparison exposed the corresponding surface difference there. Geometry diagnostics measured the desktop glass card at 453.546875px tall: counter/help lines were 20.390625px high with 13.6px margins, while its heading, labels, input, textarea and button already had whole-pixel heights. The fractional panel size is a confirmed layout fact; its relationship to rasterization is being verified.
+
+The custom-topic hints now reuse the word-limit panel’s existing 20px line height and 12px paragraph margins. This is ordinary product styling for consistent form spacing; blur, shadows, native controls and all content remain present. Regeneration and repeated ordinary comparisons across fresh builds will verify the result before publication. Temporary diagnostic file writes were removed from the test source.
