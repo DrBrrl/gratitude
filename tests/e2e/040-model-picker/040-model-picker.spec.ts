@@ -29,7 +29,7 @@ test('choose models discovered from the configured LM Studio instance without in
  await startJournal(page,info,steps,'model-picker');
  await aiSettings(page,steps,'configure');
  await steps.action('local','Choose LM Studio',()=>page.getByLabel('AI provider',{exact:true}).selectOption('lm-studio'),async()=>{await expect(page.getByLabel('Model API identifier')).toHaveValue(MODEL);});
- await steps.action('server','Enter the model laptop’s HTTPS origin',()=>page.getByLabel('LM Studio server URL').fill(SERVER),async()=>{await expect(page.getByLabel('LM Studio API token')).toHaveValue('');});
+ await steps.action('server','Enter the model laptop’s HTTPS origin',()=>page.getByLabel('LM Studio server URL').fill(SERVER+'/'),async()=>{await expect(page.getByLabel('LM Studio API token')).toHaveValue('');});
  await steps.action('token','Enter the fictional server token',()=>page.getByLabel('LM Studio API token').fill(TOKEN),async()=>{await expect(page.getByLabel('LM Studio API token')).toHaveValue(TOKEN);});
  await steps.action('discover','Discover models without generation or loading',()=>page.getByRole('button',{name:'Test connection',exact:true}).click(),async()=>{
   const picker=page.getByRole('combobox',{name:'Model API identifier',exact:true});
@@ -51,7 +51,7 @@ test('choose models discovered from the configured LM Studio instance without in
  });
  await steps.action('replacement','Explicitly replace the missing identifier',()=>page.getByLabel('Model API identifier').selectOption(PLAIN),async()=>{await expect(page.getByRole('alert')).toHaveCount(0);await expect(page.getByText(/Connected to LM Studio/)).toContainText('Text prompts only.');});
  await steps.action('save','Save the chosen model without inference',()=>page.getByRole('button',{name:'Save model settings',exact:true}).click(),async()=>{
-  await expect(page.getByText('Provider saved to your account; connection settings saved on this device.',{exact:true})).toBeVisible();await expect(page.getByRole('combobox',{name:'Model API identifier',exact:true})).toHaveValue(PLAIN);expect(discoveries).toBe(2);
+  await expect(page.getByText('Provider saved to your account; connection settings saved on this device.',{exact:true})).toBeVisible();await expect(page.getByRole('combobox',{name:'Model API identifier',exact:true})).toHaveValue(PLAIN);await expect(page.getByLabel('LM Studio server URL')).toHaveValue(SERVER);expect(discoveries).toBe(2);
   expect(inferences).toBe(0);expect(JSON.stringify(await selectionLog(page))).not.toContain(TOKEN);
  });
  await steps.action('reload','Restore the saved identifier without fetching a catalogue',()=>page.reload(),async()=>{await expectSynced(page);expect(discoveries).toBe(2);});
