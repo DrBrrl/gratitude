@@ -53,7 +53,8 @@
     return 'ai';
   }
   async function saveSetupAI(){
-    const patch=readSetupAI({enabled:choices.enabled,useJournal:choices.useJournal,useFeedback:choices.useFeedback,guidance:choices.guidance});
+    const shared=choices.enabled?choices:view.state.ai.choices;
+    const patch=readSetupAI({enabled:choices.enabled,useJournal:shared.useJournal,useFeedback:shared.useFeedback,guidance:shared.guidance});
     if(!patch)throw new Error('Check your AI choices before saving.');
     if(Object.entries(patch).some(([key,value])=>view.state.ai.choices[key as keyof AIChoices]!==value))await confirmChoices(patch);
   }
@@ -63,7 +64,7 @@
     try {
       if(!skip){
         if(answerBase!==view.state.onboarding.answersId)throw new Error('Your answers changed on another device. Skip for now to review them in Settings; your draft is kept.');
-        const answers={...$state.snapshot(answerDraft),preferredName:answerDraft.preferredName.trim(),pronouns:answerDraft.pronouns.trim()};
+        const answers={...$state.snapshot(answerDraft),useAnswers:choices.enabled?answerDraft.useAnswers:view.state.onboarding.answers.useAnswers,preferredName:answerDraft.preferredName.trim(),pronouns:answerDraft.pronouns.trim()};
         if(!validAnswers(answers))throw new Error('Check the answers and their limits before saving.');
         await saveSetupAI();
         await repository.commitAI({eventId:crypto.randomUUID(),type:'OnboardingAnswersConfirmed',schemaVersion:1,payload:{...answersInput(answers),previousEventId:answerBase}});
