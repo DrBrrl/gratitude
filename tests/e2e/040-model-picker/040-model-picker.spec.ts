@@ -51,7 +51,7 @@ test('choose models discovered from the configured LM Studio instance without in
  });
  await steps.action('replacement','Explicitly replace the missing identifier',()=>page.getByLabel('Model API identifier').selectOption(PLAIN),async()=>{await expect(page.getByRole('alert')).toHaveCount(0);await expect(page.getByText(/Connected to LM Studio/)).toContainText('Text prompts only.');});
  await steps.action('save','Save the chosen model without inference',()=>page.getByRole('button',{name:'Save model settings',exact:true}).click(),async()=>{
-  await expect(page.getByText('Provider saved to your account; connection settings saved on this device.',{exact:true})).toBeVisible();await expect(page.getByLabel('Model API identifier')).toHaveValue(PLAIN);
+  await expect(page.getByText('Provider saved to your account; connection settings saved on this device.',{exact:true})).toBeVisible();await expect(page.getByRole('combobox',{name:'Model API identifier',exact:true})).toHaveValue(PLAIN);expect(discoveries).toBe(2);
   expect(inferences).toBe(0);expect(JSON.stringify(await selectionLog(page))).not.toContain(TOKEN);
  });
  await steps.action('reload','Restore the saved identifier without fetching a catalogue',()=>page.reload(),async()=>{await expectSynced(page);expect(discoveries).toBe(2);});

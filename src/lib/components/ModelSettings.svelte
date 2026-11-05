@@ -1,5 +1,6 @@
 <script lang="ts">
-  import {defaultConnection,validateConnection,saveConnection,readProviderConnection,wasAccountConnection,discoverLocalModels,selectedLocalCapabilities,type ModelConnection,type LocalCapabilities,type LocalModelInfo} from '$lib/ai/lm-studio';
+  import {untrack} from 'svelte';
+  import {defaultConnection,serverOrigin,validateConnection,saveConnection,readProviderConnection,wasAccountConnection,discoverLocalModels,selectedLocalCapabilities,type ModelConnection,type LocalCapabilities,type LocalModelInfo} from '$lib/ai/lm-studio';
   import {providerName,isLocalService,isExternalProvider,type AIProvider} from '../ai/connection-contract';
   import type {FirebaseClient} from '../firebase/client';
   import PersonalKeySettings from './PersonalKeySettings.svelte';
@@ -9,6 +10,7 @@
   let draft=$state<ModelConnection>(defaultConnection()),busy=$state(false),message=$state(''),failed=$state(false),capabilities=$state<LocalCapabilities|null>(null);
   let models=$state<LocalModelInfo[]>([]),manualModel=$state(false),discoveredFor=$state('');
   let personalComplete=$state(false),personalReady=$state(false);
+  let observedConnection='';
   $effect(()=>{
     if(!oncomplete&&!onready)return;
     let complete=false;
@@ -19,9 +21,17 @@
     oncomplete?.(complete&&!busy&&!failed);
     onready?.(complete&&!busy&&!failed&&draft.provider===connection.provider&&(draft.provider==='personal-gemini'?personalReady:draft.provider==='gemini'||['baseUrl','model','token'].every(k=>draft[k as keyof ModelConnection]===connection[k as keyof ModelConnection])));
   });
-  const connectionKey=(value:ModelConnection)=>JSON.stringify([scope,value.provider,value.baseUrl,value.token]);
-  const showPicker=$derived(!manualModel&&discoveredFor===connectionKey(draft)&&models.length>0&&(models.length>1||!models.some(item=>item.id===draft.model)));
-  $effect(()=>{draft={...connection};capabilities=null;models=[];discoveredFor='';manualModel=false;});
+  const connectionKey=(value:ModelConnection)=>{let address=value.baseUrl.trim();try{address=serverOrigin(address);}catch{/* Incomplete addresses must not match discovered servers. */}return JSON.stringify([scope,value.provider,address,value.token.trim()]);};
+  const showPicker=$derived(!manualModel&&discoveredFor===connectionKey(draft)&&models.length>0);
+  $effect(()=>{
+    const next={...connection},signature=JSON.stringify([scope,next]);
+    untrack(()=>{
+      if(signature===observedConnection)return;
+      observedConnection=signature;draft=next;
+      // Saving a selection changes its binding/revision, not the connected server's model list.
+      if(discoveredFor!==connectionKey(next)){capabilities=null;models=[];discoveredFor='';manualModel=false;}
+    });
+  });
   $effect(()=>{if(initialError){message=initialError;failed=true;}});
   async function testConnection() {
     busy=true;message='';failed=false;
