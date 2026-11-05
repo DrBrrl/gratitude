@@ -191,3 +191,9 @@ New request/choice versions retain opaque bindings, and old schemas remain froze
 ### 2026-11-04 — Private questionnaire identity
 
 Both projects have the compatible Rules update accepting `gratitude-v4` on current request carriers, alongside historical `gratitude-v3`. All 45 local Firebase tests pass. New browser requests exclude private name and pronouns from instruction and questionnaire context; selected topic descriptions retain their independent sharing choice. No Functions, credentials or journal records were changed by these Rules-only deployments.
+
+## 2026-11-05 — Starter and backup prompt rotation
+
+After all 49 authenticated Firebase tests passed, additive Firestore Rules were deployed to `gratitude-drbrrl-dev` and `gratitude-drbrrl`. Both prior live rulesets exactly matched the reviewed `main` source. Both updated active rulesets were read back through the Rules API and exactly match `firestore.rules`, SHA-256 `e6e4149ed004946b123d0fe9e026d592eed121821aace029537aebd2da8ca7e0`.
+
+`PromptViewed` and `PromptAccepted` append literal prompt identities and local dates, using a private rotation control pointer. `PromptViewed` also records its viewing surface. Catalogue identities are bounded to the immutable 255-question v1 collection; eligible backup identities must resolve to existing backup source events. Rules reject forged receipt IDs, unknown sources and extra computed fields. Legacy references remain supported. AI actions dispatch directly to their existing validators to retain expression-budget headroom for personal-cloud follow-up requests; an authenticated regression covers that case with journal context. No Functions, indexes, Storage Rules, secrets or billing settings changed.

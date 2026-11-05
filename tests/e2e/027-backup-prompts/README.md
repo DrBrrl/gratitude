@@ -2,7 +2,7 @@
 
 # Private backup prompts and offline recovery
 
-Import a fictional 102-question workbook, cycle and select without inference, consume only on save, remove offline, cold-reload the cached app and recover the draft before syncing. Every action has an unmasked full-page comparison at zero pixel tolerance with checks below.
+Import a fictional 102-question workbook, cycle and select without inference, consume on acceptance, remove offline, cold-reload the cached app and recover the draft before syncing. Every action has an unmasked full-page comparison at zero pixel tolerance with checks below.
 
 Viewport: mobile-chromium.
 
@@ -223,18 +223,18 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Cycle to the draft question again
+## Offer another unseen question for the existing draft
 
-![Cycle to the draft question again](./screenshots/024-draft-cycle-mobile-chromium.png)
+![Offer another unseen question for the existing draft](./screenshots/024-draft-cycle-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Keep the question while preserving written text and entry identity
+## Replace the question while preserving written text and entry identity
 
-![Keep the question while preserving written text and entry identity](./screenshots/025-draft-reselect-mobile-chromium.png)
+![Replace the question while preserving written text and entry identity](./screenshots/025-draft-replace-mobile-chromium.png)
 
 **Verifications:**
 
@@ -259,9 +259,9 @@ Viewport: mobile-chromium.
 - [x] Changing or reselecting a prompt does not erase writing in the existing local draft
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Consume a question only when a reflection is saved
+## Save the reflection without consuming the accepted question twice
 
-![Consume a question only when a reflection is saved](./screenshots/028-save-mobile-chromium.png)
+![Save the reflection without consuming the accepted question twice](./screenshots/028-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -409,7 +409,7 @@ Viewport: mobile-chromium.
 
 **Verifications:**
 
-- [x] 99 questions remain; complete and cached-prefix replay agree and no inference occurred
+- [x] 98 questions remain; complete and cached-prefix replay agree and no inference occurred
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
 ## Prepare fictional private source input without changing the canonical stream
