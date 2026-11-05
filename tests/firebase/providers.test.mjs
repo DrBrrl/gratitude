@@ -49,12 +49,13 @@ test('personal-cloud follow-up requests with journal context fit Rules validatio
  await save({eventId:'setup',type:'OnboardingFinished',schemaVersion:1,payload:{version:1,outcome:'skipped'}});
  await save({eventId:'v2026-10-01_tstarter-v1-001',type:'PromptViewed',schemaVersion:1,payload:{day:'2026-10-01',promptId:'starter-v1-001',surface:'today'}});
  await save({eventId:'reflection',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:'entry',expectedRevision:0,text:'A fictional kettle and a friendly hello.',promptId:'starter-v1-001',promptText:null,entryAt:'2026-09-30T01:00:00.000Z',photoSlot:null}});
- const action=choices('personal-gemini');action.payload.useJournal=true;await save(action);
+ const action=choices('personal-gemini');action.payload.useJournal=true;action.payload.useFeedback=true;await save(action);
+ for(let i=1;i<=20;i++)await save({eventId:'feedback-'+i,type:'PromptFeedbackSubmitted',schemaVersion:1,payload:{previousEventId:replay(log).ai.control.lastEventId,promptId:'starter-v1-'+String(i).padStart(3,'0'),text:'A fictional preference '+i+'.'}});
  const target={provider:'personal-gemini',model,thinking:'provider-default',connectionId:'connection',connectionRevision:'revision'};
  await save(makeRequest(replay(log),'2026-10-01','personal','first',undefined,selection,target));
  await save({eventId:'first_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'first',text:'What fictional kindness did you appreciate?',model,finishReason:'STOP'}});
  const next=makeRequest(replay(log),'2026-10-01','personal','follow-up',undefined,selection,target,false,'first_response');
- assert.equal(next.schemaVersion,26);assert.equal(Object.keys(next.payload.entryRefs).length,1);
+ assert.equal(next.schemaVersion,26);assert.equal(Object.keys(next.payload.entryRefs).length,1);assert.equal(next.payload.feedbackIds.length,20);
  await save(next);
  await save({eventId:'follow-up_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'follow-up',text:'What fictional detail made you smile?',model,finishReason:'STOP'}});
  assert.equal(replay(log).ai.days['2026-10-01'],'follow-up_response');
