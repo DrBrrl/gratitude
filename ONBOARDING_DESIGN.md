@@ -27,18 +27,18 @@ After Google sign-in, use the existing dark glass surfaces, shared page headings
 
 | Screen | Contents and actions |
 | --- | --- |
-| Welcome | The introduction below; **Let’s get started** and **Start writing without setup**. Expandable **What can I do here?** keeps the initial screen short. |
-| About you | Optional private preferred name and pronouns. **Continue**, **Skip this question**, Back. |
+| Welcome | The introduction below; **Let’s get started** and **Skip for now**. Expandable **What can I do here?** keeps the initial screen short. |
+| About you | Optional private preferred name and pronouns. **Continue**, Back, or **Skip for now** to leave setup. |
 | Your colour | The existing fourteen-choice account picker. Start with the saved colour, or yellow `#ffe100` for an account without a choice. Preview without changing journal date colours. |
-| Your interests | Seventeen topic rows with selectable buttons, descriptions and a pencil edit button at the end of each row; repeatable custom rows. Encourage at least three. **Continue** remains available with fewer, including none. |
-| Your prompts | Narrow/Intermediate/Broad scope, then **Prompts under XX words**, 50–200 in steps of 10, initially 80 unless already saved. |
 | Choose your AI | Optional provider/model/connection setup for prompts, photos and backup generation, including the existing same-model option. **Set up later** explains where to find AI settings. |
+| Your interests (AI on) | Seventeen topic rows with selectable buttons, descriptions and a pencil edit button at the end of each row; repeatable custom rows. Encourage at least three. **Continue** remains available with fewer, including none. |
+| Your prompts (AI on) | Narrow/Intermediate/Broad scope, then **Prompts under XX words**, 50–200 in steps of 10, initially 80 unless already saved. |
 | Your Friends profile | Optional public display name and @username, using the actual Friends profile form and its consent controls; existing profiles can be reviewed. **Set up later** keeps private journaling available. |
-| Review and sharing | Editable answer summary, provider and source-sharing choices; **Save and start writing** or **Start without saving these answers**. |
+| Review and sharing | Private name/pronouns; AI users also see topic titles, scope, word limit and source-sharing choices. Back revisits answers. **Save and start writing** confirms; **Skip for now** leaves saved settings unchanged. |
 
 Show progress through the optional questions, retain draft answers when moving Back, and keep a clear exit to writing. Prefill saved appearance, AI and Friends settings without overwriting them when a step is skipped. No new bottom tab is needed. After the automatic visit flow, restore the intended destination where applicable, otherwise Today until an entry exists for the local day, then Journal. Manual revisits from Settings return there.
 
-Private answers stay in an account/deployment-scoped device draft until confirmation. Skipping one question discards its unconfirmed changes; skipping the entire setup discards the private questionnaire draft. A colour preview returns to the last saved account colour on cancellation. Confirmed appearance choices use the existing account action. A failed save retains the draft and offers Retry or Continue without setup; do not report cloud synchronization until confirmed.
+Private answers stay in an account/deployment-scoped device draft until confirmation. Back retains the draft, and **Skip for now** keeps that device-local draft without confirming its answers. A colour preview returns to the last saved account colour on cancellation. Confirmed appearance choices use the existing account action. A failed save retains the draft for another confirmation attempt, or the user can skip for now; do not report cloud synchronization until confirmed.
 
 The Friends form remains its own explicit save: explain before opening it that its display name and username can be visible to other users. Reuse its discoverability, sharing, validation and conflict controls. Saving private answers never creates a public profile or enables social sharing. A separately saved Friends profile is not rolled back when the questionnaire is cancelled; show that distinction rather than presenting the two streams as one atomic save.
 
@@ -285,3 +285,5 @@ Jamie’s revised copy supersedes the initial welcome/questions. Confirmed reque
 The setup order is Welcome → About you → Your colour → Choose your AI → Your interests → Your prompts → Friends → Review. When AI prompts are off, interests and prompt preferences are skipped and their sharing controls are absent from Review. Back returns along the active route; saved local progress restores that route. AI prompt and sharing choices take effect on final confirmation. Saving a model connection or Friends profile remains a separate explicit action.
 
 **Settings → Personalise your journal → Repeat onboarding** starts at Welcome with existing answers and preferences. The device-local draft marks a repeat so it resumes after reload. Skip stops the repeat and retains saved settings; completion confirms the answers without replacing the original rollout completion/skipping record. Journal entries, model connections and Friends profiles are preserved.
+
+When AI prompts are off at final confirmation, retain the account’s previously confirmed sharing choices and guidance. Do not newly confirm hidden AI-sharing switches, questionnaire permission or guidance from an unfinished local draft. Selected private answers can still be saved for later editing.
