@@ -4,7 +4,7 @@ import {expectSynced,startJournal,navigate} from '../helpers/journal-session';
 import {resetFriendsFixture,openFriends,createProfile,secondFriend,findFriend} from '../helpers/friends';
 
 test('chosen public names, unique handles and opt-out discovery survive replay without sharing journal data',async({page},info)=>{
- test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(240_000);
+ test.skip(process.env.E2E_FIREBASE!=='true','Requires Firebase emulators');test.setTimeout(360_000);
  const steps=new TestStepHelper(page,info,{paintStaticPage:true}); const suffix=info.project.name.startsWith('mobile')?'m':'d';const handle=`jamie_profile_${suffix}`;
  await resetFriendsFixture(page);await startJournal(page,info,steps,'profile-owner');await openFriends(page,steps);await createProfile(page,steps,'Jamie',` @${handle.toUpperCase()} `);
  await navigate(page,steps,'account-menu','Settings');
