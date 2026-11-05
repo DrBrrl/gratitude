@@ -1311,3 +1311,7 @@ Scenario 036 passes ordinary zero-pixel comparison locally on mobile and desktop
 ### 2026-11-05 — Keep the onboarding stack aligned with discard-safe prompt use
 
 PR #25 is rebased onto #24's consume-on-save update (`d23882cd`). Conflict resolution retains both local ReflectionDraft provenance and the repeat-onboarding view marker, plus all appended prompt/learning records. Svelte check reports zero errors/warnings, all 132 unit tests pass, and both prompt rotation/cooldown walkthroughs pass ordinary zero-pixel comparisons on mobile and desktop (four cases) without changing their inherited screenshots. All 3,784 referenced images exist and no obsolete baselines remain. GitHub's workflow summary can still read queued while individual jobs are already in_progress; inspect the jobs before treating a workflow as blocked or cancelling/reordering CI runs.
+
+### 2026-11-05 — Retarget onboarding after the parent merge
+
+GitHub automatically retargeted PR #25 to main after #24 merged, but reported conflicts because the rebased merge changed its ancestry. Main's merged tree is identical to the former parent tip (`d23882cd`). Rebasing only #25's commits onto main completed cleanly and produced an identical file tree to the pre-rebase branch, including its existing verification records. No application or screenshot changes were needed.
