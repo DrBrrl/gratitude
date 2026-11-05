@@ -1645,3 +1645,9 @@ For PR 24, is it possible for the prompt to not get consumed if the draft is com
 ```text
 (can we get the option to repeat the onboarding questionnaire in the "personalise" settings? Maybe just a button at the top of that settings page? It will help me do the testing of it too)
 ```
+
+## 2026-11-05 — Confirm PR grouping
+
+```text
+Just to confirm - you're doing all the things i asked for in the one PR? :)
+```
