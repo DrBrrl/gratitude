@@ -2,7 +2,7 @@
 
 # Personalised reserve refill with local or cloud AI
 
-Use independent provider settings, keep device-private local credentials, generate to thirty with the ordinary instruction and consent, consume on reflection save, refill using Gemini, preserve Today and replay without inference. All responses and prompts are fictional; every action has a strict unmasked full-page comparison and checks below.
+Use independent provider settings, keep device-private local credentials, generate to thirty with the ordinary instruction and consent, consume on explicit acceptance, refill using Gemini, preserve Today and replay without inference. All responses and prompts are fictional; every action has a strict unmasked full-page comparison and checks below.
 
 Viewport: desktop-chromium.
 
@@ -305,9 +305,9 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Save the reflection and replenish the used question through Gemini
+## Save the reflection after the accepted question is replenished through Gemini
 
-![Save the reflection and replenish the used question through Gemini](./screenshots/033-save-desktop-chromium.png)
+![Save the reflection after the accepted question is replenished through Gemini](./screenshots/033-save-desktop-chromium.png)
 
 **Verifications:**
 
