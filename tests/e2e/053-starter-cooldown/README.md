@@ -114,3 +114,21 @@ Viewport: mobile-chromium.
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Write with the rested starter
+
+![Write with the rested starter](./screenshots/012-write-rested-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Save before starting another thirty-day rest
+
+![Save before starting another thirty-day rest](./screenshots/013-save-rested-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)

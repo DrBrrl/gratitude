@@ -2,7 +2,7 @@
 
 # Daily starter and backup rotation
 
-Starter categories and backups are offered without same-day repeats, survive reload and offline recovery, and retain the accepted original identity after prompt edits. Every user action has an unmasked zero-pixel screenshot with checks beneath it.
+Starter categories and backups are offered without same-day repeats, survive reload and offline recovery, retain discarded originals, and consume only the saved selection after wording edits and reload. Every user action has an unmasked zero-pixel screenshot with checks beneath it.
 
 Viewport: mobile-chromium.
 
@@ -142,9 +142,9 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Edit the accepted starter wording
+## Edit the selected starter wording
 
-![Edit the accepted starter wording](./screenshots/015-edit-starter-mobile-chromium.png)
+![Edit the selected starter wording](./screenshots/015-edit-starter-mobile-chromium.png)
 
 **Verifications:**
 
@@ -169,18 +169,36 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Sync the literal offline offer and acceptance
+## Sync offline offers without consuming an unfinished draft
 
-![Sync the literal offline offer and acceptance](./screenshots/018-reconnect-mobile-chromium.png)
+![Sync offline offers without consuming an unfinished draft](./screenshots/018-reconnect-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Keep the starter draft on this device
+## Ask to discard the edited starter draft
 
-![Keep the starter draft on this device](./screenshots/019-leave-draft-mobile-chromium.png)
+![Ask to discard the edited starter draft](./screenshots/019-discard-starter-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Discard the entire starter draft without starting a rest
+
+![Discard the entire starter draft without starting a rest](./screenshots/020-confirm-starter-discard-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to Today after discarding
+
+![Return to Today after discarding](./screenshots/021-leave-draft-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Restore fictional account backup imports
 
-![Restore fictional account backup imports](./screenshots/020-load-reserve-mobile-chromium.png)
+![Restore fictional account backup imports](./screenshots/022-load-reserve-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Offer a random personalised backup
 
-![Offer a random personalised backup](./screenshots/021-open-backups-mobile-chromium.png)
+![Offer a random personalised backup](./screenshots/023-open-backups-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,16 +225,16 @@ Viewport: mobile-chromium.
 
 ## Offer another unseen backup
 
-![Offer another unseen backup](./screenshots/022-another-backup-mobile-chromium.png)
+![Offer another unseen backup](./screenshots/024-another-backup-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Accept and consume a backup before writing
+## Choose a backup without consuming it
 
-![Accept and consume a backup before writing](./screenshots/023-use-backup-mobile-chromium.png)
+![Choose a backup without consuming it](./screenshots/025-use-backup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,16 +243,16 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/024-backup-editor-mobile-chromium.png)
+![Open the reflection editor](./screenshots/026-backup-editor-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Edit the accepted backup
+## Edit the selected backup
 
-![Edit the accepted backup](./screenshots/025-edit-backup-mobile-chromium.png)
+![Edit the selected backup](./screenshots/027-edit-backup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Personalise the backup wording
 
-![Personalise the backup wording](./screenshots/026-backup-text-mobile-chromium.png)
+![Personalise the backup wording](./screenshots/028-backup-text-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,106 @@ Viewport: mobile-chromium.
 
 ## Retain the edited backup
 
-![Retain the edited backup](./screenshots/027-keep-backup-mobile-chromium.png)
+![Retain the edited backup](./screenshots/029-keep-backup-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Ask to discard the edited backup draft
+
+![Ask to discard the edited backup draft](./screenshots/030-discard-backup-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Discard the complete backup draft and keep all eight questions
+
+![Discard the complete backup draft and keep all eight questions](./screenshots/031-confirm-backup-discard-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Reload after discard without consuming or restoring the draft
+
+![Reload after discard without consuming or restoring the draft](./screenshots/032-reload-discarded-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Offer a different backup while the discarded original stays in the reserve
+
+![Offer a different backup while the discarded original stays in the reserve](./screenshots/033-choose-again-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep the new backup for a reflection
+
+![Keep the new backup for a reflection](./screenshots/034-use-again-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the reflection editor
+
+![Open the reflection editor](./screenshots/035-saved-backup-editor-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Edit the new backup before saving
+
+![Edit the new backup before saving](./screenshots/036-edit-saved-backup-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Personalise the new backup wording
+
+![Personalise the new backup wording](./screenshots/037-saved-backup-text-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep the wording and original selection across reload
+
+![Keep the wording and original selection across reload](./screenshots/038-keep-saved-backup-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Reload an edited unsaved prompt without consuming it
+
+![Reload an edited unsaved prompt without consuming it](./screenshots/039-reload-edited-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the reflection editor
+
+![Open the reflection editor](./screenshots/040-restore-edited-backup-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,18 +378,117 @@ Viewport: mobile-chromium.
 
 ## Write under the edited backup
 
-![Write under the edited backup](./screenshots/028-write-mobile-chromium.png)
+![Write under the edited backup](./screenshots/041-write-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Save the edited question and reflection
+## Disconnect before saving the edited reflection
 
-![Save the edited question and reflection](./screenshots/029-save-mobile-chromium.png)
+![Disconnect before saving the edited reflection](./screenshots/042-offline-save-start-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep the offline save and its original prompt use together on this device
+
+![Keep the offline save and its original prompt use together on this device](./screenshots/043-save-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return a never-synchronized offline save to the editor
+
+![Return a never-synchronized offline save to the editor](./screenshots/044-return-pending-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Ask to discard the returned offline draft
+
+![Ask to discard the returned offline draft](./screenshots/045-discard-pending-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Discard the unsent save without consuming its original prompt
+
+![Discard the unsent save without consuming its original prompt](./screenshots/046-confirm-pending-discard-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Start a new reflection with the still-displayed edited prompt
+
+![Start a new reflection with the still-displayed edited prompt](./screenshots/047-write-again-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Keep this reflection for synchronization after reconnecting
+
+![Keep this reflection for synchronization after reconnecting](./screenshots/048-save-again-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Close the app before the pending reflection is synchronized
+
+![Close the app before the pending reflection is synchronized](./screenshots/049-close-pending-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Reconnect without an app tab
+
+![Reconnect without an app tab](./screenshots/050-online-pending-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Reopen Journal, restore the durable save and consume only its edited original
+
+![Reopen Journal, restore the durable save and consume only its edited original](./screenshots/051-restore-pending-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Journal
+
+![Open Journal](./screenshots/052-confirm-saved-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Show the saved reflection after offline recovery
+
+![Show the saved reflection after offline recovery](./screenshots/053-saved-original-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The final edited question and reflection were saved once
 - [x] Screenshot matches the committed baseline (zero differing pixels)

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type {ReflectionDraft} from '../reflection-draft';
   import {STARTER_CATALOGUE} from '../starter-catalogue';
   import {choosePrompt,starterPrompt,promptRandom,type PromptKind} from '../prompt-rotation';
   import Onboarding from './Onboarding.svelte';
@@ -166,10 +167,6 @@
     return repository===active&&today===offeredDay?chosen:null;
   }
   async function offerBackup(){return offerPrompt('backup');}
-  async function acceptPrompt(id:string){
-    if(!repository||!starterPrompt(id)&&!view.state.backups[id]||view.state.rotation.accepted[id]===today)return;
-    await repository.queueBackup({eventId:`a_${today}_${id}`,type:'PromptAccepted',schemaVersion:1,payload:{day:today,promptId:id}});
-  }
   async function anotherStarter(){
     if(offering)return;
     const active=repository,offeredDay=today;
@@ -178,9 +175,9 @@
     try{
       const chosen=await offerPrompt('starter');if(repository!==active||today!==offeredDay)return;starterAttemptDay=today;
       if(!chosen){starterMessage='No unseen starter prompts are available today. Try a backup, generate a prompt, or write your own.';return;}
-      if(writing){await acceptPrompt(chosen.id);editorPromptId=chosen.id;editorManualPrompt=null;await persistDraft();}
+      if(writing){editorSelectedPromptId=chosen.id;editorPromptId=chosen.id;editorManualPrompt=null;await persistDraft();}
       else if(replaceEmpty&&todayDraft){
-        todayDraft={...todayDraft,schemaVersion:6,payload:{...todayDraft.payload,promptId:chosen.id,promptText:null,entryAt:'entryAt'in todayDraft.payload?todayDraft.payload.entryAt:null,photoSlot:'photoSlot'in todayDraft.payload?todayDraft.payload.photoSlot:null}};
+        todayDraft={...todayDraft,selectedPromptId:chosen.id,schemaVersion:6,payload:{...todayDraft.payload,promptId:chosen.id,promptText:null,entryAt:'entryAt'in todayDraft.payload?todayDraft.payload.entryAt:null,photoSlot:'photoSlot'in todayDraft.payload?todayDraft.payload.photoSlot:null}};
         await repository!.writeDraft($state.snapshot(todayDraft),todayKey);
       }
     }catch(cause){error=cause instanceof Error?cause.message:'Could not keep this prompt offer. Please try again.';}finally{offering=false;}
@@ -190,11 +187,10 @@
   });
   async function selectBackup(id:string){
     if(!repository||!resolvePrompt(view.state,id))return;
-    await acceptPrompt(id);
-    if(writing){editorPromptId=id;editorManualPrompt=null;await persistDraft();}
+    if(writing){editorSelectedPromptId=id;editorPromptId=id;editorManualPrompt=null;await persistDraft();}
     else{
       const previous=todayDraftDay===today?todayDraft:null;
-      const action:Action={eventId:previous?.eventId??crypto.randomUUID(),type:'ReflectionWritten',schemaVersion:6,payload:{
+      const action:ReflectionDraft={selectedPromptId:id,eventId:previous?.eventId??crypto.randomUUID(),type:'ReflectionWritten',schemaVersion:6,payload:{
         entryId:previous?.payload.entryId??crypto.randomUUID(),expectedRevision:previous?.payload.expectedRevision??0,text:previous?.payload.text??'',promptId:id,promptText:null,
         entryAt:previous&&'entryAt' in previous.payload?previous.payload.entryAt:null,photoSlot:previous&&'photoSlot' in previous.payload?previous.payload.photoSlot:null
       }};
@@ -273,7 +269,7 @@
   const providerName=$derived(serviceName(activeConnection.provider));
   function generatorFor(connection:ModelConnection){if(!client)throw new Error('Open your journal first.');return connection.provider==='personal-gemini'?personalGeminiGenerator(client,$state.snapshot(connection)):isLocalService(connection.provider)?localGenerator($state.snapshot(connection)):geminiGenerator(client);}
   function promptGenerator() {if(!client) throw new Error('Open your journal first.');if(modelConnectionError) throw new Error(modelConnectionError);if(!configuredConnection(activeConnection,view.state.ai.choices.promptConnectionId))throw new Error('Configure the selected connection on this device before generating.');return generatorFor(activeConnection);}
-  let draft = $state<Action | null>(null);
+  let draft = $state<ReflectionDraft | null>(null);
   let draftLoaded = $state(false);
   let draftRestored = $state(false);
   let draftStatus = $state('');
@@ -324,7 +320,7 @@
   }
   let currentInstant = $state(new Date());
   const today = $derived(localDay(currentInstant));
-  let todayDraft = $state<Action | null>(null);
+  let todayDraft = $state<ReflectionDraft | null>(null);
   let todayDraftDay = $state('');
   let editorDraftKey = $state('');
   const todayKey = $derived(`draft:today:${today}`);
@@ -347,6 +343,7 @@
   const todayColour = $derived(colourForDay(today));
   const editorColour = $derived(colourForDay(validDay(editorDateTime.slice(0,10)) ? editorDateTime.slice(0,10) : editorEntryAt ? localDay(editorEntryAt) : today));
   let editorPromptId = $state(STARTER_ID);
+  let editorSelectedPromptId = $state<string | undefined>(undefined);
   const currentPromptId = $derived((hasTodayDraft && todayDraft ? promptId(todayDraft) : daily.entry?.promptId ?? (view.state.ai.days[today]===STARTER_ID?todayStarter:view.state.ai.days[today]) ?? todayStarter) ?? STARTER_ID);
   const currentPrompt = $derived(hasTodayDraft && todayDraft ? ((todayDraft.schemaVersion === 5 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7)) ? todayDraft.payload.promptText : null) ?? resolvePrompt(view.state, promptId(todayDraft)) ?? todayDraftEntry?.prompt ?? STARTER_PROMPT : daily.entry?.prompt ?? resolvePrompt(view.state, currentPromptId) ?? STARTER_PROMPT);
   let editorManualPrompt = $state<string | null>(null);
@@ -377,7 +374,7 @@
   }
   async function useEditorPrompt() {
     if (!promptCandidate || editingPrompt || busy) return;
-    editorPromptId = promptCandidate.eventId; editorManualPrompt = null; await persistDraft();
+    editorSelectedPromptId=undefined; editorPromptId = promptCandidate.eventId; editorManualPrompt = null; await persistDraft();
   }
   const currentResponse = $derived(view.state.ai.responses[currentPromptId]);
   const currentRequest = $derived(currentResponse ? view.state.ai.requests[currentResponse.payload.requestId] : null);
@@ -633,7 +630,7 @@
     try {
       let stored = await active.readDraft(key);
       let manualEmpty=false;
-      if(!stored&&!entry&&!initialPromptId){const offered=await offerPrompt('starter');if(offered){initialPromptId=offered.id;await acceptPrompt(offered.id);}else manualEmpty=true;}
+      if(!stored&&!entry&&!initialPromptId){const offered=await offerPrompt('starter');if(offered){initialPromptId=offered.id;}else manualEmpty=true;}
       if(!stored&&!entry&&initialPromptId===STARTER_ID&&!todayStarter)manualEmpty=true;
       // Pick up a migrated draft previously stored under the entry's identity.
       if (!stored && entry && key === todayKey) {
@@ -648,6 +645,7 @@
       const original = stored ? view.state.entries.find(item => item.id === stored.payload.entryId) : entry;
       editing = original ? { ...original, revision: stored?.payload.expectedRevision ?? original.revision } : null;
       editorPromptId = stored ? promptId(stored) : original?.promptId ?? initialPromptId ?? (resolvePrompt(view.state, currentPromptId) ? currentPromptId : STARTER_ID);
+      editorSelectedPromptId=stored?.selectedPromptId??(!original&&(starterPrompt(editorPromptId)||view.state.backups[editorPromptId])?editorPromptId:undefined);
       editorManualPrompt = manualEmpty?'[No prompt]':(stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7)) ? stored.payload.promptText : null;
       editingPrompt = false; dismissedPrompt = '';
       currentInstant = new Date();
@@ -665,7 +663,6 @@
   }
   async function beginWriting() {
     if(offering)return;
-    if(!daily.entry)await acceptPrompt(currentPromptId);
     const key = daily.entry && (!hasTodayDraft || todayDraft?.payload.entryId === daily.entry.id) ? keyForEntry(daily.entry) : todayKey;
     await openComposer(key, daily.entry,true,currentPromptId);
   }
@@ -687,7 +684,7 @@
     const version = ++draftWrite;
     const eventId = draft?.eventId ?? crypto.randomUUID();
     if (editorManualPrompt !== null) editorPromptId = eventId;
-    draft = { eventId, type: 'ReflectionWritten', schemaVersion: editorManualPrompt && editorManualPrompt.length>600 ? 7 : 6, payload: {
+    draft = { selectedPromptId:editorSelectedPromptId, eventId, type: 'ReflectionWritten', schemaVersion: editorManualPrompt && editorManualPrompt.length>600 ? 7 : 6, payload: {
       entryId: editing?.id ?? draft?.payload.entryId ?? crypto.randomUUID(), text,
       expectedRevision: editing?.revision ?? draft?.payload.expectedRevision ?? 0,
       promptId: editorPromptId, promptText: editorManualPrompt,
@@ -882,6 +879,7 @@
       text = pending.payload.text;
       editing = view.state.entries.find((entry) => entry.id === pending.payload.entryId) ?? null;
       editorPromptId = promptId(pending);
+      editorSelectedPromptId=pending.selectedPromptId;
       editorManualPrompt = (pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7)) ? pending.payload.promptText : null; editingPrompt = false;
       editorDraftKey = editing ? keyForEntry(editing) : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7)) && !!pending.payload.entryAt ? newEntryKey : todayKey;
       editorDateTime = localDateTime((pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7)) && !!pending.payload.entryAt ? pending.payload.entryAt : currentInstant);

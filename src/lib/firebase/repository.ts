@@ -1,3 +1,5 @@
+import {commitDraft,draftSaveActions,type ReflectionDraft} from '../reflection-draft';
+import {localDay} from '../journal';
 import {isRotationAction,type RotationAction} from '../domain';
 import {isExternalProvider,providerName,type ExternalTarget} from '../ai/connection-contract.ts';
 import {checkModelBinding} from './model-binding.ts';
@@ -16,7 +18,7 @@ import { erasePhoto, type StagedPhoto } from '../photos';
 import {availableBackups,importedBackup,BACKUP_MINIMUM} from '../backup-prompts';
 
 type Checkpoint = { state: Projection; digest: string };
-export type JournalView = { state: Projection; pending: Action | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean; backupRemoved?: string[]; backupStatus?: string; backupImporting?: boolean; rotationPending?:boolean; onboardingPending?:boolean };
+export type JournalView = { state: Projection; pending: ReflectionDraft | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean; backupRemoved?: string[]; backupStatus?: string; backupImporting?: boolean; rotationPending?:boolean; onboardingPending?:boolean };
 async function digest(state: Projection) {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(state)));
   return [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, '0')).join('');
@@ -24,7 +26,7 @@ async function digest(state: Projection) {
 export class JournalRepository {
   private db!: IDBPDatabase;
   private state = emptyProjection();
-  private pending: Action | null = null;
+  private pending: ReflectionDraft | null = null;
   private setupFinish: Extract<OnboardingAction,{type:'OnboardingFinished'}>|null=null;
   private setupSyncing=false;
   private stopped = false;
@@ -151,9 +153,9 @@ export class JournalRepository {
   async clearStagedPhoto(entryId: string) { await this.db.delete('outbox', `photo:${entryId}`); }
   async readImportArchive(): Promise<ImportSelection | null> { return await this.db.get('outbox', 'import-archive') ?? null; }
   async storeImportArchive(file: ImportSelection | null) { if (file) await this.db.put('outbox', file, 'import-archive'); else await this.db.delete('outbox', 'import-archive'); }
-  async readDraft(key = 'draft'): Promise<Action | null> {
+  async readDraft(key = 'draft'): Promise<ReflectionDraft | null> {
     await this.draftChain;
-    const draft = await this.db.get('outbox', key) as Action | undefined;
+    const draft = await this.db.get('outbox', key) as ReflectionDraft | undefined;
     if (!draft) return null;
     if (this.pending?.eventId === draft.eventId) { await this.clearDraft(key); return null; }
     try {
@@ -163,7 +165,7 @@ export class JournalRepository {
     } catch { /* Offline drafts remain recoverable; append deduplicates the stable action ID. */ }
     return draft;
   }
-  writeDraft(draft: Action, key = 'draft') {
+  writeDraft(draft: ReflectionDraft, key = 'draft') {
     const copy = structuredClone(draft);
     const write = this.draftChain.then(() => this.db.put('outbox', copy, key)).then(() => {});
     this.draftChain = write.catch(() => {});
@@ -174,7 +176,9 @@ export class JournalRepository {
     this.draftChain = write.catch(() => {});
     return write;
   }
-  async save(action: Action) {
+  async save(draft: ReflectionDraft) {
+    const action={...draft,saveDay:localDay(new Date()),saveAttempted:false};
+    draftSaveActions(action); // Validate both immutable source actions before queuing either.
     if (this.pending) throw new Error('Retry or discard the pending save first.');
     if (!this.ready || this.stopped) throw new Error('Wait for your journal to load.');
     await this.db.put('outbox', action, 'pending');
@@ -190,7 +194,11 @@ export class JournalRepository {
     this.emit();
     try {
       if (!navigator.onLine) throw new Error('You are offline. Your text is saved on this device.');
-      await appendReflection(this.client.db, this.uid, this.pending);
+      this.pending={...this.pending,saveAttempted:true};
+      await this.db.put('outbox',this.pending,'pending');
+      let sequence=this.state.cursor;
+      await commitDraft(this.pending,async action=>{const result=await appendReflection(this.client.db,this.uid,action);sequence=Math.max(sequence,result.sequence);});
+      await this.awaitSequence(sequence);
       if (this.stopped) return;
       await this.db.delete('outbox', 'pending');
       this.pending = null;
@@ -202,8 +210,16 @@ export class JournalRepository {
   }
   async discardPending() {
     if (this.sending) throw new Error('Wait for the current save to finish.');
-    await this.db.delete('outbox', 'pending');
-    this.pending = null; this.error = ''; this.status = 'Pending save returned to editor'; this.emit();
+    this.sending=true;
+    try {
+      const pending=this.pending;
+      if(pending?.selectedPromptId&&pending.saveAttempted!==false){
+        const committed=await getDocFromServer(doc(this.client.db,`users/${this.uid}/streams/${GENERATION}/events/${pending.eventId}`));
+        if(committed.exists())throw new Error('This reflection was already saved. Choose Retry sync to finish updating your journal.');
+      }
+      await this.db.delete('outbox', 'pending');
+      this.pending = null; this.error = ''; this.status = 'Pending save returned to editor';
+    } finally {this.sending=false;this.emit();}
   }
   async finishOnboarding(outcome:'completed'|'skipped') {
     if(!this.setupFinish) this.setupFinish={eventId:crypto.randomUUID(),type:'OnboardingFinished',schemaVersion:1,payload:{version:1,outcome}};
@@ -229,14 +245,17 @@ export class JournalRepository {
   async commitAI(action: RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
     if (!this.ready || this.stopped || !navigator.onLine) throw new Error('Connect and wait for your journal to sync first.');
     const result = await appendReflection(this.client.db, this.uid, action);
-    // Await the confirmed projection, never invoke an AI adapter from a listener.
+    await this.awaitSequence(result.sequence);
+    return result;
+  }
+  private async awaitSequence(sequence:number) {
+    // Acknowledgement means the confirmed source actions are also projected.
     const deadline = performance.now() + 15_000;
-    while (!this.stopped && this.state.cursor < result.sequence) {
+    while (!this.stopped && this.state.cursor < sequence) {
       if (performance.now() > deadline) throw new Error('Your change was saved. Reload to refresh this device.');
       await new Promise(resolve => setTimeout(resolve, 20));
     }
     if (this.stopped) throw new Error('This journal session has closed.');
-    return result;
   }
   async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string, backup=false, differentFromPromptId?:string) {
     if (this.generating) throw new Error('A prompt is being generated. You can use a saved backup immediately.');
