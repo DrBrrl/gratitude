@@ -53,6 +53,7 @@ test('rotation source actions contain only observed identity and local day; malf
  const p=catalogue[0],event=viewed(p.id);
  assert.deepEqual(parseAction(event),event);
  assert.throws(()=>parseAction({...event,payload:{...event.payload,expires:'2026-12-05'}}));
+ assert.throws(()=>parseAction({...event,payload:{...event.payload,surface:['today']}}));
  assert.throws(()=>parseAction({...viewed(p.id,'2026-02-30')}));
  assert.throws(()=>replay(logOf([viewed('unknown')])));
  const backupId='bp_'+'a'.repeat(64);assert.equal(viewed(backupId).eventId.length,80);assert.deepEqual(parseAction(viewed(backupId)),viewed(backupId));

@@ -330,6 +330,19 @@ service cloud.firestore {
           && getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'AccentColourChosen';
         allow delete: if false;
       }
+      // Classify once so complex personal-cloud requests retain Rules expression headroom.
+      // Each validator still enforces its exact event type, schema and payload.
+      function validStreamAction(e) {
+        let kind = e.type;
+        return kind in ['AIChoicesConfirmed','PromptRequested','PromptResponseReceived','AIRequestFailed','PromptFeedbackSubmitted','StarterPromptChosen'] ? validAI(e)
+          : kind in ['PromptViewed','PromptAccepted'] ? validRotation(e)
+          : kind in ['OnboardingAnswersConfirmed','OnboardingAnswersCleared','OnboardingFinished'] ? validSetup(e)
+          : kind == 'AccentColourChosen' ? validAppearance(e)
+          : kind in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(e)
+          : kind in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(e)
+          : kind == 'ReflectionWritten' ? validReflection(e)
+          : kind.matches('Photo.*') && validPhoto(e);
+      }
       match /events/{eventId} {
         allow read: if owns(uid);
         allow create: if owns(uid) && generation == 'v1' && validId(eventId)
@@ -337,7 +350,7 @@ service cloud.firestore {
           && request.resource.data.eventId == eventId && request.resource.data.recordedAt == request.time
           && request.resource.data.sequence == nextSequence()
           && getAfter(root()).data.sequence == request.resource.data.sequence && getAfter(root()).data.lastEventId == eventId
-          && (request.resource.data.type in ['PromptViewed','PromptAccepted'] ? validRotation(request.resource.data) : request.resource.data.type in ['OnboardingAnswersConfirmed','OnboardingAnswersCleared','OnboardingFinished'] ? validSetup(request.resource.data) : request.resource.data.type == 'AccentColourChosen' ? validAppearance(request.resource.data) : request.resource.data.type in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(request.resource.data) : request.resource.data.type in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(request.resource.data) : request.resource.data.type == 'ReflectionWritten' ? validReflection(request.resource.data) : request.resource.data.type.matches('Photo.*') ? validPhoto(request.resource.data) : validAI(request.resource.data));
+          && validStreamAction(request.resource.data);
         allow update, delete: if false;
       }
       match /rotation/{id} {
