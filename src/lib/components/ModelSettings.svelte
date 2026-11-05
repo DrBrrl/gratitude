@@ -26,7 +26,7 @@
   $effect(()=>{
     // Provider confirmation can publish an intermediate binding before the saved destination arrives.
     if(busy)return;
-    const next={...connection},signature=JSON.stringify([scope,next]);
+    const next={...connection},signature=JSON.stringify([scope,next.provider,next.baseUrl,next.model,next.token,next.connectionId??null,next.connectionRevision??null,next.allowPersonal??false]);
     untrack(()=>{
       if(signature===observedConnection)return;
       const modelChanged=draft.model!==next.model;
@@ -93,7 +93,7 @@
         <option value="">Enter an identifier manually…</option>
       </select>
     {:else}
-      <input id={`${field}-local-model`} bind:value={draft.model} oninput={()=>{capabilities=null;message='';}} disabled={disabled||busy} autocomplete="off" spellcheck="false" />
+      <input id={`${field}-local-model`} placeholder="Test connection to see available models" bind:value={draft.model} oninput={()=>{capabilities=null;message='';}} disabled={disabled||busy} autocomplete="off" spellcheck="false" />
     {/if}
     <label for={`${field}-local-token`}>{draft.provider==='lm-studio'?'LM Studio API token':'Proxy authentication token (optional)'}</label>
     <input id={`${field}-local-token`} type="password" bind:value={draft.token} oninput={()=>{models=[];capabilities=null;message='';}} disabled={disabled||busy} autocomplete="off" />
