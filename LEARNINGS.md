@@ -1315,3 +1315,7 @@ PR #25 is rebased onto #24's consume-on-save update (`d23882cd`). Conflict resol
 ### 2026-11-05 — Retarget onboarding after the parent merge
 
 GitHub automatically retargeted PR #25 to main after #24 merged, but reported conflicts because the rebased merge changed its ancestry. Main's merged tree is identical to the former parent tip (`d23882cd`). Rebasing only #25's commits onto main completed cleanly and produced an identical file tree to the pre-rebase branch, including its existing verification records. No application or screenshot changes were needed.
+
+### 2026-11-06 — Clarify where to finish onboarding setup later
+
+The Friends introduction now names the Friends tab as the place to configure a skipped public profile. The AI introduction names Settings → AI Settings and explicitly distinguishes starter prompts from AI generated prompts. Both use the supplied wording. The existing Friends copy assertion and affected 046/054/055 screenshots are updated. Svelte check reports zero errors/warnings, and all six ordinary mobile/desktop walkthrough comparisons pass at zero pixel tolerance after regeneration. All 3,784 referenced screenshots exist with no obsolete baselines.
