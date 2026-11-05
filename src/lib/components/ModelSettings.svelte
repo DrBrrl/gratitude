@@ -4,19 +4,20 @@
   import type {FirebaseClient} from '../firebase/client';
   import PersonalKeySettings from './PersonalKeySettings.svelte';
   import type {CredentialStatus} from '../firebase/model-credential';
-  let {cloudConnections=null,client=null,purpose='prompts',heading='AI model',regionLabel='AI model connection',saveMessage='',credentialStatus={ready:false,saved:false,error:''},onsavetoken,onforgettoken,connection,scope,disabled=false,connectionOnly=false,initialError='',onchange,oncomplete}:{cloudConnections?:Record<string,ModelConnection>|null;client?:FirebaseClient|null;purpose?:'prompts'|'photos';heading?:string;regionLabel?:string;saveMessage?:string;credentialStatus?:CredentialStatus;onsavetoken?:(connection:ModelConnection)=>Promise<void>;onforgettoken?:()=>Promise<void>;connection:ModelConnection;scope:string;disabled?:boolean;connectionOnly?:boolean;initialError?:string;onchange:(connection:ModelConnection)=>Promise<void>;oncomplete?:(complete:boolean)=>void}=$props();
+  let {cloudConnections=null,client=null,purpose='prompts',heading='AI model',regionLabel='AI model connection',saveMessage='',credentialStatus={ready:false,saved:false,error:''},onsavetoken,onforgettoken,connection,scope,disabled=false,connectionOnly=false,initialError='',onchange,oncomplete,onready}:{cloudConnections?:Record<string,ModelConnection>|null;client?:FirebaseClient|null;purpose?:'prompts'|'photos';heading?:string;regionLabel?:string;saveMessage?:string;credentialStatus?:CredentialStatus;onsavetoken?:(connection:ModelConnection)=>Promise<void>;onforgettoken?:()=>Promise<void>;connection:ModelConnection;scope:string;disabled?:boolean;connectionOnly?:boolean;initialError?:string;onchange:(connection:ModelConnection)=>Promise<void>;oncomplete?:(complete:boolean)=>void;onready?:(ready:boolean)=>void}=$props();
   const field=$props.id();
   let draft=$state<ModelConnection>(defaultConnection()),busy=$state(false),message=$state(''),failed=$state(false),capabilities=$state<LocalCapabilities|null>(null);
   let models=$state<LocalModelInfo[]>([]),manualModel=$state(false),discoveredFor=$state('');
-  let personalComplete=$state(false);
+  let personalComplete=$state(false),personalReady=$state(false);
   $effect(()=>{
-    if(!oncomplete)return;
+    if(!oncomplete&&!onready)return;
     let complete=false;
     try{
       if(draft.provider==='personal-gemini')complete=personalComplete;
       else{validateConnection(draft);complete=draft.provider==='gemini'||draft.provider==='lm-studio'||!!capabilities||!!draft.connectionId&&!!draft.connectionRevision&&draft.provider===connection.provider&&draft.baseUrl===connection.baseUrl&&draft.model===connection.model&&draft.token===connection.token;}
     }catch{/* Required connection fields are incomplete. */}
-    oncomplete(complete&&!busy&&!failed);
+    oncomplete?.(complete&&!busy&&!failed);
+    onready?.(complete&&!busy&&!failed&&draft.provider===connection.provider&&(draft.provider==='personal-gemini'?personalReady:draft.provider==='gemini'||['baseUrl','model','token'].every(k=>draft[k as keyof ModelConnection]===connection[k as keyof ModelConnection])));
   });
   const connectionKey=(value:ModelConnection)=>JSON.stringify([scope,value.provider,value.baseUrl,value.token]);
   const showPicker=$derived(!manualModel&&discoveredFor===connectionKey(draft)&&models.length>0&&(models.length>1||!models.some(item=>item.id===draft.model)));
@@ -94,7 +95,7 @@
     {#if purpose==='photos'}<p class="hint">Choose a vision-capable model for photo descriptions. No journal text or prompt context is sent.</p>{/if}
     <button class="outline" type="button" onclick={testConnection} disabled={disabled||busy}>{busy?'Checking connection…':'Test connection'}</button>
   {:else if draft.provider==='personal-gemini'}
-    <PersonalKeySettings {client} connection={draft.connectionId&&cloudConnections?(cloudConnections[draft.connectionId]??{...draft,connectionId:undefined,connectionRevision:undefined}):draft} disabled={disabled||busy} oncomplete={complete=>personalComplete=complete} onchange={async saved=>{await onchange(saved);draft=saved;}} />
+    <PersonalKeySettings {client} connection={draft.connectionId&&cloudConnections?(cloudConnections[draft.connectionId]??{...draft,connectionId:undefined,connectionRevision:undefined}):draft} disabled={disabled||busy} oncomplete={complete=>personalComplete=complete} onready={ready=>personalReady=ready} onchange={async saved=>{await onchange(saved);draft=saved;}} />
   {:else}
     <p class="hint">Gemini uses this site’s managed Firebase AI connection.</p>
   {/if}

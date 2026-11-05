@@ -1639,3 +1639,9 @@ While we're doing that, i would like a separate PR targetted to pr 24 to go thro
 ### 2026-11-05 — Prompt consumption and discarded drafts
 
 For PR 24, is it possible for the prompt to not get consumed if the draft is completely discarded?
+
+## 2026-11-05 — Repeat onboarding from Personalise settings
+
+```text
+(can we get the option to repeat the onboarding questionnaire in the "personalise" settings? Maybe just a button at the top of that settings page? It will help me do the testing of it too)
+```

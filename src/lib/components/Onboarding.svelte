@@ -1,14 +1,19 @@
 <script lang="ts">
+  import {onboardingPath} from '../onboarding-flow';
   import type { Snippet } from 'svelte';
   import Questionnaire from './Questionnaire.svelte';
   import AccentPicker from './AccentPicker.svelte';
   import Icon from './Icon.svelte';
   import { TOPICS, SCOPE_OPTIONS, type OnboardingAnswers } from '../onboarding';
-  let { answers=$bindable(), step=$bindable(0), colour=$bindable(0), busy=false, message='', stale=false, online=true, aiComplete=false, friendsComplete=false, onfinish, onskip, ai, friends }:
-    {answers:OnboardingAnswers;step?:number;colour?:number;busy?:boolean;message?:string;stale?:boolean;online?:boolean;aiComplete?:boolean;friendsComplete?:boolean;onfinish:()=>Promise<void>;onskip:()=>Promise<void>;ai:Snippet;friends:Snippet}=$props();
+  let { answers=$bindable(), step=$bindable(0), colour=$bindable(0), busy=false, message='', stale=false, online=true, aiComplete=false, friendsComplete=false, aiEnabled=false, aiReviewed=$bindable(false), onAIContinue, sharing, onfinish, onskip, ai, friends }:
+    {answers:OnboardingAnswers;step?:number;colour?:number;busy?:boolean;message?:string;stale?:boolean;online?:boolean;aiComplete?:boolean;friendsComplete?:boolean;aiEnabled?:boolean;aiReviewed?:boolean;onAIContinue:()=>Promise<'ai'|'starter'|'stay'>;sharing:Snippet;onfinish:()=>Promise<void>;onskip:()=>Promise<void>;ai:Snippet;friends:Snippet}=$props();
   const topicTitles=$derived([...TOPICS.filter(([id])=>answers.selectedTopics.includes(id)).map(([,label])=>label),...answers.customTopics.filter(topic=>topic.selected).map(topic=>topic.label)]);
   const scopeTitle=$derived(SCOPE_OPTIONS.find(([value])=>value===answers.scope)?.[1]);
-  const titles=['Welcome','About you','Your colour','Your interests','Your prompts','Your AI','Your friends profile','Ready to reflect?'];
+  const titles=['Welcome','About you','Your colour','Choose your AI','Your interests','Your prompts','Your friends profile','Ready to reflect?'];
+  const path=$derived(onboardingPath(aiEnabled,aiReviewed||step>3));
+  const position=$derived(Math.max(0,path.indexOf(step))+1);
+  async function next(){if(step===3){const route=await onAIContinue();if(route==='stay')return;aiReviewed=true;move(route==='ai'?4:6);}else move(path[path.indexOf(step)+1]);}
+  function back(){move(path[Math.max(0,path.indexOf(step)-1)]);}
   const features=[
     ['Find a starting point','Ask an AI for a gratitude prompt. If you choose to share your topics of interest, past reflections, or feedback, the AI can use them to offer a more personalised prompt. You can also choose a saved backup prompt that you upload in advance without waiting for AI.'],
     ['Make the prompt yours','Edit any prompt, whether AI generated or not, ask for a different one to be generated, or write your own.'],
@@ -21,8 +26,8 @@
   function move(next:number){step=next;window.scrollTo(0,0);}
 </script>
 <section class="setup" aria-label="Personalise your journal" aria-busy={busy}>
-  <header><span class="brand">Gratitude<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></span><span class="progress">{step+1} of 8</span></header>
-  <progress value={step+1} max="8" aria-label="Onboarding progress"></progress>
+  <header><span class="brand">Gratitude<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></span><span class="progress">{position} of {path.length}</span></header>
+  <progress value={position} max={path.length} aria-label="Onboarding progress"></progress>
   {#if step>0}<h1>{titles[step]}</h1>{/if}
   {#if step===0}
     <div class="welcome-copy">
@@ -34,23 +39,23 @@
     <p>The following questions will personalise your journal.</p><p class="hint">All questions are optional and you can change your answers later!</p>
   {:else if step===1}<Questionnaire bind:answers part="identity" disabled={busy} />
   {:else if step===2}<p>What's your favourite colour? Your choice will be used as your journal's main accent colour.</p><AccentPicker selected={colour} compact preview disabled={busy} onchange={async value=>{colour=value;}} />
-  {:else if step===3}<Questionnaire bind:answers part="interests" disabled={busy} />
-  {:else if step===4}<Questionnaire bind:answers part="prompts" disabled={busy} />
-  {:else if step===5}<p class="hint">AI is optional. Choose your connections here, or set up later in Settings → AI settings.</p><p class="hint">Connection saves take effect separately. Continuing does not turn AI on or start a request.</p>{@render ai()}
-  {:else if step===6}<p class="hint">Friends are optional. Your public display name and username are separate from your private answers. You can set up later in the Friends tab.</p><p class="hint">Saving a Friends profile takes effect separately, even if you skip the questionnaire afterwards.</p>{@render friends()}
+  {:else if step===4}<Questionnaire bind:answers part="interests" disabled={busy} />
+  {:else if step===5}<Questionnaire bind:answers part="prompts" disabled={busy} />
+  {:else if step===3}<p>You can get an AI to generate personalised daily gratitude prompts for you using your prompt preferences, explicit general and prompt-specific feedback, and/or your previous journal entries!</p><p>if you would like to use an AI, you can configure it below, or later in Settings → AI Settings. To reflect on a set of starter prompts instead, skip this step.</p>{@render ai()}
+  {:else if step===6}<p>You can find your friends in Gratitude and send them little hugs to encourage them to reflect with you every day! Set up your profile now or later.</p><p class="hint">Friends are optional. Your public display name and username are separate from your private answers. You can set up later in the Friends tab.</p><p class="hint">Saving a Friends profile takes effect separately, even if you skip the questionnaire afterwards.</p>{@render friends()}
   {:else}
     <section class="glass review" aria-label="Review your answers">
-      <h2>Your private answers</h2><dl><dt>Name</dt><dd>{answers.preferredName.trim()||'Not provided'}</dd><dt>Pronouns</dt><dd>{answers.pronouns.trim()||'Not provided'}</dd><dt>Topics</dt><dd>{topicTitles.length?topicTitles.join(', '):'None selected'}</dd><dt>Prompt scope</dt><dd>{scopeTitle}</dd><dt>Word limit</dt><dd>Under {answers.wordLimit} words</dd></dl>
-      <p class="hint">Your selected topic descriptions can be shared only with your permission below. Your colour will be saved when you finish. Separately saved connections and Friends profiles already apply.</p>
+      <h2>Your private answers</h2><dl><dt>Name</dt><dd>{answers.preferredName.trim()||'Not provided'}</dd><dt>Pronouns</dt><dd>{answers.pronouns.trim()||'Not provided'}</dd>{#if aiEnabled}<dt>Topics</dt><dd>{topicTitles.length?topicTitles.join(', '):'None selected'}</dd><dt>Prompt scope</dt><dd>{scopeTitle}</dd><dt>Word limit</dt><dd>Under {answers.wordLimit} words</dd>{/if}</dl>
+      <p class="hint">Your colour will be saved when you finish. Separately saved connections and Friends profiles already apply.</p>
     </section>
-    <section class="glass"><label class="sharing"><input type="checkbox" bind:checked={answers.useAnswers} disabled={busy} /><span>Use my questionnaire answers for AI prompts</span></label><p class="hint">When AI prompts are enabled, your selected topic descriptions will be sent to your chosen provider. Your name and pronouns stay private in your journal. Journal and feedback sharing remain separate choices in AI settings. No AI request is made during setup.</p></section>
+    {#if aiEnabled}<section class="glass" aria-label="What informs your prompts"><h2>What informs your prompts</h2><p>The gratitude prompts generated by the AI can be informed by your answers to this questionnaire, by your gratitude reflections as you fill out your journal (it will learn more about your preferences and priorities in time!), and by direct prompt feedback that you can provide when faced with a particular prompt. Use the switches below to decide what you would like to provide to the AI for prompt generation - you can change this at any time in Settings → AI Settings.</p><label class="sharing"><input type="checkbox" bind:checked={answers.useAnswers} disabled={busy} /><span>Use my questionnaire answers for AI prompts</span></label><p class="hint">When AI prompts are enabled, your selected topic descriptions will be sent to your chosen provider. Your name and pronouns stay private in your journal. Your choices will be saved when you finish setup. No AI request is made during setup.</p>{@render sharing()}</section>{/if}
     {#if !online}<p class="hint">Your draft stays on this device. Reconnect to confirm your answers, or skip for now and keep writing.</p>{/if}
   {/if}
   {#if stale}<p role="alert">Your answers changed on another device. Your draft is kept. Open Personalise your journal in Settings to review the latest answers before saving.</p>{/if}
   {#if message}<p role="status">{message}</p>{/if}
   <footer>
-    {#if step>0}<button class="outline" onclick={()=>move(step-1)} disabled={busy}><Icon name="back" size={18} />Back</button>{/if}
-    {#if step<7}<button class="primary" onclick={()=>move(step+1)} disabled={busy}>{step===0?'Let’s get started':step===5&&!aiComplete||step===6&&!friendsComplete?'Set up Later':'Continue'}<Icon name="next" size={18} /></button>{:else}<button class="primary" onclick={onfinish} disabled={busy||stale||!online}>{busy?'Saving…':'Save and start writing'}</button>{/if}
+    {#if step>0}<button class="outline" onclick={back} disabled={busy}><Icon name="back" size={18} />Back</button>{/if}
+    {#if step<7}<button class="primary" onclick={next} disabled={busy}>{step===0?'Let’s get started':step===3&&(!aiEnabled||!aiComplete)||step===6&&!friendsComplete?'Set up Later':'Continue'}<Icon name="next" size={18} /></button>{:else}<button class="primary" onclick={onfinish} disabled={busy||stale||!online}>{busy?'Saving…':'Save and start writing'}</button>{/if}
   </footer>
   <button class="skip" onclick={onskip} disabled={busy}>Skip for now</button>
   <p class="hint draft">Unconfirmed answers stay on this device until you save. Skipping keeps your saved settings.</p>

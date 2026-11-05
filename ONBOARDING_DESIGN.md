@@ -279,3 +279,9 @@ Use small feature commits with corresponding unit/Firebase tests where state or 
 ## Review points
 
 Jamie’s revised copy supersedes the initial welcome/questions. Confirmed requested changes are automatic next-visit onboarding for existing accounts, seventeen built-in topics plus repeatable custom rows, editable descriptions in a highlighted table, personalised screen labels, AI and Friends setup, Intermediate scope, descriptions-only topic JSON and a twenty-unit reflection budget. Proposed technical defaults still include optional answers, three topics recommended, Narrow/80, explicit answer-sharing permission, generic formatting controls and the custom-row bounds above. Family/Movement descriptions retain Jamie’s original wording under the revised 150-character boundary. Longer output/context budgets require implementation evidence before release. Monthly AI-curated user notes remain deferred as described in [AI_CONTEXT_DESIGN.md](AI_CONTEXT_DESIGN.md#deferred-idea-gemini-curated-user-notes).
+
+## AI-first routing and repeating setup
+
+The setup order is Welcome → About you → Your colour → Choose your AI → Your interests → Your prompts → Friends → Review. When AI prompts are off, interests and prompt preferences are skipped and their sharing controls are absent from Review. Back returns along the active route; saved local progress restores that route. AI prompt and sharing choices take effect on final confirmation. Saving a model connection or Friends profile remains a separate explicit action.
+
+**Settings → Personalise your journal → Repeat onboarding** starts at Welcome with existing answers and preferences. The device-local draft marks a repeat so it resumes after reload. Skip stops the repeat and retains saved settings; completion confirms the answers without replacing the original rollout completion/skipping record. Journal entries, model connections and Friends profiles are preserved.

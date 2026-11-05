@@ -20,7 +20,7 @@ export class ReviewRepository implements JournalStore {
     if (!import.meta.env.DEV) throw new Error('UI review is available only in the development server.');
   }
   private emit() {
-    if (!this.stopped) this.notify({ state: replay(this.events), pending: null, ready: true, status: 'Synced', error: '' });
+    if (!this.stopped) this.notify({ repeatOnboarding:!!this.setupDraft&&typeof this.setupDraft==='object'&&'repeating'in this.setupDraft&&this.setupDraft.repeating===true, state: replay(this.events), pending: null, ready: true, status: 'Synced', error: '' });
   }
   private persist(events = this.events, drafts = this.drafts) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, drafts, setupDraft: this.setupDraft }));

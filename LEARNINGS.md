@@ -1277,3 +1277,9 @@ The offline-first-save walkthrough exposed an acknowledgement race: reopening wi
 The cooldown walkthrough now reaches its day-thirty save on 1 October, matching the fixed emulator receipt date. Earlier August visits only inspected eligibility; adding a real save exposed that browser and server fixtures also need to agree on the saved reflection's date. The selector boundary remains exactly 29/30 civil days.
 
 Validation: Svelte check reports zero errors/warnings; all 129 unit tests pass. Ordinary unmasked zero-pixel comparisons pass for 002, 004, 027, 028, 052 and 053 on both mobile and desktop (12 cases). The discard story includes manual wording edits, reload, cancellation of an unsent offline save and durable retry of a later save. All 3,688 referenced images exist; 27 superseded generated images were reviewed and removed, leaving no obsolete baselines. No Firestore Rules or source schemas changed.
+
+### 2026-11-05 — AI-first onboarding and repeat setup
+
+AI choice precedes interests and prompt preferences. Turning AI off collapses connections and skips those two screens; backtracking and a restored local draft follow the same conditional path. Sharing controls appear only for AI users. Questionnaire AI/sharing choices are staged locally until the final confirmation; independently saved model connections and Friends profiles retain their own explicit saves.
+
+Personalise settings now offers **Repeat onboarding**. It starts at Welcome with existing answers, preserves the journal, model connections and Friends profile, and stores a device-local repeat marker so reload resumes the questionnaire. Cancelling retains saved choices and clears that marker. Completing a repeat confirms answers without rewriting the original rollout outcome. Browser scenarios 054 and 055 cover these new paths; their screenshot verification is pending while the parent rotation baseline refresh occupies the shared Firebase emulators.
