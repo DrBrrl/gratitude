@@ -69,3 +69,7 @@ nix develop -c npx firebase deploy --project gratitude-drbrrl-dev --only firesto
 Use `production` and `gratitude-drbrrl` for the production environment. This targets the new callable only and preserves the existing hug notification sender. [FIREBASE_SETUP.md](FIREBASE_SETUP.md) records actual deployment status; the commands above are reproducible setup instructions, not evidence that a deployment occurred.
 
 The emulator function port is `15001`. Local Functions can use a private `functions/.secret.local` containing a disposable `GRATITUDE_AI_KEYRING` JSON keyring; that file is ignored by Git. Automated browser tests intercept the callable boundary using fictional replies. Relay integration tests exercise the real Firestore emulator with injected fictional Google responses; CI makes no paid requests.
+
+## Model selection in Settings and onboarding
+
+The same connection form is used in both places, including separate photo connections. Enter the server address and token, then choose **Test connection** to retrieve its available models without inference or model loading. You do not need to know a model identifier before discovery. Pick a model from the dropdown, even when the machine offers only one model, and save. Saving retains the discovered list on that open form; changing its server or token clears it. Reopening or reloading requires another metadata check. Manual identifiers remain an explicit alternative in the dropdown.
