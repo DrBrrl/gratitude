@@ -24,6 +24,8 @@
   const connectionKey=(value:ModelConnection)=>{let address=value.baseUrl.trim();try{address=serverOrigin(address);}catch{/* Incomplete addresses must not match discovered servers. */}return JSON.stringify([scope,value.provider,address,value.token.trim()]);};
   const showPicker=$derived(!manualModel&&discoveredFor===connectionKey(draft)&&models.length>0);
   $effect(()=>{
+    // Provider confirmation can publish an intermediate binding before the saved destination arrives.
+    if(busy)return;
     const next={...connection},signature=JSON.stringify([scope,next]);
     untrack(()=>{
       if(signature===observedConnection)return;
