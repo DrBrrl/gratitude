@@ -1669,3 +1669,9 @@ I successfully merged 24! Shall we retarget 25 to main?
 ```text
 Two tiny changes - for the friends onboarding - "Set up your profile now or later" should be "You can set your profile up below, or skip this step for now and set it up later in the Friends tab." And for the Choose your AI page, let's change the second paragraph to: "If you would like to use an AI, you can configure it below now, or in Settings → AI Settings later. To reflect on a set of starter prompts instead of AI generated ones, skip this step."
 ```
+
+## 2026-11-06 — Investigate PR 25 check failures
+
+```text
+Fantastic! Two tests so far have failed checks - the rest are still running
+```
