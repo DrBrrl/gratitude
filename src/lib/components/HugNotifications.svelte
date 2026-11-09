@@ -9,7 +9,7 @@
  {:else if !state.supported}<p>This browser doesn’t support background notifications.</p>
  {:else if !state.configured}<p>Background hugs aren’t available on this deployment yet.</p>
  {:else}
-  <p class="status">{state.enabled?'On this device':'Off on this device'}</p>
+  <p class="status">{state.enabled?'On for this device':'Off for this device'}</p>
   {#if state.permission==='denied'}<p>Notifications are blocked. Allow them in your browser’s site settings, then try again.</p>{/if}
   {#if !state.online}<p>Connect to turn notifications on. You can still turn them off here.</p>{/if}
   <button class="outline" disabled={state.busy||!state.online&&!state.enabled} onclick={()=>state.enabled?controller?.disable():controller?.enable()}>{state.busy?'Updating notifications…':state.enabled?'Turn off hug notifications':'Turn on hug notifications'}</button>
