@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {OllamaAccessError,ollamaOriginCommand} from '../ai/local-services';
   import {untrack} from 'svelte';
   import {defaultConnection,serverOrigin,validateConnection,saveConnection,readProviderConnection,wasAccountConnection,discoverLocalModels,selectedLocalCapabilities,type ModelConnection,type LocalCapabilities,type LocalModelInfo} from '$lib/ai/lm-studio';
   import {providerName,isLocalService,isExternalProvider,type AIProvider} from '../ai/connection-contract';
@@ -9,6 +10,8 @@
   const field=$props.id();
   let draft=$state<ModelConnection>(defaultConnection()),busy=$state(false),message=$state(''),failed=$state(false),capabilities=$state<LocalCapabilities|null>(null);
   let models=$state<LocalModelInfo[]>([]),manualModel=$state(false),discoveredFor=$state('');
+  let accessError=$state<OllamaAccessError|null>(null);
+  const appOrigin=$derived(typeof window==='undefined'?'':window.location.origin);
   let personalComplete=$state(false),personalReady=$state(false);
   let observedConnection='';
   $effect(()=>{
@@ -38,7 +41,7 @@
   });
   $effect(()=>{if(initialError){message=initialError;failed=true;}});
   async function testConnection() {
-    busy=true;message='';failed=false;
+    busy=true;message='';failed=false;accessError=null;
     models=[];discoveredFor='';manualModel=false;
     const captured=$state.snapshot(draft),key=connectionKey(captured),capturedScope=scope;
     try {
@@ -47,7 +50,7 @@
       models=discovered;discoveredFor=key;
       describeModel();
     }
-    catch(error){if(scope===capturedScope&&connectionKey(draft)===key){failed=true;capabilities=null;message=error instanceof Error?error.message:'Could not connect to LM Studio.';}}
+    catch(error){if(scope===capturedScope&&connectionKey(draft)===key){failed=true;capabilities=null;accessError=error instanceof OllamaAccessError?error:null;message=error instanceof Error?error.message:'Could not connect to the selected server.';}}
     finally{busy=false;}
   }
   function describeModel(){
@@ -115,8 +118,21 @@
   {/if}
   {#if draft.provider!=='personal-gemini'}<button class="outline" type="button" onclick={save} disabled={disabled||busy||!scope||((draft.provider==='ollama'||draft.provider==='openai-compatible')&&!capabilities)}>Save model settings</button>{/if}
   {#if message}<p class="hint connection-message" role={failed?'alert':'status'}>{message}</p>{/if}
+  {#if failed&&draft.provider==='ollama'&&accessError&&message===accessError.message}
+    <section class="ollama-access-help" aria-label="Ollama connection help">
+      <h3>Allow Gratitude in Ollama</h3>
+      <p>On the computer running Ollama, add this app’s origin to <code>OLLAMA_ORIGINS</code>:</p>
+      <p><code>{appOrigin}</code></p>
+      <p>For macOS or Linux with <code>ollama serve</code>: stop the server with Ctrl+C, then restart it using:</p>
+      <pre><code>{ollamaOriginCommand(appOrigin)}</code></pre>
+      <p>For the Ollama desktop app or a service, set the same environment variable for that app or service, then fully quit and restart it. <a href="https://docs.ollama.com/faq#how-do-i-configure-ollama-server" target="_blank" rel="noopener noreferrer">Setup instructions for macOS, Windows and Linux</a>.</p>
+      <p>Use the origin above without a page path. Then try <strong>Test connection</strong> again. Native local Ollama does not need an API token; check credentials only if your proxy requires them.</p>
+      <p>If it still fails, check the server address and browser console for CORS, HTTPS or local-network permission errors. A blocked request does not prove which of these caused it.</p>
+    </section>
+  {/if}
 </section>
 <style>
   .model-settings{box-sizing:border-box;margin:24px 0;padding:22px;background:linear-gradient(130deg,#55585b52,#191d1fc9 60%,#55514b57);border:1px solid var(--glass-border);border-radius:16px;box-shadow:inset 0 1px 0 #ffffff15,0 8px 24px #00000020;backdrop-filter:blur(18px)}.model-settings h2{margin:0 0 .7rem;font-family:Georgia,serif;font-size:1.35rem;font-weight:500}.model-settings label{display:block;color:#d8dce2;margin-top:.9rem;margin-bottom:.35rem;font-size:.95rem}.model-settings input,.model-settings select{box-sizing:border-box;display:block;width:100%;min-height:44px;border:1px solid var(--glass-border);background:#0d1117a6;border-radius:12px;padding:.65rem .75rem;color:#f3f4f7;font:inherit}.model-settings input:focus-visible,.model-settings select:focus-visible{outline:1px solid var(--glass-border);outline-offset:2px}.token-sync{margin:.8rem 0}.token-sync summary{cursor:pointer;color:#d4d9e1;font-size:.9rem}.hint{color:#aab2be;font-size:.85rem;line-height:1.5}.model-settings button{margin-top:.4rem;margin-right:.4rem;border:1px solid var(--action-border);border-radius:12px;padding:.6rem .85rem;background:#11151b80;color:#edf0f5;font:inherit;cursor:pointer}.model-settings button:disabled{opacity:.5;cursor:default}.connection-message{margin-bottom:0}
+  .ollama-access-help{margin-top:16px;padding:16px;border:1px solid var(--glass-border);border-radius:12px;background:#11151b80;font-size:.85rem;line-height:20px}.ollama-access-help p{margin:12px 0}.ollama-access-help h3{margin:0 0 12px;font-size:1rem;line-height:24px}.ollama-access-help code{font-size:.8rem;overflow-wrap:anywhere}.ollama-access-help pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border-radius:8px;background:#0d1117a6}.ollama-access-help a{color:var(--accent-text)}
 @media(prefers-reduced-transparency:reduce){.model-settings{background:#1c2024;backdrop-filter:none}}
 </style>

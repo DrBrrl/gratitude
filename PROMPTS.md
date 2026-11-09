@@ -1675,3 +1675,49 @@ Two tiny changes - for the friends onboarding - "Set up your profile now or late
 ```text
 Fantastic! Two tests so far have failed checks - the rest are still running
 ```
+
+## 2026-11-09 — Explain and diagnose Ollama connection rejections
+
+```text
+Hello hello! My friend is attempting to use an Ollama local model with the app. They are seeing a 403 for the request when they test their connection. How should we fix this? Also - let's make the fix more obvious when the connection attept fails in the app.
+```
+
+## 2026-11-09 — Friend’s Ollama setup
+
+```text
+Mac OS, ollama is running locally via ollama serve - no tailscaile in this instance.
+```
+
+## 2026-11-09 — Future Friends shared-streak table
+
+```text
+I need a note for a future thing to implement - i intended to have the streaks with people displayed below the "community streaks" - maybe a table with each friend (column 1), a heart for the present gratitude day (column 2)  (half fills when you are grateful and the other half fills when they are), and the number of days you've been grateful together in the third column - streak! :)
+```
+
+## 2026-11-09 — Missing friend streak display
+
+```text
+Also my friend can't see the number of days we've been grateful together in a row on their friends tab - there is no parenthesis beside their name
+```
+
+## 2026-11-09 — Sharing status confirmed on both accounts
+
+```text
+Both show shared
+```
+
+## 2026-11-09 — Device-specific hug notification labels
+
+```text
+Small fix - hug notifications when off should show "Off for this device" and when on the text should read "On for this device"
+```
+
+## 2026-11-09 — Production Friends display handles
+
+```text
+We're using the main brainch and my username is jamie_spanou. Theirs is johndalton.
+```
+
+### 2026-11-09 — Friends scrolling performance
+
+> The friends and hugs page is also exceptionally laggy - scrolling up and down it seems to take ages? Unsure why - on my laptop but not on JD's
