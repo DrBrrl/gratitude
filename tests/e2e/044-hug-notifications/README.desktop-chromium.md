@@ -2,7 +2,7 @@
 
 # Background hugs on a chosen device
 
-The browser push-subscription transport is a fictional fixture; Chromium’s Push API dispatches messages into the real service worker. Native notifications are inspected through registration.getNotifications(), including after the app tab closes; an actual blank browser page is captured while no app page exists. The notification’s actual link opens Friends. Muting, a new binding and sign-out reject queued old messages. Every action has an unmasked screenshot with zero tolerance and checks beneath it. Real Firefox/Android permission and OS notification-click checks are documented separately.
+The browser push-subscription transport is a fictional fixture; Chromium’s Push API dispatches messages into the real service worker. Fictional sender names include “Gratitude test” so desktop pop-ups are recognisable. Native notifications are inspected through registration.getNotifications(), including after the app tab closes; an actual blank browser page is captured while no app page exists. The notification’s actual link opens Friends. Muting, a new binding and sign-out reject queued old messages. Every action has an unmasked screenshot with zero tolerance and checks beneath it. Real Firefox/Android permission and OS notification-click checks are documented separately.
 
 Viewport: desktop-chromium.
 
