@@ -2,10 +2,30 @@ import {validModel, providerName, type ModelConnection} from './connection-contr
 import {finalText,parseChatResponse} from './chat-response.ts';
 import type {LocalModelInfo,LocalCapabilities} from './lm-studio.ts';
 
+/** Browsers can hide a CORS-rejected 403 as a fetch failure. Do not call it a bad token. */
+export class OllamaAccessError extends Error {
+  readonly reason:'forbidden'|'network';
+  constructor(reason:'forbidden'|'network') {
+    super(reason==='forbidden'
+      ? 'Ollama refused access (HTTP 403). Check its allowed browser origins. If you use a proxy, also check its access permissions and token.'
+      : 'Could not reach Ollama from this browser. Check the server address, HTTPS access and allowed browser origins. Browser security can hide an origin rejection.');
+    this.name='OllamaAccessError';this.reason=reason;
+  }
+}
+
+/** POSIX quoting for a command copied into a macOS/Linux terminal. */
+export function ollamaOriginCommand(origin:string) {
+  return `OLLAMA_ORIGINS='${origin.replaceAll("'", "'\\''")}' ollama serve`;
+}
+
 async function request(connection:ModelConnection,path:string,body:unknown,fetcher:typeof fetch) {
   let response:Response;
-  try {response=await fetcher(connection.baseUrl+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json',...(connection.token?{Authorization:`Bearer ${connection.token}`}:{})},body:body===undefined?undefined:JSON.stringify(body),credentials:'omit',redirect:'error',signal:AbortSignal.timeout(path.endsWith('/chat')||path.endsWith('/completions')?120_000:10_000)});}
-  catch {throw new Error(`Could not reach ${providerName(connection.provider)}. Check the server address, allowed origins and HTTPS access from this device.`);}
+  const headers:Record<string,string>={};
+  if(body!==undefined)headers['Content-Type']='application/json';
+  if(connection.token)headers.Authorization=`Bearer ${connection.token}`;
+  try {response=await fetcher(connection.baseUrl+path,{method:body===undefined?'GET':'POST',headers,body:body===undefined?undefined:JSON.stringify(body),credentials:'omit',redirect:'error',signal:AbortSignal.timeout(path.endsWith('/chat')||path.endsWith('/completions')?120_000:10_000)});}
+  catch {if(connection.provider==='ollama')throw new OllamaAccessError('network');throw new Error(`Could not reach ${providerName(connection.provider)}. Check the server address, allowed origins and HTTPS access from this device.`);}
+  if(response.status===403&&connection.provider==='ollama')throw new OllamaAccessError('forbidden');
   if([401,403].includes(response.status))throw new Error('The server rejected its authentication token. Check this connection’s credentials.');
   if(!response.ok)throw new Error('The selected server could not complete the request. Check its model and context settings.');
   try{return await response.json();}catch{throw new Error('The server returned an invalid response.');}

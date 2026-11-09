@@ -62,3 +62,15 @@ Off/sign-out clears the local gate before attempting network revocation. Permiss
 ## Verification
 
 Pure tests cover substring bounds, logical-date selection, repaired intersections, sharing replay, midnight/DST handling and legacy-version restrictions. Firebase emulator tests cover bounded paged search, atomic rename/hiding, explicit sharing and private provenance, revocation, stale writes, per-day hug enforcement and rejected forged/downgraded actions. Browser walkthroughs 036–039 and 043 cover both viewports, screenshot every user action with zero tolerance and generate checks under each image.
+
+## Future proposal — shared-streak table below Community streaks
+
+Requested on 9 November 2026; recorded for later implementation.
+
+Below the Community streaks section, show a table of accepted friends:
+
+| Friend | Present gratitude day | Shared streak |
+| --- | --- | --- |
+| Chosen friend name | A two-part heart: one half fills when you have reflected for the day, the other when that friend has reflected. Both halves fill when both have reflected. | Number of consecutive days you have been grateful together. |
+
+The third column is the shared streak, rather than that friend's individual streak or the lifetime total of shared dates. Imports and backfills participate through the existing date projections and can repair gaps. The status remains limited to consented gratitude dates; journal entries, prompts and photos stay private. Unavailable or unshared status must be distinguishable from an unfilled half. Before implementation, confirm which present-day/timezone convention should label the heart; the existing shared-streak convention is described above. Add textual/accessible status alongside the heart so colour and shape are not the only cues.

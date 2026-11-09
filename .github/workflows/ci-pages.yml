@@ -69,7 +69,7 @@ jobs:
           - suite: prompt-rotation
             scenarios: tests/e2e/05[23]-
           - suite: providers
-            scenarios: tests/e2e/(049-|05[01]-)
+            scenarios: tests/e2e/(049-|05[016]-)
           - suite: onboarding
             scenarios: tests/e2e/(04[5-8]-|05[45]-)
           - suite: journal

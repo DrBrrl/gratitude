@@ -1,3 +1,5 @@
+import {spawnSync} from 'node:child_process';
+import {OllamaAccessError,ollamaOriginCommand} from '../../src/lib/ai/local-services.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {discoverLocalModels,generateLocal,defaultConnection,saveConnection,readProviderConnection,validateConnection,wasAccountConnection,clearConnectionToken,type ModelConnection} from '../../src/lib/ai/lm-studio.ts';
@@ -93,4 +95,43 @@ test('explicit valid settings can replace an unreadable disposable active cache'
  const storage:Storage={get length(){return map.size;},getItem:key=>map.get(key)??null,setItem:(key,value)=>{map.set(key,String(value));},removeItem:key=>{map.delete(key);},clear:()=>map.clear(),key:index=>[...map.keys()][index]??null};
  const secretMap=new Map<string,string>();const secrets:Storage={get length(){return secretMap.size;},getItem:key=>secretMap.get(key)??null,setItem:(key,value)=>{secretMap.set(key,String(value));},removeItem:key=>{secretMap.delete(key);},clear:()=>secretMap.clear(),key:index=>[...secretMap.keys()][index]??null};
  saveConnection('broken',connection,storage,secrets);assert.equal(readProviderConnection('broken','ollama',storage,secrets).baseUrl,connection.baseUrl);
+});
+
+
+test('Ollama forbidden and browser-blocked requests explain origin access without exposing server diagnostics',async()=>{
+ for(const blocked of [false,true]){
+  const fetcher:typeof fetch=async()=>{if(blocked)throw new TypeError('Failed to fetch: private diagnostics');return new Response('private diagnostics',{status:403});};
+  await assert.rejects(discoverLocalModels(connection,fetcher),error=>{
+   assert.ok(error instanceof OllamaAccessError);assert.equal(error.reason,blocked?'network':'forbidden');
+   assert.match(error.message,/origins/);assert.equal(error.message.includes('private diagnostics'),false);
+   assert.equal(error.message.includes('HTTP 403'),!blocked,'hidden status is not presented as confirmed');return true;
+  });
+ }
+});
+
+test('proxy authentication and other server failures keep their own diagnosis',async()=>{
+ for(const [provider,status] of [['ollama',401],['openai-compatible',401],['openai-compatible',403],['ollama',500]] as const){
+  await assert.rejects(discoverLocalModels({...connection,provider,token:'fictional-private-token'},async()=>new Response('private diagnostic body',{status})),error=>{
+   assert.ok(error instanceof Error);assert.equal(error instanceof OllamaAccessError,false);
+   assert.match(error.message,status===500?/model and context/:/authentication token/);
+   assert.equal(error.message.includes('private'),false);return true;
+  });
+ }
+});
+
+test('metadata GET avoids an unnecessary JSON preflight while POST and optional proxy authentication remain intact',async()=>{
+ const {calls,fetcher}=native();await discoverLocalModels({...connection,token:'fictional-proxy-token'},fetcher);
+ for(const call of calls){const headers=new Headers(call.init.headers);assert.equal(headers.get('Authorization'),'Bearer fictional-proxy-token');assert.equal(headers.get('Content-Type'),call.init.body?'application/json':null);}
+});
+
+test('Ollama inference refusal also uses the provider-specific access diagnosis',async()=>{
+ const {fetcher}=native();
+ await assert.rejects(generateLocal(connection,'instruction','fictional journal',4000,async(url,init)=>String(url).endsWith('/api/chat')?new Response('private details',{status:403}):fetcher(url,init)),error=>error instanceof OllamaAccessError&&error.reason==='forbidden');
+});
+
+test('copied terminal commands quote the origin as literal data',()=>{
+ for(const origin of ['https://drbrrl.github.io',"https://exa'mple.test/$(printf changed)"]){
+  const result=spawnSync('sh',['-c',`ollama() { printf '%s' "$OLLAMA_ORIGINS"; }; ${ollamaOriginCommand(origin)}`],{encoding:'utf8'});
+  assert.equal(result.status,0,result.stderr);assert.equal(result.stdout,origin);
+ }
 });

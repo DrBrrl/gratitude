@@ -22,6 +22,22 @@ There is no automatic fallback between services. Existing backup prompts remain 
 4. Choose **Ollama**, enter the server origin and press **Test connection**. The default loopback address is `http://127.0.0.1:11434`; another device needs the model computer’s reachable HTTPS address.
 5. Choose a discovered model and **Save model settings**. Models with unknown/forced thinking cannot be selected. Photo descriptions need advertised vision support. A successful metadata test does not prove sufficient RAM, context or successful inference.
 
+### Fix HTTP 403 or a browser-blocked connection
+
+A native Ollama 403 commonly means its allowed origins do not include the app. The browser may hide that response as a CORS/network error, so a failed fetch alone cannot confirm the cause. Native local Ollama needs no API token; an authenticating proxy can separately reject a token or permissions.
+
+For the hosted app, allow **`https://drbrrl.github.io`**, without `/gratitude/`, a PR path or a trailing slash. Main and PR previews share that origin. A self-hosted or development app must allow its own scheme, host and port; the connection error panel shows the current origin. Keep any other custom origins you already allow in the comma-separated value.
+
+If starting Ollama in a macOS/Linux terminal, stop the existing server with **Ctrl+C** and restart it:
+
+```sh
+OLLAMA_ORIGINS='https://drbrrl.github.io' ollama serve
+```
+
+For the macOS desktop app instead, run `launchctl setenv OLLAMA_ORIGINS 'https://drbrrl.github.io'`, then fully quit and reopen Ollama. On Windows set the user environment variable and restart the app; for a Linux systemd service configure its service environment and restart the service. [Ollama’s official configuration instructions](https://docs.ollama.com/faq#how-do-i-configure-ollama-server) describe each setup. Changing a variable in another terminal does not change a server that is already running.
+
+Then use **Test connection** again. A direct local server can keep its normal loopback binding at `http://127.0.0.1:11434`; adding an allowed origin does not require opening it on all network interfaces. If access still fails, check the server address, HTTPS/local-network browser restrictions and any proxy’s authentication/CORS policy. Do not bypass browser security or use `no-cors`: the app needs to read the model catalogue.
+
 Discovery uses native `/api/tags`, `/api/ps` and `/api/show`. Generation uses non-streaming `/api/chat`, native `think: false` where explicitly supported, and disables silent context truncation/shifting. Unknown thinking controls and cloud-routed Ollama models are unavailable rather than treated as local, non-thinking inference. See [the native API contract](https://docs.ollama.com/api/chat) and [Ollama’s current thinking metadata](https://github.com/ollama/ollama/blob/main/types/model/thinking.go).
 
 Native Ollama does not enforce a placeholder OpenAI API key. Leave **Proxy authentication token** blank unless your proxy actually checks it. An optional **Remember connection in my account** saves the bound service, HTTPS/loopback server, model and optional token to the private account record. Tokens otherwise remain in this browser tab; no credential enters events or exports.
