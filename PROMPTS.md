@@ -1721,3 +1721,31 @@ We're using the main brainch and my username is jamie_spanou. Theirs is johndalt
 ### 2026-11-09 — Friends scrolling performance
 
 > The friends and hugs page is also exceptionally laggy - scrolling up and down it seems to take ages? Unsure why - on my laptop but not on JD's
+
+### 2026-11-09 — Firefox performance setting follow-up
+
+> See image!
+
+Context: reply to the hardware-acceleration question; no image was attached to the received message.
+
+### 2026-11-09 — Firefox settings screenshot
+
+[Image #1]
+
+Context: attached screenshot shows Firefox Settings search for “Use hardware acceleration when available” with no results. No acceleration setting is visible.
+
+### 2026-11-09 — Firefox active compositor
+
+> WebRender (Software)
+
+### 2026-11-09 — Browser restart result
+
+> WebRender, scrolling improved
+
+### 2026-11-09 — Unexpected Casey hugs
+
+> Question for you - i keep getting hugs from a "casey" without having a casey in my friends! Is that you testing stuff? :D
+
+### 2026-11-09 — Casey nickname
+
+> Hee hee hee okay, cool, you are Casey confirmed, hope you like your new name! :D
