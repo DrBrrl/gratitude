@@ -1749,3 +1749,7 @@ Context: attached screenshot shows Firefox Settings search for “Use hardware a
 ### 2026-11-09 — Casey nickname
 
 > Hee hee hee okay, cool, you are Casey confirmed, hope you like your new name! :D
+
+### 2026-11-09 — Retroactive shared streaks and Casey notification label
+
+> Just wanting to confirm for the friends future proposal - i'd like the streaks to be repairable and when we implement them, for them to be retroactive and count the days we've been grateful together since becoming friends :) Also you can keep Casey for the test notifications, it's cute to get a hug from you! You could just lable it "Casey (test notification)" or something :D
