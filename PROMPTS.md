@@ -1757,3 +1757,8 @@ Context: attached screenshot shows Firefox Settings search for “Use hardware a
 ### 2026-11-10 — Repeated check failures and workspace relocation
 
 > Okay Casey, re-running some checks that didn't pass. Maybe go have a look at those for me - they've failed a few times now. Also, i have created a new Projects folder in my Documents, with a Gratitude App folder in there! Can you move all gratitude folders you've created in Documents to Documents/Projects/Gratitude App and we can start using the Gratitude App folder as our highest level folder for all the new folders you might create? :)
+
+
+### 2026-11-10 — PR 26 checks still running with a cancellation
+
+> Checks still re-running on 26, with one check cancelled. (this is part of why i wanted to make sure that the PRs are only running the checks that are relevant to them :D)

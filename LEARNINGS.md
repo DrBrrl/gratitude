@@ -1375,3 +1375,8 @@ Split the same six scenarios into `onboarding` (045–046), `onboarding-ai` (047
 ### 2026-11-10 — Local workspace relocation
 
 Moved all twelve registered Gratitude workspaces from Documents into `/home/jamie/Documents/Projects/Gratitude App/`, retaining their original folder names. Used Git worktree moves, moved the primary checkout and repaired linked-worktree metadata. Compared every directory's filesystem identity and complete Git working-file status before/after; all matched, including private untracked archives/spreadsheets/follow-ups and the shader worktree's uncommitted changes. No Gratitude dev server was running. Nix/Git/gh operate from the new path, including its spaces. A local `AGENTS.md` in the enclosing Gratitude App directory records the user's instruction to put all future Gratitude workspaces and supporting folders beneath it. Historical prompt/learning paths remain historical records rather than being rewritten.
+
+
+### 2026-11-10 — Provider job reaches its deadline after all assertions pass
+
+Job 129560427750 of run 42734544766 started at 01:16:02 UTC and was cancelled at 01:41:08. All 49 backend tests and all four provider walkthroughs passed; 049 took 4.5 minutes, 050 took 7.2, 051 took 2.5 and 056 took 1.7. The last walkthrough finished at 01:41:06, immediately before the overall 25-minute cancellation. Isolated 050 into a personal-cloud job on PR 26, retaining 049/051/056 in providers. The per-job deadline and every assertion/screenshot check remain unchanged. PR 27 separately removes per-browser-job duplication of the backend suite; its own hosted run is still in progress.
