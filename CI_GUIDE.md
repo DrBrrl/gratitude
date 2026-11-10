@@ -18,7 +18,7 @@ All runs retain the build, Svelte checks, unit/deployment tests, full backend Ru
 
 A walkthrough's own test, local fixture, README or baseline selects that walkthrough. Listed design/record documents and files under `docs/` retain smoke coverage. All other paths select the full suite. In particular, global styling/layout, the shared GratitudeApp component, event projections, dates, authentication, Rules, dependencies, test helpers, workflow/selection infrastructure and unrecognised files trigger full coverage.
 
-The map is a reviewed statement of consumers, not a guess from filenames. When introducing a new consumer of a mapped component, review its scenario mapping too. Expand the map only when its consumers are established. New scenarios must have a unique ID and be registered in a group/build mode; missing registrations fail the planning job rather than silently omit a test. Registry IDs may precede a separately reviewed scenario's arrival (056 is reserved for PR 26).
+The map is a reviewed statement of consumers, not a guess from filenames. When introducing a new consumer of a mapped component, review its scenario mapping too. Expand the map only when its consumers are established. New scenarios must have a unique ID and be registered in a group/build mode; missing registrations fail the planning job rather than silently omit a test. All currently shipped walkthroughs, including 056 from PR 26, are registered.
 
 The planning job publishes the selected IDs and per-path reasons in its GitHub Actions summary. It uses a sparse checkout with Git history so selection does not download historical screenshot blobs. Scenario arguments are validated and passed as argument arrays, never interpolated into shell commands. Generic-AI walkthrough 009 gets its own generic build; paid-mode scenarios keep their paid builds.
 
@@ -32,7 +32,7 @@ The entire `tests/firebase/*.test.mjs` suite runs once in the required `backend`
 
 Every browser job has its own disposable `demo-gratitude` emulators. Before building, `scripts/warm_ci_emulators.mjs` executes real Firestore owner writes/reads and cross-user denial, plus Storage owner upload/read/delete and cross-user denial. It cleans up its fictional probe. This preserves Rules readiness without rerunning all backend regressions in each matrix job. Auth sign-in is exercised through the actual emulator popup in routing smoke coverage. Warm-up failures fail the job; there is no automatic retry or permission bypass for an expected owner operation.
 
-Onboarding is partitioned into 045–046, 047–048 and 054–055 so the walkthroughs fit within their existing job budgets. The single stable **CI gate** requires planning, build, backend, every planned browser job, import-scale and push to succeed; missing, skipped, failed or cancelled categories fail it. This is the check to require if configuring branch protection.
+Onboarding is partitioned into 045–046, 047–048 and 054–055 so the walkthroughs fit within their existing job budgets. Personal-cloud 050 retains its own job; providers 049/051/056 share the providers jobs. The single stable **CI gate** requires planning, build, backend, every planned browser job, import-scale and push to succeed; missing, skipped, failed or cancelled categories fail it. This is the check to require if configuring branch protection.
 
 ## Publication concurrency
 

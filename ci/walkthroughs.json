@@ -24,7 +24,8 @@
     "push-notifications": ["044"],
     "onboarding": ["045", "046"],
     "onboarding-ai": ["047", "048"],
-    "providers": ["049", "050", "051", "056"],
+    "providers": ["049", "051", "056"],
+    "personal-cloud": ["050"],
     "prompt-rotation": ["052", "053"],
     "onboarding-return": ["054", "055"]
   },
