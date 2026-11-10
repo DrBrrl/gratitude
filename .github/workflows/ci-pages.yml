@@ -4,21 +4,36 @@ on:
   push:
     branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened, closed, labeled, unlabeled]
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# Every publication updates the same Pages site. Serialize the entire operation.
-# Every publish also prunes closed PRs, including any superseded queued close run.
-concurrency:
-  group: gratitude-pages
-  cancel-in-progress: false
-
+# Checks are independent. Only the shared Pages mutation is serialized below.
 jobs:
-  build:
+  plan:
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          # Name-only diff needs history/trees, not historical screenshot blobs.
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/
+            /ci/
+            /tests/e2e/*/*.spec.ts
+      - name: Select affected walkthroughs
+        id: select
+        run: python3 scripts/select_ci.py
+
+  build:
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -32,11 +47,13 @@ jobs:
       - run: nix develop -c npm run check
       - run: nix develop -c npm run test:unit
       - run: nix develop -c npm run test:deployment
+      - run: nix develop -c actionlint
       - name: Configure public Firebase app
         env:
           FIREBASE_TARGET: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
         run: python3 scripts/configure_firebase_build.py
-      - run: nix develop -c npm run test:e2e
+      - name: Build deployment and check landing in both viewports
+        run: nix develop -c bash -c 'npm run build && npx playwright test tests/e2e/001-landing'
       - name: Check generated E2E documentation is committed
         run: |
           git diff --exit-code -- tests/e2e
@@ -56,95 +73,45 @@ jobs:
             test-results/
           retention-days: 14
 
+  backend:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24
+      - run: nix develop -c npm ci
+      - name: Verify backend Rules and event streams once per run
+        run: nix develop -c bash scripts/firebase-test.sh 'node --test --test-concurrency=1 tests/firebase/*.test.mjs'
+
   firebase:
-    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    name: walkthroughs (${{ matrix.project }}, ${{ matrix.suite }})
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
-      matrix:
-        project: [mobile-chromium, desktop-chromium]
-        suite: [journal, drafts, ai, ai-recovery, ai-context, local-ai, prompt-feedback, backups, credentials, model-picker, photo-model, appearance, photos, editor, import, calendar, calendar-edit, friends, community, friend-hugs, push-notifications, onboarding, onboarding-ai, onboarding-return, providers, personal-cloud, prompt-rotation]
-        include:
-          - suite: prompt-rotation
-            scenarios: tests/e2e/05[23]-
-          - suite: providers
-            scenarios: tests/e2e/(049-|05[16]-)
-          - suite: personal-cloud
-            scenarios: tests/e2e/050-
-          # These six walkthroughs exceed one job budget when grouped together.
-          - suite: onboarding
-            scenarios: tests/e2e/04[56]-
-          - suite: onboarding-ai
-            scenarios: tests/e2e/04[78]-
-          - suite: onboarding-return
-            scenarios: tests/e2e/05[45]-
-          - suite: journal
-            scenarios: tests/e2e/(00[1-3]|010-|031-)
-          - suite: friends
-            scenarios: tests/e2e/03[67]-
-          - suite: community
-            scenarios: tests/e2e/043-
-          - suite: push-notifications
-            scenarios: tests/e2e/044-
-          - suite: friend-hugs
-            scenarios: tests/e2e/03[89]-
-          - suite: drafts
-            scenarios: tests/e2e/00[4-6]-
-          - suite: calendar
-            scenarios: tests/e2e/(01[78]-|032-|033-|035-)
-          - suite: calendar-edit
-            scenarios: tests/e2e/(019-|020-|021-|022-|023-)
-          - suite: import
-            scenarios: tests/e2e/01[56]-import
-          - suite: editor
-            scenarios: tests/e2e/01[34]-
-          - suite: photos
-            scenarios: tests/e2e/(01[12]-photo|034-)
-          - suite: ai
-            scenarios: tests/e2e/007-
-          - suite: ai-recovery
-            scenarios: tests/e2e/008-
-          - suite: ai-context
-            scenarios: tests/e2e/024-
-          - suite: backups
-            scenarios: tests/e2e/02[78]-
-          - suite: credentials
-            scenarios: tests/e2e/(029-|030-)
-          - suite: appearance
-            scenarios: tests/e2e/042-
-          - suite: photo-model
-            scenarios: tests/e2e/041-
-          - suite: model-picker
-            scenarios: tests/e2e/040-
-          - suite: local-ai
-            scenarios: tests/e2e/025-
-          - suite: prompt-feedback
-            scenarios: tests/e2e/026-
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     env:
       BASE_PATH: /gratitude/pr-preview/firebase-check
+      CI_PROJECT: ${{ matrix.project }}
+      CI_AI_MODE: ${{ matrix.mode }}
+      CI_SCENARIOS: ${{ toJSON(matrix.scenarios) }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24
       - run: nix develop -c npm ci
-      - name: Verify Firebase and both AI configurations
-        # Keep the verified emulator running across builds. Its startup port is
-        # available before the first Rules evaluation has finished warming up.
-        run: >-
-          nix develop -c bash scripts/firebase-test.sh
-          'node --test --test-concurrency=1 tests/firebase/*.test.mjs &&
-          npm run test:e2e:firebase -- --project=${{ matrix.project }} "${{ matrix.scenarios }}" &&
-          if [ "${{ matrix.suite }}" = ai ]; then
-          VITE_FIREBASE_EMULATORS=true VITE_AI_DATA_MODE=generic npm run build &&
-          E2E_FIREBASE=true E2E_AI_GENERIC=true npx playwright test tests/e2e/009-generic-ai --project=${{ matrix.project }};
-          fi'
+      - name: Warm emulators, build and compare selected walkthroughs
+        run: nix develop -c bash scripts/firebase-test.sh 'python3 scripts/run_ci_walkthroughs.py'
       - name: Check generated Firebase walkthroughs
         run: |
           git diff --exit-code -- tests/e2e
           test -z "$(git ls-files --others --exclude-standard tests/e2e)"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: firebase-e2e-report-${{ matrix.project }}-${{ matrix.suite }}
@@ -154,20 +121,20 @@ jobs:
           retention-days: 14
 
   import-scale:
-    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24
       - run: nix develop -c npm ci
       - name: Verify complete import, cross-device resume and asset export
         run: nix develop -c bash scripts/firebase-test.sh 'node --test tests/import/scale.test.mjs'
 
   push:
-    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -177,16 +144,35 @@ jobs:
       - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24
       - run: nix develop -c npm ci
       - run: nix develop -c npm ci --prefix functions
-      - name: Verify private registration and replay-safe background delivery
+      - name: Verify background delivery and personal-key relay
+        # Registration Rules are covered once in backend; these are distinct suites.
         run: >-
           nix develop -c bash scripts/firebase-test.sh
-          'TZ=UTC node --test tests/firebase/push.test.mjs && node --test tests/push/delivery.test.mjs && node --test tests/relay/*.test.mjs'
+          'node --test --test-concurrency=1 tests/push/delivery.test.mjs tests/relay/*.test.mjs'
+
+  verify:
+    name: CI gate
+    needs: [plan, build, backend, firebase, import-scale, push]
+    if: always() && github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts
+      - name: Require every planned check to succeed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: python3 scripts/ci_gate.py
 
   publish:
-    needs: [build, firebase, import-scale, push]
+    needs: [verify]
+    concurrency:
+      group: gratitude-pages
+      cancel-in-progress: false
     if: >-
       always() && !cancelled() &&
-      ((needs.build.result == 'success' && needs.firebase.result == 'success' && needs.import-scale.result == 'success' && needs.push.result == 'success') || github.event.action == 'closed') &&
+      (needs.verify.result == 'success' || github.event.action == 'closed') &&
       ((github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
        (github.event_name != 'pull_request' && github.ref == 'refs/heads/main'))
     runs-on: ubuntu-latest

@@ -1,0 +1,38 @@
+{
+  "groups": {
+    "journal": ["001", "002", "003", "010", "031"],
+    "drafts": ["004", "005", "006"],
+    "ai": ["007"],
+    "ai-recovery": ["008"],
+    "generic-ai": ["009"],
+    "editor": ["013", "014"],
+    "photos": ["011", "012", "034"],
+    "import": ["015", "016"],
+    "calendar": ["017", "018", "032", "033", "035"],
+    "calendar-edit": ["019", "020", "021", "022", "023"],
+    "ai-context": ["024"],
+    "local-ai": ["025"],
+    "prompt-feedback": ["026"],
+    "backups": ["027", "028"],
+    "credentials": ["029", "030"],
+    "friends": ["036", "037"],
+    "friend-hugs": ["038", "039"],
+    "model-picker": ["040"],
+    "photo-model": ["041"],
+    "appearance": ["042"],
+    "community": ["043"],
+    "push-notifications": ["044"],
+    "onboarding": ["045", "046"],
+    "onboarding-ai": ["047", "048"],
+    "providers": ["049", "050", "051", "056"],
+    "prompt-rotation": ["052", "053"],
+    "onboarding-return": ["054", "055"]
+  },
+  "smoke": ["035"],
+  "isolated_components": {
+    "src/lib/components/HugNotifications.svelte": ["036", "037", "038", "039", "043", "044"],
+    "src/lib/components/Friends.svelte": ["036", "037", "038", "039", "043", "044", "045", "046", "047", "048", "054", "055"],
+    "src/lib/components/ImportPanel.svelte": ["015", "016"]
+  },
+  "documentation": ["README.md", "VISION.md", "PROMPTS.md", "LEARNINGS.md", "AI_CONNECTIONS_SETUP.md", "AI_PROVIDER_DESIGN.md", "DEPLOYMENT.md", "FIREBASE_SETUP.md", "FRIENDS_DESIGN.md", "IMPLEMENTATION_PLAN.md", "MVP_DESIGN.md", "ONBOARDING_DESIGN.md", "PUSH_NOTIFICATIONS_DESIGN.md", "UX_DESIGN.md", "LICENSE"]
+}

@@ -360,3 +360,9 @@ Scenario [056](tests/e2e/056-ollama-access/README.md) and its desktop companion 
 Background-notification fixtures use a **(test notification)** suffix for fictional senders, including **Casey (test notification)**. These isolated local Chromium contexts exercise native notifications, so their pop-ups can appear on the developer’s desktop; they do not add production friends or send production hugs. Keep real worker delivery and notification inspection intact.
 
 The personal-cloud CI jobs run scenario 050 separately from the providers jobs (049, 051 and 056). The previous combined desktop job passed all four walkthroughs but reached the overall 25-minute deadline immediately afterward; the split retains the same tests and deadline.
+
+## PR impact selection
+
+[CI_GUIDE.md](CI_GUIDE.md) documents conservative PR walkthrough selection, full main/manual coverage and the `ci:full-e2e` override. Both viewports retain landing and routing/sign-in/navigation smoke coverage. Shared runtime code, test infrastructure and unknown paths trigger the full suite. The selector tests verify merge-base diffs, renames/deletions, required smoke coverage, complete scenario/viewport coverage, build modes, argument validation and the fail-closed publication gate. Selection never changes a walkthrough's actions, screenshot comparisons or generated checks.
+
+Backend Rules/event-stream verification runs once per CI run. Browser jobs retain real Firestore/Storage allow/deny readiness probes in their own disposable emulators. The onboarding groups run 045–046, 047–048 and 054–055 separately; publication waits for every planned check.

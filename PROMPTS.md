@@ -1788,3 +1788,12 @@ https://firebasestorage.googleapis.com/v0/b/gratitude-drbrrl.firebasestorage.app
 ### 2026-11-12 — Production attachment retry
 
 > It attaches now
+
+### 2026-11-10 — Selecting affected PR walkthroughs
+
+> Wonderful. I do wonder if in future, the checks that run at the end of every PR can be limited to re-doing the screenshot walkthroughs that are impacted by the changes made in the PR? Is that reasonable? And then the checks that happen on the main branch can be for all E2E tests... Thoughts?
+
+
+### 2026-11-10 — Implement selective CI in a separate PR
+
+> Go ahead and do that for me in a separate CI PR please :)
