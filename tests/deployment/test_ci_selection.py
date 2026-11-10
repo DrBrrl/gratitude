@@ -68,6 +68,15 @@ class SelectionTests(unittest.TestCase):
             counts.update(('001', project) for project in select_ci.PROJECTS)
             self.assertEqual(counts, Counter({(key, project): 1 for key in found for project in select_ci.PROJECTS}))
 
+    def test_long_personal_cloud_walkthrough_keeps_its_own_job_budget(self):
+        rows = self.plan(event_name='push')['matrix']['include']
+        cloud = [row for row in rows if any(name.startswith('050-') for name in row['scenarios'])]
+        self.assertEqual(len(cloud), 2)
+        self.assertEqual({row['project'] for row in cloud}, set(select_ci.PROJECTS))
+        self.assertTrue(all(row['suite'] == 'personal-cloud' and row['scenarios'] == ['050-personal-cloud'] for row in cloud))
+        providers = [row for row in rows if row['suite'] == 'providers']
+        self.assertTrue(all({name[:3] for name in row['scenarios']} == {'049', '051', '056'} for row in providers))
+
     def test_full_label_is_an_explicit_override_and_removal_returns_to_selection(self):
         event = {'pull_request': {'labels': [{'name': 'ci:full-e2e'}]}}
         self.assertTrue(self.plan(['README.md'], event)['full'])
