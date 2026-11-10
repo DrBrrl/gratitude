@@ -64,14 +64,19 @@ jobs:
       fail-fast: false
       matrix:
         project: [mobile-chromium, desktop-chromium]
-        suite: [journal, drafts, ai, ai-recovery, ai-context, local-ai, prompt-feedback, backups, credentials, model-picker, photo-model, appearance, photos, editor, import, calendar, calendar-edit, friends, community, friend-hugs, push-notifications, onboarding, providers, prompt-rotation]
+        suite: [journal, drafts, ai, ai-recovery, ai-context, local-ai, prompt-feedback, backups, credentials, model-picker, photo-model, appearance, photos, editor, import, calendar, calendar-edit, friends, community, friend-hugs, push-notifications, onboarding, onboarding-ai, onboarding-return, providers, prompt-rotation]
         include:
           - suite: prompt-rotation
             scenarios: tests/e2e/05[23]-
           - suite: providers
             scenarios: tests/e2e/(049-|05[016]-)
+          # These six walkthroughs exceed one job budget when grouped together.
           - suite: onboarding
-            scenarios: tests/e2e/(04[5-8]-|05[45]-)
+            scenarios: tests/e2e/04[56]-
+          - suite: onboarding-ai
+            scenarios: tests/e2e/04[78]-
+          - suite: onboarding-return
+            scenarios: tests/e2e/05[45]-
           - suite: journal
             scenarios: tests/e2e/(00[1-3]|010-|031-)
           - suite: friends
