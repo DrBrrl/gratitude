@@ -1797,3 +1797,7 @@ https://firebasestorage.googleapis.com/v0/b/gratitude-drbrrl.firebasestorage.app
 ### 2026-11-10 — Implement selective CI in a separate PR
 
 > Go ahead and do that for me in a separate CI PR please :)
+
+### 2026-11-10 — Review CI PR after merging PR 26
+
+> Let's check through pr 27 now - i merged 26 :)
