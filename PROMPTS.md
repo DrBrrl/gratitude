@@ -1753,3 +1753,7 @@ Context: attached screenshot shows Firefox Settings search for “Use hardware a
 ### 2026-11-09 — Retroactive shared streaks and Casey notification label
 
 > Just wanting to confirm for the friends future proposal - i'd like the streaks to be repairable and when we implement them, for them to be retroactive and count the days we've been grateful together since becoming friends :) Also you can keep Casey for the test notifications, it's cute to get a hug from you! You could just lable it "Casey (test notification)" or something :D
+
+### 2026-11-10 — Repeated check failures and workspace relocation
+
+> Okay Casey, re-running some checks that didn't pass. Maybe go have a look at those for me - they've failed a few times now. Also, i have created a new Projects folder in my Documents, with a Gratitude App folder in there! Can you move all gratitude folders you've created in Documents to Documents/Projects/Gratitude App and we can start using the Gratitude App folder as our highest level folder for all the new folders you might create? :)
