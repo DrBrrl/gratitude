@@ -1801,3 +1801,7 @@ https://firebasestorage.googleapis.com/v0/b/gratitude-drbrrl.firebasestorage.app
 ### 2026-11-10 — Review CI PR after merging PR 26
 
 > Let's check through pr 27 now - i merged 26 :)
+
+### 2026-11-12 — Rebase CI PR after photo fix merge
+
+> Merged! Let's resolve conflicts in PR27
