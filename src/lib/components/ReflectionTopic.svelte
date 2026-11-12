@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import type { Entry, Projection } from '../domain';
-  import { topicChoices, topicLabel, type TopicAction } from '../reflection-topics';
+  import { reflectionTopic, topicChoices, topicLabel, type TopicAction } from '../reflection-topics';
   import Icon from './Icon.svelte';
   let { entry, journal, disabled=false, onchoose, onedit }: {
     entry: Entry; journal: Projection; disabled?:boolean;
@@ -12,12 +12,12 @@
   let open=$state(false), saving=$state(false), error=$state(''), search=$state(''), active=$state(0);
   let snapshot=$state<{revision:number;previousEventId:string|null;answersId:string|null;topicId:string|null}|null>(null);
   let choices=$state<{id:string|null;label:string}[]>([]);
-  const label=$derived(topicLabel(journal.topics[entry.id],journal.onboarding.answers));
+  const label=$derived(topicLabel(reflectionTopic(journal.topics,entry.id),journal.onboarding.answers));
   const filtered=$derived(choices.filter(option=>option.label.toLocaleLowerCase().includes(search.toLocaleLowerCase().trim())));
   const listId=$derived(`topic-options-${entry.id}`);
   async function begin() {
     if(disabled||saving)return;
-    snapshot={revision:entry.revision,previousEventId:journal.topics[entry.id]?.lastEventId??null,answersId:journal.onboarding.answersId,topicId:journal.topics[entry.id]?.topicId??null};
+    snapshot={revision:entry.revision,previousEventId:reflectionTopic(journal.topics,entry.id)?.lastEventId??null,answersId:journal.onboarding.answersId,topicId:reflectionTopic(journal.topics,entry.id)?.topicId??null};
     choices=[{id:null,label:'Not yet classified'},...topicChoices(journal.onboarding.answers)];
     if(snapshot.topicId&&!choices.some(option=>option.id===snapshot!.topicId))choices.push({id:snapshot.topicId,label});
     search='';error='';active=Math.max(0,choices.findIndex(option=>option.id===snapshot!.topicId));open=true;

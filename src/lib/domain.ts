@@ -1,4 +1,4 @@
-import { topicChoices, validTopicId, type TopicAction, type ReflectionTopic } from './reflection-topics.ts';
+import { reflectionTopic, topicChoices, validTopicId, type TopicAction, type ReflectionTopic } from './reflection-topics.ts';
 import {emptyRotation,starterPrompt,type RotationState} from './prompt-rotation.ts';
 import {PROVIDERS,validExternalTarget,type AIProvider,type ExternalTarget} from './ai/connection-contract.ts';
 import { emptyOnboarding, applyOnboarding, isOnboardingAction, validOnboardingAction, type OnboardingAction, type OnboardingState } from './onboarding.ts';
@@ -222,7 +222,7 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
   if (action.type === 'ReflectionTopicChosen') {
     const p = action.payload;
     if (!state.entries.some(entry => entry.id === p.entryId && entry.revision === p.expectedRevision)) throw new Error('This reflection changed. Reopen it before choosing a topic.');
-    if ((state.topics[p.entryId]?.lastEventId ?? null) !== p.previousEventId) throw new Error('The topic changed on another device. Please choose again.');
+    if ((reflectionTopic(state.topics,p.entryId)?.lastEventId ?? null) !== p.previousEventId) throw new Error('The topic changed on another device. Please choose again.');
     if (state.onboarding.answersId !== p.answersId) throw new Error('Your topics changed. Please reopen the picker.');
     const choice = topicChoices(state.onboarding.answers).find(option => option.id === p.topicId);
     if (p.topicId !== null && !choice) throw new Error('This topic is no longer available.');

@@ -986,7 +986,7 @@
         <article class="tinted card saved-card" style:--entry-colour={entryColour(savedEntry, zone)}>
           <h2>Prompt</h2><p class="entry-prompt">{savedEntry.prompt}</p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={savedEntry.text} /></p>
-          {#if repository}<ReflectionTopic entry={savedEntry} journal={view.state} disabled={!!view.pending || busy} onchoose={action=>repository!.commitAI(action)} onedit={()=>edit(savedEntry!)} />{/if}
+          {#if repository}{#key savedEntry.id}<ReflectionTopic entry={savedEntry} journal={view.state} disabled={!!view.pending || busy} onchoose={action=>repository!.commitAI(action)} onedit={()=>edit(savedEntry!)} />{/key}{/if}
         </article>
         {#if client && repository}<PhotoPanel connection={photoConnection} connectionError={photoConnectionProblem} {client} {repository} {view} uid={user.uid} entryId={savedEntry.id} colour={entryColour(savedEntry, zone)} />{/if}
         <div class="saved-actions"><button class="primary" onclick={done}>Done</button></div>
@@ -1024,7 +1024,7 @@
           <h2>Prompt</h2><p class="entry-prompt"><HighlightedText text={selected.prompt} {query} /></p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={selected.text} {query} /></p>
           {#if client && repository}<PhotoPanel connection={photoConnection} connectionError={photoConnectionProblem} {client} {repository} {view} uid={user.uid} entryId={selected.id} {query} />{/if}
-          {#if repository}<ReflectionTopic entry={selected} journal={view.state} disabled={!!view.pending || busy} onchoose={action=>repository!.commitAI(action)} onedit={()=>edit(selected!)} />{/if}
+          {#if repository}{#key selected.id}<ReflectionTopic entry={selected} journal={view.state} disabled={!!view.pending || busy} onchoose={action=>repository!.commitAI(action)} onedit={()=>edit(selected!)} />{/key}{/if}
         </article>
       {:else}
         <h1 class="page-heading">{privateName ? `${privateName}’s Journal` : 'Your journal'}</h1>
