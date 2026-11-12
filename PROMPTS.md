@@ -1867,3 +1867,17 @@ Let's think through gratitude prompt types for the AI to generate. Here are some
 - New moon: Reflections that use the topics the user has reflected on the least (no difference in the AI instructions, just a difference in the JSON topic selection)
 - Full moon: Review prompts - a focus towards thinking about things from the past month in more detail (difference in the AI instructions and in the JSON topic selection?)
 ```
+
+### 2026-11-12 — First topic-aware prompt implementation
+
+> Okay, love the plan! Let's open our first PR and you can ask me any questions you have about implementation as that's going up.
+
+Implementation clarification: label for entries without a classification.
+
+> Yes — show Not yet classified
+
+### 2026-11-12 — Separate community gratitude table PR
+
+> Oh, also! The community gratitude thing with the table we discussed - i would love a PR for that too! Don't know why i thought we had done that already.
+
+> Cheers Casey! :)

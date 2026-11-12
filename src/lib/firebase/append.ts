@@ -15,7 +15,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
   const action = parseAction(input);
   const stream = doc(db, `users/${uid}/streams/${GENERATION}`);
   const event = doc(db, `${stream.path}/events/${action.eventId}`);
-  const pointer = doc(db, isRotationAction(action)?`${stream.path}/rotation/control`:isOnboardingAction(action) ? `${stream.path}/onboarding/control` : action.type === 'AccentColourChosen' ? `${stream.path}/appearance/control` : action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
+  const pointer = doc(db, action.type==='ReflectionTopicChosen'?`${stream.path}/topics/${action.payload.entryId}`:isRotationAction(action)?`${stream.path}/rotation/control`:isOnboardingAction(action) ? `${stream.path}/onboarding/control` : action.type === 'AccentColourChosen' ? `${stream.path}/appearance/control` : action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
   const resultFromPrior = (value: DocumentData) => {
     const decoded = decodeEvent(value);
     const original = parseAction({ eventId: decoded.eventId, type: decoded.type, schemaVersion: decoded.schemaVersion, payload: decoded.payload });
@@ -28,7 +28,16 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
       const [prior,head,latest] = await Promise.all([tx.get(event),tx.get(stream),tx.get(pointer)]);
       if (prior.exists()) return resultFromPrior(prior.data());
       let metadata: Record<string, unknown>;
-      if(isRotationAction(action)){metadata={lastEventId:action.eventId};
+      if(action.type==='ReflectionTopicChosen') {
+        const p=action.payload;
+        const [entry,setup]=await Promise.all([tx.get(doc(db,`${stream.path}/entries/${p.entryId}`)),tx.get(doc(db,`${stream.path}/onboarding/control`))]);
+        if(!entry.exists())throw new Error('This reflection is no longer available.');
+        const source=await tx.get(doc(db,`${stream.path}/events/${entry.get('lastEventId')}`));
+        if(source.get('payload.expectedRevision')+1!==p.expectedRevision)throw new Error('This reflection changed. Reopen it before choosing a topic.');
+        if((latest.get('lastEventId')??null)!==p.previousEventId)throw new Error('The topic changed on another device. Please choose again.');
+        if((setup.get('answersId')??null)!==p.answersId)throw new Error('Your topics changed. Please reopen the picker.');
+        metadata={lastEventId:action.eventId};
+      } else if(isRotationAction(action)){metadata={lastEventId:action.eventId};
       } else if (isOnboardingAction(action)) {
         const answersId = latest.get('answersId') ?? null;
         const version = latest.get('version') ?? 0;

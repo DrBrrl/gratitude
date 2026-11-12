@@ -1,3 +1,4 @@
+import type { TopicAction } from '../reflection-topics';
 import {commitDraft,draftSaveActions,type ReflectionDraft} from '../reflection-draft';
 import {localDay} from '../journal';
 import {isRotationAction,type RotationAction} from '../domain';
@@ -75,7 +76,7 @@ export class JournalRepository {
     if (checkpoint) {
       try {
         const s = checkpoint.state;
-        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.requestUnits || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance || !s.onboarding || !s.rotation || !Array.isArray(s.rotation.offers) || !s.rotation.accepted || !s.rotation.acceptedText || !s.rotation.requests ||
+        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.requestUnits || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance || !s.onboarding || !s.topics || !s.rotation || !Array.isArray(s.rotation.offers) || !s.rotation.accepted || !s.rotation.acceptedText || !s.rotation.requests ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
           if (!s.lastEventId) throw new Error('Invalid checkpoint anchor');
@@ -246,7 +247,7 @@ export class JournalRepository {
     });
     return this.draftChain;
   }
-  async commitAI(action: RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
+  async commitAI(action: TopicAction | RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
     if (!this.ready || this.stopped || !navigator.onLine) throw new Error('Connect and wait for your journal to sync first.');
     const result = await appendReflection(this.client.db, this.uid, action);
     await this.awaitSequence(result.sequence);

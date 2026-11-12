@@ -1,3 +1,4 @@
+import type { TopicAction } from '../reflection-topics';
 import {commitDraft,type ReflectionDraft} from '../reflection-draft';
 import {localDay} from '../journal';
 import {type RotationAction} from '../domain';
@@ -69,7 +70,7 @@ export class ReviewRepository implements JournalStore {
     replay(events); // Real reducer enforces ordering and edit revisions.
     this.persist(events); this.emit();
   }
-  async commitAI(action: RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
+  async commitAI(action: TopicAction | RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
   async requestPrompt() { throw new Error('Use the Firebase preview to try Gemini. UI review stays entirely on this device.'); }
   async queueBackups(actions:(BackupAction|RotationAction)[]) {for(const action of actions)await this.save(action);}
   async queueBackup(action:BackupAction|RotationAction) {await this.save(action);}

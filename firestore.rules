@@ -332,6 +332,19 @@ service cloud.firestore {
       }
       // Classify once so complex personal-cloud requests retain Rules expression headroom.
       // Each validator still enforces its exact event type, schema and payload.
+      function topicPath(entryId) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/topics/$(entryId); }
+      function validTopicChoice(e) {
+        let p=e.payload;
+        let before=exists(topicPath(p.entryId)) ? get(topicPath(p.entryId)).data.lastEventId : null;
+        let builtins=['nature','community','art','books','music','movies','science','wildlife','family','pets','friends','food','home','movement','learning','discovery','technology'];
+        return e.type == 'ReflectionTopicChosen' && e.schemaVersion == 1
+          && p.keys().hasAll(['entryId','expectedRevision','previousEventId','topicId','answersId']) && p.keys().hasOnly(['entryId','expectedRevision','previousEventId','topicId','answersId'])
+          && validId(p.entryId) && p.expectedRevision is int && p.expectedRevision > 0 && p.expectedRevision == nextRevision(p.entryId)
+          && p.previousEventId == before && p.answersId == setupBefore().answersId
+          && (p.topicId == null || p.topicId == 'unknown' || p.topicId in builtins
+            || p.topicId is string && p.topicId.matches('^custom_[a-zA-Z0-9_-]{0,73}$') && p.answersId != null && p.topicId in get(eventPath(p.answersId)).data.payload.customOrder)
+          && getAfter(topicPath(p.entryId)).data.lastEventId == e.eventId;
+      }
       function validStreamAction(e) {
         let kind = e.type;
         return kind in ['AIChoicesConfirmed','PromptRequested','PromptResponseReceived','AIRequestFailed','PromptFeedbackSubmitted','StarterPromptChosen'] ? validAI(e)
@@ -340,6 +353,7 @@ service cloud.firestore {
           : kind == 'AccentColourChosen' ? validAppearance(e)
           : kind in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(e)
           : kind in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(e)
+          : kind == 'ReflectionTopicChosen' ? validTopicChoice(e)
           : kind == 'ReflectionWritten' ? validReflection(e)
           : kind.matches('Photo.*') && validPhoto(e);
       }
@@ -393,6 +407,15 @@ service cloud.firestore {
             ? request.resource.data.confirmationId == request.resource.data.lastEventId && getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ImportRecordConfirmed'
             : resource.data.lastEventId == resource.data.confirmationId && request.resource.data.confirmationId == resource.data.confirmationId && getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ReflectionImported')
           && getAfter(eventPath(request.resource.data.lastEventId)).data.payload.sourceKey == sourceKey;
+        allow delete: if false;
+      }
+      match /topics/{entryId} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && generation == 'v1' && validId(entryId)
+          && request.resource.data.keys().hasAll(['lastEventId']) && request.resource.data.keys().hasOnly(['lastEventId'])
+          && validId(request.resource.data.lastEventId) && !exists(eventPath(request.resource.data.lastEventId))
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ReflectionTopicChosen'
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.payload.entryId == entryId;
         allow delete: if false;
       }
       match /entries/{entryId} {
