@@ -1762,3 +1762,29 @@ Context: attached screenshot shows Firefox Settings search for “Use hardware a
 ### 2026-11-10 — PR 26 checks still running with a cancellation
 
 > Checks still re-running on 26, with one check cancelled. (this is part of why i wanted to make sure that the PRs are only running the checks that are relevant to them :D)
+
+### 2026-11-12 — Photo attachment failure
+
+> I'm having an issue where i can't seem to attach photos! "Photo not attached. Your selection is saved on this device. Check your connection and retry."
+
+### 2026-11-12 — Attachment failure scope
+
+> Main app, and it fails both types of attachment tries!
+
+### 2026-11-12 — Browser request statuses
+
+> When i tried it, i got a 403 for get and then a 404 for post - not sure where the error message is though
+
+### 2026-11-12 — Network response and locating the request URL
+
+> Please click the red GET request, then its Response tab. What does it show for `error.message` or `error.code`? Also share the request’s domain/path before any `?` (for example `firebasestorage.googleapis.com/v0/...` or `firestore.googleapis.com/...`). Please leave out headers, tokens and image data.
+
+The request is actually purple! The "response" tab shows "error	{ code: 404, message: "Not Found." }" No idea where the domain/path is though.
+
+### 2026-11-12 — Photo request URL
+
+https://firebasestorage.googleapis.com/v0/b/gratitude-drbrrl.firebasestorage.app/o/users%2FaJ7NjmFSkePOGuGfGhorv4RqwPg2%2Fv1%2F3b2921c4-e876-49bd-b636-efda66616627
+
+### 2026-11-12 — Production attachment retry
+
+> It attaches now
