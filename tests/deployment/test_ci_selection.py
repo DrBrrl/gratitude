@@ -33,12 +33,12 @@ class SelectionTests(unittest.TestCase):
     def test_isolated_hug_status_keeps_every_friends_consumer(self):
         plan = self.plan(['src/lib/components/HugNotifications.svelte'])
         self.assertFalse(plan['full'])
-        self.assertEqual(self.ids(plan), {'001', '035', '036', '037', '038', '039', '043', '044', '059'})
+        self.assertEqual(self.ids(plan), {'001', '035', '036', '037', '038', '039', '043', '044', '059', '060'})
 
     def test_friend_changes_include_onboarding_consumers_too(self):
         plan = self.plan(['src/lib/components/Friends.svelte'])
         self.assertFalse(plan['full'])
-        self.assertTrue({'036', '043', '044', '045', '046', '047', '048', '054', '055', '059'} <= self.ids(plan))
+        self.assertTrue({'036', '043', '044', '045', '046', '047', '048', '054', '055', '059', '060'} <= self.ids(plan))
 
     def test_multiple_changes_union_related_features(self):
         plan = self.plan(['src/lib/components/ImportPanel.svelte', 'src/lib/components/HugNotifications.svelte'])

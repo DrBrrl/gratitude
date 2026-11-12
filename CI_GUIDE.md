@@ -12,8 +12,8 @@ All runs retain the build, Svelte checks, unit/deployment tests, full backend Ru
 
 | Changed component | Additional walkthroughs |
 | --- | --- |
-| HugNotifications | All Friends/hug/community/notification consumers (036–039, 043–044) |
-| Friends | Friends/hugs plus all onboarding flows |
+| HugNotifications | All Friends/hug/community/notification consumers (036–039, 043–044, 059–060) |
+| Friends | Friends/hugs, table/publication recovery (059–060), plus all onboarding flows |
 | ImportPanel | Import and recovery (015–016) |
 
 A walkthrough's own test, local fixture, README or baseline selects that walkthrough. Listed design/record documents and files under `docs/` retain smoke coverage. All other paths select the full suite. In particular, global styling/layout, the shared GratitudeApp component, event projections, dates, authentication, Rules, dependencies, test helpers, workflow/selection infrastructure and unrecognised files trigger full coverage.

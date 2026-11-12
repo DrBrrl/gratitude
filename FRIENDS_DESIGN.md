@@ -82,3 +82,9 @@ The status remains limited to consented gratitude dates; journal entries, prompt
 The table uses the acceptance of the current continuous friendship. Removing or blocking ends it; accepting a fresh request starts a new shared-streak period. A new Friends checkpoint version (4) rebuilds acceptance from existing source events rather than inventing a rollout timestamp. This derived `acceptedAt` stays outside the canonical friendship head and source payloads. Community gratitude paragraphs and the table share this acceptance-bound calculation, so their totals agree. Individual streaks beside a friend’s name still describe that person’s full shared journal history.
 
 Unavailable or unshared rows show textual status and no numeric streak instead of zero. The two halves also have accessible text, so their colours are not the sole signal. Table rows use one glass surface without per-row backdrop blur.
+
+## Confirmed sharing and received hugs
+
+A saved public profile does not itself create streak-sharing consent. The owner sees separate states for no saved choice, explicitly hidden dates, enabled dates awaiting publication and a confirmed matching publication. An enabled account with a missing projection can use **Sync shared streak** to rebuild only the date projection, without changing consent or journal entries. No administrative repair creates sharing consent.
+
+An incoming hug adds **Hugged you!** beneath that friend’s hug button for the recipient’s current device day. It remains after reload, replay or reading a notification and clears at local midnight, including when returning to an open tab. This is separate from the sender’s filled heart and daily quota, uses the existing received timestamp and creates no new events.

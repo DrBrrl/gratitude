@@ -3,7 +3,7 @@
   import { base } from '$app/paths';
   import type { FirebaseClient } from '$lib/firebase/client';
   import { FriendsRepository, saveFriendProfile, appendFriendAction, type DiscoveredProfile, type FriendsView } from '$lib/friends/repository';
-  import { canHug, huggedToday, emptyProfile, usernameKey, validateProfile, type PairType, type PairProjection } from '$lib/friends/domain';
+  import { canHug, huggedToday, receivedHugToday, emptyProfile, usernameKey, validateProfile, type PairType, type PairProjection } from '$lib/friends/domain';
   import Icon from './Icon.svelte';
   import FriendGratitudeTable, {type FriendGratitudeRow} from './FriendGratitudeTable.svelte';
   import HugNotifications from './HugNotifications.svelte';
@@ -15,7 +15,7 @@
 
   let { client, uid, journal, pushController, pushState, profileOnly=false, oncomplete }: { profileOnly?:boolean; oncomplete?:(complete:boolean)=>void; client: FirebaseClient; uid: string; journal: JournalView; pushController:PushController|null;pushState:PushState } = $props();
   let repository: FriendsRepository | null = null;
-  let view = $state.raw<FriendsView>({ sharing: emptySharing(''), gratitude: {}, streaksLoading: false, profile: emptyProfile(''), pairs: {}, peers: {}, ready: false, synced: false, error: '' });
+  let view = $state.raw<FriendsView>({ publicationReady:false, sharing: emptySharing(''), gratitude: {}, streaksLoading: false, profile: emptyProfile(''), pairs: {}, peers: {}, ready: false, synced: false, error: '' });
   const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const zoneChoices = [...new Set([browserZone, 'UTC', ...Intl.supportedValuesOf('timeZone')])].sort();
   let shareStreaks = $state(true), sharingZone = $state(browserZone);
@@ -72,6 +72,12 @@
     const text = String(days), first = Number(text.slice(0, (text.length - 1) % 3 + 1));
     return first === 8 || first === 11 || first === 18 || first >= 80 && first < 90 || first >= 800 && first < 900 ? 'an' : 'a';
   }
+  async function syncSharedStreak(){
+    return run(async()=>{
+      if(!journal.ready||journal.status!=='Synced'||journal.rotationPending)throw new Error('Wait for your journal to finish syncing, then try again.');
+      if(!await publishGratitude(client.db,uid,view.sharing,journal.state))throw new Error('Your journal or sharing choice changed. Wait for sync, then try again.');
+    },'Your shared streak is synced.');
+  }
   function editProfile() {
     username=view.profile.username;displayName=view.profile.displayName;discoverable=view.profile.discoverable;
     shareStreaks=view.sharing.sequence ? view.sharing.enabled : true; sharingZone=view.sharing.timeZone ?? browserZone;editingProfile=true;
@@ -85,9 +91,11 @@
     void opened.start().catch(() => {view={...view,ready:true};error='Friends could not be opened. Check your connection and reload.';});
     const offline = () => { view = { ...view, synced: false }; };
     const online = () => { void opened.sync().catch(() => {}); };
-    const clock = setInterval(() => now = Date.now(), 30_000);
+    const refreshClock=()=>now=Date.now();
+    const clock = setInterval(refreshClock, 30_000);
+    window.addEventListener('focus',refreshClock);document.addEventListener('visibilitychange',refreshClock);
     window.addEventListener('offline', offline); window.addEventListener('online', online);
-    return () => { clearInterval(clock); opened.stop(); repository = null; window.removeEventListener('offline', offline); window.removeEventListener('online', online); };
+    return () => { clearInterval(clock);window.removeEventListener('focus',refreshClock);document.removeEventListener('visibilitychange',refreshClock); opened.stop(); repository = null; window.removeEventListener('offline', offline); window.removeEventListener('online', online); };
   });
   async function run(task: () => Promise<unknown>, message: string, recovery=false) {
     if (busy || (!view.synced && !recovery)) return false;
@@ -123,7 +131,7 @@
 
 </script>
 
-<div class="friends-space" aria-busy={busy||!view.ready} data-streaks-loading={view.streaksLoading}>
+<div class="friends-space" aria-busy={busy||!view.ready} data-streaks-loading={view.streaksLoading} data-publication-ready={view.publicationReady}>
   {#if !profileOnly}<h1>Friends & hugs</h1>
   <p class="intro">You can encourage your friends to practice gratitude by sending them one hug per day!</p>{/if}
   {#if !view.ready}<p role="status">Opening your friends…</p>{:else}
@@ -146,7 +154,8 @@
       {:else}
         <div class="profile-heading"><Icon name="account" size={28} /><div><h2>{view.profile.displayName}</h2><p><em>@{view.profile.username}</em></p></div></div>
         <p class="hint">{#if view.profile.discoverable}People can find you by searching for your <em>@username</em>{:else}Your profile is hidden from new username searches.{/if}</p>
-        <p class="hint">{view.sharing.sequence ? view.sharing.enabled ? 'Your gratitude streaks are shared with accepted friends.' : 'Your gratitude streaks are hidden from friends.' : 'Review streak sharing to start your community calendar.'}</p>
+        <p class="hint">{!view.sharing.sequence ? 'Save your sharing choice to let friends see your streak. Edit your friends profile and save with sharing enabled.' : !view.sharing.enabled ? 'Your gratitude streaks are hidden from friends.' : view.publicationReady ? 'Your gratitude streaks are shared with accepted friends.' : 'Streak sharing is on. Your gratitude dates are waiting to sync; keep Gratitude open and connected.'}</p>
+        {#if view.sharing.enabled && !view.publicationReady}<button class="outline sharing-sync" onclick={syncSharedStreak} disabled={disabled || !journal.ready || journal.status!=='Synced' || !!journal.rotationPending}>Sync shared streak</button>{/if}
         <button class="outline" onclick={editProfile}>Edit friends profile</button>
       {/if}
     </section>
@@ -174,7 +183,7 @@
       {#if incoming.length}<section aria-label="Incoming friend requests"><h2>Friend requests</h2>{#each incoming as [id,p] (id)}<article class="glass"><h3>{name(peer(p))}</h3><p class="hint"><em>{handle(peer(p))}</em> would like to connect.</p><div class="actions"><button class="primary" onclick={() => act('FriendRequestAccepted',peer(p))} disabled={disabled}>Accept request from {name(peer(p))}</button><button class="outline" onclick={() => act('FriendRequestDeclined',peer(p))} disabled={disabled}>Decline request</button><button class="quiet" onclick={() => act('FriendBlocked',peer(p))} disabled={disabled}>Block {name(peer(p))}</button></div></article>{/each}</section>{/if}
       {#if outgoing.length}<section aria-label="Sent friend requests"><h2>Requests you sent</h2>{#each outgoing as [id,p] (id)}<article class="glass"><h3>{name(peer(p))}</h3><p class="hint"><em>{handle(peer(p))}</em> · waiting for a reply</p><button class="outline" onclick={() => act('FriendRequestCancelled',peer(p))} disabled={disabled}>Cancel request to {name(peer(p))}</button></article>{/each}</section>{/if}
       <section aria-label="Your friends"><h2>Your friends</h2>{#if !friends.length}<p class="hint">No friends yet. Add some to get started!</p>{/if}
-        {#each friends as [id,p] (id)}<article class="glass friend-card"><div class="profile-heading"><svg class="gratitude-star" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg><div><h3>{name(peer(p))}{#if peerStreak(peer(p)) !== null}<span class="friend-streak">{' '}({peerStreak(peer(p))} days of gratitude in a row)</span>{/if}</h3><p class="hint"><em>{handle(peer(p))}</em></p></div><button class="outline hug-button" aria-label={`Send a hug to ${name(peer(p))}`} aria-pressed={huggedToday(p,uid,now,utcOffset)} title={huggedToday(p,uid,now,utcOffset)?'Hug sent today':`Send a hug to ${name(peer(p))}`} onclick={() => act('HugSent',peer(p))} disabled={disabled || !canHug(p,uid,now,utcOffset)}><Icon name="heart" size={28} filled={huggedToday(p,uid,now,utcOffset)} /></button></div>
+        {#each friends as [id,p] (id)}<article class="glass friend-card"><div class="profile-heading"><svg class="gratitude-star" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg><div><h3>{name(peer(p))}{#if peerStreak(peer(p)) !== null}<span class="friend-streak">{' '}({peerStreak(peer(p))} days of gratitude in a row)</span>{/if}</h3><p class="hint"><em>{handle(peer(p))}</em></p></div><span class="friend-hug"><button class="outline hug-button" aria-describedby={receivedHugToday(p,uid,now,browserZone)?`received-${id}`:undefined} aria-label={`Send a hug to ${name(peer(p))}`} aria-pressed={huggedToday(p,uid,now,utcOffset)} title={huggedToday(p,uid,now,utcOffset)?'Hug sent today':`Send a hug to ${name(peer(p))}`} onclick={() => act('HugSent',peer(p))} disabled={disabled || !canHug(p,uid,now,utcOffset)}><Icon name="heart" size={28} filled={huggedToday(p,uid,now,utcOffset)} /></button>{#if receivedHugToday(p,uid,now,browserZone)}<small class="received-hug" id={`received-${id}`}>Hugged you!</small>{/if}</span></div>
           {#if !(uid===p.members[0]?p.hugsB:p.hugsA)}<p class="hint">Your friend has paused incoming hugs.</p>{/if}
           <details><summary>Manage friendship with {name(peer(p))}</summary><div class="actions manage"><button class="outline" onclick={() => act('HugPreferencesChosen',peer(p),{allowHugs:!(uid===p.members[0]?p.hugsA:p.hugsB)})} disabled={disabled}>{(uid===p.members[0]?p.hugsA:p.hugsB)?'Pause hugs from':'Allow hugs from'} {name(peer(p))}</button><button class="outline" onclick={() => act('FriendRemoved',peer(p))} disabled={disabled}>Remove {name(peer(p))} as a friend</button><button class="quiet" onclick={() => act('FriendBlocked',peer(p))} disabled={disabled}>Block {name(peer(p))}</button></div></details>
         </article>{/each}
@@ -199,6 +208,8 @@
 <style>
   .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0; }
   .search-input { position:relative;flex:1;min-width:0; }.search-placeholder { position:absolute;inset:0;padding:0 10px;color:#aab2be;font-size:.7rem;line-height:42px;pointer-events:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }.search-input input { height:42px;min-height:42px;padding:9px 10px; }.search-row button { height:42px;min-height:42px;padding:8px 8px;font-size:.8rem; }.search-help { font-size:.75rem;margin:10px 0 0; }.more-matches{margin-top:16px;}
+  .sharing-sync{margin-right:8px;margin-bottom:8px}
+  .friend-hug{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0}.received-hug{font-size:.68rem;line-height:1.3;color:var(--accent-highlight);white-space:nowrap}
   .friend-streak { font-size:.78rem;font-weight:400;color:#bfc5ce;line-height:1.5; }.community-streak p { margin:0; }.community-streak strong { color:var(--accent-text);font-weight:600; } select { width:100%;padding:12px;border:1px solid var(--glass-border);border-radius:10px;background:#10151a;color:inherit;font:inherit; }
   .friend-card .profile-heading > div { flex:1; }.hug-button { display:grid;place-items:center;width:46px;height:46px;padding:6px;flex-shrink:0;color:var(--accent-highlight);border-color:var(--action-border); }.hug-button[aria-pressed=true] { opacity:1; }
   .friends-space { color:#f4f5fa; font-family:Arial,Helvetica,sans-serif; text-align:left; }
