@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ReflectionTopic from './ReflectionTopic.svelte';
   import type {ReflectionDraft} from '../reflection-draft';
   import {STARTER_CATALOGUE} from '../starter-catalogue';
   import {choosePrompt,starterPrompt,promptRandom,type PromptKind} from '../prompt-rotation';
@@ -985,9 +986,10 @@
         <article class="tinted card saved-card" style:--entry-colour={entryColour(savedEntry, zone)}>
           <h2>Prompt</h2><p class="entry-prompt">{savedEntry.prompt}</p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={savedEntry.text} /></p>
+          {#if repository}<ReflectionTopic entry={savedEntry} journal={view.state} disabled={!!view.pending || busy} onchoose={action=>repository!.commitAI(action)} onedit={()=>edit(savedEntry!)} />{/if}
         </article>
         {#if client && repository}<PhotoPanel connection={photoConnection} connectionError={photoConnectionProblem} {client} {repository} {view} uid={user.uid} entryId={savedEntry.id} colour={entryColour(savedEntry, zone)} />{/if}
-        <div class="saved-actions"><button class="primary" onclick={done}>Done</button><button class="outline" onclick={() => edit(savedEntry)}>Edit reflection</button></div>
+        <div class="saved-actions"><button class="primary" onclick={done}>Done</button></div>
       {:else}
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
         <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} photos={calendarPhotos} />
@@ -1022,7 +1024,7 @@
           <h2>Prompt</h2><p class="entry-prompt"><HighlightedText text={selected.prompt} {query} /></p>
           <h2>Reflection</h2><p class="entry-text"><ReflectionText text={selected.text} {query} /></p>
           {#if client && repository}<PhotoPanel connection={photoConnection} connectionError={photoConnectionProblem} {client} {repository} {view} uid={user.uid} entryId={selected.id} {query} />{/if}
-          <button class="entry-action card-action" onclick={() => edit(selected)} disabled={!!view.pending || busy}><Icon name="edit" size={16} />Edit reflection</button>
+          {#if repository}<ReflectionTopic entry={selected} journal={view.state} disabled={!!view.pending || busy} onchoose={action=>repository!.commitAI(action)} onedit={()=>edit(selected!)} />{/if}
         </article>
       {:else}
         <h1 class="page-heading">{privateName ? `${privateName}’s Journal` : 'Your journal'}</h1>
@@ -1239,7 +1241,6 @@
   .card .entry-prompt, .detail .entry-prompt { font-size: .975rem; font-style: italic; font-weight: 400; color: color-mix(in srgb, var(--entry-colour) 38%, #ecf4ff); }
   .detail { padding: 22px; margin-top: 12px; }
   .entry-text { white-space: pre-wrap; overflow-wrap: anywhere; }
-  .entry-action { display: inline-flex; align-items: center; gap: 6px; color: var(--yellow); min-height: 28px; padding: 2px 8px; margin-top: 16px; font-size: .85rem; }
   .empty { text-align: center; padding: 36px 22px !important; }
   .empty :global(svg) { color: var(--accent-highlight); margin-bottom: 20px; }
   .empty h2 { font-size: 1.65rem; }

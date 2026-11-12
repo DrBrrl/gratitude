@@ -368,3 +368,7 @@ The personal-cloud CI jobs run scenario 050 separately from the providers jobs (
 Backend Rules/event-stream verification runs once per CI run. Browser jobs retain real Firestore/Storage allow/deny readiness probes in their own disposable emulators. The onboarding groups run 045–046, 047–048 and 054–055 separately; publication waits for every planned check.
 
 Scenario 014 also uses the existing fifteen-second persistence budget for its first save after reconnection and for export readiness. A hosted trace showed successful reflection/prompt-consumption commits while the page still displayed Saving… at its previous two-second assertion deadline. Wait for the actual saved date and export-ready state; preserve the same actions, exact content checks and zero-pixel comparisons.
+
+## Editable reflection topics
+
+Walkthrough [057](tests/e2e/057-reflection-topics/README.md) covers saved/detail topic editing, search, selected value, click-away cancellation, keyboard save, offline failure/retry, reload and full replay without changing the reflection revision. [058](tests/e2e/058-imported-topics/README.md) covers legacy imported writing, unselected custom categories, Escape cancellation and JSON export with original import provenance. Both run at mobile and desktop sizes with the standard unmasked zero-tolerance helper.

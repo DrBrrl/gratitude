@@ -28,6 +28,8 @@ New requests use the saved scope/word limit and a twenty-unit history budget: re
 
 The [topic-aware prompt workflow proposal](docs/design/TOPIC_AWARE_PROMPTS.md) covers single-topic generation, editable reflection categories, historical classification and optional review prompts. It is a design for review, not a change to current generation.
 
+Saved-reflection and View entry cards now show an editable topic. **Not yet classified** is separate from **Unknown**; the pencil opens a searchable list of every built-in and saved custom topic, regardless of AI-interest selection. Manual choices sync through the private event stream and survive reflection edits and full replay. JSON export includes topic metadata (version 4 when present); Markdown stays unchanged. Existing imports start unclassified. AI classification and topic-aware generation remain later stages. See [the topic walkthrough](tests/e2e/057-reflection-topics/README.md) and [custom/imported topics](tests/e2e/058-imported-topics/README.md).
+
 ## Starter and backup prompt rotation
 
 Today starts with a random starter from the supplied seventeen-category catalogue. **Another starter prompt** chooses an unseen category first, then permits category reuse while avoiding adjacent repeats where alternatives remain. A prompt is never deliberately offered twice on the same local day, across Today, independent composers and the backup chooser. Reopening an existing draft or the current daily card restores its existing choice.
