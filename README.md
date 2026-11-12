@@ -26,6 +26,8 @@ New requests use the saved scope/word limit and a twenty-unit history budget: re
 
 [Onboarding design and implementation notes](ONBOARDING_DESIGN.md) explain storage, permissions, compatibility and remaining provider work. [Fourteen concept mockups](docs/ux/ONBOARDING_REVIEW.md) accompany the executable walkthroughs [045](tests/e2e/045-private-answers/README.md), [046](tests/e2e/046-onboarding/README.md), [047](tests/e2e/047-onboarding-ai/README.md) and [048](tests/e2e/048-onboarding-existing/README.md).
 
+The [topic-aware prompt workflow proposal](docs/design/TOPIC_AWARE_PROMPTS.md) covers single-topic generation, editable reflection categories, historical classification and optional review prompts. It is a design for review, not a change to current generation.
+
 ## Starter and backup prompt rotation
 
 Today starts with a random starter from the supplied seventeen-category catalogue. **Another starter prompt** chooses an unseen category first, then permits category reuse while avoiding adjacent repeats where alternatives remain. A prompt is never deliberately offered twice on the same local day, across Today, independent composers and the backup chooser. Reopening an existing draft or the current daily card restores its existing choice.
