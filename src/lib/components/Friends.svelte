@@ -10,7 +10,7 @@
   import type {PushController,PushState} from '../push/controller';
   import type { JournalView } from '../firebase/repository';
   import { saveGratitudeSharing, publishGratitude } from '../friends/sharing';
-  import { gratitudeDays, streakSummary, communityStreak, friendshipGratitude, emptySharing, validTimeZone } from '../friends/streaks';
+  import { gratitudeDays, streakSummary, friendshipGratitude, emptySharing, validTimeZone } from '../friends/streaks';
   import { dayInZone } from '../civil-date';
 
   let { client, uid, journal, pushController, pushState, profileOnly=false, oncomplete }: { profileOnly?:boolean; oncomplete?:(complete:boolean)=>void; client: FirebaseClient; uid: string; journal: JournalView; pushController:PushController|null;pushState:PushState } = $props();
@@ -43,14 +43,13 @@
     return snapshot ? streakSummary(snapshot.days, dayInZone(new Date(now).toISOString(), snapshot.timeZone)).current : null;
   }
   const communities = $derived.by(() => {
-    if (!view.sharing.enabled || !view.sharing.timeZone || !journal.ready) return [];
-    const own = gratitudeDays(journal.state.entries, view.sharing.timeZone);
-    const today = dayInZone(new Date(now).toISOString(), view.sharing.timeZone);
+    const zone=view.sharing.timeZone;
+    if (!view.sharing.enabled || !zone || !journal.ready) return [];
+    const own = gratitudeDays(journal.state.entries, zone);
     return friends.flatMap(([, pair]) => {
       const person = peer(pair), snapshot = view.gratitude[person];
-      if (!snapshot) return [];
-      const theirsToday = dayInZone(new Date(now).toISOString(), snapshot.timeZone);
-      const summary = communityStreak(own, snapshot.days, today < theirsToday ? today : theirsToday);
+      if (!snapshot || !pair.acceptedAt) return [];
+      const summary = friendshipGratitude(own, snapshot.days, pair.acceptedAt, new Date(now).toISOString(), zone, snapshot.timeZone);
       return summary.longest ? [{ uid: person, ...summary }] : [];
     });
   });
