@@ -4,7 +4,8 @@ import type { Projection } from '../domain.ts';
 
 export async function saveGratitudeSharing(db: Firestore, uid: string, choice: { enabled: boolean; timeZone: string }, previousEventId: string | null, eventId = crypto.randomUUID()) {
   const headRef = doc(db, `friendSharing/${uid}`), eventRef = doc(db, `${headRef.path}/events/${eventId}`);
-  return runTransaction(db, async tx => {
+  for(let attempt=0;;attempt++){
+    try { return await runTransaction(db, async tx => {
     const [head, prior] = await Promise.all([tx.get(headRef), tx.get(eventRef)]);
     const before = head.exists() ? head.data() as SharingProjection : emptySharing(uid);
     if (prior.exists()) {
@@ -18,7 +19,13 @@ export async function saveGratitudeSharing(db: Firestore, uid: string, choice: {
     tx.set(eventRef, { ...event, recordedAt: serverTimestamp() }); tx.set(headRef, next);
     if (!choice.enabled) { tx.delete(doc(db, `friendGratitude/${uid}`)); tx.delete(doc(db, `users/${uid}/privateProjections/gratitudeDays`)); }
     return next;
-  });
+    }); } catch(error) {
+      // Rules can reject a raced precondition before the SDK retries it.
+      // Reread the same immutable action; a real denial still fails after three attempts.
+      if((error as {code?:string}).code==='permission-denied' && attempt<2)continue;
+      throw error;
+    }
+  }
 }
 
 const publications = new WeakMap<Firestore, Map<string, Promise<boolean | undefined>>>();
