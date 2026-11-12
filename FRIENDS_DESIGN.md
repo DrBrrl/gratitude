@@ -63,9 +63,9 @@ Off/sign-out clears the local gate before attempting network revocation. Permiss
 
 Pure tests cover substring bounds, logical-date selection, repaired intersections, sharing replay, midnight/DST handling and legacy-version restrictions. Firebase emulator tests cover bounded paged search, atomic rename/hiding, explicit sharing and private provenance, revocation, stale writes, per-day hug enforcement and rejected forged/downgraded actions. Browser walkthroughs 036–039 and 043 cover both viewports, screenshot every user action with zero tolerance and generate checks under each image.
 
-## Future proposal — shared-streak table below Community streaks
+## Shared-streak table below Community gratitude
 
-Requested on 9 November 2026; recorded for later implementation.
+Requested on 9 November 2026; implemented in this branch.
 
 Below the Community streaks section, show a table of accepted friends:
 
@@ -77,4 +77,8 @@ The third column is the shared streak, rather than that friend's individual stre
 
 Shared streaks are retroactive from the date the friendship was accepted: launching this feature later must count all eligible shared gratitude dates since becoming friends. Use the recorded acceptance action as the historical starting point, not feature rollout, sharing opt-in, entry creation or import time. Entries added or imported later count by their reflection dates; backfilling a missed eligible day repairs continuity. Dates before becoming friends do not count toward this shared streak.
 
-The status remains limited to consented gratitude dates; journal entries, prompts and photos stay private. Unavailable or unshared status must be distinguishable from an unfilled half. Before implementation, confirm which present-day/timezone convention should label the heart; the existing shared-streak convention is described above. Add textual/accessible status alongside the heart so colour and shape are not the only cues.
+The status remains limited to consented gratitude dates; journal entries, prompts and photos stay private. Unavailable or unshared status must be distinguishable from an unfilled half. Confirmed on 12 November: each half follows that person’s current day in their saved sharing timezone. Shared streaks use the earlier current date and matching civil date labels, as in the existing shared-streak convention. The starting day is the later local acceptance date across the two calendars. Add textual/accessible status alongside the heart so colour and shape are not the only cues.
+
+The table uses the acceptance of the current continuous friendship. Removing or blocking ends it; accepting a fresh request starts a new shared-streak period. A new Friends checkpoint version (4) rebuilds acceptance from existing source events rather than inventing a rollout timestamp. This derived `acceptedAt` stays outside the canonical friendship head and source payloads. The existing Community gratitude paragraphs retain their all-history comparison; the table explicitly counts since friendship.
+
+Unavailable or unshared rows show textual status and no numeric streak instead of zero. The two halves also have accessible text, so their colours are not the sole signal. Table rows use one glass surface without per-row backdrop blur.

@@ -1926,3 +1926,9 @@ Thanks Casey! Merged 30. Have you been keeping notes of the little things i was 
 ### 2026-11-13 — Resolve Today PR conflicts before merge
 
 Wonderful thank you! Let's make sure any conflicts in 35 are sorted and i will merge that one. Then we can retarget 31 to main and move from there!
+
+### 2026-11-12 — Implement the community gratitude table separately
+
+Implementation clarification: each half of the Friends-table heart uses that person’s current day in their saved sharing timezone.
+
+> Yes — each person’s own current day

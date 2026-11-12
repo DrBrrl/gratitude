@@ -26,3 +26,13 @@ export function applySharing(state: SharingProjection, event: SharingAction): Sh
   return { uid: state.uid, sequence: event.sequence, lastEventId: event.eventId, enabled: p.enabled, timeZone: p.enabled ? p.timeZone : null };
 }
 export type SharedGratitude = { schemaVersion: 1; publicationId: string; sharingEventId: string; timeZone: string; days: string[] };
+
+/** Retroactive to the current friendship, using reflection dates rather than publication/import time. */
+export function friendshipGratitude(own: string[], peer: string[], acceptedAt: string, now: string, ownZone: string, peerZone: string) {
+  if(!Number.isFinite(Date.parse(acceptedAt))||!Number.isFinite(Date.parse(now))||!validTimeZone(ownZone)||!validTimeZone(peerZone))throw new Error('Invalid friendship calendar context.');
+  const ownToday=dayInZone(now,ownZone),peerToday=dayInZone(now,peerZone);
+  const ownStart=dayInZone(acceptedAt,ownZone),peerStart=dayInZone(acceptedAt,peerZone);
+  // Shared streaks compare the same civil labels, through the earlier current day.
+  const start=ownStart>peerStart?ownStart:peerStart,through=ownToday<peerToday?ownToday:peerToday;
+  return {...communityStreak(own.filter(day=>day>=start),peer.filter(day=>day>=start),through),start,ownToday,peerToday,ownGrateful:own.includes(ownToday),peerGrateful:peer.includes(peerToday)};
+}

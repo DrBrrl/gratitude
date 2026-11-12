@@ -5,11 +5,12 @@
   import { FriendsRepository, saveFriendProfile, appendFriendAction, type DiscoveredProfile, type FriendsView } from '$lib/friends/repository';
   import { canHug, huggedToday, emptyProfile, usernameKey, validateProfile, type PairType, type PairProjection } from '$lib/friends/domain';
   import Icon from './Icon.svelte';
+  import FriendGratitudeTable, {type FriendGratitudeRow} from './FriendGratitudeTable.svelte';
   import HugNotifications from './HugNotifications.svelte';
   import type {PushController,PushState} from '../push/controller';
   import type { JournalView } from '../firebase/repository';
   import { saveGratitudeSharing, publishGratitude } from '../friends/sharing';
-  import { gratitudeDays, streakSummary, communityStreak, emptySharing, validTimeZone } from '../friends/streaks';
+  import { gratitudeDays, streakSummary, communityStreak, friendshipGratitude, emptySharing, validTimeZone } from '../friends/streaks';
   import { dayInZone } from '../civil-date';
 
   let { client, uid, journal, pushController, pushState, profileOnly=false, oncomplete }: { profileOnly?:boolean; oncomplete?:(complete:boolean)=>void; client: FirebaseClient; uid: string; journal: JournalView; pushController:PushController|null;pushState:PushState } = $props();
@@ -51,6 +52,21 @@
       const theirsToday = dayInZone(new Date(now).toISOString(), snapshot.timeZone);
       const summary = communityStreak(own, snapshot.days, today < theirsToday ? today : theirsToday);
       return summary.longest ? [{ uid: person, ...summary }] : [];
+    });
+  });
+  const gratitudeRows=$derived.by(():FriendGratitudeRow[]=>{
+    const instant=new Date(now).toISOString();
+    const own=view.sharing.enabled&&view.sharing.timeZone&&journal.ready?gratitudeDays(journal.state.entries,view.sharing.timeZone):null;
+    return friends.map(([,pair])=>{
+      const person=peer(pair),snapshot=view.sharing.enabled?view.gratitude[person]:undefined;
+      const base={id:person,name:name(person),handle:handle(person)};
+      if(!own||!view.sharing.timeZone||!snapshot||!pair.acceptedAt){
+        const ownToday=view.sharing.enabled&&view.sharing.timeZone?dayInZone(instant,view.sharing.timeZone):null;
+        const peerToday=snapshot?dayInZone(instant,snapshot.timeZone):null;
+        return {...base,current:null,ownGrateful:own&&ownToday?own.includes(ownToday):null,peerGrateful:snapshot&&peerToday?snapshot.days.includes(peerToday):null,ownToday,peerToday,unavailable:!view.sharing.enabled?'Sharing off':view.streaksLoading||!journal.ready?'Loading…':'Not shared or unavailable'};
+      }
+      const result=friendshipGratitude(own,snapshot.days,pair.acceptedAt,instant,view.sharing.timeZone,snapshot.timeZone);
+      return {...base,current:result.current,ownGrateful:result.ownGrateful,peerGrateful:result.peerGrateful,ownToday:result.ownToday,peerToday:result.peerToday,unavailable:null};
     });
   });
   function streakArticle(days: number) {
@@ -171,6 +187,7 @@
           {:else}<p>{view.profile.displayName} and {name(streak.uid)}’s longest gratitude streak: <strong>{streak.longest} {streak.longest===1?'day':'days'}.</strong></p>{/if}
         </article>{/each}
       </section>
+      <FriendGratitudeTable rows={gratitudeRows} cached={!view.synced || journal.status!=='Synced'} />
       {#if blocked.length}<section aria-label="Blocked people"><h2>Blocked people</h2>{#each blocked as [id,p] (id)}<article class="glass"><h3>{name(peer(p))}</h3><p class="hint">Unblocking does not restore the friendship.</p><button class="outline" onclick={() => act('FriendUnblocked',peer(p))} disabled={disabled}>Unblock {name(peer(p))}</button></article>{/each}</section>{/if}
     {/if}
     {#if !profileOnly}<HugNotifications controller={pushController} state={pushState} />{/if}
