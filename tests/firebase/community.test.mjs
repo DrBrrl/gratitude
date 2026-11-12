@@ -96,3 +96,15 @@ test('Rules permit a hug after local midnight within 24h and reject repeats, off
    const eventId=`daily-forged-${name}`,batch=writeBatch(a);batch.set(doc(a,`friendPairs/${id}`),{...head,sequence:head.sequence+1,lastEventId:eventId,lastHugA:serverTimestamp(),lastHugOffsetA:schema===1?null:900});batch.set(doc(a,`friendPairs/${id}/events/${eventId}`),{eventId,schemaVersion:schema,sequence:head.sequence+1,type:'HugSent',actorUid:uid,targetUid:peer,recordedAt:serverTimestamp(),payload:{previousEventId:head.lastEventId,...extra}});await assertFails(batch.commit());
  }
 });
+
+test('independent devices can retry one sharing action without duplicating it or overriding a later choice',async()=>{
+ const uid='sharing-concurrent',a=db(uid),b=db(uid),choice={enabled:true,timeZone:'Australia/Hobart'};
+ const results=await Promise.all([saveGratitudeSharing(a,uid,choice,null,'sharing-once'),saveGratitudeSharing(b,uid,choice,null,'sharing-once')]);
+ assert.ok(results.every(result=>result.lastEventId==='sharing-once'&&result.enabled));
+ assert.equal((await getDocs(collection(a,`friendSharing/${uid}/events`))).size,1);
+ await assert.rejects(saveGratitudeSharing(b,uid,{enabled:false,timeZone:'UTC'},null,'sharing-once'),/already used/);
+ await saveGratitudeSharing(b,uid,{enabled:false,timeZone:'UTC'},'sharing-once','sharing-disabled');
+ await assert.rejects(saveGratitudeSharing(a,uid,choice,null,'sharing-stale'),/changed on another device/);
+ assert.equal((await getDoc(doc(a,`friendSharing/${uid}`))).get('enabled'),false);
+ assert.equal((await getDocs(collection(a,`friendSharing/${uid}/events`))).size,2);
+});
