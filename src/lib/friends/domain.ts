@@ -8,7 +8,7 @@ export type PairAction = { eventId: string; type: PairType; actorUid: string; ta
 export type PairEvent = PairAction & { schemaVersion: 1 | 2; sequence: number; recordedAt: string };
 export type PairHead = { members: [string, string]; sequence: number; lastEventId: string | null; status: 'none' | 'pending' | 'accepted'; requesterUid: string | null; blockedA: boolean; blockedB: boolean; hugsA: boolean; hugsB: boolean; requestedAt: string | null; lastHugA: string | null; lastHugB: string | null; lastHugOffsetA: number | null; lastHugOffsetB: number | null };
 export type Hug = { id: string; from: string; to: string; at: string; read: boolean };
-export type PairProjection = PairHead & { hugs: Hug[] };
+export type PairProjection = PairHead & { hugs: Hug[]; acceptedAt: string | null };
 export function usernameKey(input: string) { return input.trim().toLowerCase().replace(/^@/, ''); }
 export function validateProfile(input: ProfileInput) {
   if (!input || typeof input.username !== 'string' || !/^[a-z][a-z0-9_]{2,23}$/.test(usernameKey(input.username)) || input.username.length > 30) throw new Error('Use 3–24 letters, numbers or underscores, starting with a letter.');
@@ -23,9 +23,9 @@ export function applyProfile(before: Profile, event: ProfileEvent): Profile {
 }
 export function emptyPair(a: string, b: string): PairProjection {
   if (!a || !b || a === b) throw new Error('Choose another person.');
-  return { members: [a, b], sequence: 0, lastEventId: null, status: 'none', requesterUid: null, blockedA: false, blockedB: false, hugsA: true, hugsB: true, requestedAt: null, lastHugA: null, lastHugB: null, lastHugOffsetA: null, lastHugOffsetB: null, hugs: [] };
+  return { members: [a, b], sequence: 0, lastEventId: null, status: 'none', requesterUid: null, blockedA: false, blockedB: false, hugsA: true, hugsB: true, requestedAt: null, lastHugA: null, lastHugB: null, lastHugOffsetA: null, lastHugOffsetB: null, hugs: [], acceptedAt: null };
 }
-export function pairHead(pair: PairProjection): PairHead { const { hugs: _, ...head } = pair; return head; }
+export function pairHead(pair: PairProjection): PairHead { const { hugs: _, acceptedAt: _acceptedAt, ...head } = pair; return head; }
 /** Observed clock context, never a computed day/streak in the source event. */
 export function validHugOffset(offset: unknown): offset is number { return Number.isInteger(offset) && Number(offset) >= -720 && Number(offset) <= 840 && Number(offset) % 15 === 0; }
 export function hugDay(now: number, offset: number) { return Math.floor((now + offset * 60_000) / 86_400_000); }
@@ -51,16 +51,16 @@ export function applyPair(before: PairProjection, event: PairEvent): PairProject
     case 'FriendRequestAccepted':
     case 'FriendRequestDeclined':
       if (!connected || before.status !== 'pending' || before.requesterUid === event.actorUid) throw new Error('Only the recipient can answer this request.');
-      next = { ...next, status: event.type === 'FriendRequestAccepted' ? 'accepted' : 'none', requesterUid: null }; break;
+      next = { ...next, status: event.type === 'FriendRequestAccepted' ? 'accepted' : 'none', acceptedAt:event.type === 'FriendRequestAccepted'?event.recordedAt:null, requesterUid: null }; break;
     case 'FriendRequestCancelled':
       if (before.status !== 'pending' || before.requesterUid !== event.actorUid) throw new Error('Only the sender can cancel this request.');
-      next = { ...next, status: 'none', requesterUid: null }; break;
+      next = { ...next, status: 'none', acceptedAt:null, requesterUid: null }; break;
     case 'FriendRemoved':
       if (before.status !== 'accepted') throw new Error('This friendship has already ended.');
-      next = { ...next, status: 'none', requesterUid: null }; break;
+      next = { ...next, status: 'none', acceptedAt:null, requesterUid: null }; break;
     case 'FriendBlocked':
       if (a ? before.blockedA : before.blockedB) throw new Error('Already blocked.');
-      next = { ...next, status: 'none', requesterUid: null, [a ? 'blockedA' : 'blockedB']: true }; break;
+      next = { ...next, status: 'none', acceptedAt:null, requesterUid: null, [a ? 'blockedA' : 'blockedB']: true }; break;
     case 'FriendUnblocked':
       if (!(a ? before.blockedA : before.blockedB)) throw new Error('Not blocked.');
       next = { ...next, [a ? 'blockedA' : 'blockedB']: false }; break;
@@ -78,6 +78,6 @@ export function applyPair(before: PairProjection, event: PairEvent): PairProject
 /** Canonical stream IDs are opaque, including names inherited by ordinary objects. */
 export function cachedPairOrEmpty(cache: Record<string, PairProjection>, id: string, canonical: PairHead, rebuild = false): PairProjection {
   const cached = !rebuild && Object.hasOwn(cache,id) ? cache[id] : undefined;
-  if (!cached || !Number.isSafeInteger(cached.sequence) || !Array.isArray(cached.members) || cached.members.length !== 2 || !Array.isArray(cached.hugs) || cached.members[0] !== canonical.members[0] || cached.members[1] !== canonical.members[1] || cached.sequence > canonical.sequence || cached.sequence === canonical.sequence && cached.lastEventId !== canonical.lastEventId) return emptyPair(...canonical.members);
+  if (!cached || !Number.isSafeInteger(cached.sequence) || !Array.isArray(cached.members) || cached.members.length !== 2 || !Array.isArray(cached.hugs) || !(cached.status === 'accepted' ? typeof cached.acceptedAt === 'string' && Number.isFinite(Date.parse(cached.acceptedAt)) : cached.acceptedAt === null) || cached.members[0] !== canonical.members[0] || cached.members[1] !== canonical.members[1] || cached.sequence > canonical.sequence || cached.sequence === canonical.sequence && cached.lastEventId !== canonical.lastEventId) return emptyPair(...canonical.members);
   return cached;
 }

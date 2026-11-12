@@ -62,7 +62,7 @@ export async function appendFriendAction(db: Firestore, actorUid: string, comman
       return pairId;
     }
     let before: PairProjection;
-    if (head.exists()) before = { ...decodePair(head.data()), hugs: [] };
+    if (head.exists()) before = { ...decodePair(head.data()), hugs: [], acceptedAt: null };
     else {
       if (!['FriendRequestSent','FriendBlocked'].includes(command.type)) throw new Error('Send a friend request first.');
       before = emptyPair(actorUid, command.targetUid);
@@ -105,7 +105,7 @@ export async function acknowledgeHug(db: Firestore, uid: string, pairId: string,
 
 export type DiscoveredProfile = Pick<Profile, 'uid' | 'username' | 'displayName'>;
 export type FriendsView = { sharing: SharingProjection; gratitude: Record<string, SharedGratitude>; streaksLoading: boolean; profile: Profile; pairs: Record<string, PairProjection>; peers: Record<string, Profile>; ready: boolean; synced: boolean; error: string };
-type Checkpoint = { version: 3; sharing: SharingProjection; uid: string; profile: Profile; pairs: Record<string, PairProjection>; inbox: InboxProjection };
+type Checkpoint = { version: 4; sharing: SharingProjection; uid: string; profile: Profile; pairs: Record<string, PairProjection>; inbox: InboxProjection };
 async function digest(value: unknown) { return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(value)))), n => n.toString(16).padStart(2, '0')).join(''); }
 export class FriendsRepository {
   private cache: IDBPDatabase | null = null;
@@ -135,7 +135,7 @@ export class FriendsRepository {
     const cached = await this.cache.get('projection', 'checkpoint');
     if (cached) {
       const c = cached.value as Checkpoint;
-      if (c.version === 3 && c.sharing?.uid === this.uid && c.uid === this.uid && c.profile?.uid === this.uid && c.pairs && c.inbox && cached.digest === await digest(c)) {
+      if (c.version === 4 && c.sharing?.uid === this.uid && c.uid === this.uid && c.profile?.uid === this.uid && c.pairs && c.inbox && cached.digest === await digest(c)) {
         this.inbox=c.inbox; this.state = { ...this.state, sharing: c.sharing, profile: c.profile, pairs: c.pairs, ready: true }; this.emit();
       } else await this.cache.delete('projection', 'checkpoint');
     }
@@ -193,7 +193,7 @@ export class FriendsRepository {
     this.inbox=inbox;
     const readPairs=applyReadState(pairs,inbox,this.uid);
     this.state = { ...this.state, sharing, profile, pairs:readPairs, ready: true, synced: true, error: '' };
-    const checkpoint: Checkpoint = { version: 3, sharing, uid: this.uid, profile, pairs:readPairs, inbox };
+    const checkpoint: Checkpoint = { version: 4, sharing, uid: this.uid, profile, pairs:readPairs, inbox };
     await this.cache?.put('projection', { value: checkpoint, digest: await digest(checkpoint) }, 'checkpoint');
     if (this.stopped) return;
     for (const peer of new Set(Object.values(pairs).flatMap(pair => pair.members.filter(uid => uid !== this.uid)))) {

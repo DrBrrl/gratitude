@@ -21,6 +21,7 @@
     "photo-model": ["041"],
     "appearance": ["042"],
     "community": ["043"],
+    "friend-table": ["059"],
     "push-notifications": ["044"],
     "onboarding": ["045", "046"],
     "onboarding-ai": ["047", "048"],
@@ -33,8 +34,8 @@
   },
   "smoke": ["035"],
   "isolated_components": {
-    "src/lib/components/HugNotifications.svelte": ["036", "037", "038", "039", "043", "044"],
-    "src/lib/components/Friends.svelte": ["036", "037", "038", "039", "043", "044", "045", "046", "047", "048", "054", "055"],
+    "src/lib/components/HugNotifications.svelte": ["036", "037", "038", "039", "043", "044", "059"],
+    "src/lib/components/Friends.svelte": ["036", "037", "038", "039", "043", "044", "045", "046", "047", "048", "054", "055", "059"],
     "src/lib/components/ImportPanel.svelte": ["015", "016"]
   },
   "documentation": ["README.md", "VISION.md", "PROMPTS.md", "LEARNINGS.md", "AI_CONNECTIONS_SETUP.md", "AI_PROVIDER_DESIGN.md", "DEPLOYMENT.md", "FIREBASE_SETUP.md", "FRIENDS_DESIGN.md", "IMPLEMENTATION_PLAN.md", "MVP_DESIGN.md", "ONBOARDING_DESIGN.md", "PUSH_NOTIFICATIONS_DESIGN.md", "UX_DESIGN.md", "LICENSE"]
