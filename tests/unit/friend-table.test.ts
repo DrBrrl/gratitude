@@ -47,3 +47,11 @@ test('received-hug labels follow the recipient day, survive read state and reset
  const dst={...pair,lastHugA:'2026-04-04T13:30:00.000Z'};
  assert.equal(receivedHugToday(dst,'bob',Date.parse('2026-04-04T16:30:00Z'),zone),true);
 });
+
+
+test('acceptance across midnight starts on the later shared civil date and excludes future dates',()=>{
+ const dates=['2026-09-27','2026-09-28','2026-09-29','2026-09-30','2026-10-01','2026-10-02'];
+ const result=friendshipGratitude(dates,dates,'2026-09-27T23:30:00.000Z',now,zone,'UTC');
+ assert.equal(result.start,'2026-09-28');assert.equal(result.current,4);assert.equal(result.longest,4);assert.equal(result.total,4);
+ assert.equal(result.ownToday,'2026-10-01');assert.equal(result.peerToday,'2026-10-01');
+});
