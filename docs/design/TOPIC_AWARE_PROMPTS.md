@@ -1,12 +1,14 @@
 # Topic-aware gratitude prompts: review and delivery workflow
 
-**Proposal for review; no application behaviour changes in this PR.** Based on Jamie’s “2026-11-10 (12:08) - AI Prompt and reflection selection.md”, preserved verbatim in [PROMPTS.md](../../PROMPTS.md#2026-11-12--topic-aware-ai-prompt-workflow-proposal).
+**Delivery workflow approved; AI wording and selection policy remain for review.** Based on Jamie’s “2026-11-10 (12:08) - AI Prompt and reflection selection.md”, preserved verbatim in [PROMPTS.md](../../PROMPTS.md#2026-11-12--topic-aware-ai-prompt-workflow-proposal).
+
+The first implementation, [PR #30](https://github.com/DrBrrl/gratitude/pull/30), adds manual reflection topics on saved and detailed cards, searchable custom/built-in choices, private events, replay and JSON export metadata. Historical AI classification, topic-aware generation and lunar modes remain later stages. Native JSON journal restore remains unimplemented; the existing alternate-app ZIP importer starts imported writing unclassified. The candidate AI instructions below are not live.
 
 The intended result is a fresh, relevant invitation to notice something new. A request focuses on one selected interest, uses matching historical reflections as background, and avoids asking the user to repeat a reflection they have already written. Occasional review prompts are a separate, visible mode. Imports and older writing participate through editable topic assignments.
 
 ## What exists and what changes
 
-Checked against main `24402fdd`:
+Pre-implementation baseline, checked against main `24402fdd`:
 
 | Area | Current implementation | Proposed change |
 | --- | --- | --- |
