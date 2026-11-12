@@ -2,7 +2,7 @@
 
 # Send one hug each day
 
-Accepted friends exchange hugs with an outlined or filled heart. The recipient can pause incoming hugs. The sender cannot send another hug on the same local calendar day. Full replay preserves the action and preferences; community gratitude replaces the old inbox. Every action has an unmasked zero-pixel screenshot with checks beneath its image.
+Accepted friends exchange hugs with an outlined or filled heart. The recipient can pause incoming hugs. The sender cannot send another hug on the same local calendar day. The recipient sees Hugged you! below the friend’s heart for their current device day; it survives replay/reload and clears the next day without deleting the hug. Full replay preserves the action and preferences; community gratitude replaces the old inbox. Every action has an unmasked zero-pixel screenshot with checks beneath its image.
 
 Viewport: desktop-chromium.
 
@@ -332,9 +332,27 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Keep today’s received-hug label after reload
+
+![Keep today’s received-hug label after reload](./screenshots/036-same-day-received-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The recipient sees Hugged you! beside that friend, independently of the sender’s filled heart and paused permissions
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to the open Friends page on the recipient’s next local day
+
+![Return to the open Friends page on the recipient’s next local day](./screenshots/037-next-day-focus-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/036-paused-on-sender-desktop-chromium.png)
+![Return to the other friend’s device](./screenshots/038-paused-on-sender-desktop-chromium.png)
 
 **Verifications:**
 
@@ -343,7 +361,7 @@ Viewport: desktop-chromium.
 
 ## Open controls to end the friendship
 
-![Open controls to end the friendship](./screenshots/037-remove-controls-desktop-chromium.png)
+![Open controls to end the friendship](./screenshots/039-remove-controls-desktop-chromium.png)
 
 **Verifications:**
 
@@ -352,7 +370,7 @@ Viewport: desktop-chromium.
 
 ## End the friendship without deleting received hugs
 
-![End the friendship without deleting received hugs](./screenshots/038-remove-friend-desktop-chromium.png)
+![End the friendship without deleting received hugs](./screenshots/040-remove-friend-desktop-chromium.png)
 
 **Verifications:**
 
@@ -361,7 +379,7 @@ Viewport: desktop-chromium.
 
 ## Return to the other friend’s device
 
-![Return to the other friend’s device](./screenshots/039-friendship-ended-desktop-chromium.png)
+![Return to the other friend’s device](./screenshots/041-friendship-ended-desktop-chromium.png)
 
 **Verifications:**
 

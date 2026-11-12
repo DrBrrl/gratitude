@@ -35,3 +35,15 @@ test('a renewed friendship starts at its new acceptance instead of joining two s
  assert.equal(pair.acceptedAt,'2026-09-28T02:00:00.000Z');
  const dates=['2026-09-27','2026-09-28','2026-09-29','2026-09-30'];assert.equal(friendshipGratitude(dates,dates,pair.acceptedAt!,now,zone,zone).current,3);
 });
+
+test('received-hug labels follow the recipient day, survive read state and reset at local midnight including DST',async()=>{
+ const {receivedHugToday}=await import('../../src/lib/friends/domain.ts');
+ const pair={...emptyPair('alice','bob'),status:'accepted' as const,lastHugA:'2026-10-01T13:59:00.000Z',lastHugOffsetA:-600};
+ assert.equal(receivedHugToday(pair,'bob',Date.parse('2026-10-01T13:59:30Z'),zone),true);
+ assert.equal(receivedHugToday(pair,'bob',Date.parse('2026-10-01T14:00:00Z'),zone),false);
+ assert.equal(receivedHugToday(pair,'alice',Date.parse('2026-10-01T13:59:30Z'),zone),false);
+ assert.equal(receivedHugToday(pair,'stranger',Date.parse(now),zone),false);
+ assert.equal(receivedHugToday({...pair,status:'none'},'bob',Date.parse('2026-10-01T13:59:30Z'),zone),false);
+ const dst={...pair,lastHugA:'2026-04-04T13:30:00.000Z'};
+ assert.equal(receivedHugToday(dst,'bob',Date.parse('2026-04-04T16:30:00Z'),zone),true);
+});

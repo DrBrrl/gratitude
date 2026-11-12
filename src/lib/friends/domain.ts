@@ -1,3 +1,4 @@
+import {dayInZone} from '../civil-date.ts';
 /** Social source events contain user actions; all relationship state is derived. */
 export const SOCIAL_VERSION = 2;
 export type ProfileInput = { username: string; displayName: string; discoverable: boolean };
@@ -32,6 +33,12 @@ export function hugDay(now: number, offset: number) { return Math.floor((now + o
 export function huggedToday(pair: PairHead, actor: string, now: number, offset: number) {
   const a = actor === pair.members[0], last = a ? pair.lastHugA : pair.lastHugB, previousOffset = a ? pair.lastHugOffsetA : pair.lastHugOffsetB;
   return !!last && hugDay(Date.parse(last), previousOffset ?? offset) === hugDay(now, offset);
+}
+/** Received status follows the recipient's device day, independently of sender quota and inbox reads. */
+export function receivedHugToday(pair:PairHead,recipient:string,now:number,timeZone:string){
+  if(!pair.members.includes(recipient)||pair.status!=='accepted'||!Number.isFinite(now))return false;
+  const at=recipient===pair.members[0]?pair.lastHugB:pair.lastHugA;
+  return !!at&&dayInZone(at,timeZone)===dayInZone(new Date(now).toISOString(),timeZone);
 }
 export function canHug(pair: PairHead, actor: string, now: number, offset = 0) {
   const a = actor === pair.members[0], last = a ? pair.lastHugA : pair.lastHugB, previousOffset = a ? pair.lastHugOffsetA : pair.lastHugOffsetB;
