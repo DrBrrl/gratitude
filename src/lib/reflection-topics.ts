@@ -17,3 +17,8 @@ export function topicLabel(topic: ReflectionTopic | undefined, answers: Onboardi
   if (!topic?.topicId) return 'Not yet classified';
   return topicChoices(answers).find(option => option.id === topic.topicId)?.label ?? topic.label;
 }
+
+/** Event identities are opaque and can match ordinary object property names. */
+export function reflectionTopic(topics:Record<string,ReflectionTopic>,entryId:string):ReflectionTopic|undefined {
+  return Object.hasOwn(topics,entryId)?topics[entryId]:undefined;
+}

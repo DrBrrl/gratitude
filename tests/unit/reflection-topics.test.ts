@@ -55,3 +55,11 @@ test('legacy imported writing keeps its original identity, prompt and date after
  const initial=replay(source),assigned=applyEvent(initial,event(choose('nature',{entryId:plan.input.entryId}),3));
  assert.deepEqual(assigned.entries,initial.entries);assert.equal(topicLabel(assigned.topics[plan.input.entryId],assigned.onboarding.answers),'Nature & outdoors');assert.equal(JSON.parse(exportJournal(assigned,'json').content).version,4);
 });
+
+test('opaque entry IDs cannot inherit phantom categories from ordinary object properties',()=>{
+ for(const id of ['constructor','__proto__','toString']){
+  const source={...writing,payload:{...writing.payload,entryId:id}} as JournalEvent;
+  const state=replay([source]);assert.equal('topic' in JSON.parse(exportJournal(state,'json').content).entries[0],false);
+  const chosen=applyEvent(state,event(choose('nature',{entryId:id})));assert.equal(JSON.parse(exportJournal(chosen,'json').content).entries[0].topic.id,'nature');
+ }
+});

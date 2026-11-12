@@ -1,4 +1,4 @@
-import { topicLabel } from './reflection-topics.ts';
+import { reflectionTopic, topicLabel } from './reflection-topics.ts';
 import { entryPhotos, type Projection } from './domain.ts';
 import { zipSync, strToU8 } from 'fflate';
 import { entryColour, chronologicalEntries, entryTimestamp } from './journal.ts';
@@ -12,7 +12,13 @@ function localTimestamp(value: string) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 export function exportJournal(state: Projection, format: 'markdown' | 'json') {
-  const entries = chronologicalEntries(state.entries).map((entry) => ({ id: entry.id, createdAt: entry.recordedAt, entryAt: entryTimestamp(entry), prompt: entry.prompt, text: entry.text, colour: entryColour(entry), ...(state.topics[entry.id] ? { topic: {id:state.topics[entry.id].topicId,label:topicLabel(state.topics[entry.id],state.onboarding.answers),origin:state.topics[entry.id].origin} } : {}), ...(entry.origin ? { origin: entry.origin } : {}), ...(entryPhotos(state, entry.id).length ? { photos: entryPhotos(state, entry.id).map(photo => ({ path: `attachments/${photo.photoId}.jpg`, summary: photo.summary, summaryOrigin: photo.origin, summaryStatus: photo.status })) } : {}) }));
+  const entries = chronologicalEntries(state.entries).map((entry) => {
+    const topic=reflectionTopic(state.topics,entry.id);
+    return { id: entry.id, createdAt: entry.recordedAt, entryAt: entryTimestamp(entry), prompt: entry.prompt, text: entry.text, colour: entryColour(entry),
+      ...(topic ? {topic:{id:topic.topicId,label:topicLabel(topic,state.onboarding.answers),origin:topic.origin}} : {}),
+      ...(entry.origin ? { origin: entry.origin } : {}),
+      ...(entryPhotos(state, entry.id).length ? { photos: entryPhotos(state, entry.id).map(photo => ({ path: `attachments/${photo.photoId}.jpg`, summary: photo.summary, summaryOrigin: photo.origin, summaryStatus: photo.status })) } : {}) };
+  });
   if (format === 'json') return { name: 'gratitude-journal.json', type: 'application/json', content: JSON.stringify({ format: 'gratitude-journal', version: Object.keys(state.topics).length ? 4 : entries.some(entry => entry.origin) ? 3 : 2, throughSequence: state.cursor, ...(state.onboarding.answersId?{questionnaire:{version:1,answers:state.onboarding.answers}}:{}), entries }, null, 2) + '\n' };
   // Render in the exporting browser’s local timezone, including historical DST.
   const content = ['# Gratitude journal', ...entries.map((entry) =>
