@@ -1918,3 +1918,11 @@ You've been working for a while! :) Can you summarise what you've been up to and
 ### 2026-11-13 — Continue Today layout completion
 
 Okay! :) big change, thanks for getting through it.
+
+### 2026-11-13 — Recap of requests and PR ownership
+
+Thanks Casey! Merged 30. Have you been keeping notes of the little things i was asking for while you were working yesterday? Can you tell mw what they were again and which PR they are a part of currently?
+
+### 2026-11-13 — Resolve Today PR conflicts before merge
+
+Wonderful thank you! Let's make sure any conflicts in 35 are sorted and i will merge that one. Then we can retarget 31 to main and move from there!
