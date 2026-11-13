@@ -372,3 +372,7 @@ Scenario 014 also uses the existing fifteen-second persistence budget for its fi
 ## Editable reflection topics
 
 Walkthrough [057](tests/e2e/057-reflection-topics/README.md) covers saved/detail topic editing, search, selected value, click-away cancellation, keyboard save, offline failure/retry, reload and full replay without changing the reflection revision. [058](tests/e2e/058-imported-topics/README.md) covers legacy imported writing, unselected custom categories, Escape cancellation and JSON export with original import provenance. Both run at mobile and desktop sizes with the standard unmasked zero-tolerance helper.
+
+## Today button hierarchy
+
+Walkthrough [061](tests/e2e/061-today-buttons/README.md) verifies AI-off and AI-on action order, full-width writing/generation, equal-height smaller starter/backup buttons, a full-width opened backup panel, and unchanged starter/AI actions. It restores 98 fictional backups and waits for import confirmation before comparing the final count. Mobile and desktop documentation embeds every action screenshot with checks underneath, with no masking and zero pixel tolerance.

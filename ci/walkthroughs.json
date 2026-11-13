@@ -28,7 +28,8 @@
     "personal-cloud": ["050"],
     "prompt-rotation": ["052", "053"],
     "onboarding-return": ["054", "055"],
-    "reflection-topics": ["057", "058"]
+    "reflection-topics": ["057", "058"],
+    "today-buttons": ["061"]
   },
   "smoke": ["035"],
   "isolated_components": {
