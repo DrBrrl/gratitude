@@ -13,7 +13,12 @@ test('discarded drafts keep prompts available and saving edited wording consumes
  await page.route(/firebasevertexai.googleapis.com|\/v1\/chat\/completions/,route=>{inference++;return route.abort();});
  await startJournal(page,info,steps,'prompt-rotation');
  const seen=new Set<string>(),categories=new Set<string>();
- const remember=async()=>{const text=(await page.locator('.daily-prompt h2').textContent())!;const prompt=STARTER_CATALOGUE.find(p=>p.text===text);expect(prompt).toBeTruthy();expect(seen.has(text)).toBe(false);expect(categories.has(prompt!.category)).toBe(false);seen.add(text);categories.add(prompt!.category);return text;};
+ const remember=async()=>{
+  // A click returns before the asynchronous offer is stored and rendered.
+  await expect(page.locator('main')).toHaveAttribute('data-prompt-offer-busy','false');
+  if(seen.size)await expect(page.locator('.daily-prompt h2')).not.toHaveText([...seen].at(-1)!);
+  const text=(await page.locator('.daily-prompt h2').textContent())!;const prompt=STARTER_CATALOGUE.find(p=>p.text===text);expect(prompt).toBeTruthy();expect(seen.has(text)).toBe(false);expect(categories.has(prompt!.category)).toBe(false);seen.add(text);categories.add(prompt!.category);return text;
+ };
  const first=await remember();
  for(let i=0;i<3;i++)await steps.action(`starter-${i+1}`,'Ask for a different starter category',()=>page.getByRole('button',{name:'Another starter prompt',exact:true}).click(),async()=>{await remember();expect(inference).toBe(0);});
  const selected=(await page.locator('.daily-prompt h2').textContent())!;

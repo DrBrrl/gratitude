@@ -18,7 +18,7 @@ function same(a: unknown, b: unknown) {
 }
 
 /** Atomically reserve the normalized lookup key alongside the literal user action. */
-export async function saveFriendProfile(db: Firestore, uid: string, input: ProfileInput, eventId = crypto.randomUUID()) {
+export async function saveFriendProfile(db: Firestore, uid: string, input: ProfileInput, eventId: string = crypto.randomUUID()) {
   validateProfile(input);
   const headRef = profileRef(db, uid), eventRef = doc(db, `${headRef.path}/events/${eventId}`), nameRef = doc(db, `friendUsernames/${usernameKey(input.username)}`);
   await runTransaction(db, async tx => {
@@ -62,7 +62,7 @@ export async function appendFriendAction(db: Firestore, actorUid: string, comman
       return pairId;
     }
     let before: PairProjection;
-    if (head.exists()) before = { ...decodePair(head.data()), hugs: [] };
+    if (head.exists()) before = { ...decodePair(head.data()), hugs: [], acceptedAt: null };
     else {
       if (!['FriendRequestSent','FriendBlocked'].includes(command.type)) throw new Error('Send a friend request first.');
       before = emptyPair(actorUid, command.targetUid);
@@ -104,8 +104,8 @@ export async function acknowledgeHug(db: Firestore, uid: string, pairId: string,
 }
 
 export type DiscoveredProfile = Pick<Profile, 'uid' | 'username' | 'displayName'>;
-export type FriendsView = { sharing: SharingProjection; gratitude: Record<string, SharedGratitude>; streaksLoading: boolean; profile: Profile; pairs: Record<string, PairProjection>; peers: Record<string, Profile>; ready: boolean; synced: boolean; error: string };
-type Checkpoint = { version: 3; sharing: SharingProjection; uid: string; profile: Profile; pairs: Record<string, PairProjection>; inbox: InboxProjection };
+export type FriendsView = { publicationReady:boolean; sharing: SharingProjection; gratitude: Record<string, SharedGratitude>; streaksLoading: boolean; profile: Profile; pairs: Record<string, PairProjection>; peers: Record<string, Profile>; ready: boolean; synced: boolean; error: string };
+type Checkpoint = { version: 4; sharing: SharingProjection; uid: string; profile: Profile; pairs: Record<string, PairProjection>; inbox: InboxProjection };
 async function digest(value: unknown) { return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(value)))), n => n.toString(16).padStart(2, '0')).join(''); }
 export class FriendsRepository {
   private cache: IDBPDatabase | null = null;
@@ -120,7 +120,7 @@ export class FriendsRepository {
   private db: Firestore; private uid: string; private scope: string; private notify: (view: FriendsView) => void;
   constructor(db: Firestore, uid: string, scope: string, notify: (view: FriendsView) => void) {
     this.db = db; this.uid = uid; this.scope = scope; this.notify = notify;
-    this.state = { sharing: emptySharing(uid), gratitude: Object.create(null), streaksLoading: false, profile: emptyProfile(uid), pairs: {}, peers: Object.create(null), ready: false, synced: false, error: '' };
+    this.state = { publicationReady:false, sharing: emptySharing(uid), gratitude: Object.create(null), streaksLoading: false, profile: emptyProfile(uid), pairs: {}, peers: Object.create(null), ready: false, synced: false, error: '' };
   }
   private emit() { if (!this.stopped) this.notify({ ...this.state, streaksLoading: this.gratitudeLoading.size > 0, gratitude: { ...this.state.gratitude }, pairs: { ...this.state.pairs }, peers: { ...this.state.peers } }); }
   private enqueue(task: () => Promise<void>) {
@@ -135,17 +135,17 @@ export class FriendsRepository {
     const cached = await this.cache.get('projection', 'checkpoint');
     if (cached) {
       const c = cached.value as Checkpoint;
-      if (c.version === 3 && c.sharing?.uid === this.uid && c.uid === this.uid && c.profile?.uid === this.uid && c.pairs && c.inbox && cached.digest === await digest(c)) {
+      if (c.version === 4 && c.sharing?.uid === this.uid && c.uid === this.uid && c.profile?.uid === this.uid && c.pairs && c.inbox && cached.digest === await digest(c)) {
         this.inbox=c.inbox; this.state = { ...this.state, sharing: c.sharing, profile: c.profile, pairs: c.pairs, ready: true }; this.emit();
       } else await this.cache.delete('projection', 'checkpoint');
     }
     if (this.stopped) return;
     const changed = () => { void this.enqueue(() => this.refresh()); };
     const failed = () => { if (!this.stopped) { this.state.error = 'Friends are unavailable. Reconnect to refresh.'; this.state.ready = true; this.state.synced = false; this.emit(); } };
-    this.stops = [onSnapshot(doc(this.db,`friendSharing/${this.uid}`),changed,failed),onSnapshot(doc(this.db,`friendInboxes/${this.uid}`),changed,failed),onSnapshot(profileRef(this.db, this.uid), changed, failed), onSnapshot(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid)), changed, failed)];
+    this.stops = [onSnapshot(doc(this.db,`friendGratitude/${this.uid}`),changed,failed),onSnapshot(doc(this.db,`friendSharing/${this.uid}`),changed,failed),onSnapshot(doc(this.db,`friendInboxes/${this.uid}`),changed,failed),onSnapshot(profileRef(this.db, this.uid), changed, failed), onSnapshot(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid)), changed, failed)];
   }
   async refresh(rebuild = false) {
-    const [profileHead, heads, inboxHead, sharingHead] = await Promise.all([getDocFromServer(profileRef(this.db, this.uid)), getDocsFromServer(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid))), getDocFromServer(doc(this.db,`friendInboxes/${this.uid}`)), getDocFromServer(doc(this.db,`friendSharing/${this.uid}`))]);
+    const [profileHead, heads, inboxHead, sharingHead, ownPublication] = await Promise.all([getDocFromServer(profileRef(this.db, this.uid)), getDocsFromServer(query(collection(this.db, 'friendPairs'), where('members', 'array-contains', this.uid))), getDocFromServer(doc(this.db,`friendInboxes/${this.uid}`)), getDocFromServer(doc(this.db,`friendSharing/${this.uid}`)),getDocFromServer(doc(this.db,`friendGratitude/${this.uid}`))]);
     if (this.stopped) return;
     let profile = rebuild ? emptyProfile(this.uid) : this.state.profile;
     const canonicalProfile = profileHead.exists() ? profileHead.data() as Profile : emptyProfile(this.uid);
@@ -192,8 +192,10 @@ export class FriendsRepository {
     if (!same(sharing,canonicalSharing)) throw new Error('Gratitude sharing history does not match its source cursor.');
     this.inbox=inbox;
     const readPairs=applyReadState(pairs,inbox,this.uid);
-    this.state = { ...this.state, sharing, profile, pairs:readPairs, ready: true, synced: true, error: '' };
-    const checkpoint: Checkpoint = { version: 3, sharing, uid: this.uid, profile, pairs:readPairs, inbox };
+    const published=ownPublication.data() as SharedGratitude|undefined;
+    const publicationReady=!!(sharing.enabled&&published?.schemaVersion===1&&published.sharingEventId===sharing.lastEventId&&published.timeZone===sharing.timeZone&&Array.isArray(published.days)&&published.days.every(validDay)&&new Set(published.days).size===published.days.length);
+    this.state = { ...this.state, publicationReady, sharing, profile, pairs:readPairs, ready: true, synced: true, error: '' };
+    const checkpoint: Checkpoint = { version: 4, sharing, uid: this.uid, profile, pairs:readPairs, inbox };
     await this.cache?.put('projection', { value: checkpoint, digest: await digest(checkpoint) }, 'checkpoint');
     if (this.stopped) return;
     for (const peer of new Set(Object.values(pairs).flatMap(pair => pair.members.filter(uid => uid !== this.uid)))) {

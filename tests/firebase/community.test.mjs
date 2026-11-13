@@ -108,3 +108,16 @@ test('independent devices can retry one sharing action without duplicating it or
  assert.equal((await getDoc(doc(a,`friendSharing/${uid}`))).get('enabled'),false);
  assert.equal((await getDocs(collection(a,`friendSharing/${uid}/events`))).size,2);
 });
+
+test('owner publication status distinguishes an unsaved choice, an unpublished projection and confirmed sharing',async()=>{
+ const uid='publication-status',a=db(uid);await saveFriendProfile(a,uid,profile('publication_status'),'publication-profile');
+ let view;const repository=new FriendsRepository(a,uid,'publication-status',next=>view=next);
+ try{
+  await repository.refresh();assert.equal(view.sharing.sequence,0);assert.equal(view.publicationReady,false);
+  const sharing=await saveGratitudeSharing(a,uid,{enabled:true,timeZone:'Australia/Hobart'},null,'publication-enable');
+  await repository.refresh();assert.equal(view.sharing.enabled,true);assert.equal(view.publicationReady,false);
+  await publishGratitude(a,uid,sharing,emptyProjection());await repository.refresh();assert.equal(view.publicationReady,true);
+  await saveGratitudeSharing(a,uid,{enabled:false,timeZone:'Australia/Hobart'},'publication-enable','publication-disable');
+  await repository.refresh();assert.equal(view.sharing.enabled,false);assert.equal(view.publicationReady,false);
+ }finally{repository.stop();}
+});

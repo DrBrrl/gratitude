@@ -376,3 +376,9 @@ Walkthrough [057](tests/e2e/057-reflection-topics/README.md) covers saved/detail
 ## Today button hierarchy
 
 Walkthrough [061](tests/e2e/061-today-buttons/README.md) verifies AI-off and AI-on action order, full-width writing/generation, equal-height smaller starter/backup buttons, a full-width opened backup panel, and unchanged starter/AI actions. It restores 98 fictional backups and waits for import confirmation before comparing the final count. Mobile and desktop documentation embeds every action screenshot with checks underneath, with no masking and zero pixel tolerance.
+
+## Shared gratitude table
+
+Walkthrough [059](tests/e2e/059-friend-gratitude-table/README.md) follows two fictional users through empty, half-filled and filled hearts, live updates, historic backfill repair from friendship acceptance, full replay and sharing withdrawal. Both viewport walkthroughs retain an unmasked zero-tolerance screenshot after every user action. The historical acceptance is a source-event fixture, rather than a change to a previously recorded event.
+
+Walkthrough [060](tests/e2e/060-sharing-publication/README.md) reproduces an existing profile without sharing consent, explicit confirmation and repair of a missing public calendar without adding another consent event. Walkthrough [038](tests/e2e/038-hugs/README.md) also verifies the received-hug label through replay/reload and the recipient’s next local day in an open tab.

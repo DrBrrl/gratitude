@@ -1926,3 +1926,22 @@ Thanks Casey! Merged 30. Have you been keeping notes of the little things i was 
 ### 2026-11-13 — Resolve Today PR conflicts before merge
 
 Wonderful thank you! Let's make sure any conflicts in 35 are sorted and i will merge that one. Then we can retarget 31 to main and move from there!
+
+### 2026-11-12 — Implement the community gratitude table separately
+
+Implementation clarification: each half of the Friends-table heart uses that person’s current day in their saved sharing timezone.
+
+> Yes — each person’s own current day
+
+### 2026-11-12 — Missing friend-visible streak and daily received-hug label
+
+A note that my friends still can't see my gratitude streak on my friend profile! Also a note that i would like us to add in a little bit of text under the hugging heart for friends when they have received a hug from that friend that says "Hugged you!" Resets every day. :)
+
+
+## 2026-11-12 — Finish agreed PRs
+
+I'm off to bed! Please go ahead and set up the rest of the PRs when you're done with the things we already discussed :)
+
+### 2026-11-13 — Prepare Friends PR after Today merge
+
+I'm re-running 2 failed jobs on main and then will look at merging pr31 :) Can we make sure it's all sorted out and ready?
