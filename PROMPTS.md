@@ -1881,3 +1881,10 @@ Implementation clarification: label for entries without a classification.
 > Oh, also! The community gratitude thing with the table we discussed - i would love a PR for that too! Don't know why i thought we had done that already.
 
 > Cheers Casey! :)
+
+
+### 2026-11-13 — Today button layout
+
+A formatting change to our Today page! See "Today Page buttons.odp" in the folder i put my notes in for you :)
+
+The referenced presentation shows a full-width Write a response button, followed by a full-width Generate a prompt button when AI is enabled, and a smaller side-by-side row of Another starter prompt and Choose a backup prompt. With AI disabled, the smaller row follows Write a response directly.
