@@ -1888,3 +1888,25 @@ Implementation clarification: label for entries without a classification.
 A formatting change to our Today page! See "Today Page buttons.odp" in the folder i put my notes in for you :)
 
 The referenced presentation shows a full-width Write a response button, followed by a full-width Generate a prompt button when AI is enabled, and a smaller side-by-side row of Another starter prompt and Choose a backup prompt. With AI disabled, the smaller row follows Write a response directly.
+
+Referenced presentation text, verbatim in shape order (the original slide supplies the layout):
+
+```text
+Write a response
+Another starter prompt
+Write a response
+Generate a prompt
+Choose a backup prompt (98)
+What it looks like now:
+What I want for people with AI prompts on:
+Write a response
+Write a response
+Generate a prompt
+Choose a backup prompt (98)
+Another starter prompt
+What I want for people with AI prompts off:
+Write a response
+Write a response
+Choose a backup prompt (98)
+Another starter prompt
+```
