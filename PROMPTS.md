@@ -1910,3 +1910,11 @@ Write a response
 Choose a backup prompt (98)
 Another starter prompt
 ```
+
+### 2026-11-13 — Today layout progress request
+
+You've been working for a while! :) Can you summarise what you've been up to and where i might see the progress?
+
+### 2026-11-13 — Continue Today layout completion
+
+Okay! :) big change, thanks for getting through it.
