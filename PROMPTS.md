@@ -1941,3 +1941,7 @@ A note that my friends still can't see my gratitude streak on my friend profile!
 ## 2026-11-12 — Finish agreed PRs
 
 I'm off to bed! Please go ahead and set up the rest of the PRs when you're done with the things we already discussed :)
+
+### 2026-11-13 — Prepare Friends PR after Today merge
+
+I'm re-running 2 failed jobs on main and then will look at merging pr31 :) Can we make sure it's all sorted out and ready?
