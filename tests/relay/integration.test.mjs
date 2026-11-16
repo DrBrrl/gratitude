@@ -111,3 +111,18 @@ test('personal-key classification requires separate consent, an active claim and
   else await assert.rejects(f.invoke({auth:auth(uid),data}),error=>error.code==='failed-precondition');
  }
 });
+test('pausing a personal-cloud batch retains an in-flight answer, while cancellation rejects it',async()=>{
+ for(const operation of ['pause','cancel']){
+  const uid=`relay-classify-${operation}`;let f;
+  f=await prepareCloud(uid,{allowPersonal:true,onGenerate:async()=>{await appendReflection(f.db,uid,{eventId:'class-control',type:'ClassificationBatchControlled',schemaVersion:1,payload:{previousEventId:'class-request',batchId:'class-batch',operation}});}});
+  await appendReflection(f.db,uid,{eventId:'class-write',type:'ReflectionWritten',schemaVersion:1,payload:{entryId:'entry',expectedRevision:0,starterId:'small-moment-v1',text:'A fictional walk.'}});
+  await appendReflection(f.db,uid,{eventId:'class-consent',type:'ClassificationConsentChosen',schemaVersion:1,payload:{previousEventId:null,enabled:true,provider:'personal-gemini',model,connectionId:'connection',connectionRevision:f.saved.revision}});
+  const target={kind:'reflection',id:'entry',revision:1,previousTopicId:null};
+  await appendReflection(f.db,uid,{eventId:'class-batch',type:'ClassificationBatchRequested',schemaVersion:1,payload:{previousEventId:'class-consent',consentId:'class-consent',answersId:null,catalogueVersion:1,targets:{reflection_entry:'1:'}}});
+  await appendReflection(f.db,uid,{eventId:'class-request',type:'ClassificationRequested',schemaVersion:1,payload:{previousEventId:'class-batch',batchId:'class-batch',target,retryOf:null}});
+  await claimClassification(f.db,uid,'class-request','worker');
+  const pending=f.invoke({auth:auth(uid),data:{...f.data,requestId:'class-request',system:'Classify this fictional text.',context:'A fictional walk.'}});
+  if(operation==='pause')assert.equal((await pending).finishReason,'STOP');else await assert.rejects(pending,error=>error.code==='failed-precondition');
+  assert.equal(f.network.calls.filter(c=>c.init.method==='POST').length,1);
+ }
+});

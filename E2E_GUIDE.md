@@ -382,3 +382,11 @@ Walkthrough [061](tests/e2e/061-today-buttons/README.md) verifies AI-off and AI-
 Walkthrough [059](tests/e2e/059-friend-gratitude-table/README.md) follows two fictional users through empty, half-filled and filled hearts, live updates, historic backfill repair from friendship acceptance, full replay and sharing withdrawal. Both viewport walkthroughs retain an unmasked zero-tolerance screenshot after every user action. The historical acceptance is a source-event fixture, rather than a change to a previously recorded event.
 
 Walkthrough [060](tests/e2e/060-sharing-publication/README.md) reproduces an existing profile without sharing consent, explicit confirmation and repair of a missing public calendar without adding another consent event. Walkthrough [038](tests/e2e/038-hugs/README.md) also verifies the received-hug label through replay/reload and the recipient’s next local day in an open tab.
+
+## Explicit reflection and backup classification
+
+Walkthrough [062](tests/e2e/062-reflection-classification/README.md) grants separate classification consent, classifies one fictional reflection using an intercepted Gemini response, manually corrects its category, then reloads and fully replays without inference. It verifies the exact classification instruction and context vocabulary, with no questionnaire identity, photos or unrelated writing.
+
+Walkthrough [063](tests/e2e/063-backup-classification/README.md) imports two fictional questions, starts a bounded batch, holds the first response while pausing, reloads and explicitly resumes. It rejects a malformed category, retries to Unknown, corrects a backup manually without consuming it, and withdraws consent. Both viewports use the ordinary action-by-action helper, unmasked full-page comparisons, `maxDiffPixels: 0` and `threshold: 0`; generated walkthroughs embed each screenshot before its checks. Existing AI-settings consumers also retain their updated full-page screenshots for the new classification link.
+
+Authenticated classification tests include twenty-target validation, a forged target near the end of a batch, owner isolation, competing claims, changed external bindings and manual/text/consent/cancel races. Provider integration remains fictional in tests; running checks never classifies a real journal.

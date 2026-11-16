@@ -76,3 +76,22 @@ test('imported reflection classification preserves the historical instant, sourc
  const before=structuredClone(f.state.entries.find(e=>e.id===plan.input.entryId));f.consent();const b=f.batch('reflection',plan.input.entryId),r=f.request(b,'reflection',plan.input.entryId);f.reply(r);
  assert.deepEqual(f.state.entries.find(e=>e.id===plan.input.entryId),before);assert.equal(f.state.topics[plan.input.entryId].origin,'ai');
 });
+test('LM Studio consent pins the chosen computer without placing its URL or credentials in source events',async()=>{
+ const {classificationDestination}=await import('../../src/lib/ai/classification-connection.ts');
+ const connection={provider:'lm-studio' as const,baseUrl:'https://fictional-one.example',model:'google/gemma-4-31b',token:'fictional-secret'};
+ const first=await classificationDestination(connection);assert.deepEqual(await classificationDestination({...connection,token:'a different token'}),first);assert.deepEqual(await classificationDestination({...connection,baseUrl:connection.baseUrl+'/'}),first);
+ assert.notEqual((await classificationDestination({...connection,baseUrl:'https://fictional-two.example'})).connectionRevision,first.connectionRevision);
+ assert.ok(!JSON.stringify(first).includes('fictional-one.example'));assert.ok(!JSON.stringify(first).includes('fictional-secret'));
+ const f=fixture();f.action('ClassificationConsentChosen',{enabled:true,...first});assert.equal(f.state.classification.consent?.payload.connectionRevision,first.connectionRevision);
+});
+test('opaque numeric request identities retain source chronology rather than JavaScript property order',()=>{
+ const f=fixture();f.consent();const batchId=f.batch(),target=currentTarget(f.state,'reflection','entry');
+ f.append({eventId:'2',type:'ClassificationRequested',schemaVersion:1,payload:{previousEventId:f.state.classification.lastEventId,batchId,target,retryOf:null}});
+ f.action('ClassificationFailed',{requestId:'2',reason:'unavailable'});
+ f.append({eventId:'1',type:'ClassificationRequested',schemaVersion:1,payload:{previousEventId:f.state.classification.lastEventId,batchId,target,retryOf:'2'}});f.reply('1');
+ assert.deepEqual(f.state.classification.requestOrder,['2','1']);assert.deepEqual(batchProgress(f.state.classification,batchId),{completed:1,failed:0,remaining:0});
+});
+test('bounded Unicode observations remain replayable even when they are not valid category IDs',()=>{
+ const f=fixture();f.consent();const request=f.request(f.batch()),text='🙂'.repeat(4000);f.reply(request,text);assert.equal(f.state.classification.outcomes[request],'invalid');
+ assert.equal((f.state.classification.replies[request].payload as {text:string}).text,text);assert.deepEqual(replay(f.log),f.state);
+});

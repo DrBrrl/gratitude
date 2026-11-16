@@ -345,6 +345,131 @@ service cloud.firestore {
             || p.topicId is string && p.topicId.matches('^custom_[a-zA-Z0-9_-]{0,73}$') && p.answersId != null && p.topicId in get(eventPath(p.answersId)).data.payload.customOrder)
           && getAfter(topicPath(p.entryId)).data.lastEventId == e.eventId;
       }
+      function nullableId(v) { return v == null || validId(v); }
+      function classPath() { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/classification/control; }
+      function classBefore() { let head=get(classPath());return head == null ? {'lastEventId':null,'consentId':null,'batchId':null,'requestId':null,'provider':'gemini','model':'gemini-3.6-flash','connectionId':null,'connectionRevision':null} : head.data; }
+      function classAnswers() { let head=get(/databases/$(database)/documents/users/$(uid)/streams/$(generation)/onboarding/control);return head == null ? null : head.data.answersId; }
+      function classBatch(id) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/classificationBatches/$(id); }
+      function classItem(p) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/classificationItems/$(p.batchId + '_' + p.target.kind + '_' + p.target.id); }
+      function classClaim(id) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/classificationClaims/$(id); }
+      function classTopic(t) { return t.kind == 'reflection' ? topicPath(t.id) : /databases/$(database)/documents/users/$(uid)/streams/$(generation)/backupTopics/$(t.id); }
+      function classTarget(t) { return t is map && t.keys().hasAll(['kind','id','revision','previousTopicId']) && t.keys().hasOnly(['kind','id','revision','previousTopicId']) && t.kind in ['reflection','backup'] && validId(t.id) && t.revision is int && t.revision > 0 && nullableId(t.previousTopicId); }
+      function classTargetAt(m,ks,i) { return i >= ks.size() || ks[i].matches('^(reflection|backup)_[a-zA-Z0-9_-]{1,80}$') && m[ks[i]] is string && m[ks[i]].matches('^[1-9][0-9]{0,14}:[a-zA-Z0-9_-]{0,80}$'); }
+      function classTargets(m) { let ks=m.keys();return ks.size() > 0 && ks.size() <= 20 && classTargetAt(m,ks,0) && classTargetAt(m,ks,1) && classTargetAt(m,ks,2) && classTargetAt(m,ks,3) && classTargetAt(m,ks,4) && classTargetAt(m,ks,5) && classTargetAt(m,ks,6) && classTargetAt(m,ks,7) && classTargetAt(m,ks,8) && classTargetAt(m,ks,9); }
+      function classRemainingTargets(m) { let ks=m.keys();return classTargetAt(m,ks,10) && classTargetAt(m,ks,11) && classTargetAt(m,ks,12) && classTargetAt(m,ks,13) && classTargetAt(m,ks,14) && classTargetAt(m,ks,15) && classTargetAt(m,ks,16) && classTargetAt(m,ks,17) && classTargetAt(m,ks,18) && classTargetAt(m,ks,19); }
+      function classTopicMatches(t) { let head=get(classTopic(t));return (head == null ? null : head.data.lastEventId) == t.previousTopicId; }
+      function classRevision(t) { let head=get(pointerPath(t.id));return head != null && get(eventPath(head.data.lastEventId)).data.payload.expectedRevision + 1 == t.revision; }
+      function classBackupCurrent(t) { let head=get(backupPath(t.id));return t.revision == 1 && (head == null || head.data.lastEventId == t.id); }
+      function classTargetCurrent(t) {
+        return classTopicMatches(t) && (t.kind == 'reflection' ? classRevision(t) : classBackupCurrent(t));
+      }
+      function classKnownTopic(id,answersId) {
+        return id == 'unknown' || id in ['nature','community','art','books','music','movies','science','wildlife','family','pets','friends','food','home','movement','learning','discovery','technology']
+          || id is string && answersId != null && get(eventPath(answersId)).data.type == 'OnboardingAnswersConfirmed' && id in get(eventPath(answersId)).data.payload.customOrder;
+      }
+      function classDestination(p) {
+        return p.provider in ['gemini','lm-studio','ollama','openai-compatible','personal-gemini'] && p.model is string && p.model.matches('^[a-zA-Z0-9][a-zA-Z0-9_.:/@+-]{0,79}$')
+          && (p.provider == 'gemini' ? p.connectionId == null && p.connectionRevision == null : p.provider == 'lm-studio' ? p.connectionId == 'lm-studio' && p.connectionRevision is string && p.connectionRevision.matches('^[a-f0-9]{64}$') : validId(p.connectionId) && validId(p.connectionRevision));
+      }
+      function classBinding(p) {
+        return p.provider in ['gemini','lm-studio'] || get(/databases/$(database)/documents/users/$(uid)/privateConnections/$(p.connectionId)).data.provider == p.provider
+          && get(/databases/$(database)/documents/users/$(uid)/privateConnections/$(p.connectionId)).data.model == p.model
+          && get(/databases/$(database)/documents/users/$(uid)/privateConnections/$(p.connectionId)).data.revision == p.connectionRevision;
+      }
+      function classRequestAllowed(e) {
+        let p=e.payload;
+        let b=get(eventPath(p.batchId)).data.payload;
+        let c=classBefore();
+        return p.batchId == c.batchId && get(classBatch(p.batchId)).data.status == 'running' && b.targets[p.target.kind + '_' + p.target.id] == string(p.target.revision) + ':' + (p.target.previousTopicId == null ? '' : p.target.previousTopicId)
+          && b.consentId == c.consentId && b.answersId == classAnswers() && classBinding(get(eventPath(c.consentId)).data.payload)
+          && (c.requestId == null || request.time >= get(eventPath(c.requestId)).data.recordedAt + duration.value(180,'s'))
+          && getAfter(classItem(p)).data.requestId == e.eventId && getAfter(classItem(p)).data.resultId == null;
+      }
+      function validClassification(e) {
+        let p=e.payload;
+        let kind=e.type;
+        return e.schemaVersion == 1 && nullableId(p.previousEventId) && p.previousEventId == classBefore().lastEventId && getAfter(classPath()).data.lastEventId == e.eventId
+          && (kind == 'ClassificationConsentChosen' ? p.keys().hasAll(['previousEventId','enabled','provider','model','connectionId','connectionRevision']) && p.keys().hasOnly(['previousEventId','enabled','provider','model','connectionId','connectionRevision']) && p.enabled is bool && classDestination(p) && (!p.enabled || classBinding(p))
+          : kind == 'ClassificationBatchRequested' ? p.keys().hasAll(['previousEventId','consentId','answersId','catalogueVersion','targets']) && p.keys().hasOnly(['previousEventId','consentId','answersId','catalogueVersion','targets']) && p.consentId == classBefore().consentId && get(eventPath(p.consentId)).data.payload.enabled == true && p.answersId == classAnswers() && p.catalogueVersion == 1 && classTargets(p.targets) && getAfter(classBatch(e.eventId)).data.status == 'running' && getAfter(classBatch(e.eventId)).data.lastEventId == e.eventId
+          : kind == 'ClassificationBatchControlled' ? p.keys().hasAll(['previousEventId','batchId','operation']) && p.keys().hasOnly(['previousEventId','batchId','operation']) && p.batchId == classBefore().batchId && p.operation in ['pause','resume','cancel'] && getAfter(classBatch(p.batchId)).data.lastEventId == e.eventId && getAfter(classBatch(p.batchId)).data.status == (p.operation == 'pause' ? 'paused' : p.operation == 'resume' ? 'running' : 'cancelled')
+          : kind == 'ClassificationRequested' ? p.keys().hasAll(['previousEventId','batchId','target','retryOf']) && p.keys().hasOnly(['previousEventId','batchId','target','retryOf']) && validId(p.batchId) && nullableId(p.retryOf) && classTarget(p.target) && classRequestAllowed(e)
+          : kind == 'ClassificationResponseReceived' ? p.keys().hasAll(['previousEventId','requestId','text','model','finishReason']) && p.keys().hasOnly(['previousEventId','requestId','text','model','finishReason']) && text(p.text,4000) && text(p.model,100) && p.model.size() > 0 && p.finishReason == 'STOP' && classReply(e)
+          : kind == 'ClassificationFailed' ? p.keys().hasAll(['previousEventId','requestId','reason']) && p.keys().hasOnly(['previousEventId','requestId','reason']) && p.reason in ['unavailable','invalid-response'] && classReply(e)
+          : kind == 'BackupTopicChosen' && p.keys().hasAll(['previousEventId','target','answersId','topicId']) && p.keys().hasOnly(['previousEventId','target','answersId','topicId']) && classTarget(p.target) && p.target.kind == 'backup' && classKnownBackup(p.target.id) && p.answersId == classAnswers() && (p.topicId == null || classKnownTopic(p.topicId,p.answersId)) && getAfter(classTopic(p.target)).data.lastEventId == e.eventId);
+      }
+      function classReply(e) {
+        return validId(e.payload.requestId) && get(eventPath(e.payload.requestId)).data.type == 'ClassificationRequested' && get(classClaim(e.payload.requestId)).data.resultId == null && getAfter(classClaim(e.payload.requestId)).data.resultId == e.eventId;
+      }
+      function classReplyBinding(e) { let r=get(eventPath(e.payload.requestId)).data.payload;let b=get(eventPath(r.batchId)).data.payload;return classBefore().consentId != b.consentId || classBinding(classBefore()); }
+      function classCanApply(e) {
+        let r=get(eventPath(e.payload.requestId)).data.payload;
+        let b=get(eventPath(r.batchId)).data.payload;
+        let c=classBefore();
+        return e.type == 'ClassificationResponseReceived' && c.batchId == r.batchId && c.requestId == e.payload.requestId && c.consentId == b.consentId
+          && b.answersId == classAnswers() && get(classBatch(r.batchId)).data.status != 'cancelled' && classTargetCurrent(r.target) && classKnownTopic(e.payload.text,b.answersId);
+      }
+      match /classification/{id} {
+        allow read: if owns(uid);
+        allow create,update: if owns(uid) && generation == 'v1' && id == 'control'
+          && request.resource.data.keys().hasAll(['lastEventId','consentId','batchId','requestId','provider','model','connectionId','connectionRevision']) && request.resource.data.keys().hasOnly(['lastEventId','consentId','batchId','requestId','provider','model','connectionId','connectionRevision']) && validId(request.resource.data.lastEventId) && !exists(eventPath(request.resource.data.lastEventId))
+          && classHead(getAfter(eventPath(request.resource.data.lastEventId)).data);
+        allow delete: if false;
+        function classHead(e) {
+          let before=classBefore();let after=request.resource.data;
+          return e.type in ['ClassificationConsentChosen','ClassificationBatchRequested','ClassificationBatchControlled','ClassificationRequested','ClassificationResponseReceived','ClassificationFailed','BackupTopicChosen']
+            && after.provider == (e.type == 'ClassificationConsentChosen' ? e.payload.provider : before.provider) && after.model == (e.type == 'ClassificationConsentChosen' ? e.payload.model : before.model) && after.connectionId == (e.type == 'ClassificationConsentChosen' ? e.payload.connectionId : before.connectionId) && after.connectionRevision == (e.type == 'ClassificationConsentChosen' ? e.payload.connectionRevision : before.connectionRevision)
+            && after.consentId == (e.type == 'ClassificationConsentChosen' ? e.eventId : before.consentId)
+            && after.batchId == (e.type == 'ClassificationBatchRequested' ? e.eventId : before.batchId)
+            && (e.type in ['ClassificationResponseReceived','ClassificationFailed'] ? classReplyBinding(e) : true)
+            && after.requestId == (e.type == 'ClassificationRequested' ? e.eventId : e.type in ['ClassificationResponseReceived','ClassificationFailed'] && before.requestId == e.payload.requestId ? null : before.requestId);
+        }
+      }
+      match /classificationBatches/{id} {
+        allow read: if owns(uid);
+        allow create,update: if owns(uid) && generation == 'v1' && request.resource.data.keys().hasAll(['lastEventId','status']) && request.resource.data.keys().hasOnly(['lastEventId','status']) && !exists(eventPath(request.resource.data.lastEventId))
+          && (getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ClassificationBatchRequested' ? id == request.resource.data.lastEventId && classRemainingTargets(getAfter(eventPath(request.resource.data.lastEventId)).data.payload.targets) : getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ClassificationBatchControlled' && getAfter(eventPath(request.resource.data.lastEventId)).data.payload.batchId == id);
+        allow delete: if false;
+      }
+      match /classificationItems/{id} {
+        allow read: if owns(uid);
+        allow create,update: if owns(uid) && generation == 'v1' && request.resource.data.keys().hasAll(['requestId','resultId']) && request.resource.data.keys().hasOnly(['requestId','resultId']) && request.resource.data.resultId == null && !exists(eventPath(request.resource.data.requestId))
+          && validItem(getAfter(eventPath(request.resource.data.requestId)).data);
+        allow delete: if false;
+        function validItem(e) {
+          let p=e.payload;
+          return e.type == 'ClassificationRequested' && id == p.batchId + '_' + p.target.kind + '_' + p.target.id && p.retryOf == (resource == null ? null : resource.data.requestId) && classTargetCurrent(p.target)
+            && (p.target.previousTopicId == null || get(eventPath(p.target.previousTopicId)).data.type == 'ClassificationResponseReceived')
+            && (p.target.kind == 'reflection' || get(eventPath(p.target.id)).data.type == 'BackupPromptImported' || get(eventPath(p.target.id)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.target.id)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25]);
+        }
+      }
+      match /classificationTargetClaims/{id} {
+        allow read: if owns(uid);
+        allow create: if owns(uid) && generation == 'v1' && request.resource.data.keys().hasAll(['owner','claimedAt']) && request.resource.data.keys().hasOnly(['owner','claimedAt']) && request.resource.data.claimedAt == request.time && validId(request.resource.data.owner)
+          && targetClaim(get(eventPath(id)).data.payload) && getAfter(classClaim(id)).data.owner == request.resource.data.owner;
+        allow update,delete: if false;
+        function targetClaim(p) { return classTargetCurrent(p.target) && get(classBatch(p.batchId)).data.status == 'running'; }
+      }
+      match /classificationClaims/{id} {
+        allow read: if owns(uid);
+        allow create: if owns(uid) && generation == 'v1' && request.resource.data.keys().hasAll(['owner','claimedAt','resultId']) && request.resource.data.keys().hasOnly(['owner','claimedAt','resultId']) && request.resource.data.resultId == null && validId(request.resource.data.owner) && request.resource.data.claimedAt == request.time
+          && classBefore().requestId == id && get(eventPath(id)).data.type == 'ClassificationRequested'
+          && request.time < get(eventPath(id)).data.recordedAt + duration.value(180,'s') && activeClaim(get(eventPath(id)).data.payload) && getAfter(/databases/$(database)/documents/users/$(uid)/streams/$(generation)/classificationTargetClaims/$(id)).data.owner == request.resource.data.owner;
+        allow update: if owns(uid) && generation == 'v1' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['resultId']) && resource.data.resultId == null && validId(request.resource.data.resultId) && !exists(eventPath(request.resource.data.resultId)) && claimReceipt(getAfter(eventPath(request.resource.data.resultId)).data);
+        allow delete: if false;
+        function claimReceipt(e) { let t=get(eventPath(id)).data.payload.target;return e.type in ['ClassificationResponseReceived','ClassificationFailed'] && e.payload.requestId == id && (classCanApply(e) ? getAfter(classTopic(t)).data.lastEventId == e.eventId : (exists(classTopic(t)) ? getAfter(classTopic(t)).data == get(classTopic(t)).data : !existsAfter(classTopic(t)))); }
+        function activeClaim(p) { let b=get(eventPath(p.batchId)).data.payload;return classBefore().consentId == b.consentId && classAnswers() == b.answersId && classBinding(get(eventPath(b.consentId)).data.payload); }
+      }
+      match /backupTopics/{id} {
+        allow read: if owns(uid);
+        allow create,update: if owns(uid) && generation == 'v1' && request.resource.data.keys().hasAll(['lastEventId']) && request.resource.data.keys().hasOnly(['lastEventId']) && !exists(eventPath(request.resource.data.lastEventId)) && classTopicWrite(getAfter(eventPath(request.resource.data.lastEventId)).data,'backup',id);
+        allow delete: if false;
+      }
+      function classKnownBackup(id) { return get(eventPath(id)).data.type == 'BackupPromptImported' || get(eventPath(id)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(id)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25]; }
+      function classTopicWrite(e,kind,id) {
+        return e.type == 'BackupTopicChosen' ? kind == 'backup' && e.payload.target.id == id && classTargetCurrent(e.payload.target)
+          : e.type == 'ClassificationResponseReceived' && get(eventPath(e.payload.requestId)).data.payload.target.kind == kind && get(eventPath(e.payload.requestId)).data.payload.target.id == id && classCanApply(e);
+      }
+
       function validStreamAction(e) {
         let kind = e.type;
         return kind in ['AIChoicesConfirmed','PromptRequested','PromptResponseReceived','AIRequestFailed','PromptFeedbackSubmitted','StarterPromptChosen'] ? validAI(e)
@@ -353,6 +478,7 @@ service cloud.firestore {
           : kind == 'AccentColourChosen' ? validAppearance(e)
           : kind in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(e)
           : kind in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(e)
+          : kind in ['ClassificationConsentChosen','ClassificationBatchRequested','ClassificationBatchControlled','ClassificationRequested','ClassificationResponseReceived','ClassificationFailed','BackupTopicChosen'] ? validClassification(e)
           : kind == 'ReflectionTopicChosen' ? validTopicChoice(e)
           : kind == 'ReflectionWritten' ? validReflection(e)
           : kind.matches('Photo.*') && validPhoto(e);
@@ -414,8 +540,7 @@ service cloud.firestore {
         allow create, update: if owns(uid) && generation == 'v1' && validId(entryId)
           && request.resource.data.keys().hasAll(['lastEventId']) && request.resource.data.keys().hasOnly(['lastEventId'])
           && validId(request.resource.data.lastEventId) && !exists(eventPath(request.resource.data.lastEventId))
-          && getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ReflectionTopicChosen'
-          && getAfter(eventPath(request.resource.data.lastEventId)).data.payload.entryId == entryId;
+          && (getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'ReflectionTopicChosen' && getAfter(eventPath(request.resource.data.lastEventId)).data.payload.entryId == entryId || classTopicWrite(getAfter(eventPath(request.resource.data.lastEventId)).data,'reflection',entryId));
         allow delete: if false;
       }
       match /entries/{entryId} {
