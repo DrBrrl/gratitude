@@ -1,6 +1,6 @@
 # AI reflection classification: implementation handoff
 
-Status: manual/batch implementation under verification on current main, including the merged manual topic model from [PR #30](https://github.com/DrBrrl/gratitude/pull/30). This is stage 3 of the approved [delivery workflow](../TOPIC_AWARE_PROMPTS.md).
+Status: manual/batch classification implemented and locally verified on current main, including the merged manual topic model from [PR #30](https://github.com/DrBrrl/gratitude/pull/30). This is stage 3 of the approved [delivery workflow](../TOPIC_AWARE_PROMPTS.md).
 
 ## User experience
 
