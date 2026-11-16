@@ -1,3 +1,7 @@
+import {classificationDestination} from '../ai/classification-connection.ts';
+import type {ModelConnection} from '../ai/connection-contract.ts';
+import {CLASSIFICATION_SYSTEM,classificationContext,targetMatches,batchRequests,type ClassificationAction,type ClassificationTarget,type ClassificationReply} from '../classification.ts';
+import {claimClassification} from './classification.ts';
 import type { TopicAction } from '../reflection-topics';
 import {commitDraft,draftSaveActions,type ReflectionDraft} from '../reflection-draft';
 import {localDay} from '../journal';
@@ -19,7 +23,7 @@ import { erasePhoto, type StagedPhoto } from '../photos';
 import {availableBackups,importedBackup,BACKUP_MINIMUM} from '../backup-prompts';
 
 type Checkpoint = { state: Projection; digest: string };
-export type JournalView = { state: Projection; pending: ReflectionDraft | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean; backupRemoved?: string[]; backupStatus?: string; backupImporting?: boolean; rotationPending?:boolean; repeatOnboarding?:boolean; onboardingPending?:boolean };
+export type JournalView = { state: Projection; pending: ReflectionDraft | null; status: string; error: string; ready: boolean; aiResultPending?: boolean; photoResultsPending?: string[]; photoGenerating?: string[]; photoCleanupPending?: boolean; classificationResultsPending?:boolean; backupRemoved?: string[]; backupStatus?: string; backupImporting?: boolean; rotationPending?:boolean; repeatOnboarding?:boolean; onboardingPending?:boolean };
 async function digest(state: Projection) {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(state)));
   return [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, '0')).join('');
@@ -42,6 +46,9 @@ export class JournalRepository {
   private pendingAnchor: { id: string; sequence: number } | null = null;
   private aiResult: ResponseAction | null = null;
   private generating = false;
+  private classifying=false;
+  private classificationSync:Promise<void>=Promise.resolve();
+  private classificationResults:Record<string,ClassificationReply>={};
   private backupActions:(BackupAction|RotationAction)[]=[];
   private backupSyncing=false;
   private backupQueue=Promise.resolve();
@@ -55,7 +62,7 @@ export class JournalRepository {
   private error = '';
   constructor(private client: FirebaseClient, private uid: string, private notify: (view: JournalView) => void) {}
   private emit() {
-    if (!this.stopped) this.notify({ state: this.backupActions.filter(isRotationAction).reduce((state,action)=>state.rotation.offers.some(o=>o.eventId===action.eventId)||action.type==='PromptAccepted'&&state.rotation.accepted[action.payload.promptId]>=action.payload.day?state:applyEvent(state,{...action,sequence:state.cursor+1,recordedAt:new Date().toISOString()}),this.state), repeatOnboarding:this.repeatOnboarding, rotationPending:this.backupActions.some(isRotationAction), pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, onboardingPending:!!this.setupFinish, backupImporting:this.backupImporting||this.backupActions.some(a=>a.type==='BackupPromptImported'),backupRemoved:this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),backupStatus:this.backupStatus, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
+    if (!this.stopped) this.notify({ state: this.backupActions.filter(isRotationAction).reduce((state,action)=>state.rotation.offers.some(o=>o.eventId===action.eventId)||action.type==='PromptAccepted'&&state.rotation.accepted[action.payload.promptId]>=action.payload.day?state:applyEvent(state,{...action,sequence:state.cursor+1,recordedAt:new Date().toISOString()}),this.state), repeatOnboarding:this.repeatOnboarding, rotationPending:this.backupActions.some(isRotationAction), pending: this.pending, status: this.status, error: this.error, ready: this.ready, aiResultPending: !!this.aiResult, onboardingPending:!!this.setupFinish, backupImporting:this.backupImporting||this.backupActions.some(a=>a.type==='BackupPromptImported'),backupRemoved:this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),backupStatus:this.backupStatus, classificationResultsPending:!!Object.keys(this.classificationResults).length, photoResultsPending: Object.keys(this.photoResults), photoGenerating: [...this.photoRequests], photoCleanupPending: !!Object.keys(this.photoCleanup).length });
   }
   async start() {
     const generation = ++this.listenerGeneration;
@@ -70,13 +77,14 @@ export class JournalRepository {
     this.backupActions=await this.db.get('outbox','backup-actions')??[];
     this.aiResult = await this.db.get('outbox', 'ai-result') ?? null;
     this.photoResults = await this.db.get('outbox', 'photo-results') ?? {};
+    this.classificationResults=await this.db.get('outbox','classification-results')??{};
     this.photoCleanup = await this.db.get('outbox', 'photo-cleanup') ?? {};
     if (Object.keys(this.photoCleanup).length) void this.retryPhotoCleanup().catch(() => {});
     const checkpoint = await this.db.get('cache', 'checkpoint') as Checkpoint | undefined;
     if (checkpoint) {
       try {
         const s = checkpoint.state;
-        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.requestUnits || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance || !s.onboarding || !s.topics || !s.rotation || !Array.isArray(s.rotation.offers) || !s.rotation.accepted || !s.rotation.acceptedText || !s.rotation.requests ||
+        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.requestUnits || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance || !s.onboarding || !s.classification || !s.topics || !s.rotation || !Array.isArray(s.rotation.offers) || !s.rotation.accepted || !s.rotation.acceptedText || !s.rotation.requests ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
           if (!s.lastEventId) throw new Error('Invalid checkpoint anchor');
@@ -247,7 +255,7 @@ export class JournalRepository {
     });
     return this.draftChain;
   }
-  async commitAI(action: TopicAction | RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
+  async commitAI(action: ClassificationAction | TopicAction | RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
     if (!this.ready || this.stopped || !navigator.onLine) throw new Error('Connect and wait for your journal to sync first.');
     const result = await appendReflection(this.client.db, this.uid, action);
     await this.awaitSequence(result.sequence);
@@ -261,6 +269,55 @@ export class JournalRepository {
       await new Promise(resolve => setTimeout(resolve, 20));
     }
     if (this.stopped) throw new Error('This journal session has closed.');
+  }
+  async requestClassification(batchId:string,target:ClassificationTarget,generate:GeneratePrompt,connection?:ModelConnection) {
+    if(this.classifying||this.stopped)throw new Error('A classification is already running.');
+    if(Object.keys(this.classificationResults).length)throw new Error('Sync the received classification before another request.');
+    this.classifying=true;
+    try {
+      const snapshot=this.state,c=snapshot.classification;
+      const batch=c.batches[batchId],consent=c.consent;
+      if(!batch||!consent?.payload.enabled)throw new Error('Review classification consent first.');
+      const destination=connection?await classificationDestination(connection):{provider:generate.target?.provider??'gemini',model:generate.target?.model??'gemini-3.6-flash',connectionId:generate.target&&'connectionId' in generate.target?generate.target.connectionId:null,connectionRevision:generate.target&&'connectionRevision' in generate.target?generate.target.connectionRevision:null};
+      const actual=generate.target;
+      if((actual?.provider??'gemini')!==destination.provider||(actual?.model??'gemini-3.6-flash')!==destination.model||isExternalProvider(destination.provider)&&(!actual||!('connectionId' in actual)||actual.connectionId!==destination.connectionId||actual.connectionRevision!==destination.connectionRevision))throw new Error('The selected generator does not match this classification connection.');
+      const expected=consent.payload;
+      if(Object.entries(destination).some(([key,value])=>expected[key as keyof typeof destination]!==value))throw new Error('The classification connection changed. Review consent before continuing.');
+      const context=classificationContext(snapshot,target);
+      const request:Extract<ClassificationAction,{type:'ClassificationRequested'}>={eventId:crypto.randomUUID(),type:'ClassificationRequested',schemaVersion:1,payload:{previousEventId:c.lastEventId,batchId,target,retryOf:batchRequests(c,batchId,target).at(-1)?.eventId??null}};
+      const result=await this.commitAI(request);
+      if(!result.created)throw new Error('This request may have run already. Wait and explicitly retry if needed.');
+      const latest=this.state.classification;
+      if(this.stopped||latest.consent?.eventId!==consent.eventId||latest.batches[batchId]?.status!=='running'||this.state.onboarding.answersId!==batch.action.payload.answersId||!targetMatches(this.state,target))throw new Error('Classification paused because this item or consent changed.');
+      if(!await claimClassification(this.client.db,this.uid,request.eventId,crypto.randomUUID()))throw new Error('Another device claimed this request. Wait before retrying.');
+      let reply:ClassificationReply;
+      try {
+        const output=await generate(context,{system:CLASSIFICATION_SYSTEM,max:4000,requestId:request.eventId});
+        if(this.stopped)return;
+        reply={eventId:crypto.randomUUID(),type:'ClassificationResponseReceived',schemaVersion:1,payload:{previousEventId:this.state.classification.lastEventId,requestId:request.eventId,text:output.text,model:output.model,finishReason:output.finishReason}};
+      } catch {
+        if(this.stopped)return;
+        reply={eventId:crypto.randomUUID(),type:'ClassificationFailed',schemaVersion:1,payload:{previousEventId:this.state.classification.lastEventId,requestId:request.eventId,reason:'unavailable'}};
+      }
+      this.classificationResults[request.eventId]=reply;
+      await this.db.put('outbox',this.classificationResults,'classification-results');this.emit();
+      await this.syncClassifications();
+    } finally {this.classifying=false;this.emit();}
+  }
+  async syncClassifications() {
+    this.classificationSync=this.classificationSync.catch(()=>{}).then(()=>this.flushClassifications());
+    return this.classificationSync;
+  }
+  private async flushClassifications() {
+    for(const [id,reply] of Object.entries(this.classificationResults)){
+      if(!Object.hasOwn(this.state.classification.replies,id)) {
+        const updated={...reply,payload:{...reply.payload,previousEventId:this.state.classification.lastEventId}} as ClassificationReply;
+        this.classificationResults[id]=updated;await this.db.put('outbox',this.classificationResults,'classification-results');
+        await this.commitAI(updated);
+      }
+      delete this.classificationResults[id];await this.db.put('outbox',this.classificationResults,'classification-results');
+    }
+    this.emit();
   }
   async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string, backup=false, differentFromPromptId?:string) {
     if (this.generating) throw new Error('A prompt is being generated. You can use a saved backup immediately.');
@@ -437,9 +494,9 @@ export class JournalRepository {
   stop() {
     this.stopped = true; this.listenerGeneration++;
     this.unsubscribe?.();
-    void Promise.allSettled([this.chain, this.draftChain,this.backupQueue]).finally(() => this.db?.close());
+    void Promise.allSettled([this.chain, this.draftChain,this.backupQueue,this.classificationSync]).finally(() => this.db?.close());
   }
 }
 
 /** UI-facing contract shared with the development event-fixture adapter. */
-export type JournalStore = Pick<JournalRepository, 'finishOnboarding' | 'syncOnboarding' | 'readOnboardingDraft' | 'writeOnboardingDraft' | 'queueBackups' | 'queueBackup' | 'syncBackups' | 'readImportArchive' | 'storeImportArchive' | 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult' | 'requestPhotoSummary' | 'syncPhotoResult' | 'readStagedPhoto' | 'stagePhoto' | 'clearStagedPhoto' | 'cancelStagedPhoto' | 'removePhoto' | 'retryPhotoCleanup'>;
+export type JournalStore = Pick<JournalRepository, 'requestClassification' | 'syncClassifications' | 'finishOnboarding' | 'syncOnboarding' | 'readOnboardingDraft' | 'writeOnboardingDraft' | 'queueBackups' | 'queueBackup' | 'syncBackups' | 'readImportArchive' | 'storeImportArchive' | 'start' | 'stop' | 'readDraft' | 'writeDraft' | 'clearDraft' | 'save' | 'retry' | 'discardPending' | 'exportSnapshot' | 'rebuild' | 'commitAI' | 'requestPrompt' | 'syncPromptResult' | 'requestPhotoSummary' | 'syncPhotoResult' | 'readStagedPhoto' | 'stagePhoto' | 'clearStagedPhoto' | 'cancelStagedPhoto' | 'removePhoto' | 'retryPhotoCleanup'>;

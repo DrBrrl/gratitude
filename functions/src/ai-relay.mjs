@@ -102,10 +102,10 @@ export function createAIRelay({db,project,keyring,fetcher=fetch,now=Date.now,tim
    if(classification){classificationBatch=await db.doc(`${stream}/events/${p.batchId}`).get();const consent=await db.doc(`${stream}/events/${classificationBatch.get('payload.consentId')}`).get();p={...consent.get('payload'),answersId:classificationBatch.get('payload.answersId'),target:p.target,batchId:p.batchId,consentId:consent.id};}
    const photo=source.get('type')==='PhotoSummaryRequested';
    if(!(classification|| (photo?source.get('schemaVersion')===4:source.get('type')==='PromptRequested'&&[23,24,25,26,27].includes(source.get('schemaVersion'))))||p?.provider!=='personal-gemini'||p.connectionId!==data.connectionId||p.connectionRevision!==data.revision||p.model!==saved.metadata.get('model'))fail('permission-denied','The recorded request does not authorize this cloud connection.');
-   const stillAuthorized=async()=>{
+   const stillAuthorized=async(afterDispatch=false)=>{
     if(classification){
      const [control,current,setup,batch,target,chosen,claim]=await Promise.all([db.doc(`${stream}/classification/control`).get(),saved.ref.get(),db.doc(`${stream}/onboarding/control`).get(),db.doc(`${stream}/classificationBatches/${p.batchId}`).get(),db.doc(`${stream}/${p.target.kind==='reflection'?'entries':'backups'}/${p.target.id}`).get(),db.doc(`${stream}/${p.target.kind==='reflection'?'topics':'backupTopics'}/${p.target.id}`).get(),db.doc(`${stream}/classificationClaims/${data.requestId}`).get()]);
-     if(!claim.exists||claim.get('resultId')!==null||!saved.metadata.get('allowPersonal')||control.get('consentId')!==p.consentId||control.get('requestId')!==data.requestId||control.get('batchId')!==p.batchId||current.get('revision')!==data.revision||(setup.get('answersId')??null)!==p.answersId||batch.get('status')!=='running'||(chosen.get('lastEventId')??null)!==p.target.previousTopicId)fail('failed-precondition','Classification consent, model, category or batch changed.');
+     if(!claim.exists||claim.get('resultId')!==null||!saved.metadata.get('allowPersonal')||control.get('consentId')!==p.consentId||control.get('requestId')!==data.requestId||control.get('batchId')!==p.batchId||current.get('revision')!==data.revision||(setup.get('answersId')??null)!==p.answersId||(batch.get('status')==='cancelled'||!afterDispatch&&batch.get('status')!=='running')||(chosen.get('lastEventId')??null)!==p.target.previousTopicId)fail('failed-precondition','Classification consent, model, category or batch changed.');
      if(p.target.kind==='reflection'){const writing=await db.doc(`${stream}/events/${target.get('lastEventId')}`).get();if(writing.get('payload.expectedRevision')+1!==p.target.revision)fail('failed-precondition','The reflection changed.');}
      else if(target.exists&&target.get('lastEventId')!==p.target.id)fail('failed-precondition','The backup was removed.');
      return;
@@ -130,7 +130,7 @@ export function createAIRelay({db,project,keyring,fetcher=fetch,now=Date.now,tim
    const candidate=result.candidates?.[0],output=candidate?.content?.parts;
    if(result.candidates?.length!==1||candidate.finishReason!=='STOP'||!Array.isArray(output)||output.some(part=>!part.thought&&typeof part.text!=='string'))fail('data-loss','The model returned an incomplete final answer.');
    const answer=finalText(output.filter(part=>!part.thought).map(part=>part.text).join(''),result.modelVersion,data.max);
-   await stillAuthorized();
+   await stillAuthorized(true);
    return answer;
   }finally{await release();}
  };

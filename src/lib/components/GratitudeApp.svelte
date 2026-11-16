@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Classification from './Classification.svelte';
   import ReflectionTopic from './ReflectionTopic.svelte';
   import type {ReflectionDraft} from '../reflection-draft';
   import {STARTER_CATALOGUE} from '../starter-catalogue';
@@ -628,7 +629,7 @@
     if (!repository) throw new Error('Wait for your journal to open.');
     await repository.commitAI({ eventId: crypto.randomUUID(), type: 'AccentColourChosen', schemaVersion: 1, payload: { previousEventId: view.state.appearance.lastEventId, colourIndex } });
   }
-  let settingsPage = $state<'menu' | 'ai' | 'answers' | 'export' | 'privacy' | 'account' | 'import'>('menu');
+  let settingsPage = $state<'menu' | 'ai' | 'answers' | 'export' | 'privacy' | 'account' | 'import' | 'classification'>('menu');
   let exportFormat = $state<'markdown' | 'json'>('markdown');
   let showPromptInfo = $state(false);
   let editorOrigin = $state<{ tab: typeof tab; selectedId: string | null; savedId: string | null; label: string; scroll: number }>({ tab: 'today', selectedId: null, savedId: null, label: 'Today', scroll: 0 });
@@ -1061,7 +1062,7 @@
     {:else if tab === 'friends'}
       {#if client && !uiReview}<Friends {client} uid={user.uid} journal={view} {pushController} pushState={hugPushState} />{:else}<h1 class="page-heading">Friends &amp; hugs</h1><p>Friends are available when signed in to a Firebase journal.</p>{/if}
     {:else}
-      {#if settingsPage !== 'menu'}<button class="back" onclick={() => openSettings('menu')}><Icon name="back" />Settings</button>{/if}
+      {#if settingsPage !== 'menu'}<button class="back" onclick={() => openSettings(settingsPage==='classification'?'ai':'menu')}><Icon name="back" />{settingsPage==='classification'?'AI settings':'Settings'}</button>{/if}
       {#if settingsPage === 'menu'}
         <h1 class="page-heading">Settings</h1>
         <div class="settings-menu">
@@ -1084,6 +1085,9 @@
           {#if clearAnswersOpen}<section class="glass preferences" aria-label="Clear questionnaire answers"><h2>Clear your answers?</h2><p class="hint">This clears your private name, pronouns, topics and prompt controls, and stops sharing selected topic descriptions with AI. Your journal, feedback, account colour and Friends profile stay.</p><button class="outline" onclick={() => saveAnswers(true)} disabled={answerBusy}>Confirm clear answers</button><button class="text-button" onclick={() => clearAnswersOpen = false}>Keep my answers</button></section>{/if}
           {#if answerMessage}<p role="status" class="hint">{answerMessage}</p>{/if}
         {:else}<p role="status">Opening your answers…</p>{/if}
+      {:else if settingsPage === 'classification'}
+        <h1 class="page-heading">Topic classification</h1>
+        {#if repository}<Classification {view} {repository} connection={activeConnection} allowed={canShare(activeConnection)&&!uiReview&&aiAvailable&&configuredConnection(activeConnection,view.state.ai.choices.promptConnectionId)} generate={promptGenerator} onconfigure={()=>openSettings('ai')} />{/if}
       {:else if settingsPage === 'ai'}
         <h1 class="page-heading">AI settings</h1>
         <ModelSettings {client} cloudConnections={connectionMetadata} credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={aiBusy||generatingPrompt||!!view.aiResultPending||uiReview} initialError={modelConnectionError} onchange={selectPromptConnection} />
@@ -1102,6 +1106,7 @@
           <details class="prompt-info"><summary>Prompt info</summary><p class="hint">Your saved preferences are shared when requesting a prompt. The switches above optionally include up to 20 units of earlier reflections (anniversaries, rediscoveries, and recent writing), plus up to 20 original questions with their feedback. Reflections over 600 characters use two units. Entry dates determine selection; imports count by their original dates. {isLocalService(activeConnection.provider)?`Your configured ${serviceName(activeConnection.provider)} server processes this context to generate your prompt.`:'Google processes this context to generate your prompt.'}</p></details>
         {:else if activeConnection.provider==='personal-gemini'}<p class="hint">This personal cloud connection has not been approved for personal context. Only a generic instruction with your selected scope and word limit is sent. Review your project’s provider terms in the connection settings before sharing reflections, feedback, questionnaire answers or photos.</p>{:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction with your selected scope and word limit is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
+        <button class="outline" onclick={()=>openSettings('classification')}>Classify journal and backup topics</button>
         <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {serviceName(photoConnection.provider)} processing for each photo.</p><p class="hint">Questionnaire answers: {view.state.onboarding.answers.useAnswers&&personalContextAvailable?'shared when AI prompts are enabled':'not shared'}.</p><p class="hint">Your private name and pronouns are excluded from AI instructions and questionnaire context.</p><dl class="hint"><dt>Selected descriptions</dt><dd>{#each selectedDescriptions(view.state.onboarding.answers) as description}<p>{description}</p>{:else}None{/each}</dd><dt>Prompt controls</dt><dd>{SCOPE_OPTIONS.find(([value])=>value===view.state.onboarding.answers.scope)?.[1]} · under {view.state.onboarding.answers.wordLimit} words</dd></dl><button class="outline" onclick={()=>openSettings('answers')}>Edit my answers</button><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
         {#if repository}<BackupPrompts {view} {repository} email={user.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups} />
         {#if view.state.ai.choices.backupProvider&&view.state.ai.choices.backupProvider!=='gemini'&&view.state.ai.choices.backupProvider!==accountProvider}<details class="backup-connection"><summary>{view.state.ai.choices.backupProvider==='lm-studio'?'Local backup connection':'Backup model connection'}</summary><ModelSettings {client} cloudConnections={connectionMetadata} credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={localBackupConnection} scope={modelScope} connectionOnly disabled={aiBusy||uiReview} onchange={async connection=>{const bound=await bindConnection(connection,modelScope);await confirmChoices({backupConnectionId:isExternalProvider(bound.provider)?bound.connectionId!:null});modelConnection=bound;modelConnectionError='';refiller.reset();}} /></details>{/if}

@@ -21,10 +21,10 @@ export type ClassificationReply = Extract<ClassificationAction,{type:'Classifica
 export type ClassificationBatch = {action:Extract<ClassificationAction,{type:'ClassificationBatchRequested'}>;status:'running'|'paused'|'cancelled'};
 export type ClassificationState = {
  lastEventId:string|null; consent:Extract<ClassificationAction,{type:'ClassificationConsentChosen'}>|null; batchId:string|null; requestId:string|null;
- batches:Record<string,ClassificationBatch>; requests:Record<string,ClassificationRequest>; requestedAt:Record<string,string>;
+ batches:Record<string,ClassificationBatch>; requestOrder:string[]; requests:Record<string,ClassificationRequest>; requestedAt:Record<string,string>;
  replies:Record<string,ClassificationReply>; outcomes:Record<string,'classified'|'invalid'|'failed'|'stale'>; backupTopics:Record<string,ReflectionTopic>;
 };
-export function emptyClassification():ClassificationState{return {lastEventId:null,consent:null,batchId:null,requestId:null,batches:{},requests:{},requestedAt:{},replies:{},outcomes:{},backupTopics:{}};}
+export function emptyClassification():ClassificationState{return {lastEventId:null,consent:null,batchId:null,requestId:null,batches:{},requestOrder:[],requests:{},requestedAt:{},replies:{},outcomes:{},backupTopics:{}};}
 const id=(v:unknown):v is string=>typeof v==='string'&&/^[a-zA-Z0-9_-]{1,80}$/.test(v);
 const ref=(v:unknown)=>v===null||id(v);
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -36,11 +36,11 @@ export function validClassificationAction(v:Record<string,unknown>){
  const p=v.payload;if(!ref(p.previousEventId))return false;
  const exact=(list:string[])=>keys(p,['previousEventId',...list]);
  switch(v.type){
-  case 'ClassificationConsentChosen':return exact(['enabled','provider','model','connectionId','connectionRevision'])&&typeof p.enabled==='boolean'&&PROVIDERS.includes(p.provider as AIProvider)&&validModel(p.model)&&ref(p.connectionId)&&ref(p.connectionRevision)&&((['gemini','lm-studio'].includes(String(p.provider)))?p.connectionId===null&&p.connectionRevision===null:id(p.connectionId)&&id(p.connectionRevision));
+  case 'ClassificationConsentChosen':return exact(['enabled','provider','model','connectionId','connectionRevision'])&&typeof p.enabled==='boolean'&&PROVIDERS.includes(p.provider as AIProvider)&&validModel(p.model)&&ref(p.connectionId)&&ref(p.connectionRevision)&&(p.provider==='gemini'?p.connectionId===null&&p.connectionRevision===null:p.provider==='lm-studio'?p.connectionId==='lm-studio'&&typeof p.connectionRevision==='string'&&/^[a-f0-9]{64}$/.test(p.connectionRevision):id(p.connectionId)&&id(p.connectionRevision));
   case 'ClassificationBatchRequested':return exact(['consentId','answersId','catalogueVersion','targets'])&&id(p.consentId)&&ref(p.answersId)&&p.catalogueVersion===TOPIC_CATALOGUE_VERSION&&object(p.targets)&&Object.keys(p.targets).length>0&&Object.keys(p.targets).length<=CLASSIFICATION_LIMIT&&Object.entries(p.targets).every(([key,ref])=>/^(reflection|backup)_[a-zA-Z0-9_-]{1,80}$/.test(key)&&typeof ref==='string'&&/^[1-9][0-9]{0,14}:[a-zA-Z0-9_-]{0,80}$/.test(ref));
   case 'ClassificationBatchControlled':return exact(['batchId','operation'])&&id(p.batchId)&&['pause','resume','cancel'].includes(String(p.operation));
   case 'ClassificationRequested':return exact(['batchId','target','retryOf'])&&id(p.batchId)&&validClassificationTarget(p.target)&&ref(p.retryOf);
-  case 'ClassificationResponseReceived':return exact(['requestId','text','model','finishReason'])&&id(p.requestId)&&typeof p.text==='string'&&p.text.length<=4000&&typeof p.model==='string'&&p.model.length>0&&p.model.length<=100&&p.finishReason==='STOP';
+  case 'ClassificationResponseReceived':return exact(['requestId','text','model','finishReason'])&&id(p.requestId)&&typeof p.text==='string'&&Array.from(p.text).length<=4000&&typeof p.model==='string'&&p.model.length>0&&Array.from(p.model).length<=100&&p.finishReason==='STOP';
   case 'ClassificationFailed':return exact(['requestId','reason'])&&id(p.requestId)&&['unavailable','invalid-response'].includes(String(p.reason));
   case 'BackupTopicChosen':return exact(['target','answersId','topicId'])&&validClassificationTarget(p.target)&&p.target.kind==='backup'&&ref(p.answersId)&&(p.topicId===null||id(p.topicId));
   default:return false;
@@ -59,15 +59,15 @@ export function targetAvailable(s:Projection,t:ClassificationTarget){return t.ki
 export function targetMatches(s:Projection,t:ClassificationTarget){return targetAvailable(s,t)&&(targetTopic(s,t)?.lastEventId??null)===t.previousTopicId;}
 export function topicStale(s:Projection,t:Pick<ClassificationTarget,'kind'|'id'>){const topic=targetTopic(s,t);return topic?.origin==='ai'&&t.kind==='reflection'&&topic.revision!==s.entries.find(e=>e.id===t.id)?.revision;}
 export function eligibleTargets(s:Projection,kind:ClassificationTarget['kind']){
- const ids=kind==='reflection'?s.entries.map(e=>e.id):Object.keys(s.backups);
- return ids.map(id=>currentTarget(s,kind,id)).filter(t=>targetAvailable(s,t)&&(t.kind==='reflection'||!s.backups[t.id].used)&&(!targetTopic(s,t)?.topicId||topicStale(s,t))&&targetTopic(s,t)?.origin!=='user');
+ const candidates=kind==='reflection'?s.entries.map(e=>({kind,id:e.id,revision:e.revision,previousTopicId:reflectionTopic(s.topics,e.id)?.lastEventId??null})):Object.entries(s.backups).filter(([,p])=>!p.removed&&!p.used).map(([id])=>({kind,id,revision:1,previousTopicId:reflectionTopic(s.classification.backupTopics,id)?.lastEventId??null}));
+ return candidates.filter(t=>{const topic=targetTopic(s,t);return topic?.origin!=='user'&&(!topic?.topicId||topic.origin==='ai'&&t.kind==='reflection'&&topic.revision!==t.revision);});
 }
 export function classificationContext(s:Projection,t:ClassificationTarget){
  if(!targetMatches(s,t))throw new Error('This item changed. Start a fresh batch.');
  return JSON.stringify({kind:t.kind,text:t.kind==='reflection'?s.entries.find(e=>e.id===t.id)!.text:s.backups[t.id].text,
   vocabulary:[...TOPICS.map(([id,,description])=>({id,description:s.onboarding.answers.descriptions[id]??description})),...s.onboarding.answers.customTopics.map(({id,description})=>({id,description})),{id:'unknown',description:'No topic fits.'}]});
 }
-export function batchRequests(s:ClassificationState,batchId:string,t:ClassificationTarget){return Object.values(s.requests).filter(r=>r.payload.batchId===batchId&&r.payload.target.kind===t.kind&&r.payload.target.id===t.id);}
+export function batchRequests(s:ClassificationState,batchId:string,t:ClassificationTarget){return s.requestOrder.map(id=>s.requests[id]).filter(r=>r.payload.batchId===batchId&&r.payload.target.kind===t.kind&&r.payload.target.id===t.id);}
 export function batchProgress(s:ClassificationState,batchId:string){
  const batch=s.batches[batchId];const counts={completed:0,failed:0,remaining:0};if(!batch)return counts;
  for(const t of batchTargets(batch.action)){const last=batchRequests(s,batchId,t).at(-1);const outcome=last?s.outcomes[last.eventId]:undefined;if(outcome==='classified')counts.completed++;else if(outcome)counts.failed++;else counts.remaining++;}return counts;
@@ -95,7 +95,7 @@ export function applyClassification(state:Projection,a:ClassificationAction,reco
   const prior=batchRequests(s,p.batchId,p.target).at(-1);
   if((prior?.eventId??null)!==p.retryOf||prior&&s.outcomes[prior.eventId]==='classified')throw new Error('This classification is already complete.');
   if(s.requestId&&Date.parse(recordedAt)-Date.parse(s.requestedAt[s.requestId])<CLASSIFICATION_LEASE_MS)throw new Error('A classification is still in progress. Wait before retrying an uncertain request.');
-  next={...next,requestId:a.eventId,requests:{...s.requests,[a.eventId]:a},requestedAt:{...s.requestedAt,[a.eventId]:recordedAt}};
+  next={...next,requestId:a.eventId,requestOrder:[...s.requestOrder,a.eventId],requests:{...s.requests,[a.eventId]:a},requestedAt:{...s.requestedAt,[a.eventId]:recordedAt}};
  }
  if(a.type==='ClassificationResponseReceived'||a.type==='ClassificationFailed'){
   const p=a.payload,r=s.requests[p.requestId];if(!r||Object.hasOwn(s.replies,p.requestId))throw new Error('Unknown or already settled classification request.');

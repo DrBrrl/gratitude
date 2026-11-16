@@ -1,6 +1,6 @@
 # AI reflection classification: implementation handoff
 
-Status: implementation in progress on current main, including the merged manual topic model from [PR #30](https://github.com/DrBrrl/gratitude/pull/30). This is stage 3 of the approved [delivery workflow](../TOPIC_AWARE_PROMPTS.md).
+Status: manual/batch implementation under verification on current main, including the merged manual topic model from [PR #30](https://github.com/DrBrrl/gratitude/pull/30). This is stage 3 of the approved [delivery workflow](../TOPIC_AWARE_PROMPTS.md).
 
 ## User experience
 
@@ -14,7 +14,7 @@ A manual choice remains authoritative after a text edit. An AI choice becomes st
 
 ## Source and projection contract
 
-Allocate explicit schema versions after inspecting the final merged domain. The event names below describe a proposed contract, not existing supported events:
+The table describes the source intent; the exact implemented schema-1 wire contract is recorded below:
 
 | Source action or observation | Literal input |
 | --- | --- |
@@ -49,3 +49,18 @@ The backend must independently validate allowed event shapes, ownership, source 
 - CI uses fictional writing and controlled model responses. This draft authorizes no background processing of anyone's real journal.
 
 Jamie chose manual and batch classification for the first delivery (16 November 2026). Automatic classification after save is outside this PR. Backup prompts use the same built-in/custom vocabulary and editable AI suggestions as reflections; existing reserve wording and consumption behaviour are preserved.
+
+
+## Implemented contract for review
+
+The first delivery is manual and batch only. The UI lives under AI settings, uses the selected prompt connection and has separate explicit classification consent. Opening it, importing a journal or importing backups makes no classification call. A batch selects at most twenty literal targets. More batches can be selected after finishing or cancelling; there is no automatic whole-history upload. Changing the current model requires reviewing classification consent again. All current providers use the existing task adapters, including native Ollama and the authenticated personal Gemini relay.
+
+Schema-1 source events are `ClassificationConsentChosen`, `ClassificationBatchRequested`, `ClassificationBatchControlled`, `ClassificationRequested`, `ClassificationResponseReceived`, `ClassificationFailed` and `BackupTopicChosen`. Requests reference a batch, literal item/revision/topic cursor and an optional prior retry. Batches reference the consent and questionnaire event plus taxonomy version. Targets are keyed by kind and identity, preventing duplicates. Responses retain bounded final text and model identity; strict single-ID validation derives classified/invalid/stale state. Unknown completes an item. Display labels and all progress remain projections.
+
+`classification/control`, `classificationBatches`, `classificationItems`, `classificationClaims`, `classificationTargetClaims`, `topics` and `backupTopics` are disposable owner-only coordination/validation heads, not journal truth. The control caches the chosen destination to avoid repeated Rules lookups. An atomic target/consent claim allows one dispatcher per request. The request has a three-minute lease; execution after interruption is uncertain and requires explicit retry rather than automatic redispatch. Receipt IDs prevent duplicate results. Source replay restores assignments without model calls. A model binding changed during inference prevents assignment until the user withdraws classification consent and syncs the now-stale observation.
+
+Manual category cursors, reflection revisions, vocabulary references and consent are checked before dispatch and acceptance. A fresh explicitly requested batch supersedes previous queued work; its old in-flight observations cannot become authoritative. Removing a backup invalidates its pending classification. Using an already-dispatched backup does not change its text or resurrect its availability; its category remains useful private metadata. Reflection date changes make AI suggestions stale through the revision check, while manual categories persist.
+
+Projection version 17 rebuilds older caches once. JSON version 5 retains AI provenance and stale status, and includes backup/category metadata when assigned. Existing manual-only exports remain version 4, legacy exports retain their versions, and Markdown is unchanged. Native JSON restore and automatic after-save classification remain outside this delivery.
+
+LM Studio approvals additionally pin a technical SHA-256 handle for the normalized literal server/model selection. This prevents a different computer running the same model from inheriting approval. URLs and tokens remain outside source events. The adapter and selected connection are checked together before dispatch; the handle is connection identity, not a computed journal value. Personal-cloud calls are paced and a pause keeps an already-dispatched answer, while cancellation or revocation prevents its application.

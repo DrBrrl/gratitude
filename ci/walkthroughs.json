@@ -30,7 +30,8 @@
     "prompt-rotation": ["052", "053"],
     "onboarding-return": ["054", "055"],
     "reflection-topics": ["057", "058"],
-    "today-buttons": ["061"]
+    "today-buttons": ["061"],
+    "classification": ["062", "063"]
   },
   "smoke": ["035"],
   "isolated_components": {

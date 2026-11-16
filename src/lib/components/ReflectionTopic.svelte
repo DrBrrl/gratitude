@@ -2,6 +2,7 @@
   import { tick } from 'svelte';
   import type { Entry, Projection } from '../domain';
   import { reflectionTopic, topicChoices, topicLabel, type TopicAction } from '../reflection-topics';
+  import {topicStale} from '../classification';
   import Icon from './Icon.svelte';
   let { entry, journal, disabled=false, onchoose, onedit }: {
     entry: Entry; journal: Projection; disabled?:boolean;
@@ -58,7 +59,7 @@
         <button class="cancel" type="button" onclick={close} disabled={saving}>Cancel</button>
       </div>
     {:else}
-      <strong class="topic-label">{label}</strong>
+      <strong class="topic-label">{label}</strong>{#if reflectionTopic(journal.topics,entry.id)?.origin==='ai'}<small class="status">{topicStale(journal,{kind:'reflection',id:entry.id})?'AI suggestion · needs review after editing':'AI suggestion'}</small>{/if}
       <button class="card-action card-button pencil" aria-label="Change reflection topic" onclick={begin} disabled={disabled||saving}><Icon name="edit" size={15}/></button>
     {/if}
   </div>

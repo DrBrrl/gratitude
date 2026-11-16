@@ -1,3 +1,4 @@
+import {topicLabel} from './reflection-topics.ts';
 import {sha256,readBoundedZip} from './import-archive.ts';
 import type {BackupAction,Projection} from './domain.ts';
 export const BACKUP_MINIMUM=30;
@@ -9,7 +10,7 @@ export function availableBackups(state:Projection,removed:string[]=[],pendingPro
   const used=new Set([...state.entries.map(entry=>entry.promptId),...removed,pendingPrompt]);
   const excluded=new Set(Object.entries(state.backups).filter(([id,p])=>p.removed||p.used||used.has(id)).map(([,p])=>promptKey(p.text)));
   const seen=new Set<string>();
-  return Object.entries(state.backups).filter(([,p])=>{const key=promptKey(p.text);if(excluded.has(key)||seen.has(key))return false;seen.add(key);return true;}).map(([id,p])=>({id,text:p.text}));
+  return Object.entries(state.backups).filter(([,p])=>{const key=promptKey(p.text);if(excluded.has(key)||seen.has(key))return false;seen.add(key);return true;}).map(([id,p])=>({id,text:p.text,...(state.classification.backupTopics[id]?{category:topicLabel(state.classification.backupTopics[id],state.onboarding.answers)}: {})}));
 }
 export async function importedBackup(text:string):Promise<Extract<BackupAction,{type:'BackupPromptImported'}>> {
   const clean=text.trim();if(!clean||clean.length>4000)throw new Error('Each prompt must contain 1–4,000 characters.');

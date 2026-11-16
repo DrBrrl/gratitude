@@ -2,7 +2,7 @@
 
 **Delivery workflow approved; AI wording and selection policy remain for review.** Based on Jamie’s “2026-11-10 (12:08) - AI Prompt and reflection selection.md”, preserved verbatim in [PROMPTS.md](../../PROMPTS.md#2026-11-12--topic-aware-ai-prompt-workflow-proposal).
 
-The first implementation, [PR #30](https://github.com/DrBrrl/gratitude/pull/30), adds manual reflection topics on saved and detailed cards, searchable custom/built-in choices, private events, replay and JSON export metadata. Historical AI classification, topic-aware generation and lunar modes remain later stages. Native JSON journal restore remains unimplemented; the existing alternate-app ZIP importer starts imported writing unclassified. The candidate AI instructions below are not live.
+The first implementation, [PR #30](https://github.com/DrBrrl/gratitude/pull/30), adds manual reflection topics on saved and detailed cards, searchable custom/built-in choices, private events, replay and JSON export metadata. PR #32 adds explicitly requested classification for saved/imported reflections and backup prompts, with separate consent, manual corrections and resumable batches. Topic-aware generation and lunar modes remain later stages. Native JSON journal restore remains unimplemented; the existing alternate-app ZIP importer starts imported writing unclassified. The candidate AI instructions below are not live.
 
 The intended result is a fresh, relevant invitation to notice something new. A request focuses on one selected interest, uses matching historical reflections as background, and avoids asking the user to repeat a reflection they have already written. Occasional review prompts are a separate, visible mode. Imports and older writing participate through editable topic assignments.
 

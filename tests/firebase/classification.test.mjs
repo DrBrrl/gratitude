@@ -21,7 +21,8 @@ async function fixture(uid,kind='reflection',options={}){
  await appendReflection(db,uid,{eventId:'setup-finished',type:'OnboardingFinished',schemaVersion:1,payload:{version:1,outcome:'skipped'}});
  if(options.custom)await appendReflection(db,uid,{eventId:'class-answers',type:'OnboardingAnswersConfirmed',schemaVersion:1,payload:{previousEventId:null,...answersInput({...defaultAnswers(),customTopics:[{id:'custom_birds',label:'Birdwatching',description:'Watching birds.',selected:false}]})}});
  if(options.local)await setDoc(doc(db,`users/${uid}/privateConnections/local`),{schemaVersion:1,provider:'ollama',model:'fictional/text',revision:'one',updatedAt:serverTimestamp()});
- await action('ClassificationConsentChosen','consent',{enabled:true,provider:options.local?'ollama':'gemini',model:options.local?'fictional/text':'gemini-3.6-flash',connectionId:options.local?'local':null,connectionRevision:options.local?'one':null});
+ const destination=options.lm?{provider:'lm-studio',model:'google/gemma-4-31b',connectionId:'lm-studio',connectionRevision:'a'.repeat(64)}:{provider:options.local?'ollama':'gemini',model:options.local?'fictional/text':'gemini-3.6-flash',connectionId:options.local?'local':null,connectionRevision:options.local?'one':null};
+ await action('ClassificationConsentChosen','consent',{enabled:true,...destination});
  await action('ClassificationBatchRequested','batch',{consentId:'consent',answersId:options.custom?'class-answers':null,catalogueVersion:1,targets:{[`${t.kind}_${t.id}`]:'1:'}});
  const request=async(eventId='request',changes={})=>action('ClassificationRequested',eventId,{batchId:'batch',target:t,retryOf:null,...changes});
  const reply=async(text='nature')=>action('ClassificationResponseReceived','response',{requestId:'request',text,model:'fictional/model',finishReason:'STOP'});
@@ -38,6 +39,7 @@ async function forgedReply(f,{extra={},assign=true}={}){
 test('owner-only classification claims coordinate devices; replies replay identically and never change writing',async()=>{
  const f=await fixture('class-owner');await f.request();assert.equal((await Promise.all([claimClassification(f.db,f.uid,'request','one'),claimClassification(f.db,f.uid,'request','two')])).filter(Boolean).length,1);await f.reply();
  const log=await f.log(),state=replay(log);assert.equal(state.topics.entry.topicId,'nature');assert.equal(state.entries[0].revision,1);assert.deepEqual(state,replay(log.slice(3),replay(log.slice(0,3))));
+ const original=log.find(e=>e.type==='ClassificationResponseReceived');assert.equal((await appendReflection(f.db,f.uid,{eventId:original.eventId,type:original.type,schemaVersion:original.schemaVersion,payload:original.payload})).created,false);
  await assertFails(getDoc(doc(client('intruder'),`${f.path}/events/response`)));await assertFails(getDoc(doc(client('intruder'),`${f.path}/classification/control`)));
  await assert.rejects(f.reply(),/changed|already/);
 });
@@ -82,4 +84,9 @@ test('raw batches cannot bypass target validation in the latter half of their at
  const head=await getDoc(doc(f.db,f.path)),control=await getDoc(doc(f.db,`${f.path}/classification/control`)),id='forged-tail';
  const e={eventId:id,type:'ClassificationBatchRequested',schemaVersion:1,payload:{previousEventId:control.get('lastEventId'),consentId:'consent',answersId:null,catalogueVersion:1,targets},sequence:head.get('sequence')+1,recordedAt:serverTimestamp()};
  const b=writeBatch(f.db);b.set(doc(f.db,`${f.path}/events/${id}`),e);b.set(doc(f.db,f.path),{sequence:e.sequence,lastEventId:id});b.set(doc(f.db,`${f.path}/classification/control`),{...control.data(),lastEventId:id,batchId:id});b.set(doc(f.db,`${f.path}/classificationBatches/${id}`),{lastEventId:id,status:'running'});await assertFails(b.commit());
+});
+
+test('LM Studio classifications retain a pinned server/model handle without exposing the address',async()=>{
+ const f=await fixture('class-lm-studio','reflection',{lm:true});await f.request();await claimClassification(f.db,f.uid,'request','worker');await f.reply('unknown');
+ const state=replay(await f.log());assert.equal(state.topics.entry.topicId,'unknown');assert.equal(state.classification.consent.payload.connectionRevision,'a'.repeat(64));
 });
