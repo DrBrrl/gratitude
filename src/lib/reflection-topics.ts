@@ -5,7 +5,7 @@ export type TopicAction = {
   eventId: string; type: 'ReflectionTopicChosen'; schemaVersion: 1;
   payload: { entryId: string; expectedRevision: number; previousEventId: string | null; topicId: string | null; answersId: string | null };
 };
-export type ReflectionTopic = { topicId: string | null; label: string; lastEventId: string; origin: 'user' };
+export type ReflectionTopic = { topicId: string | null; label: string; lastEventId: string; origin: 'user'|'ai'; revision?:number; requestId?:string };
 export function topicChoices(answers: OnboardingAnswers) {
   return [...TOPICS.map(([id,label]) => ({ id: id as string, label })), ...answers.customTopics.map(({id,label}) => ({id,label})), {id:'unknown',label:'Unknown'}];
 }

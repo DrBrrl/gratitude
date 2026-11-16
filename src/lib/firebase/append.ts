@@ -1,3 +1,5 @@
+import {isClassificationAction} from '../classification.ts';
+import {appendClassification} from './classification.ts';
 import { isOnboardingAction } from '../onboarding.ts';
 import { stableJSON } from '../import-source.ts';
 import { doc, getDocFromServer, runTransaction, serverTimestamp, Timestamp, type Firestore, type DocumentData } from 'firebase/firestore';
@@ -13,6 +15,7 @@ export function decodeEvent(data: DocumentData): JournalEvent {
 /** Security Rules independently validate every part of this atomic append. */
 export async function appendReflection(db: Firestore, uid: string, input: SourceAction) {
   const action = parseAction(input);
+  if(isClassificationAction(action))return appendClassification(db,uid,action);
   const stream = doc(db, `users/${uid}/streams/${GENERATION}`);
   const event = doc(db, `${stream.path}/events/${action.eventId}`);
   const pointer = doc(db, action.type==='ReflectionTopicChosen'?`${stream.path}/topics/${action.payload.entryId}`:isRotationAction(action)?`${stream.path}/rotation/control`:isOnboardingAction(action) ? `${stream.path}/onboarding/control` : action.type === 'AccentColourChosen' ? `${stream.path}/appearance/control` : action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);

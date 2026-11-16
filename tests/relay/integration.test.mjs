@@ -1,3 +1,4 @@
+import {claimClassification} from '../../src/lib/firebase/classification.ts';
 import {before,after,test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -91,4 +92,22 @@ test('revocation does not need readable ciphertext or generation quota, and remo
  for(let i=0;i<14;i++)assert.deepEqual(await invoke({auth:auth(uid),data:{operation:'delete',connectionId:'connection',revision:saved.revision}}),{deleted:true});
  await assert.rejects(invoke({auth:auth(uid),data:{operation:'delete',connectionId:'connection',revision:saved.revision}}),error=>error.code==='resource-exhausted');
  assert.equal(network.calls.filter(call=>call.init.method==='POST').length,0);
+});
+
+test('personal-key classification requires separate consent, an active claim and approved personal processing',async()=>{
+ for(const mode of ['unclaimed',false,true]){
+  const allowPersonal=mode!==false;
+  const uid=`relay-classify-${mode}`,f=await prepareCloud(uid,{allowPersonal});
+  await appendReflection(f.db,uid,{eventId:'class-write',type:'ReflectionWritten',schemaVersion:1,payload:{entryId:'entry',expectedRevision:0,starterId:'small-moment-v1',text:'A fictional walk.'}});
+  const destination={provider:'personal-gemini',model,connectionId:'connection',connectionRevision:f.saved.revision};
+  await appendReflection(f.db,uid,{eventId:'class-consent',type:'ClassificationConsentChosen',schemaVersion:1,payload:{previousEventId:null,enabled:true,...destination}});
+  const target={kind:'reflection',id:'entry',revision:1,previousTopicId:null};
+  await appendReflection(f.db,uid,{eventId:'class-batch',type:'ClassificationBatchRequested',schemaVersion:1,payload:{previousEventId:'class-consent',consentId:'class-consent',answersId:null,catalogueVersion:1,targets:{reflection_entry:'1:'}}});
+  await appendReflection(f.db,uid,{eventId:'class-request',type:'ClassificationRequested',schemaVersion:1,payload:{previousEventId:'class-batch',batchId:'class-batch',target,retryOf:null}});
+  const data={...f.data,requestId:'class-request',system:'Classify the supplied fictional writing.',context:'{"kind":"reflection","text":"A fictional walk.","vocabulary":[{"id":"nature"}]}'};
+  if(mode==='unclaimed'){await assert.rejects(f.invoke({auth:auth(uid),data}),error=>error.code==='failed-precondition');continue;}
+  await claimClassification(f.db,uid,'class-request','worker');
+  if(allowPersonal){const result=await f.invoke({auth:auth(uid),data});assert.equal(result.model,model+'-fixture');}
+  else await assert.rejects(f.invoke({auth:auth(uid),data}),error=>error.code==='failed-precondition');
+ }
 });
