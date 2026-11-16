@@ -1,3 +1,4 @@
+import {topicStale} from './classification.ts';
 import { reflectionTopic, topicLabel } from './reflection-topics.ts';
 import { entryPhotos, type Projection } from './domain.ts';
 import { zipSync, strToU8 } from 'fflate';
@@ -15,11 +16,11 @@ export function exportJournal(state: Projection, format: 'markdown' | 'json') {
   const entries = chronologicalEntries(state.entries).map((entry) => {
     const topic=reflectionTopic(state.topics,entry.id);
     return { id: entry.id, createdAt: entry.recordedAt, entryAt: entryTimestamp(entry), prompt: entry.prompt, text: entry.text, colour: entryColour(entry),
-      ...(topic ? {topic:{id:topic.topicId,label:topicLabel(topic,state.onboarding.answers),origin:topic.origin}} : {}),
+      ...(topic ? {topic:{id:topic.topicId,label:topicLabel(topic,state.onboarding.answers),origin:topic.origin,...(topic.origin==='ai'?{requestId:topic.requestId,revision:topic.revision,stale:topicStale(state,{kind:'reflection',id:entry.id})}:{})}} : {}),
       ...(entry.origin ? { origin: entry.origin } : {}),
       ...(entryPhotos(state, entry.id).length ? { photos: entryPhotos(state, entry.id).map(photo => ({ path: `attachments/${photo.photoId}.jpg`, summary: photo.summary, summaryOrigin: photo.origin, summaryStatus: photo.status })) } : {}) };
   });
-  if (format === 'json') return { name: 'gratitude-journal.json', type: 'application/json', content: JSON.stringify({ format: 'gratitude-journal', version: Object.keys(state.topics).length ? 4 : entries.some(entry => entry.origin) ? 3 : 2, throughSequence: state.cursor, ...(state.onboarding.answersId?{questionnaire:{version:1,answers:state.onboarding.answers}}:{}), entries }, null, 2) + '\n' };
+  if (format === 'json') return { name: 'gratitude-journal.json', type: 'application/json', content: JSON.stringify({ format: 'gratitude-journal', version: Object.values(state.topics).some(t=>t.origin==='ai')||Object.keys(state.classification.backupTopics).length ? 5 : Object.keys(state.topics).length ? 4 : entries.some(entry => entry.origin) ? 3 : 2, throughSequence: state.cursor, ...(Object.keys(state.classification.backupTopics).length?{backupPrompts:Object.entries(state.backups).map(([id,p])=>({id,...p,...(state.classification.backupTopics[id]?{topic:state.classification.backupTopics[id]}:{})}))}:{}), ...(state.onboarding.answersId?{questionnaire:{version:1,answers:state.onboarding.answers}}:{}), entries }, null, 2) + '\n' };
   // Render in the exporting browser’s local timezone, including historical DST.
   const content = ['# Gratitude journal', ...entries.map((entry) =>
     `## ${localTimestamp(entry.entryAt)}\n\n**Prompt**: ${escapeMarkdown(entry.prompt)}\n\n**Reflection**: ${escapeMarkdown(entry.text)}${entry.photos?.map(photo => `\n\n![Attached journal photo](${photo.path})\n\n**Image summary**: ${escapeMarkdown(photo.summary)}`).join('') ?? ''}`)].join('\n\n') + '\n';

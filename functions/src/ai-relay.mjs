@@ -95,10 +95,21 @@ export function createAIRelay({db,project,keyring,fetcher=fetch,now=Date.now,tim
    }
    const saved=await credential(uid,data.connectionId,data.revision);
    if(!id(data.requestId)||typeof data.system!=='string'||!data.system.trim()||data.system.length>5000||![600,1000,4000].includes(data.max))fail('invalid-argument','The inference request is invalid.');
-   const stream=`users/${uid}/streams/v1`,source=await db.doc(`${stream}/events/${data.requestId}`).get(),p=source.get('payload');
+   const stream=`users/${uid}/streams/v1`,source=await db.doc(`${stream}/events/${data.requestId}`).get();
+   let p=source.get('payload');
+   const classification=source.get('type')==='ClassificationRequested'&&source.get('schemaVersion')===1;
+   let classificationBatch;
+   if(classification){classificationBatch=await db.doc(`${stream}/events/${p.batchId}`).get();const consent=await db.doc(`${stream}/events/${classificationBatch.get('payload.consentId')}`).get();p={...consent.get('payload'),answersId:classificationBatch.get('payload.answersId'),target:p.target,batchId:p.batchId,consentId:consent.id};}
    const photo=source.get('type')==='PhotoSummaryRequested';
-   if(!(photo?source.get('schemaVersion')===4:source.get('type')==='PromptRequested'&&[23,24,25,26,27].includes(source.get('schemaVersion')))||p?.provider!=='personal-gemini'||p.connectionId!==data.connectionId||p.connectionRevision!==data.revision||p.model!==saved.metadata.get('model'))fail('permission-denied','The recorded request does not authorize this cloud connection.');
+   if(!(classification|| (photo?source.get('schemaVersion')===4:source.get('type')==='PromptRequested'&&[23,24,25,26,27].includes(source.get('schemaVersion'))))||p?.provider!=='personal-gemini'||p.connectionId!==data.connectionId||p.connectionRevision!==data.revision||p.model!==saved.metadata.get('model'))fail('permission-denied','The recorded request does not authorize this cloud connection.');
    const stillAuthorized=async()=>{
+    if(classification){
+     const [control,current,setup,batch,target,chosen,claim]=await Promise.all([db.doc(`${stream}/classification/control`).get(),saved.ref.get(),db.doc(`${stream}/onboarding/control`).get(),db.doc(`${stream}/classificationBatches/${p.batchId}`).get(),db.doc(`${stream}/${p.target.kind==='reflection'?'entries':'backups'}/${p.target.id}`).get(),db.doc(`${stream}/${p.target.kind==='reflection'?'topics':'backupTopics'}/${p.target.id}`).get(),db.doc(`${stream}/classificationClaims/${data.requestId}`).get()]);
+     if(!claim.exists||claim.get('resultId')!==null||!saved.metadata.get('allowPersonal')||control.get('consentId')!==p.consentId||control.get('requestId')!==data.requestId||control.get('batchId')!==p.batchId||current.get('revision')!==data.revision||(setup.get('answersId')??null)!==p.answersId||batch.get('status')!=='running'||(chosen.get('lastEventId')??null)!==p.target.previousTopicId)fail('failed-precondition','Classification consent, model, category or batch changed.');
+     if(p.target.kind==='reflection'){const writing=await db.doc(`${stream}/events/${target.get('lastEventId')}`).get();if(writing.get('payload.expectedRevision')+1!==p.target.revision)fail('failed-precondition','The reflection changed.');}
+     else if(target.exists&&target.get('lastEventId')!==p.target.id)fail('failed-precondition','The backup was removed.');
+     return;
+    }
     const [control,current,setup]=await Promise.all([db.doc(`${stream}/ai/control`).get(),saved.ref.get(),db.doc(`${stream}/onboarding/control`).get()]);
     if(control.get('choicesId')!==p.choicesId||current.get('revision')!==data.revision||!photo&&(control.get('requestId')!==data.requestId||(setup.get('answersId')??null)!==p.answersId))fail('failed-precondition','The request or its sharing choices changed. The late result was discarded.');
     if(photo){const pointer=await db.doc(`${stream}/photos/${p.entryId}_${p.slot}`).get();if(pointer.get('lastEventId')!==data.requestId)fail('failed-precondition','The photo changed. The late result was discarded.');}
