@@ -2,7 +2,7 @@
 
 # Send one hug each day
 
-Accepted friends exchange hugs with an outlined or filled heart. The recipient can pause incoming hugs. The sender cannot send another hug on the same local calendar day. The recipient sees Hugged you! below the friend’s heart for their current device day; it survives replay/reload and clears the next day without deleting the hug. Full replay preserves the action and preferences; community gratitude replaces the old inbox. Every action has an unmasked zero-pixel screenshot with checks beneath its image.
+Accepted friends exchange hugs with an outlined or filled heart. The recipient can pause incoming hugs. The sender cannot send another hug on the same local calendar day. The recipient sees Hugged you! below the friend’s heart for their current device day; it survives replay/reload and clears the next day without deleting the hug. Full replay preserves the action and preferences; friend cards and Gratitude together replace the old inbox. Every action has an unmasked zero-pixel screenshot with checks beneath its image.
 
 Viewport: mobile-chromium.
 

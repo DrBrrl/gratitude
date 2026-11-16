@@ -2,7 +2,7 @@
 
 # Gratitude together, one half at a time
 
-A table below Community gratitude lists each accepted friend, a two-part present-day heart and a repairable shared streak since acceptance. Both devices update live, historic backfills repair the run, pre-friendship dates are excluded, full source replay preserves acceptance, and withdrawn sharing is unavailable rather than falsely unfilled. Every user action has an unmasked zero-tolerance screenshot.
+Friend cards show their longest shared streak. The separate Gratitude together table lists each accepted friend, a two-part present-day heart and a repairable shared streak since acceptance. Both devices update live, historic backfills repair the run, pre-friendship dates are excluded, full source replay preserves acceptance, and withdrawn sharing is unavailable rather than falsely unfilled. Every user action has an unmasked zero-tolerance screenshot.
 
 Viewport: mobile-chromium.
 
