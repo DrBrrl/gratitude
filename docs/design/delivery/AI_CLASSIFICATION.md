@@ -1,6 +1,6 @@
 # AI reflection classification: implementation handoff
 
-Status: draft specification; classification is not implemented by this PR. Depends on the manual topic model in [PR #30](https://github.com/DrBrrl/gratitude/pull/30). This is stage 3 of the approved [delivery workflow](../TOPIC_AWARE_PROMPTS.md).
+Status: implementation in progress on current main, including the merged manual topic model from [PR #30](https://github.com/DrBrrl/gratitude/pull/30). This is stage 3 of the approved [delivery workflow](../TOPIC_AWARE_PROMPTS.md).
 
 ## User experience
 
@@ -48,4 +48,4 @@ The backend must independently validate allowed event shapes, ownership, source 
 - Every user action followed by an unmasked screenshot comparison with `maxDiffPixels: 0` and `threshold: 0`; generated README images followed by their checks.
 - CI uses fictional writing and controlled model responses. This draft authorizes no background processing of anyone's real journal.
 
-Before implementing the dispatch queue, settle whether classification should initially be manual/batch only or also run automatically after an explicitly opted-in save. The recommended first delivery is manual/batch, keeping the consent boundary visible.
+Jamie chose manual and batch classification for the first delivery (16 November 2026). Automatic classification after save is outside this PR. Backup prompts use the same built-in/custom vocabulary and editable AI suggestions as reflections; existing reserve wording and consumption behaviour are preserved.
