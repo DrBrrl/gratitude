@@ -1954,3 +1954,15 @@ Before we progress any of the three draft PRs, i want us to change some things a
 The preceding message was interrupted and completed with:
 
 Before we progress any of the three draft PRs, i want us to change some things about the current Friends page! First, let's put the "[user] and [friend]'s longest gratitude streak: xx days." text in the "your friends" boxes, between the @[username] and "Manage friendship with [friend]" texts? Little bit of padding above and below, about half a line either side. Then we'll get rid of the Community gratitude section altogether, leaving the Gratitude together section. I would also like a bit of padding below the friend table, above the Hug notifications box. They're currently stuck together!
+
+### 2026-11-16 — Implement classification and categorise backups
+
+Done and merged! Let's retarget pr32 to main and start on implementing that one. A note that the backup prompts need to be categorised like the starter prompts are (suggestion of category better than no category) as well as the existing reflections. :)
+
+### 2026-11-16 — Classification scope clarification
+
+Manual and batch first
+
+### 2026-11-16 — Resolve classification branch conflicts
+
+There are also some conflicts to resolve in that branch :)
