@@ -20,7 +20,7 @@ New `HugSent` actions use schema 2 and capture the sender’s observed UTC offse
 
 Existing schema-1 hug history replays with its original 24-hour rule. Its final legacy cooldown is retained until the first schema-2 hug; modern senders cannot downgrade to schema 1 to bypass daily checks. Pair-head timestamps preserve canonical sub-millisecond precision during unrelated actions.
 
-Hug source history and existing private read acknowledgements remain intact, but the former inbox UI is replaced with **Community gratitude**. Sending confirms persistence, not that the recipient has seen the gesture. Full replay never sends an old hug again.
+Hug source history and existing private read acknowledgements remain intact, but the former inbox UI is replaced with friend-card streaks and **Gratitude together**. Sending confirms persistence, not that the recipient has seen the gesture. Full replay never sends an old hug again.
 
 ## Sharing dates and streaks
 
@@ -30,7 +30,9 @@ A lightweight owner publisher runs after sign-in, independently of opening Frien
 
 Shared records expose no journal text, prompts, photos, summaries, entry identifiers/counts, exact writing times or private journal cursor. Accepted friends alone can read dates while sharing is enabled. Disabling sharing atomically deletes both the shared snapshot and private receipt; removing/blocking a friendship denies subsequent reads immediately. Already viewed information cannot be recalled. Raw sharing-choice history and publication provenance stay owner-only.
 
-The friend’s current streak appears beside their name as **(N days of gratitude in a row)**. It is absent when sharing is off/unavailable. Individual streaks use that person’s shared-calendar timezone. Community gratitude intersects both sets of civil dates since the current friendship was accepted and uses the earlier of their current local dates; today being unfinished retains yesterday’s run. For an active run: **Jamie and Robin have a 4 day gratitude streak.** Once it ends, show their longest shared run. A missing day repaired by either friend restores the shared run. Empty copy: **Your community streaks will show up here!**
+The friend’s current streak appears beside their name as **(N days of gratitude in a row)**. It is absent when sharing is off/unavailable. Individual streaks use that person’s shared-calendar timezone. Shared streaks intersect both sets of civil dates since the current friendship was accepted and use the earlier of their current local dates; today being unfinished retains yesterday’s run. A missing day repaired by either friend restores the shared run.
+
+Each friend card always shows the longest available shared run, including during an active run: **Jamie and Robin’s longest gratitude streak: 4 days.** This line sits between the username and Manage friendship, with half a line of padding above and below. Known empty histories show zero; private/unavailable results are omitted. There is no standalone Community gratitude section. The Gratitude together table retains the current shared run and has 24px of space beneath it before Hug notifications.
 
 Only live, server-confirmed peer consent/snapshots enter the UI. Peer dates are not saved in the application’s IndexedDB checkpoint; consent changes and friendship revocation remove the in-memory result. Unavailable information is omitted, not treated as a missed day. Sharing never grants access to the private journal stream or credentials.
 
@@ -63,7 +65,7 @@ Off/sign-out clears the local gate before attempting network revocation. Permiss
 
 Pure tests cover substring bounds, logical-date selection, repaired intersections, sharing replay, midnight/DST handling and legacy-version restrictions. Firebase emulator tests cover bounded paged search, atomic rename/hiding, explicit sharing and private provenance, revocation, stale writes, per-day hug enforcement and rejected forged/downgraded actions. Browser walkthroughs 036–039 and 043 cover both viewports, screenshot every user action with zero tolerance and generate checks under each image.
 
-## Shared-streak table below Community gratitude
+## Gratitude together table
 
 Requested on 9 November 2026; implemented in this branch.
 
@@ -79,7 +81,7 @@ Shared streaks are retroactive from the date the friendship was accepted: launch
 
 The status remains limited to consented gratitude dates; journal entries, prompts and photos stay private. Unavailable or unshared status must be distinguishable from an unfilled half. Confirmed on 12 November: each half follows that person’s current day in their saved sharing timezone. Shared streaks use the earlier current date and matching civil date labels, as in the existing shared-streak convention. The starting day is the later local acceptance date across the two calendars. Add textual/accessible status alongside the heart so colour and shape are not the only cues.
 
-The table uses the acceptance of the current continuous friendship. Removing or blocking ends it; accepting a fresh request starts a new shared-streak period. A new Friends checkpoint version (4) rebuilds acceptance from existing source events rather than inventing a rollout timestamp. This derived `acceptedAt` stays outside the canonical friendship head and source payloads. Community gratitude paragraphs and the table share this acceptance-bound calculation, so their totals agree. Individual streaks beside a friend’s name still describe that person’s full shared journal history.
+The table uses the acceptance of the current continuous friendship. Removing or blocking ends it; accepting a fresh request starts a new shared-streak period. A new Friends checkpoint version (4) rebuilds acceptance from existing source events rather than inventing a rollout timestamp. This derived `acceptedAt` stays outside the canonical friendship head and source payloads. The longest run in each friend card and the current run in the table use the same acceptance-bound calendar. Individual streaks beside a friend’s name still describe that person’s full shared journal history.
 
 Unavailable or unshared rows show textual status and no numeric streak instead of zero. The two halves also have accessible text, so their colours are not the sole signal. Table rows use one glass surface without per-row backdrop blur.
 

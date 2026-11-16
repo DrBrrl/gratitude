@@ -1945,3 +1945,12 @@ I'm off to bed! Please go ahead and set up the rest of the PRs when you're done 
 ### 2026-11-13 — Prepare Friends PR after Today merge
 
 I'm re-running 2 failed jobs on main and then will look at merging pr31 :) Can we make sure it's all sorted out and ready?
+
+
+### 2026-11-16 — Friends card streaks and table spacing
+
+Before we progress any of the three draft PRs, i want us to change some things about
+
+The preceding message was interrupted and completed with:
+
+Before we progress any of the three draft PRs, i want us to change some things about the current Friends page! First, let's put the "[user] and [friend]'s longest gratitude streak: xx days." text in the "your friends" boxes, between the @[username] and "Manage friendship with [friend]" texts? Little bit of padding above and below, about half a line either side. Then we'll get rid of the Community gratitude section altogether, leaving the Gratitude together section. I would also like a bit of padding below the friend table, above the Hug notifications box. They're currently stuck together!
