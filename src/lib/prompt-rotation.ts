@@ -1,6 +1,6 @@
 import { STARTER_CATALOGUE } from './starter-catalogue.ts';
 export type PromptKind = 'starter'|'backup';
-export type PromptOffer = {eventId:string;day:string;promptId:string;kind:PromptKind;text:string;surface:'today'|'editor'|'backup';sequence:number};
+export type PromptOffer = {eventId:string;day:string;promptId:string;kind:PromptKind|'ai';topicId?:string|null;text:string;surface:'today'|'editor'|'backup';sequence:number};
 export type RotationState = {offers:PromptOffer[];accepted:Record<string,string>;acceptedText:Record<string,string>;requests:Record<string,number>};
 export const emptyRotation = ():RotationState=>({offers:[],accepted:{},acceptedText:{},requests:{}});
 const starters=new Map<string,{id:string;category:string;text:string}>(STARTER_CATALOGUE.map(p=>[p.id,p]));

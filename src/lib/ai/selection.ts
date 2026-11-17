@@ -1,8 +1,9 @@
 import type { Entry, Projection } from '../domain.ts';
+import { reflectionTopic } from '../reflection-topics.ts';
 import { civilDate, dayInZone, validDay } from '../civil-date.ts';
 
 export const SELECTOR_VERSION = 'mixed-v1';
-export type SelectionInput = { day: string; timeZone: string; selectionSeed: string; entryId?: string; weighted?:boolean; avoidEntryIds?: readonly string[] };
+export type SelectionInput = { day: string; timeZone: string; selectionSeed: string; entryId?: string; weighted?:boolean; avoidEntryIds?: readonly string[]; topic?: {id:string|null} };
 export type Selection = { anniversary: Entry[]; rediscovery: Entry[]; fallback: Entry[]; recent: Entry[] };
 export function validTimeZone(value: unknown): value is string {
   if (typeof value !== 'string' || value.length > 100 || !/^[A-Za-z_+-]+(?:\/[A-Za-z0-9_+-]+)*$/.test(value)) return false;
@@ -11,12 +12,15 @@ export function validTimeZone(value: unknown): value is string {
 export function validSelection(input: SelectionInput) {
   return validDay(input.day) && validTimeZone(input.timeZone) && typeof input.selectionSeed === 'string' && /^[a-f0-9]{32}$/.test(input.selectionSeed);
 }
+let fixtureSeedDraw=0;
 /** Literal random request input. Never called by the reducer or a transaction retry. */
 export function newSelectionSeed() {
+  const fixtureSeed=import.meta.env?.VITE_PROMPT_RANDOM_SEED;
+  if(fixtureSeed){let hash=2166136261;for(const char of `${fixtureSeed}:context:${fixtureSeedDraw++}`)hash=Math.imul(hash^char.charCodeAt(0),16777619);return Array.from({length:4},(_,i)=>{hash=Math.imul(hash^(i+1),16777619);return (hash>>>0).toString(16).padStart(8,'0');}).join('');}
   return [...crypto.getRandomValues(new Uint8Array(16))].map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 /** sfc32 with four 32-bit hex words and 12 warmup rounds. */
-function randomSource(seed: string) {
+export function randomSource(seed: string) {
   let [a,b,c,d] = seed.match(/.{8}/g)!.map(word => parseInt(word,16));
   const next = () => {
     const t = ((a + b | 0) + d | 0) >>> 0;
@@ -49,30 +53,33 @@ export function selectReflections(state: Projection, input: SelectionInput): Sel
   const candidates=state.entries.filter(entry => entry.id !== input.entryId && entry.text.trim()).map(entry => ({
     entry, day: dayInZone(entry.entryAt ?? entry.recordedAt,input.timeZone)
   })).filter(item => item.day < input.day).sort((a,b)=>compare(a.day,b.day)||compare(a.entry.id,b.entry.id));
+  const topicOf=(entry:Entry)=>{const t=reflectionTopic(state.topics,entry.id);return t?.origin==='ai'&&t.revision!==entry.revision?undefined:t?.topicId;};
+  const matches=(entry:Entry)=>!input.topic || !!input.topic.id && topicOf(entry)===input.topic.id;
+  const fallbackEligible=(entry:Entry)=>matches(entry) || !!input.topic?.id && topicOf(entry)==='unknown';
   const cost=(entry:Entry)=>input.weighted && entry.text.trim().length>600?2:1;
   const spent=(entries:Entry[])=>entries.reduce((sum,entry)=>sum+cost(entry),0);
   const used=new Set<string>();
-  const take=(entries: Entry[], count: number) => {
+  const take=(entries: Entry[], count: number, rankUsage=false) => {
     const result:Entry[]=[];let remaining=count;
-    for(const entry of entries.filter(entry=>!used.has(entry.id)).sort(freshness)){
+    for(const entry of entries.filter(entry=>!used.has(entry.id)).sort(rankUsage?(a,b)=>(state.ai.usage[a.id]?.lastSequence??0)-(state.ai.usage[b.id]?.lastSequence??0)||Number(!matches(a))-Number(!matches(b))||freshness(a,b):freshness)){
       if(cost(entry)<=remaining){result.push(entry);remaining-=cost(entry);}
       if(!remaining)break;
     }
     result.forEach(entry=>used.add(entry.id)); return result;
   };
   const ref=ordinal(input.day);
-  const recent=take(shuffle(candidates.filter(item=>ref-ordinal(item.day)<=14).map(item=>item.entry),draw),5);
+  const recent=take(shuffle(candidates.filter(item=>ref-ordinal(item.day)<=(input.topic?30:14) && matches(item.entry)).map(item=>item.entry),draw),5);
   const [year,month,date]=input.day.split('-').map(Number);
   const groups=new Map<number,{entry:Entry;distance:number}[]>();
   for(const item of candidates) {
-    if(used.has(item.entry.id)) continue;
+    if(used.has(item.entry.id)||!matches(item.entry)) continue;
     const candidateYear=Number(item.day.slice(0,4));
     for(const centreYear of [candidateYear-1,candidateYear,candidateYear+1]) {
       if(centreYear<1 || centreYear>=year) continue;
       let centre=`${String(centreYear).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
       if(month===2 && date===29 && !validDay(centre)) centre=`${String(centreYear).padStart(4,'0')}-02-28`;
       const distance=Math.abs(ordinal(item.day)-ordinal(centre));
-      if(distance<=3) { const group=groups.get(centreYear)??[]; group.push({entry:item.entry,distance});groups.set(centreYear,group); }
+      if(distance<=(input.topic?28:3)) { const group=groups.get(centreYear)??[]; group.push({entry:item.entry,distance});groups.set(centreYear,group); }
     }
   }
   const years=shuffle([...groups.keys()].sort((a,b)=>a-b),draw);
@@ -90,9 +97,9 @@ export function selectReflections(state: Projection, input: SelectionInput): Sel
     }
     if(!found) break;
   }
-  const leastUsed=shuffle(candidates.map(item=>item.entry),draw).sort((a,b)=>(state.ai.usage[a.id]?.lastSequence??0)-(state.ai.usage[b.id]?.lastSequence??0));
-  const rediscovery=take(leastUsed,7);
-  const fallback=take(leastUsed,20-spent(recent)-spent(anniversary)-spent(rediscovery));
+  const leastUsed=shuffle(candidates.map(item=>item.entry).filter(fallbackEligible),draw).sort((a,b)=>(state.ai.usage[a.id]?.lastSequence??0)-(state.ai.usage[b.id]?.lastSequence??0)||(input.topic?Number(!matches(a))-Number(!matches(b)):0));
+  const rediscovery=take(leastUsed,7,!!input.topic);
+  const fallback=take(leastUsed,20-spent(recent)-spent(anniversary)-spent(rediscovery),!!input.topic);
   return {anniversary,rediscovery,fallback,recent};
 }
 export function selectedEntries(selection: Selection) {
