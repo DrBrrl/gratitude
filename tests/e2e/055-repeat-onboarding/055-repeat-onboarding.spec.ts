@@ -1,3 +1,4 @@
+import {settingsSection} from '../helpers/journal-session';
 import {test,expect as baseExpect} from '@playwright/test';
 import {TestStepHelper} from '../helpers/test-step-helper';
 import {startJournal,navigate,expectSynced,seedHistory} from '../helpers/journal-session';
@@ -10,6 +11,7 @@ test('repeat setup from Personalise preserves saved settings and resumes after r
  await startJournal(page,info,steps,'repeat-onboarding');
  await seedHistory(page,[{text:'A fictional moment to preserve while repeating setup.',recordedAt:'2026-09-30T01:00:00Z'}]);
  await navigate(page,steps,'settings','Settings');
+ await settingsSection(page,steps,'parent-personalise','Account');
  await steps.action('personalise','Open Personalise settings',()=>page.getByRole('button',{name:/^Personalise your journal/}).click(),async()=>{await expect(page.getByRole('button',{name:'Repeat onboarding',exact:true})).toBeEnabled();});
  await steps.action('name','Enter a private name',()=>page.getByLabel('What would you like to be called?').fill('Robin'),async()=>{await expect(page.getByLabel('What would you like to be called?')).toHaveValue('Robin');});
  await steps.action('save','Save the private answer before repeating',()=>page.getByRole('button',{name:'Save my answers',exact:true}).click(),async()=>{await expect(page.getByText('Your answers are saved.',{exact:true})).toBeVisible();await expectSynced(page);});
@@ -21,6 +23,7 @@ test('repeat setup from Personalise preserves saved settings and resumes after r
  await steps.action('cancel','Leave the repeat without changing saved answers or rollout outcome',()=>page.getByRole('button',{name:'Skip for now',exact:true}).click(),async()=>{await expect(page.locator('.setup')).toHaveCount(0);await expect(page.getByRole('button',{name:'Repeat onboarding',exact:true})).toBeEnabled();await expect(page.getByLabel('What would you like to be called?')).toHaveValue('Robin, draft only');const state=replay(await selectionLog(page));expect(state.onboarding).toEqual(before.onboarding);expect(state.ai.choices).toEqual(before.ai.choices);expect(state.entries).toEqual(before.entries);});
  await steps.action('reload-cancelled','Do not reopen a cancelled repeat on the next visit',()=>page.reload(),async()=>{await expectSynced(page);await expect(page.locator('.setup')).toHaveCount(0);});
  await navigate(page,steps,'settings-again','Settings');
+ await settingsSection(page,steps,'parent-personalise-again','Account');
  await steps.action('personalise-again','Return to Personalise settings',()=>page.getByRole('button',{name:/^Personalise your journal/}).click(),async()=>{await expect(page.getByRole('button',{name:'Repeat onboarding',exact:true})).toBeEnabled();});
  await steps.action('repeat-again','Start a new repeat from Welcome',()=>page.getByRole('button',{name:'Repeat onboarding',exact:true}).click(),async()=>{await expect(page.getByRole('button',{name:'Let’s get started',exact:true})).toBeVisible();});
  await steps.action('about-again','Review the retained unconfirmed draft',()=>page.getByRole('button',{name:'Let’s get started',exact:true}).click(),async()=>{await expect(page.getByLabel('What would you like to be called?')).toHaveValue('Robin, draft only');});

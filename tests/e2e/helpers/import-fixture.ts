@@ -1,3 +1,4 @@
+import {settingsSection} from './journal-session';
 import { expect, type Page } from '@playwright/test';
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
 import { doc, getDoc, Timestamp, writeBatch } from 'firebase/firestore';
@@ -10,6 +11,7 @@ export const fixture=archiveFixture();
 export const zip={name:'fictional-gratitude.zip',mimeType:'application/zip',buffer:Buffer.from(fixture.bytes)};
 export async function openImport(page:Page, steps:TestStepHelper, id:string) {
   await navigate(page,steps,`${id}-settings`,'Settings');
+  await settingsSection(page,steps,`parent-${id}-import`,'Privacy & data');
   await steps.action(`${id}-import`,'Open the private journal importer',()=>page.getByRole('button',{name:/^Import journal/}).click(),async()=>{
     await expect(page.getByRole('heading',{name:'Import journal',exact:true})).toBeVisible();
     await expect(page.getByLabel('Choose journal ZIP')).toBeEnabled({timeout:15_000});

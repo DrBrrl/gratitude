@@ -1,3 +1,4 @@
+import {settingsSection} from '../helpers/journal-session';
 import { expect as playwrightExpect, test } from '@playwright/test';
 import { readFile, mkdtemp, writeFile, rm } from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -109,6 +110,7 @@ test('attach private photos, correct searchable AI descriptions and retain them 
     await expect(page.locator('.photo-card').nth(1).locator('.summary')).toHaveText('A little reminder of home.'); expect(requests).toBe(3);
   }, 'All three photos are loaded and decoded, manual descriptions survive replay and Gemini is not called again');
   await navigate(page, steps, 'export-settings', 'Settings');
+  await settingsSection(page,steps,'parent-export','Privacy & data');
   await steps.action('export', 'Open journal export', () => page.getByRole('button', { name: /^Export journal/ }).click(), async () => { await expect(page.getByRole('button', { name: 'Prepare export', exact: true })).toBeVisible(); });
   await steps.action('prepare', 'Include saved photo bytes and descriptions in Markdown ZIP', () => page.getByRole('button', { name: 'Prepare export', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Download Markdown ZIP', exact: true })).toBeVisible({ timeout: 15_000 }); });
   const download = page.waitForEvent('download');

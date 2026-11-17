@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { shown, total, onmore }: { shown: number; total: number; onmore: () => void } = $props();
+  let { shown, total, onmore, itemLabel='reflections', buttonLabel='Show older reflections' }: { shown: number; total: number; onmore: () => void; itemLabel?:string; buttonLabel?:string } = $props();
   let sentinel = $state<HTMLDivElement>();
   $effect(() => {
     const node = sentinel;
@@ -19,8 +19,8 @@
 </script>
 
 <div class="more-reflections" bind:this={sentinel}>
-  <p role="status">Showing {shown} of {total} reflections</p>
-  {#if shown < total}<button type="button" onclick={onmore}>Show older reflections</button>{/if}
+  <p role="status">Showing {shown} of {total} {itemLabel}</p>
+  {#if shown < total}<button type="button" onclick={onmore}>{buttonLabel}</button>{/if}
 </div>
 
 <style>

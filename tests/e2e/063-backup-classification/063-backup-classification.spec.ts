@@ -1,3 +1,5 @@
+import {navigate} from '../helpers/journal-session';
+import {settingsSection} from '../helpers/journal-session';
 import {test,expect as baseExpect,type Route} from '@playwright/test';
 import {TestStepHelper} from '../helpers/test-step-helper';
 import {startJournal,expectSynced} from '../helpers/journal-session';
@@ -15,7 +17,9 @@ test('backup batches pause, survive reload, retry invalid replies and allow manu
  await steps.action('import-open','Open private backup import',()=>page.getByText('Import backup prompts',{exact:true}).click(),async()=>{await expect(page.getByLabel('Prompt spreadsheet (.xlsx)')).toBeVisible();});
  await steps.action('import-file','Choose two fictional backup questions',()=>page.getByLabel('Prompt spreadsheet (.xlsx)').setInputFiles({name:'fictional-prompts.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(fixture.bytes)}),async()=>{await expect(page.getByText(/Import 2 prompts into/)).toBeVisible();});
  await steps.action('import-confirm','Import without classifying or consuming questions',()=>page.getByRole('button',{name:'Confirm prompt import',exact:true}).click(),async()=>{await expect(page.locator('.backup-settings')).toContainText('2 personalised prompts ready');expect(calls).toBe(0);});
+ await navigate(page,steps,'root-classification','Settings');
  await steps.action('classification','Open the classification disclosure',()=>page.getByRole('button',{name:'Classify journal and backup topics',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Topic classification',exact:true})).toBeVisible();});
+ await steps.action('tools-classification','Open the AI classification controls without starting inference',()=>page.locator('.classification-tools > summary').click(),async()=>{await expect(page.getByRole('heading',{name:'AI classification',exact:true})).toBeVisible();});
  await steps.action('allow','Allow classification only with the displayed connection',()=>page.getByRole('button',{name:'Allow classification with this connection',exact:true}).click(),async()=>{await expect(page.getByRole('button',{name:'Classify unclassified backups',exact:true})).toBeEnabled();expect(calls).toBe(0);});
  await steps.action('start-batch','Start a bounded serial backup batch',()=>page.getByRole('button',{name:'Classify unclassified backups',exact:true}).click(),async()=>{await expect.poll(()=>!!held).toBe(true);await expect(page.getByRole('region',{name:'Classification progress',exact:true})).toContainText('0 completed · 2 remaining');});
  await steps.action('pause','Stop queued calls while the first request is in flight',()=>page.getByRole('button',{name:'Pause',exact:true}).click(),async()=>{await expect(page.getByRole('region',{name:'Classification progress',exact:true})).toContainText('Paused.');expect(calls).toBe(1);});
@@ -23,7 +27,9 @@ test('backup batches pause, survive reload, retry invalid replies and allow manu
  await steps.step('received','Retain the already-dispatched response without starting another call',[{description:'The first category is saved, the second remains queued and the batch stays paused',check:async()=>{await expect(page.getByRole('region',{name:'Classification progress',exact:true})).toContainText('1 completed · 1 remaining');expect(calls).toBe(1);}}]);
  await steps.action('reload','Keep paused source progress across reload',()=>page.reload(),async()=>{await expectSynced(page);expect(calls).toBe(1);});
  await aiSettings(page,steps,'resume-settings');
- await steps.action('restore','Review the paused batch without dispatching it',()=>page.getByRole('button',{name:'Classify journal and backup topics',exact:true}).click(),async()=>{await expect(page.getByRole('region',{name:'Classification progress',exact:true})).toContainText('Paused.');expect(calls).toBe(1);});
+ await navigate(page,steps,'root-restore','Settings');
+ await steps.action('restore','Review the paused batch without dispatching it',()=>page.getByRole('button',{name:'Classify journal and backup topics',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Topic classification',exact:true})).toBeVisible();});
+ await steps.action('tools-restore','Open the AI classification controls without starting inference',()=>page.locator('.classification-tools > summary').click(),async()=>{await expect(page.getByRole('heading',{name:'AI classification',exact:true})).toBeVisible();});
  await steps.action('resume','Explicitly resume the remaining backup',()=>page.getByRole('button',{name:'Resume',exact:true}).click(),async()=>{await expect(page.getByRole('region',{name:'Classification progress',exact:true})).toContainText('1 completed · 0 remaining · 1 failed or stale');expect(calls).toBe(2);});
  await steps.action('retry','Retry the invalid item and retain Unknown as a completed result',()=>page.getByRole('button',{name:'Retry failed or interrupted item',exact:true}).click(),async()=>{await expect(page.getByRole('region',{name:'Classification progress',exact:true})).toContainText('2 completed · 0 remaining · 0 failed or stale');expect(calls).toBe(3);});
  await steps.action('backup-kind','Review a backup category',()=>page.getByLabel('Item type',{exact:true}).selectOption('backup'),async()=>{await expect(page.getByLabel('Item',{exact:true}).locator('option')).toHaveCount(3);});

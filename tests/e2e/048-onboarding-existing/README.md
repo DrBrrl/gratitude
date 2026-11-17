@@ -141,9 +141,18 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Account settings
+
+![Open Account settings](./screenshots/015-parent-restore-answers-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Recover the unconfirmed private draft for later editing
 
-![Recover the unconfirmed private draft for later editing](./screenshots/015-restore-answers-mobile-chromium.png)
+![Recover the unconfirmed private draft for later editing](./screenshots/016-restore-answers-mobile-chromium.png)
 
 **Verifications:**
 
@@ -152,7 +161,7 @@ Viewport: mobile-chromium.
 
 ## Use an eighty-character private name
 
-![Use an eighty-character private name](./screenshots/016-maximum-name-mobile-chromium.png)
+![Use an eighty-character private name](./screenshots/017-maximum-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -161,7 +170,16 @@ Viewport: mobile-chromium.
 
 ## Confirm the private name without enabling AI
 
-![Confirm the private name without enabling AI](./screenshots/017-save-name-mobile-chromium.png)
+![Confirm the private name without enabling AI](./screenshots/018-save-name-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return to the named Account page
+
+![Return to the named Account page](./screenshots/019-name-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -170,7 +188,7 @@ Viewport: mobile-chromium.
 
 ## Keep the named Account row within the narrow menu
 
-![Keep the named Account row within the narrow menu](./screenshots/018-name-menu-mobile-chromium.png)
+![Keep the named Account row within the narrow menu](./screenshots/020-name-menu-mobile-chromium.png)
 
 **Verifications:**
 
@@ -179,7 +197,7 @@ Viewport: mobile-chromium.
 
 ## Wrap the full private name in the Journal heading
 
-![Wrap the full private name in the Journal heading](./screenshots/019-name-journal-mobile-chromium.png)
+![Wrap the full private name in the Journal heading](./screenshots/021-name-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -188,7 +206,7 @@ Viewport: mobile-chromium.
 
 ## Keep the personalised Today heading inside the screen
 
-![Keep the personalised Today heading inside the screen](./screenshots/020-name-today-mobile-chromium.png)
+![Keep the personalised Today heading inside the screen](./screenshots/022-name-today-mobile-chromium.png)
 
 **Verifications:**
 

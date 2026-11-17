@@ -1,3 +1,4 @@
+import {settingsSection} from '../helpers/journal-session';
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { TestStepHelper } from '../helpers/test-step-helper';
@@ -58,6 +59,7 @@ test('choose a date from Today and change a saved reflection date without losing
   await navigate(page, steps, 'replayed-journal', 'Journal');
   await steps.step('replayed-date', 'Preserve the edited date after complete replay', [{ description: 'The same single entry retains its date, body and colour', check: async () => { await expect(cards).toHaveCount(1); await expect(cards.locator('time')).toHaveText('Thu 01 Oct 2026, 9:15 AM'); await expect(cards).toContainText(text); await expect(cards).toHaveAttribute('style', new RegExp(colour)); } }]);
   await navigate(page, steps, 'export-settings', 'Settings');
+  await settingsSection(page,steps,'parent-export','Privacy & data');
   await steps.action('export', 'Open Markdown export', () => page.getByRole('button', { name: /^Export journal/ }).click(), async () => { await expect(page.getByRole('radio', { name: /Markdown/ })).toBeChecked(); });
   await steps.action('prepare', 'Prepare the reflection with its edited date', () => page.getByRole('button', { name: 'Prepare export', exact: true }).click(), async () => { await expect(page.getByRole('status')).toHaveText('Export ready', { timeout: 15_000 }); });
   const download = page.waitForEvent('download');

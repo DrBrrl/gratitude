@@ -1,3 +1,4 @@
+import {settingsSection} from '../helpers/journal-session';
 import {test,expect as baseExpect} from '@playwright/test';
 import {initializeTestEnvironment} from '@firebase/rules-unit-testing';
 import {readFile} from 'node:fs/promises';
@@ -35,6 +36,7 @@ test('assign an unselected custom topic to an imported reflection and export it'
  await steps.action('reopen-custom','Retain the saved custom selection',()=>page.getByRole('button',{name:'Change reflection topic',exact:true}).click(),async()=>{await expect(page.getByRole('option',{name:/^Birdwatching/})).toHaveAttribute('aria-selected','true');});
  await steps.action('escape','Cancel category editing with Escape',()=>picker.press('Escape'),async()=>{await expect(picker).toHaveCount(0);await expect(page.getByRole('button',{name:'Change reflection topic',exact:true})).toBeFocused();});
  await navigate(page,steps,'settings','Settings');
+ await settingsSection(page,steps,'parent-export','Privacy & data');
  await steps.action('export','Open journal export',()=>page.getByRole('button',{name:/^Export journal/}).click(),async()=>{await expect(page.getByRole('radio',{name:/JSON/})).toBeVisible();});
  await steps.action('json','Choose the full JSON format',()=>page.getByRole('radio',{name:/JSON/}).check(),async()=>{await expect(page.getByRole('radio',{name:/JSON/})).toBeChecked();});
  await steps.action('prepare','Prepare the category with the imported writing',()=>page.getByRole('button',{name:'Prepare export',exact:true}).click(),async()=>{await expect(page.getByRole('status')).toHaveText('Export ready');});

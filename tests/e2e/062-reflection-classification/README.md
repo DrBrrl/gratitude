@@ -133,9 +133,27 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Settings
+
+![Open Settings](./screenshots/014-root-open-classification-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Review the separate classification disclosure
 
-![Review the separate classification disclosure](./screenshots/014-open-classification-mobile-chromium.png)
+![Review the separate classification disclosure](./screenshots/015-open-classification-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the AI classification controls without starting inference
+
+![Open the AI classification controls without starting inference](./screenshots/016-tools-open-classification-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Explicitly allow this connection to classify selected text
 
-![Explicitly allow this connection to classify selected text](./screenshots/015-allow-mobile-chromium.png)
+![Explicitly allow this connection to classify selected text](./screenshots/017-allow-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Select one saved reflection
 
-![Select one saved reflection](./screenshots/016-choose-mobile-chromium.png)
+![Select one saved reflection](./screenshots/018-choose-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Request one editable AI category
 
-![Request one editable AI category](./screenshots/017-classify-one-mobile-chromium.png)
+![Request one editable AI category](./screenshots/019-classify-one-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/018-journal-mobile-chromium.png)
+![Open Journal](./screenshots/020-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Read the AI suggestion on the reflection
 
-![Read the AI suggestion on the reflection](./screenshots/019-entry-mobile-chromium.png)
+![Read the AI suggestion on the reflection](./screenshots/021-entry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Open the existing manual category picker
 
-![Open the existing manual category picker](./screenshots/020-correct-open-mobile-chromium.png)
+![Open the existing manual category picker](./screenshots/022-correct-open-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Find another category without using AI
 
-![Find another category without using AI](./screenshots/021-correct-search-mobile-chromium.png)
+![Find another category without using AI](./screenshots/023-correct-search-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Make the manual category authoritative
 
-![Make the manual category authoritative](./screenshots/022-correct-mobile-chromium.png)
+![Make the manual category authoritative](./screenshots/024-correct-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Restore the journal without repeating inference
 
-![Restore the journal without repeating inference](./screenshots/023-reload-mobile-chromium.png)
+![Restore the journal without repeating inference](./screenshots/025-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/024-settings-mobile-chromium.png)
+![Open Settings](./screenshots/026-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Open full replay recovery
 
-![Open full replay recovery](./screenshots/025-privacy-mobile-chromium.png)
+![Open full replay recovery](./screenshots/027-privacy-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Replay immutable observations and the manual correction
 
-![Replay immutable observations and the manual correction](./screenshots/026-rebuild-mobile-chromium.png)
+![Replay immutable observations and the manual correction](./screenshots/028-rebuild-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/027-replayed-journal-mobile-chromium.png)
+![Open Journal](./screenshots/029-replayed-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: mobile-chromium.
 
 ## Verify the same writing and manual category after full replay
 
-![Verify the same writing and manual category after full replay](./screenshots/028-replayed-entry-mobile-chromium.png)
+![Verify the same writing and manual category after full replay](./screenshots/030-replayed-entry-mobile-chromium.png)
 
 **Verifications:**
 

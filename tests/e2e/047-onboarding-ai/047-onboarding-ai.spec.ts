@@ -1,3 +1,4 @@
+import {settingsSection} from '../helpers/journal-session';
 import {test,expect as baseExpect} from '@playwright/test';
 import {TestStepHelper} from '../helpers/test-step-helper';
 import {startJournal,seedHistory,navigate,openEditor,expectSynced,editor} from '../helpers/journal-session';
@@ -23,6 +24,7 @@ test('explicit questionnaire consent informs cloud and local prompts with weight
  await startJournal(page,info,steps,'onboarding-ai');
  await seedHistory(page,Array.from({length:18},(_,i)=>({text:'x'.repeat(601),recordedAt:`2025-10-${String(i%7+1).padStart(2,'0')}T01:00:00Z`})));
  await navigate(page,steps,'settings','Settings');
+ await settingsSection(page,steps,'parent-answers','Account');
  await steps.action('answers','Choose private answers separately from AI use',()=>page.getByRole('button',{name:/^Personalise your journal/}).click(),async()=>{await expect(page.getByLabel('What would you like to be called?')).toHaveValue('');});
  await steps.action('name','Choose a name for the private journal',()=>page.getByLabel('What would you like to be called?').fill('Sam'),async()=>{await expect(page.getByLabel('What would you like to be called?')).toHaveValue('Sam');});
  await steps.action('pronouns','Explicitly provide pronouns',()=>page.getByLabel('Share your pronouns if you like!').fill('they/them'),async()=>{await expect(page.getByLabel('Share your pronouns if you like!')).toHaveValue('they/them');});
@@ -32,6 +34,7 @@ test('explicit questionnaire consent informs cloud and local prompts with weight
  await steps.action('limit','Choose the 200-word option',()=>page.getByRole('slider').press('End'),async()=>{await expect(page.getByRole('slider')).toHaveValue('200');});
  await steps.action('consent','Explicitly share selected questionnaire answers',()=>page.getByLabel('Use my questionnaire answers for AI prompts',{exact:true}).check(),async()=>{await expect(page.getByLabel('Use my questionnaire answers for AI prompts',{exact:true})).toBeChecked();});
  await steps.action('save-answers','Confirm only literal questionnaire inputs',()=>page.getByRole('button',{name:'Save my answers',exact:true}).click(),async()=>{await expect(page.getByRole('status')).toHaveText('Your answers are saved.');expect(requests).toHaveLength(0);});
+ await steps.action('back-account','Return from Personalise to Account',()=>page.locator('button.back').click(),async()=>{await expect(page.getByRole('heading',{name:'Account · Sam',exact:true})).toBeVisible();});
  await steps.action('back-settings','Return to Settings',()=>page.locator('button.back').click(),async()=>{await expect(page.getByRole('heading',{name:'Settings',exact:true})).toBeVisible();});
  await steps.action('ai','Open AI settings and inspect the confirmed sources',()=>page.getByRole('button',{name:/^AI settings/}).click(),async()=>{await expect(page.locator('.prompt-sources')).not.toContainText('Sam');await expect(page.locator('.prompt-sources')).toContainText('Your private name and pronouns are excluded');await expect(page.locator('.prompt-sources')).toContainText('Music and sounds: listening, playing, singing.');});
  await toggleAI(page,steps,'enable',true);

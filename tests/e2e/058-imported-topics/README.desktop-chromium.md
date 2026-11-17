@@ -151,9 +151,18 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/016-parent-export-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open journal export
 
-![Open journal export](./screenshots/016-export-desktop-chromium.png)
+![Open journal export](./screenshots/017-export-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Choose the full JSON format
 
-![Choose the full JSON format](./screenshots/017-json-desktop-chromium.png)
+![Choose the full JSON format](./screenshots/018-json-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Prepare the category with the imported writing
 
-![Prepare the category with the imported writing](./screenshots/018-prepare-desktop-chromium.png)
+![Prepare the category with the imported writing](./screenshots/019-prepare-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Download JSON with category and original import provenance
 
-![Download JSON with category and original import provenance](./screenshots/019-download-desktop-chromium.png)
+![Download JSON with category and original import provenance](./screenshots/020-download-desktop-chromium.png)
 
 **Verifications:**
 

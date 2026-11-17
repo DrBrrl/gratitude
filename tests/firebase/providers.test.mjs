@@ -60,3 +60,38 @@ test('personal-cloud follow-up requests with journal context fit Rules validatio
  await save({eventId:'follow-up_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'follow-up',text:'What fictional detail made you smile?',model,finishReason:'STOP'}});
  assert.equal(replay(log).ai.days['2026-10-01'],'follow-up_response');
 });
+
+test('shared backups use the current prompt connection; explicit legacy backups retain their binding',async()=>{
+ const uid='shared-backup',db=client(uid),log=[];
+ const save=async action=>{await appendReflection(db,uid,action);log.push({...action,sequence:log.length+1,recordedAt:at});};
+ for(const id of ['one','two'])await setDoc(doc(db,`users/${uid}/privateConnections/${id}`),{schemaVersion:1,provider:'ollama',model:'fictional/text',revision:id,updatedAt:serverTimestamp()});
+ let action={...choices('ollama','one'),schemaVersion:6,payload:{...choices('ollama','one').payload,backupProvider:'prompt',backupConnectionId:null}};
+ await save(action);
+ const target=id=>({provider:'ollama',model:'fictional/text',thinking:false,connectionId:id,connectionRevision:id});
+ const request=makeRequest(replay(log),'2026-10-01','personal','shared-request',undefined,selection,target('one'),true);await save(request);
+ await save({eventId:'shared-request_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:request.eventId,text:'A fictional shared question?',model:'fictional/text',finishReason:'STOP'}});
+ action={...action,eventId:'next',payload:{...action.payload,previousEventId:log.at(-1).eventId,promptConnectionId:'two'}};await save(action);
+ const next=makeRequest(replay(log),'2026-10-01','personal','next-request',undefined,selection,target('two'),true);
+ await assertFails(appendReflection(db,uid,{...next,payload:{...next.payload,connectionId:'one',connectionRevision:'one'}}));
+ await save(next);
+ assert.equal(replay(log).ai.choices.backupProvider,'prompt');assert.deepEqual(replay(log.slice(3),replay(log.slice(0,3))),replay(log));
+ action={...action,eventId:'fixed',schemaVersion:5,payload:{...action.payload,previousEventId:log.at(-1).eventId,backupProvider:'ollama',backupConnectionId:'one'}};await save(action);
+ await save(makeRequest(replay(log),'2026-10-01','personal','fixed-request',undefined,selection,target('one'),true));
+ action={...action,eventId:'other-prompt',payload:{...action.payload,previousEventId:log.at(-1).eventId,provider:'gemini',promptConnectionId:null}};await save(action);
+ await save(makeRequest(replay(log),'2026-10-01','personal','fixed-after-prompt-change',undefined,selection,target('one'),true));
+ assert.equal(replay(log).ai.choices.backupConnectionId,'one');assert.equal(replay(log).ai.choices.provider,'gemini');
+
+ await assertFails(setDoc(doc(client('other-owner'),`users/${uid}/privateSettings/lmStudioBackups`),{schemaVersion:1,baseUrl:'https://fictional.example',model:'fictional/text',token:'fictional-token',updatedAt:serverTimestamp()}));
+ await setDoc(doc(db,`users/${uid}/privateSettings/lmStudioBackups`),{schemaVersion:1,baseUrl:'https://fictional.example',model:'fictional/text',token:'fictional-token',updatedAt:serverTimestamp()});
+ await assertFails(getDoc(doc(client('other-owner'),`users/${uid}/privateSettings/lmStudioBackups`)));
+});
+
+test('Rules reject forged shared choices and legacy schemas independently of the parser',async()=>{
+ const uid='forged-shared-choice',db=client(uid),root=`users/${uid}/streams/v1`;
+ async function raw(action){const batch=writeBatch(db);batch.set(doc(db,`${root}/events/${action.eventId}`),{...action,sequence:1,recordedAt:serverTimestamp()});batch.set(doc(db,root),{sequence:1,lastEventId:action.eventId});batch.set(doc(db,`${root}/ai/control`),{lastEventId:action.eventId,choicesId:action.eventId,requestId:null});return batch.commit();}
+ const action={...choices('gemini',null),schemaVersion:6,payload:{...choices('gemini',null).payload,backupProvider:'prompt',backupConnectionId:null}};
+ await assertFails(raw({...action,payload:{...action.payload,backupConnectionId:'separate-hidden'}}));
+ await assertFails(raw({...action,schemaVersion:5}));
+ await assertFails(raw({...action,payload:{...action.payload,token:'never-in-events'}}));
+ await raw(action);
+});

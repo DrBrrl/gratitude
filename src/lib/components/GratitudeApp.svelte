@@ -120,13 +120,16 @@
   import { aiAvailable as geminiAvailable, personalContextAvailable as geminiPersonal, geminiGenerator } from '$lib/ai/gemini';
   import BackupPicker from './BackupPicker.svelte';
   import BackupPrompts from './BackupPrompts.svelte';
+  import UnknownReview from './UnknownReview.svelte';
+  import {backupProvider,backupConnectionId} from '../ai/backup-connection';
+  import {unknownTargets} from '../unknown-review';
   import {availableBackups,BACKUP_MINIMUM} from '../backup-prompts';
   import {BackupRefiller} from '../ai/backup-refiller';
   import ModelSettings from './ModelSettings.svelte';
   import PhotoModelSettings from './PhotoModelSettings.svelte';
   import PromptFeedback from './PromptFeedback.svelte';
   import MoreReflections from './MoreReflections.svelte';
-  import {defaultConnection,photoConnectionScope,readConnection,readProviderConnection,saveConnection,wasAccountConnection,clearConnectionToken,localGenerator,type ModelConnection} from '$lib/ai/lm-studio';
+  import {defaultConnection,photoConnectionScope,backupConnectionScope,readConnection,readProviderConnection,saveConnection,wasAccountConnection,clearConnectionToken,localGenerator,type ModelConnection} from '$lib/ai/lm-studio';
   import {collection,onSnapshot} from 'firebase/firestore';
   import {isExternalProvider,isLocalService,providerName as serviceName,type AIProvider} from '../ai/connection-contract';
   import {saveModelBinding} from '../firebase/model-binding';
@@ -135,6 +138,10 @@
   let stopConnections=()=>{};
   let modelConnection=$state<ModelConnection>(defaultConnection());
   let modelConnectionError=$state('');
+  let backupSlotSaved=$state(false);
+  let backupModelConnection=$state<ModelConnection>(defaultConnection()),backupConnectionError=$state('');
+  let backupCredentialStore:ModelCredentialStore|null=null;
+  let backupCredentialStatus=$state<CredentialStatus>({ready:false,saved:false,error:''});
   let photoModelConnection=$state<ModelConnection>(defaultConnection()),photoConnectionError=$state('');
   import {ModelCredentialStore,type CredentialStatus} from '../firebase/model-credential';
   let credentialStore:ModelCredentialStore|null=null,photoCredentialStore:ModelCredentialStore|null=null;
@@ -150,11 +157,26 @@
   }
   async function savePhotoToken(connection:ModelConnection){if(!photoCredentialStore||!navigator.onLine)throw new Error('Connect and sign in first.');await photoCredentialStore.save(isExternalProvider(connection.provider)?await bindConnection(connection,photoModelScope):connection);}
   async function forgetPhotoToken(){if(!photoCredentialStore||!navigator.onLine)throw new Error('Connect and sign in first.');await photoCredentialStore.forget();}
+  const backupOriginKey=(scope:string)=>`gratitude:backup-token-origin:${scope}`;
+  function clearInheritedBackupToken(scope:string){
+    if(sessionStorage.getItem(backupOriginKey(scope))!=='prompt-account')return;
+    clearConnectionToken(backupConnectionScope(scope));sessionStorage.removeItem(backupOriginKey(scope));
+    if(scope===modelScope)backupModelConnection={...backupModelConnection,token:''};
+  }
+  function preserveLegacyBackup(){
+    const connection=localBackupConnection;
+    saveConnection(backupModelScope,connection);backupModelConnection=connection;backupSlotSaved=true;
+    if(wasAccountConnection(modelScope)&&connection.provider===modelConnection.provider&&connection.baseUrl===modelConnection.baseUrl&&connection.token===modelConnection.token)sessionStorage.setItem(backupOriginKey(modelScope),'prompt-account');
+    else sessionStorage.removeItem(backupOriginKey(modelScope));
+  }
+  async function saveBackupToken(connection:ModelConnection){if(!backupCredentialStore||!navigator.onLine)throw new Error('Connect and sign in first.');await backupCredentialStore.save(isExternalProvider(connection.provider)?await bindConnection({...connection,connectionId:connection.provider!=='personal-gemini'&&connection.connectionId===view.state.ai.choices.promptConnectionId?undefined:connection.connectionId},backupModelScope):connection);}
+  async function forgetBackupToken(){if(!backupCredentialStore||!navigator.onLine)throw new Error('Connect and sign in first.');await backupCredentialStore.forget();}
   async function confirmChoices(patch:Partial<AIChoices>){
     if(!repository)throw new Error('Open your journal first.');
     const payload={...view.state.ai.choices,backupEnabled:view.state.ai.choices.backupEnabled??false,backupProvider:view.state.ai.choices.backupProvider??'lm-studio',...patch,previousEventId:view.state.ai.control.lastEventId};
     const {promptConnectionId:unusedPrompt,photoConnectionId:unusedPhoto,backupConnectionId:unusedBackup,...legacyPayload}=payload;
-    if([payload.provider,payload.backupProvider,payload.photoProvider].some(provider=>provider&&provider!=='prompt'&&isExternalProvider(provider as AIProvider))||view.state.ai.choices.promptConnectionId!==undefined)await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:5,payload:{...payload,photoProvider:payload.photoProvider??'prompt',promptConnectionId:payload.promptConnectionId??null,photoConnectionId:payload.photoConnectionId??null,backupConnectionId:payload.backupConnectionId??null}});
+    if(payload.backupProvider==='prompt')await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:6,payload:{...payload,photoProvider:payload.photoProvider??'prompt',promptConnectionId:payload.promptConnectionId??null,photoConnectionId:payload.photoConnectionId??null,backupConnectionId:null}});
+    else if([payload.provider,payload.backupProvider,payload.photoProvider].some(provider=>provider&&provider!=='prompt'&&isExternalProvider(provider as AIProvider))||view.state.ai.choices.promptConnectionId!==undefined)await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:5,payload:{...payload,photoProvider:payload.photoProvider??'prompt',promptConnectionId:payload.promptConnectionId??null,photoConnectionId:payload.photoConnectionId??null,backupConnectionId:payload.backupConnectionId??null}});
     else if(payload.photoProvider!==undefined)await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:4,payload:{...legacyPayload,photoProvider:payload.photoProvider}});
     else await repository.commitAI({eventId:crypto.randomUUID(),type:'AIChoicesConfirmed',schemaVersion:3,payload:legacyPayload});
   }
@@ -164,14 +186,16 @@
     return saveConnection(scope,bound);
   }
   async function selectPromptConnection(connection:ModelConnection){
-    const bound=await bindConnection(connection,modelScope);
+    // Preserve a legacy explicit backup on this device before the prompt slot changes.
+    if(view.state.ai.choices.backupProvider!=='prompt'&&!backupSlotSaved&&modelScope){preserveLegacyBackup();}
+    const bound=await bindConnection({...connection,connectionId:connection.provider!=='personal-gemini'&&connection.connectionId===view.state.ai.choices.backupConnectionId?undefined:connection.connectionId},modelScope);
     await confirmChoices({provider:bound.provider,promptConnectionId:isExternalProvider(bound.provider)?bound.connectionId!:null});
-    modelConnection=bound;modelConnectionError='';refiller.reset();
+    modelConnection=bound;modelConnectionError='';refiller.reset();return bound;
   }
   async function savePhotoModel(provider:'prompt'|AIProvider,connection?:ModelConnection){
     const bound=connection?await bindConnection(connection,photoModelScope):undefined;
     await confirmChoices({photoProvider:provider,photoConnectionId:bound&&isExternalProvider(provider as AIProvider)?bound.connectionId!:null});
-    if(bound){photoModelConnection=bound;photoConnectionError='';}
+    if(bound){photoModelConnection=bound;photoConnectionError='';}return bound;
   }
   let refillMessage=$state('');
   let offering=$state(false),starterAttemptDay=$state(''),starterOwner=$state(''),starterMessage=$state('');
@@ -220,13 +244,20 @@
     }
   }
   async function removeBackup(id:string){await repository?.queueBackup({eventId:crypto.randomUUID(),type:'BackupPromptRemoved',schemaVersion:1,payload:{promptId:id}});}
-  async function configureBackups(enabled:boolean,provider:AIProvider){if(!repository)return;const connection=resolveConnection(provider,view.state.ai.choices.backupProvider===provider?view.state.ai.choices.backupConnectionId:null,modelConnection,modelScope);if(enabled&&isExternalProvider(provider)&&!connection.connectionId)throw new Error('Configure and save this provider before enabling backup refills.');await confirmChoices({backupEnabled:enabled,backupProvider:provider,backupConnectionId:isExternalProvider(provider)?connection.connectionId!:null});refiller.reset();refillMessage='';}
+  async function configureBackups(enabled:boolean){if(!repository)return;if(enabled&&!configuredConnection(localBackupConnection,backupConnectionId(view.state.ai.choices)))throw new Error('Configure and save the backup connection before enabling refills.');await confirmChoices({backupEnabled:enabled});refiller.reset();refillMessage='';}
+  async function saveBackupModel(provider:'prompt'|AIProvider,connection?:ModelConnection){
+    // Distinct task bindings prevent a prompt-model save from mutating backup metadata.
+    const bound=connection?await bindConnection({...connection,connectionId:connection.provider!=='personal-gemini'&&connection.connectionId===view.state.ai.choices.promptConnectionId?undefined:connection.connectionId},backupModelScope):undefined;
+    await confirmChoices({backupProvider:provider,backupConnectionId:bound&&isExternalProvider(provider as AIProvider)?bound.connectionId!:null});
+    if(bound){backupModelConnection=bound;backupSlotSaved=true;backupConnectionError='';sessionStorage.removeItem(backupOriginKey(modelScope));}else clearInheritedBackupToken(modelScope);refiller.reset();refillMessage='';return bound;
+  }
   const refiller=new BackupRefiller(async()=>{
     if(!repository||!client)throw new Error('Open your journal first.');
-    const provider=view.state.ai.choices.backupProvider??'lm-studio';
-    if(provider==='lm-studio'&&modelConnectionError)throw new Error(modelConnectionError);
+    const provider=backupProvider(view.state.ai.choices);
+    if(backupConnectionProblem)throw new Error(backupConnectionProblem);
     if(provider==='gemini'&&!geminiAvailable)throw new Error('Gemini is unavailable.');
-    const connection=resolveConnection(provider,view.state.ai.choices.backupConnectionId,modelConnection,modelScope);
+    const connection=localBackupConnection;
+    if(!configuredConnection(connection,backupConnectionId(view.state.ai.choices)))throw new Error('Configure the backup connection on this device first.');
     const generate=generatorFor(connection);
     await repository.requestPrompt(today,canShare(connection)?'personal':'generic',generate,undefined,true);
   });
@@ -260,6 +291,7 @@
   let repository = $state.raw<JournalStore | null>(null);
   let user = $state<Pick<User, 'uid' | 'email'> | null>(null);
   const modelScope=$derived(client&&user?`${client.projectId}:${base}:${user.uid}`:'');
+  const backupModelScope=$derived(modelScope?backupConnectionScope(modelScope):'');
   const photoModelScope=$derived(modelScope?photoConnectionScope(modelScope):'');
   let configured = $state(false);
   let initialized = $state(false);
@@ -285,7 +317,17 @@
   const activeConnection=$derived(resolveConnection(accountProvider,view.state.ai.choices.promptConnectionId,modelConnection,modelScope));
   const photoConnection=$derived(!view.state.ai.choices.photoProvider||view.state.ai.choices.photoProvider==='prompt'?activeConnection:resolveConnection(view.state.ai.choices.photoProvider,view.state.ai.choices.photoConnectionId,photoModelConnection,photoModelScope));
   const photoConnectionProblem=$derived((!view.state.ai.choices.photoProvider||view.state.ai.choices.photoProvider==='prompt')?modelConnectionError:photoConnection.provider!=='gemini'?photoConnectionError:'');
-  const localBackupConnection=$derived(resolveConnection(view.state.ai.choices.backupProvider??'lm-studio',view.state.ai.choices.backupConnectionId,modelConnection,modelScope));
+  const localBackupConnection=$derived(view.state.ai.choices.backupProvider==='prompt'?activeConnection:resolveConnection(backupProvider(view.state.ai.choices),view.state.ai.choices.backupConnectionId,backupSlotSaved?backupModelConnection:modelConnection,backupSlotSaved?backupModelScope:modelScope));
+  $effect(()=>{
+    if(!view.ready||!modelScope||backupSlotSaved||view.state.ai.choices.backupProvider==='prompt'||!credentialStatus.ready||!backupCredentialStatus.ready||backupConnectionError)return;
+    // Freeze the old explicit device choice after account credential restoration.
+    // No event or extra cloud credential sharing is introduced by this migration.
+    const connection=localBackupConnection;
+    if(!configuredConnection(connection,backupConnectionId(view.state.ai.choices)))return;
+    try{preserveLegacyBackup();}
+    catch{backupConnectionError='Backup settings could not be preserved on this device. Save the backup connection again.';}
+  });
+  const backupConnectionProblem=$derived(view.state.ai.choices.backupProvider==='prompt'?modelConnectionError:backupConnectionError);
   const aiAvailable=$derived(!modelConnectionError&&configuredConnection(activeConnection,view.state.ai.choices.promptConnectionId)&&(activeConnection.provider!=='gemini'||geminiAvailable));
   const personalContextAvailable=$derived(canShare(activeConnection));
   const providerName=$derived(serviceName(activeConnection.provider));
@@ -629,7 +671,13 @@
     if (!repository) throw new Error('Wait for your journal to open.');
     await repository.commitAI({ eventId: crypto.randomUUID(), type: 'AccentColourChosen', schemaVersion: 1, payload: { previousEventId: view.state.appearance.lastEventId, colourIndex } });
   }
-  let settingsPage = $state<'menu' | 'ai' | 'answers' | 'export' | 'privacy' | 'account' | 'import' | 'classification'>('menu');
+  let settingsPage = $state<'menu' | 'ai' | 'answers' | 'export' | 'privacy' | 'account' | 'import' | 'classification' | 'unknown'>('menu');
+  let classificationOpen=$state(false);
+  let reviewKind=$state<'reflection'|'backup'>('reflection');
+  let answersParent=$state<'account'|'ai'>('account');
+  const settingsParent=$derived(settingsPage==='unknown'?'classification':settingsPage==='import'||settingsPage==='export'?'privacy':settingsPage==='answers'?answersParent:'menu');
+  const unknownReflections=$derived(unknownTargets(view.state,'reflection',view.backupRemoved).length);
+  const unknownBackups=$derived(unknownTargets(view.state,'backup',view.backupRemoved).length);
   let exportFormat = $state<'markdown' | 'json'>('markdown');
   let showPromptInfo = $state(false);
   let editorOrigin = $state<{ tab: typeof tab; selectedId: string | null; savedId: string | null; label: string; scroll: number }>({ tab: 'today', selectedId: null, savedId: null, label: 'Today', scroll: 0 });
@@ -689,7 +737,7 @@
     await openComposer(key, daily.entry,true,currentPromptId);
   }
   async function newEntry() { if(dateFilter)await startDateReflection(dateFilter);else await openComposer(newEntryKey, undefined); }
-  async function openSettings(next: typeof settingsPage) { settingsPage = next; exportStatus = ''; preparedFile = null; aiMessage = ''; if (next === 'ai') choices = { ...view.state.ai.choices }; if (next === 'answers') await loadAnswers(); await tick(); window.scrollTo(0, 0); }
+  async function openSettings(next: typeof settingsPage) { if(next==='classification')classificationOpen=false; if(next==='answers')answersParent=settingsPage==='ai'?'ai':'account'; settingsPage = next; exportStatus = ''; preparedFile = null; aiMessage = ''; if (next === 'ai') choices = { ...view.state.ai.choices }; if (next === 'answers') await loadAnswers(); await tick(); window.scrollTo(0, 0); }
 
   async function navigate(next: typeof tab) { if(flow || page.state.calendar || page.url.searchParams.has('calendar')){flow=null;appliedFlow='';dateFilter=null;try{sessionStorage.removeItem(navKey);}catch{}pushState(`${base}/journal/`,{...page.state,calendar:null});} chooseInitialPage = false; tab = next; selectedId = null; writing = false; savedId = null; settingsPage = 'menu'; aiMessage = '';dailyPromptError=null; feedbackOpen = false; await tick(); window.scrollTo(0, 0); }
   async function openEntry(entry: Entry) { if(flow){await appendFrame({kind:'entry',id:entry.id});return;} journalScroll = window.scrollY; selectedId = entry.id; await tick(); document.getElementById('entry-heading')?.focus(); window.scrollTo(0, 0); }
@@ -778,7 +826,7 @@
         stopAuth = onAuthStateChanged(client.auth, (next) => {
           const current = ++session;if(!next)signInDestination=null;refiller.reset();refillMessage='';dailyPromptError=null;weekDay=null;journalLimits={};
           calendarThumbnailCache?.dispose();calendarThumbnailCache=null;
-          photoCredentialStore?.stop();photoCredentialStore=null;photoCredentialStatus={ready:false,saved:false,error:''};
+          photoCredentialStore?.stop();backupCredentialStore?.stop();photoCredentialStore=null;photoCredentialStatus={ready:false,saved:false,error:''};
           stopConnections();connectionMetadata={};
           credentialStore?.stop();credentialStore=null;credentialStatus={ready:false,saved:false,error:''};
           pushController?.stop();pushController=null;
@@ -789,10 +837,12 @@
           aiBusy = false; generatingPrompt = false; aiMessage = ''; feedbackOpen = false; feedbackText = ''; choices = { enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' };
           if(user && user.uid!==next?.uid){try{sessionStorage.removeItem(navKey);}catch{}}
           flow=null;dateFilter=null;appliedFlow='';conflictDay=null;homeAnchor={month:localDay(new Date()).slice(0,7),offset:0};
-          if(user && user.uid!==next?.uid && client) {try{clearConnectionToken(`${client.projectId}:${base}:${user.uid}`);clearConnectionToken(photoConnectionScope(`${client.projectId}:${base}:${user.uid}`));}catch{}}
+          if(user && user.uid!==next?.uid && client) {try{clearConnectionToken(`${client.projectId}:${base}:${user.uid}`);clearConnectionToken(photoConnectionScope(`${client.projectId}:${base}:${user.uid}`));clearConnectionToken(backupConnectionScope(`${client.projectId}:${base}:${user.uid}`));}catch{}}
+          backupModelConnection=defaultConnection();backupSlotSaved=false;backupConnectionError='';
           modelConnection=defaultConnection();modelConnectionError='';photoModelConnection=defaultConnection();photoConnectionError='';
           if(next&&client) {try{modelConnection=readConnection(`${client.projectId}:${base}:${next.uid}`);}catch{modelConnection={...defaultConnection(),provider:'lm-studio'};modelConnectionError='Model settings could not be restored. Save your model connection in AI settings before generating.';}}
           if(next&&client){try{photoModelConnection=readConnection(photoConnectionScope(`${client.projectId}:${base}:${next.uid}`));}catch{photoConnectionError='Photo model settings could not be restored. Save the photo connection again.';}}
+          if(next&&client){try{const slot=backupConnectionScope(`${client.projectId}:${base}:${next.uid}`);backupSlotSaved=!!localStorage.getItem(`gratitude:model:${slot}`);if(backupSlotSaved)backupModelConnection=readConnection(slot);}catch{backupConnectionError='Backup model settings could not be restored. Save the backup connection again.';}}
           setupOpen=false;setupRepeated=false;answerReady=false;answerDraft=defaultAnswers();
           user = next; todayDraft = null; todayDraftDay = ''; editorDraftKey = ''; text = ''; editing = null; error = ''; draft = null; draftLoaded = false; draftRestored = false; draftStatus = ''; draftWrite++; exportStatus = ''; preparedFile = null; exporting = false; tab = 'today'; selectedId = null; query = ''; writing = false; savedId = null; settingsPage = 'menu';
           view = { state: emptyProjection(), pending: null, status: '', error: '', ready: false };
@@ -811,8 +861,8 @@
               if(session!==current)return;
               credentialStatus=status;
               try{
-                if(saved){modelConnection={...saved,provider:saved.provider??'lm-studio'};saveConnection(scope,modelConnection,localStorage,sessionStorage,true);modelConnectionError='';refiller.reset();}
-                else if(saved===null){modelConnection={...modelConnection,token:''};clearConnectionToken(scope);}
+                if(saved){modelConnection={...saved,provider:saved.provider??'lm-studio'};saveConnection(scope,modelConnection,localStorage,sessionStorage,true);if(backupSlotSaved&&sessionStorage.getItem(backupOriginKey(scope))==='prompt-account'&&backupModelConnection.provider===modelConnection.provider&&backupModelConnection.baseUrl===modelConnection.baseUrl){backupModelConnection={...backupModelConnection,token:modelConnection.token};saveConnection(backupConnectionScope(scope),backupModelConnection);}modelConnectionError='';refiller.reset();}
+                else if(saved===null){modelConnection={...modelConnection,token:''};clearConnectionToken(scope);clearInheritedBackupToken(scope);}
               }catch{modelConnectionError='Could not keep the model token in this tab. Account sync remains available.';}
             },restoredAccountToken);
             credentialStore.start();
@@ -824,6 +874,14 @@
               catch{photoConnectionError='Could not keep the photo model token in this tab. Account sync remains available.';}
             },restoredPhotoToken,'photos');photoCredentialStore.start();
 
+            const backupScope=backupConnectionScope(scope);
+            let restoredBackupToken=false;try{restoredBackupToken=wasAccountConnection(backupScope);}catch{}
+            backupCredentialStore=new ModelCredentialStore(client.db,next.uid,(saved,status)=>{
+              if(session!==current)return;backupCredentialStatus=status;
+              try{if(saved){backupModelConnection={...saved,provider:saved.provider??'lm-studio'};backupSlotSaved=true;sessionStorage.removeItem(backupOriginKey(scope));saveConnection(backupScope,backupModelConnection,localStorage,sessionStorage,true);backupConnectionError='';refiller.reset();}else if(saved===null){backupModelConnection={...backupModelConnection,token:''};clearConnectionToken(backupScope);}}
+              catch{backupConnectionError='Could not keep the backup model token in this tab. Account sync remains available.';}
+            },restoredBackupToken,'backups');backupCredentialStore.start();
+
             repository = new JournalRepository(client, next.uid, (value) => {
               if (session === current) receiveView(value);
             });
@@ -834,13 +892,13 @@
       } else initialized = true;
     } catch { initialized = true; error = 'Sign-in is unavailable. Please try again later.'; }
     const online = () => { setupOnline=true; void repository?.syncOnboarding().catch(()=>{});gratitudePublisher?.update(view);refiller.reset();void repository?.syncBackups();void repository?.syncPromptResult().catch(()=>{});void repository?.retry();};
-    const refillTimer=setInterval(()=>{const refill=refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting&&(view.state.ai.choices.backupProvider!=='lm-studio'||!!modelConnection.token||credentialStatus.ready),online:navigator.onLine,visible:document.visibilityState==='visible',busy:setupOpen||busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state);refillMessage=refiller.status;void refill.then(()=>{refillMessage=refiller.status;});},3000);
+    const refillTimer=setInterval(()=>{const refill=refiller.tick({state:view.state,ready:view.ready&&view.status==='Synced'&&!view.backupImporting&&!backupConnectionProblem&&configuredConnection(localBackupConnection,backupConnectionId(view.state.ai.choices)),online:navigator.onLine,visible:document.visibilityState==='visible',busy:setupOpen||busy||aiBusy||generatingPrompt||!!view.aiResultPending||!!view.pending,removed:view.backupRemoved},()=>view.state);refillMessage=refiller.status;void refill.then(()=>{refillMessage=refiller.status;});},3000);
     const offline=()=>{setupOnline=false;};
     window.addEventListener('offline',offline);
     window.addEventListener('online', online);
     const openHug=async(event:MessageEvent)=>{if(event.data?.type==='OPEN_HUG_FRIENDS'&&event.data.uid===user?.uid&&event.data.scope===new URL(`${base}/`,location.origin).href){if(writing&&text.trim())await persistDraft();await navigate('friends');}};
     navigator.serviceWorker?.addEventListener('message',openHug);
-    return () => { session++; stopAuth();stopConnections();pushController?.stop();navigator.serviceWorker?.removeEventListener('message',openHug); gratitudePublisher?.stop(); calendarThumbnailCache?.dispose(); credentialStore?.stop();photoCredentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online);window.removeEventListener('offline',offline); };
+    return () => { session++; stopAuth();stopConnections();pushController?.stop();navigator.serviceWorker?.removeEventListener('message',openHug); gratitudePublisher?.stop(); calendarThumbnailCache?.dispose(); credentialStore?.stop();photoCredentialStore?.stop();backupCredentialStore?.stop(); repository?.stop();clearInterval(refillTimer); window.removeEventListener('online', online);window.removeEventListener('offline',offline); };
   });
   async function signIn(journal = landing) {
     if (!initialized || busy) return;
@@ -921,7 +979,7 @@
     {/snippet}
   </WelcomePage>
 {:else}
-<main data-prompt-offer-busy={offering||view.ready&&!!user&&!setupOpen&&!landing&&!calendarShown&&!savedId&&!selectedId&&tab==='today'&&!writing&&!daily.entry&&!hasTodayDraft&&!todayStarter&&(!view.state.ai.days[today]||view.state.ai.days[today]===STARTER_ID)&&starterAttemptDay!==today} data-prompt-rotation-pending={!!view.rotationPending} data-onboarding-pending={!!view.onboardingPending} data-journal-ready={view.ready&&!chooseInitialPage} class:composing={writing} class:friendsPage={tab==='friends'} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:calendarView={calendarShown}>
+<main data-prompt-offer-busy={offering||view.ready&&!!user&&!setupOpen&&!landing&&!calendarShown&&!savedId&&!selectedId&&tab==='today'&&!writing&&!daily.entry&&!hasTodayDraft&&!todayStarter&&(!view.state.ai.days[today]||view.state.ai.days[today]===STARTER_ID)&&starterAttemptDay!==today} data-prompt-rotation-pending={!!view.rotationPending} data-onboarding-pending={!!view.onboardingPending} data-journal-ready={view.ready&&!chooseInitialPage} class:composing={writing} class:friendsPage={tab==='friends'} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:classificationPage={tab==='settings'&&(settingsPage==='classification'||settingsPage==='unknown')} class:calendarView={calendarShown}>
   {#if !initialized}
     <p role="status" class="loading">Opening Gratitude…</p>
   {:else if setupOpen}
@@ -933,7 +991,7 @@
           <ModelSettings {client} cloudConnections={connectionMetadata} credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={answerBusy||uiReview} initialError={modelConnectionError} onchange={selectPromptConnection} oncomplete={complete=>setupPromptComplete=complete} onready={ready=>setupPromptReady=ready} />
           <PhotoModelSettings {client} cloudConnections={connectionMetadata} provider={view.state.ai.choices.photoProvider??'prompt'} connection={view.state.ai.choices.photoProvider==='personal-gemini'?photoConnection:photoModelConnection} scope={photoModelScope} credentialStatus={photoCredentialStatus} onsavetoken={savePhotoToken} onforgettoken={forgetPhotoToken} onsave={savePhotoModel} initialError={photoConnectionError} disabled={answerBusy||uiReview} oncomplete={complete=>setupPhotoComplete=complete} />
           <section class="glass preferences"><label class="ai-label" for="setup-guidance">What should prompts focus on or avoid? <span class="hint">Optional</span></label><textarea id="setup-guidance" bind:value={choices.guidance} maxlength="500" rows="3"></textarea></section>
-          <details class="prompt-info"><summary>Backup prompt preferences</summary>{#if repository}<BackupPrompts {view} {repository} email={user?.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups} />{/if}<p class="hint">Choose the same provider to use your prompt model for backups. {isExternalProvider(activeConnection.provider)?'Backups use the saved connection for their selected service.':'Local backups use your saved LM Studio prompt connection.'}</p></details>
+          <details class="prompt-info"><summary>Backup prompt preferences</summary>{#if repository}<BackupPrompts {view} {repository} email={user?.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups}>{#snippet modelPicker()}<PhotoModelSettings task="backups" promptConnection={activeConnection} {client} cloudConnections={connectionMetadata} provider={view.state.ai.choices.backupProvider??'lm-studio'} connection={localBackupConnection} scope={backupModelScope} credentialStatus={backupCredentialStatus} onsavetoken={saveBackupToken} onforgettoken={forgetBackupToken} onsave={saveBackupModel} initialError={backupConnectionProblem} disabled={aiBusy||uiReview} />{/snippet}</BackupPrompts>{/if}</details>
           <p class="hint">Save your model connection here. AI and sharing choices are saved when you finish setup; no prompt is generated during the questionnaire. Choose Set up Later to use starters if required connection details are incomplete.</p>
           {:else}<p class="hint">Continue with starter prompts. You can set up AI later in Settings → AI Settings.</p>{/if}
           {#if aiMessage}<p role="status" class="hint">{aiMessage}</p>{/if}
@@ -1062,12 +1120,12 @@
     {:else if tab === 'friends'}
       {#if client && !uiReview}<Friends {client} uid={user.uid} journal={view} {pushController} pushState={hugPushState} />{:else}<h1 class="page-heading">Friends &amp; hugs</h1><p>Friends are available when signed in to a Firebase journal.</p>{/if}
     {:else}
-      {#if settingsPage !== 'menu'}<button class="back" onclick={() => openSettings(settingsPage==='classification'?'ai':'menu')}><Icon name="back" />{settingsPage==='classification'?'AI settings':'Settings'}</button>{/if}
+      {#if settingsPage !== 'menu'}<button class="back" onclick={() => openSettings(settingsParent)}><Icon name="back" />{settingsParent==='classification'?'Classify topics':settingsParent==='privacy'?'Privacy & data':settingsParent==='account'?'Account':settingsParent==='ai'?'AI settings':'Settings'}</button>{/if}
       {#if settingsPage === 'menu'}
         <h1 class="page-heading">Settings</h1>
         <div class="settings-menu">
-          {#each [{ id: 'answers', icon: 'edit', title: 'Personalise your journal', subtitle: 'Your name, interests and prompts' }, { id: 'ai', icon: 'sparkles', title: 'AI settings', subtitle: 'Answers, memory and sharing' }, { id: 'export', icon: 'file', title: 'Export journal', subtitle: 'Markdown or JSON' }, { id: 'import', icon: 'file', title: 'Import journal', subtitle: 'ZIP export, photos and dates' }, { id: 'privacy', icon: 'shield', title: 'Privacy & data', subtitle: 'Your journal, your control' }, { id: 'account', icon: 'account', title: privateName ? `Account · ${privateName}` : 'Account', subtitle: user.email ?? 'Signed in' }] as item}
-            <button class="glass settings-row" onclick={() => openSettings(item.id as typeof settingsPage)}><span class="row-icon" class:yellow={item.id === 'ai'}><Icon name={item.icon} size={30} /></span><span class="row-copy"><strong>{item.title}</strong><span>{item.subtitle}</span></span><Icon name="next" size={20} /></button>
+          {#each [{ id: 'ai', icon: 'sparkles', title: 'AI settings', subtitle: 'Model choices, prompt preferences, and backup prompts' }, { id: 'classification', icon: 'file', title: 'Classify journal and backup topics', subtitle: 'AI suggestions and manual review' }, { id: 'privacy', icon: 'shield', title: 'Privacy & data', subtitle: 'Import, export and recovery' }, { id: 'account', icon: 'account', title: privateName ? `Account · ${privateName}` : 'Account', subtitle: 'Personalisation, colour and sign-in' }] as item}
+            <button class="glass settings-row" aria-label={item.title} onclick={() => openSettings(item.id as typeof settingsPage)}><span class="row-icon" class:yellow={item.id === 'ai'}><Icon name={item.icon} size={30} /></span><span class="row-copy"><strong>{item.title}</strong><span>{item.subtitle}</span></span><Icon name="next" size={20} /></button>
           {/each}
         </div>
         <p class="app-credit">Gratitude · GPLv3</p>
@@ -1087,7 +1145,11 @@
         {:else}<p role="status">Opening your answers…</p>{/if}
       {:else if settingsPage === 'classification'}
         <h1 class="page-heading">Topic classification</h1>
-        {#if repository}<Classification {view} {repository} connection={activeConnection} allowed={canShare(activeConnection)&&!uiReview&&aiAvailable&&configuredConnection(activeConnection,view.state.ai.choices.promptConnectionId)} generate={promptGenerator} onconfigure={()=>openSettings('ai')} />{/if}
+        {#if repository}<details class="glass classification-tools" bind:open={classificationOpen}><summary><span>AI classification</span><small>{providerName}{activeConnection.provider==='gemini'?'':` · ${activeConnection.model}`}</small></summary>{#if classificationOpen}<Classification {view} {repository} connection={activeConnection} allowed={canShare(activeConnection)&&!uiReview&&aiAvailable&&configuredConnection(activeConnection,view.state.ai.choices.promptConnectionId)} generate={promptGenerator} onconfigure={()=>openSettings('ai')} />{/if}</details>
+        <section class="glass" aria-label="Manual review"><h2>Manual review</h2><p class="hint">Choose topics for items marked Unknown. No AI request is needed.</p><div class="settings-menu">{#each [{kind:'reflection',label:'Review reflections',count:unknownReflections},{kind:'backup',label:'Review backup prompts',count:unknownBackups}] as item}<button class="outline" onclick={()=>{reviewKind=item.kind as typeof reviewKind;void openSettings('unknown');}}>{item.label} ({item.count})<Icon name="next" size={18}/></button>{/each}</div></section>{/if}
+      {:else if settingsPage === 'unknown'}
+        <h1 class="page-heading">Review Unknown</h1>
+        {#if repository}<UnknownReview {view} {repository} bind:kind={reviewKind} />{/if}
       {:else if settingsPage === 'ai'}
         <h1 class="page-heading">AI settings</h1>
         <ModelSettings {client} cloudConnections={connectionMetadata} credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={aiBusy||generatingPrompt||!!view.aiResultPending||uiReview} initialError={modelConnectionError} onchange={selectPromptConnection} />
@@ -1106,10 +1168,10 @@
           <details class="prompt-info"><summary>Prompt info</summary><p class="hint">Your saved preferences are shared when requesting a prompt. The switches above optionally include up to 20 units of earlier reflections (anniversaries, rediscoveries, and recent writing), plus up to 20 original questions with their feedback. Reflections over 600 characters use two units. Entry dates determine selection; imports count by their original dates. {isLocalService(activeConnection.provider)?`Your configured ${serviceName(activeConnection.provider)} server processes this context to generate your prompt.`:'Google processes this context to generate your prompt.'}</p></details>
         {:else if activeConnection.provider==='personal-gemini'}<p class="hint">This personal cloud connection has not been approved for personal context. Only a generic instruction with your selected scope and word limit is sent. Review your project’s provider terms in the connection settings before sharing reflections, feedback, questionnaire answers or photos.</p>{:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction with your selected scope and word limit is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
-        <button class="outline" onclick={()=>openSettings('classification')}>Classify journal and backup topics</button>
+
         <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {serviceName(photoConnection.provider)} processing for each photo.</p><p class="hint">Questionnaire answers: {view.state.onboarding.answers.useAnswers&&personalContextAvailable?'shared when AI prompts are enabled':'not shared'}.</p><p class="hint">Your private name and pronouns are excluded from AI instructions and questionnaire context.</p><dl class="hint"><dt>Selected descriptions</dt><dd>{#each selectedDescriptions(view.state.onboarding.answers) as description}<p>{description}</p>{:else}None{/each}</dd><dt>Prompt controls</dt><dd>{SCOPE_OPTIONS.find(([value])=>value===view.state.onboarding.answers.scope)?.[1]} · under {view.state.onboarding.answers.wordLimit} words</dd></dl><button class="outline" onclick={()=>openSettings('answers')}>Edit my answers</button><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
-        {#if repository}<BackupPrompts {view} {repository} email={user.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups} />
-        {#if view.state.ai.choices.backupProvider&&view.state.ai.choices.backupProvider!=='gemini'&&view.state.ai.choices.backupProvider!==accountProvider}<details class="backup-connection"><summary>{view.state.ai.choices.backupProvider==='lm-studio'?'Local backup connection':'Backup model connection'}</summary><ModelSettings {client} cloudConnections={connectionMetadata} credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={localBackupConnection} scope={modelScope} connectionOnly disabled={aiBusy||uiReview} onchange={async connection=>{const bound=await bindConnection(connection,modelScope);await confirmChoices({backupConnectionId:isExternalProvider(bound.provider)?bound.connectionId!:null});modelConnection=bound;modelConnectionError='';refiller.reset();}} /></details>{/if}
+        {#if repository}<BackupPrompts {view} {repository} email={user.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups}>{#snippet modelPicker()}<PhotoModelSettings task="backups" promptConnection={activeConnection} {client} cloudConnections={connectionMetadata} provider={view.state.ai.choices.backupProvider??'lm-studio'} connection={localBackupConnection} scope={backupModelScope} credentialStatus={backupCredentialStatus} onsavetoken={saveBackupToken} onforgettoken={forgetBackupToken} onsave={saveBackupModel} initialError={backupConnectionProblem} disabled={aiBusy||uiReview} />{/snippet}</BackupPrompts>
+
         {#if refillStatus}<p class="hint" role="status">{refillStatus}</p>{#if backups.length<BACKUP_MINIMUM}<button class="outline" onclick={()=>{refiller.reset();refillMessage='';}}>Retry backup refill</button>{/if}{/if}{/if}
       {:else if settingsPage === 'import'}
         <h1 class="page-heading">Import journal</h1>
@@ -1126,10 +1188,10 @@
         {#if preparedFile}<div class="ready glass" role="status"><span class="ready-icon"><Icon name="check" /></span>Export ready</div><button class="outline download" onclick={downloadPrepared}><Icon name="download" />Download {exportFormat === 'markdown' ? 'Markdown' : 'JSON'}{preparedFile.type === 'application/zip' ? ' ZIP' : ''}</button>{:else if exportStatus}<p aria-live="polite">{exportStatus}</p>{/if}
         <p class="hint export-warning">This file contains your private reflections.</p>
       {:else if settingsPage === 'privacy'}
-        <h1>Privacy & data</h1><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device. Daily AI prompt sharing starts off disabled in AI settings. Photo summaries are a separate choice for each photo.</p><button class="outline" onclick={() => openSettings('export')}>Export your journal</button></section>
+        <h1 class="page-heading">Privacy & data</h1><div class="settings-menu">{#each [{id:'import',title:'Import journal',subtitle:'ZIP export, photos and dates'},{id:'export',title:'Export journal',subtitle:'Markdown or JSON'}] as item}<button class="glass settings-row" onclick={()=>openSettings(item.id as typeof settingsPage)}><span class="row-icon"><Icon name="file" size={30}/></span><span class="row-copy"><strong>{item.title}</strong><span>{item.subtitle}</span></span><Icon name="next" size={20}/></button>{/each}</div><section class="glass"><h2>Your moments are yours.</h2><p>Your saved reflections belong to your account. Search happens on this device. Daily AI prompt sharing starts off disabled in AI settings. Photo summaries are a separate choice for each photo.</p></section>
         <section class="glass"><h2>Journal recovery</h2><p class="muted">Rebuild this device’s view from your saved account history.</p><button class="outline" onclick={() => repository?.rebuild().catch(() => error = 'Could not rebuild. Please reload and try again.')} disabled={busy}>Rebuild local view</button></section>
       {:else}
-        <h1 class="page-heading">{privateName ? `Account · ${privateName}` : 'Account'}</h1><AccentPicker selected={view.state.appearance.colourIndex} disabled={!view.ready || busy} onchange={chooseAccent} /><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
+        <h1 class="page-heading">{privateName ? `Account · ${privateName}` : 'Account'}</h1><button class="glass settings-row" onclick={()=>openSettings('answers')}><span class="row-icon"><Icon name="edit" size={30}/></span><span class="row-copy"><strong>Personalise your journal</strong><span>Your name, interests and prompts</span></span><Icon name="next" size={20}/></button><AccentPicker selected={view.state.appearance.colourIndex} disabled={!view.ready || busy} onchange={chooseAccent} /><section class="glass"><span class="account-avatar"><Icon name="account" size={32} /></span><p class="account-email">{user.email}</p><p class="muted">{uiReview ? 'Your fictional journal stays in this browser.' : 'Your reflections stay together across your devices.'}</p><button class="outline" onclick={leave} disabled={busy}>Sign out</button></section>
       {/if}
     {/if}
     {#if view.aiResultPending && (writing || tab !== 'today' || savedEntry)}<section class="glass photo-recovery"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
@@ -1150,11 +1212,13 @@
 </main>
 {/if}
 <style>
+  .classification-tools{padding:18px 22px;margin:24px 0;box-sizing:border-box}.classification-tools>summary{cursor:pointer;min-height:44px;color:#d8dce2;font-size:1rem;line-height:24px}.classification-tools>summary small{display:block;margin-top:6px;color:#b6beca;font-size:.8rem;overflow-wrap:anywhere}.classification-tools :global(.classification){padding:0;margin:22px 0 0;border:0;background:transparent}
+
   /* Keep the dynamic settings document on a whole-pixel scroll boundary. */
   .friendsPage { height: calc-size(auto, round(nearest, size, 1px)); }
-  .aiSettings { height: calc-size(auto, round(nearest, size, 1px)); }
+  .aiSettings, .classificationPage { height: calc-size(auto, round(nearest, size, 1px)); }
   /* Each moving surface also needs an integral origin, not just the scroll boundary. */
-  .aiSettings > :global(:not(nav)) { height: calc-size(auto, round(nearest, size, 1px)); }
+  .aiSettings > :global(:not(nav)), .classificationPage > :global(:not(nav)) { height: calc-size(auto, round(nearest, size, 1px)); }
   /* Keep the nested month scroller on integral origins after cache/reload and
      scroll restoration. Its own explicit viewport height must stay intact. */
   .calendarView { height: calc-size(auto, round(nearest, size, 1px)); }

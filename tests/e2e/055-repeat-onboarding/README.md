@@ -88,9 +88,18 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Account settings
+
+![Open Account settings](./screenshots/009-parent-personalise-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open Personalise settings
 
-![Open Personalise settings](./screenshots/009-personalise-mobile-chromium.png)
+![Open Personalise settings](./screenshots/010-personalise-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Enter a private name
 
-![Enter a private name](./screenshots/010-name-mobile-chromium.png)
+![Enter a private name](./screenshots/011-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Save the private answer before repeating
 
-![Save the private answer before repeating](./screenshots/011-save-mobile-chromium.png)
+![Save the private answer before repeating](./screenshots/012-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Restart the questionnaire from its beginning
 
-![Restart the questionnaire from its beginning](./screenshots/012-repeat-mobile-chromium.png)
+![Restart the questionnaire from its beginning](./screenshots/013-repeat-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Keep the previously saved private answer
 
-![Keep the previously saved private answer](./screenshots/013-prefill-mobile-chromium.png)
+![Keep the previously saved private answer](./screenshots/014-prefill-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Change a private answer without confirming it
 
-![Change a private answer without confirming it](./screenshots/014-draft-name-mobile-chromium.png)
+![Change a private answer without confirming it](./screenshots/015-draft-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Resume the repeated questionnaire after reloading
 
-![Resume the repeated questionnaire after reloading](./screenshots/015-reload-mobile-chromium.png)
+![Resume the repeated questionnaire after reloading](./screenshots/016-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Leave the repeat without changing saved answers or rollout outcome
 
-![Leave the repeat without changing saved answers or rollout outcome](./screenshots/016-cancel-mobile-chromium.png)
+![Leave the repeat without changing saved answers or rollout outcome](./screenshots/017-cancel-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Do not reopen a cancelled repeat on the next visit
 
-![Do not reopen a cancelled repeat on the next visit](./screenshots/017-reload-cancelled-mobile-chromium.png)
+![Do not reopen a cancelled repeat on the next visit](./screenshots/018-reload-cancelled-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +180,16 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/018-settings-again-mobile-chromium.png)
+![Open Settings](./screenshots/019-settings-again-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Account settings
+
+![Open Account settings](./screenshots/020-parent-personalise-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Return to Personalise settings
 
-![Return to Personalise settings](./screenshots/019-personalise-again-mobile-chromium.png)
+![Return to Personalise settings](./screenshots/021-personalise-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Start a new repeat from Welcome
 
-![Start a new repeat from Welcome](./screenshots/020-repeat-again-mobile-chromium.png)
+![Start a new repeat from Welcome](./screenshots/022-repeat-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Review the retained unconfirmed draft
 
-![Review the retained unconfirmed draft](./screenshots/021-about-again-mobile-chromium.png)
+![Review the retained unconfirmed draft](./screenshots/023-about-again-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Choose the answer to confirm this time
 
-![Choose the answer to confirm this time](./screenshots/022-restore-name-mobile-chromium.png)
+![Choose the answer to confirm this time](./screenshots/024-restore-name-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Continue to the saved colour
 
-![Continue to the saved colour](./screenshots/023-colour-mobile-chromium.png)
+![Continue to the saved colour](./screenshots/025-colour-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Continue to the AI choice
 
-![Continue to the AI choice](./screenshots/024-ai-mobile-chromium.png)
+![Continue to the AI choice](./screenshots/026-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Keep starter prompts and skip AI preferences
 
-![Keep starter prompts and skip AI preferences](./screenshots/025-friends-mobile-chromium.png)
+![Keep starter prompts and skip AI preferences](./screenshots/027-friends-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Review the repeated answers
 
-![Review the repeated answers](./screenshots/026-review-mobile-chromium.png)
+![Review the repeated answers](./screenshots/028-review-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Confirm answers and return to Personalise without resetting the account
 
-![Confirm answers and return to Personalise without resetting the account](./screenshots/027-complete-mobile-chromium.png)
+![Confirm answers and return to Personalise without resetting the account](./screenshots/029-complete-mobile-chromium.png)
 
 **Verifications:**
 

@@ -133,9 +133,27 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Settings
+
+![Open Settings](./screenshots/014-root-open-classification-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Review the separate classification disclosure
 
-![Review the separate classification disclosure](./screenshots/014-open-classification-desktop-chromium.png)
+![Review the separate classification disclosure](./screenshots/015-open-classification-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the AI classification controls without starting inference
+
+![Open the AI classification controls without starting inference](./screenshots/016-tools-open-classification-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly allow this connection to classify selected text
 
-![Explicitly allow this connection to classify selected text](./screenshots/015-allow-desktop-chromium.png)
+![Explicitly allow this connection to classify selected text](./screenshots/017-allow-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Select one saved reflection
 
-![Select one saved reflection](./screenshots/016-choose-desktop-chromium.png)
+![Select one saved reflection](./screenshots/018-choose-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Request one editable AI category
 
-![Request one editable AI category](./screenshots/017-classify-one-desktop-chromium.png)
+![Request one editable AI category](./screenshots/019-classify-one-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/018-journal-desktop-chromium.png)
+![Open Journal](./screenshots/020-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Read the AI suggestion on the reflection
 
-![Read the AI suggestion on the reflection](./screenshots/019-entry-desktop-chromium.png)
+![Read the AI suggestion on the reflection](./screenshots/021-entry-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Open the existing manual category picker
 
-![Open the existing manual category picker](./screenshots/020-correct-open-desktop-chromium.png)
+![Open the existing manual category picker](./screenshots/022-correct-open-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Find another category without using AI
 
-![Find another category without using AI](./screenshots/021-correct-search-desktop-chromium.png)
+![Find another category without using AI](./screenshots/023-correct-search-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Make the manual category authoritative
 
-![Make the manual category authoritative](./screenshots/022-correct-desktop-chromium.png)
+![Make the manual category authoritative](./screenshots/024-correct-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Restore the journal without repeating inference
 
-![Restore the journal without repeating inference](./screenshots/023-reload-desktop-chromium.png)
+![Restore the journal without repeating inference](./screenshots/025-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/024-settings-desktop-chromium.png)
+![Open Settings](./screenshots/026-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Open full replay recovery
 
-![Open full replay recovery](./screenshots/025-privacy-desktop-chromium.png)
+![Open full replay recovery](./screenshots/027-privacy-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Replay immutable observations and the manual correction
 
-![Replay immutable observations and the manual correction](./screenshots/026-rebuild-desktop-chromium.png)
+![Replay immutable observations and the manual correction](./screenshots/028-rebuild-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Open Journal
 
-![Open Journal](./screenshots/027-replayed-journal-desktop-chromium.png)
+![Open Journal](./screenshots/029-replayed-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Verify the same writing and manual category after full replay
 
-![Verify the same writing and manual category after full replay](./screenshots/028-replayed-entry-desktop-chromium.png)
+![Verify the same writing and manual category after full replay](./screenshots/030-replayed-entry-desktop-chromium.png)
 
 **Verifications:**
 

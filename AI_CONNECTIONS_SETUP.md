@@ -12,7 +12,7 @@ Open **Settings → AI settings → AI model**, or the AI step in onboarding. Co
 | Verified compatible local server | Your explicitly verified chat-completions server | Optional server/proxy token; requires the metadata contract below |
 | My Gemini API key | Google, through Gratitude’s authenticated Firebase relay | Your own write-only, encrypted account key |
 
-There is no automatic fallback between services. Existing backup prompts remain available when a model is unreachable. Prompts and photos can use the same connection or separately saved services/models. Backup preferences independently select a service and use its saved prompt/backup connection; named general-purpose profiles and more cloud vendors remain future work.
+There is no automatic fallback between services. Existing backup prompts remain available when a model is unreachable. Prompts and photos can use the same connection or separately saved services/models. Backup generation uses the photo-style connection selector: Same as prompt model follows its current server, model and credentials, or a separate connection can use another model/computer, including the same provider. Existing explicit backup choices remain explicit; automatic refill stays separately opt-in. Optional local backup token sync uses its own private account slot; named general-purpose profiles and more cloud vendors remain future work.
 
 ## Native Ollama
 

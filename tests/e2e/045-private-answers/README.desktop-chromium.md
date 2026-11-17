@@ -88,9 +88,18 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Account settings
+
+![Open Account settings](./screenshots/009-parent-answers-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open the private questionnaire
 
-![Open the private questionnaire](./screenshots/009-answers-desktop-chromium.png)
+![Open the private questionnaire](./screenshots/010-answers-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Enter a private preferred name
 
-![Enter a private preferred name](./screenshots/010-name-desktop-chromium.png)
+![Enter a private preferred name](./screenshots/011-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Enter optional private pronouns
 
-![Enter optional private pronouns](./screenshots/011-pronouns-desktop-chromium.png)
+![Enter optional private pronouns](./screenshots/012-pronouns-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Select a topic with a non-colour check
 
-![Select a topic with a non-colour check](./screenshots/012-music-desktop-chromium.png)
+![Select a topic with a non-colour check](./screenshots/013-music-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Open the selected topic’s description editor
 
-![Open the selected topic’s description editor](./screenshots/013-edit-description-desktop-chromium.png)
+![Open the selected topic’s description editor](./screenshots/014-edit-description-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Make the topic description personal
 
-![Make the topic description personal](./screenshots/014-write-description-desktop-chromium.png)
+![Make the topic description personal](./screenshots/015-write-description-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Keep the edited description in the setup draft
 
-![Keep the edited description in the setup draft](./screenshots/015-save-description-desktop-chromium.png)
+![Keep the edited description in the setup draft](./screenshots/016-save-description-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Select another interest
 
-![Select another interest](./screenshots/016-community-desktop-chromium.png)
+![Select another interest](./screenshots/017-community-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Name a custom topic
 
-![Name a custom topic](./screenshots/017-custom-name-desktop-chromium.png)
+![Name a custom topic](./screenshots/018-custom-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Describe the custom topic
 
-![Describe the custom topic](./screenshots/018-custom-description-desktop-chromium.png)
+![Describe the custom topic](./screenshots/019-custom-description-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Add a row without silently selecting it
 
-![Add a row without silently selecting it](./screenshots/019-custom-add-desktop-chromium.png)
+![Add a row without silently selecting it](./screenshots/020-custom-add-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly select the custom topic
 
-![Explicitly select the custom topic](./screenshots/020-custom-select-desktop-chromium.png)
+![Explicitly select the custom topic](./screenshots/021-custom-select-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Choose Intermediate prompt scope
 
-![Choose Intermediate prompt scope](./screenshots/021-scope-desktop-chromium.png)
+![Choose Intermediate prompt scope](./screenshots/022-scope-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Focus the word-limit slider
 
-![Focus the word-limit slider](./screenshots/022-focus-limit-desktop-chromium.png)
+![Focus the word-limit slider](./screenshots/023-focus-limit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Increase the limit by one ten-word step
 
-![Increase the limit by one ten-word step](./screenshots/023-change-limit-desktop-chromium.png)
+![Increase the limit by one ten-word step](./screenshots/024-change-limit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Confirm the private answers
 
-![Confirm the private answers](./screenshots/024-save-desktop-chromium.png)
+![Confirm the private answers](./screenshots/025-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Use the private name in Journal
 
-![Use the private name in Journal](./screenshots/025-journal-desktop-chromium.png)
+![Use the private name in Journal](./screenshots/026-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Use the private name on Today
 
-![Use the private name on Today](./screenshots/026-today-desktop-chromium.png)
+![Use the private name on Today](./screenshots/027-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Restore private preferences from the cached and cloud journal
 
-![Restore private preferences from the cached and cloud journal](./screenshots/027-reload-desktop-chromium.png)
+![Restore private preferences from the cached and cloud journal](./screenshots/028-reload-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Open another device
 
-![Open another device](./screenshots/028-second-open-desktop-chromium.png)
+![Open another device](./screenshots/029-second-open-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Choose Google sign-in
 
-![Choose Google sign-in](./screenshots/029-google-popup-desktop-chromium.png)
+![Choose Google sign-in](./screenshots/030-google-popup-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Complete sign-in and open Today
 
-![Complete sign-in and open Today](./screenshots/030-signed-in-desktop-chromium.png)
+![Complete sign-in and open Today](./screenshots/031-signed-in-desktop-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +298,16 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/031-second-settings-desktop-chromium.png)
+![Open Settings](./screenshots/032-second-settings-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Account settings
+
+![Open Account settings](./screenshots/033-parent-second-answers-desktop-chromium.png)
 
 **Verifications:**
 
@@ -298,7 +316,7 @@ Viewport: desktop-chromium.
 
 ## Inspect synchronized answers on the second device
 
-![Inspect synchronized answers on the second device](./screenshots/032-second-answers-desktop-chromium.png)
+![Inspect synchronized answers on the second device](./screenshots/034-second-answers-desktop-chromium.png)
 
 **Verifications:**
 
@@ -307,7 +325,7 @@ Viewport: desktop-chromium.
 
 ## Review what clearing private answers affects
 
-![Review what clearing private answers affects](./screenshots/033-clear-open-desktop-chromium.png)
+![Review what clearing private answers affects](./screenshots/035-clear-open-desktop-chromium.png)
 
 **Verifications:**
 
@@ -316,7 +334,7 @@ Viewport: desktop-chromium.
 
 ## Clear answers and their AI permission together
 
-![Clear answers and their AI permission together](./screenshots/034-clear-confirm-desktop-chromium.png)
+![Clear answers and their AI permission together](./screenshots/036-clear-confirm-desktop-chromium.png)
 
 **Verifications:**
 
@@ -325,7 +343,7 @@ Viewport: desktop-chromium.
 
 ## See the cleared private heading on the original device
 
-![See the cleared private heading on the original device](./screenshots/035-cleared-on-first-desktop-chromium.png)
+![See the cleared private heading on the original device](./screenshots/037-cleared-on-first-desktop-chromium.png)
 
 **Verifications:**
 

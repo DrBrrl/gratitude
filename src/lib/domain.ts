@@ -1,3 +1,4 @@
+import {backupProvider,backupConnectionId} from './ai/backup-connection.ts';
 import {emptyClassification,isClassificationAction,validClassificationAction,applyClassification,type ClassificationAction,type ClassificationState} from './classification.ts';
 import { reflectionTopic, topicChoices, validTopicId, type TopicAction, type ReflectionTopic } from './reflection-topics.ts';
 import {emptyRotation,starterPrompt,type RotationState} from './prompt-rotation.ts';
@@ -9,7 +10,7 @@ import { SELECTOR_VERSION, validSelection } from './ai/selection.ts';
 import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 17;
+export const PROJECTION_VERSION = 18;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
@@ -24,9 +25,9 @@ export type Action = Envelope<'ReflectionWritten', ReflectionPayload & { starter
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 6|7>;
 type LegacyAIChoices = { enabled: boolean; useJournal: boolean; useFeedback: boolean; guidance: string };
 type ProviderChoice = {provider:AIProvider};
-export type AIChoices = LegacyAIChoices & ProviderChoice & { backupEnabled?: boolean; backupProvider?: AIProvider; photoProvider?: 'prompt'|AIProvider; promptConnectionId?:string|null; photoConnectionId?:string|null; backupConnectionId?:string|null };
+export type AIChoices = LegacyAIChoices & ProviderChoice & { backupEnabled?: boolean; backupProvider?: AIProvider | 'prompt'; photoProvider?: 'prompt'|AIProvider; promptConnectionId?:string|null; photoConnectionId?:string|null; backupConnectionId?:string|null };
 type Previous = { previousEventId: string | null };
-export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & LegacyAIChoices> | Envelope<'AIChoicesConfirmed', Previous & LegacyAIChoices & ProviderChoice,2> | Envelope<'AIChoicesConfirmed', Previous & Required<Omit<AIChoices,'photoProvider'|'promptConnectionId'|'photoConnectionId'|'backupConnectionId'>>,3> | Envelope<'AIChoicesConfirmed', Previous & Required<Omit<AIChoices,'promptConnectionId'|'photoConnectionId'|'backupConnectionId'>>,4> | Envelope<'AIChoicesConfirmed', Previous & Required<AIChoices>,5>;
+export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & LegacyAIChoices> | Envelope<'AIChoicesConfirmed', Previous & LegacyAIChoices & ProviderChoice,2> | Envelope<'AIChoicesConfirmed', Previous & Required<Omit<AIChoices,'photoProvider'|'promptConnectionId'|'photoConnectionId'|'backupConnectionId'>>,3> | Envelope<'AIChoicesConfirmed', Previous & Required<Omit<AIChoices,'promptConnectionId'|'photoConnectionId'|'backupConnectionId'>>,4> | Envelope<'AIChoicesConfirmed', Previous & Required<AIChoices>,5|6>;
 type RequestPayload = Previous & { choicesId: string; day: string; templateVersion: PromptTemplateVersion;
   contextMode: 'generic' | 'personal'; feedbackIds: string[] };
 type LegacyRequestPayload = RequestPayload & { entryRefs: { entryId: string; revision: number }[] };
@@ -93,7 +94,7 @@ export type JournalEvent = SourceAction & { sequence: number; recordedAt: string
 /** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 17; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 18; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     requestUnits: Record<string,number>; requestedAt: Record<string,string>; usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
@@ -145,7 +146,7 @@ export function parseAction(input: unknown): SourceAction {
       || (v.schemaVersion === 5 || v.schemaVersion === 6 || v.schemaVersion === 7) && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.promptText === null || p.promptId === v.eventId && string(p.promptText, v.schemaVersion===7?4000:600)) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4)
       || v.schemaVersion === 4 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4))
       && id(p.entryId) && string(p.text, 10_000, (v.schemaVersion === 4 || v.schemaVersion === 5 || v.schemaVersion === 6 || v.schemaVersion === 7)) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
-  } else if (v.schemaVersion === 1 || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27].includes(v.schemaVersion as number) && v.type === 'PromptRequested' || [2,3,4].includes(v.schemaVersion as number) && v.type==='PhotoSummaryRequested' || [2,3,4,5].includes(v.schemaVersion as number) && v.type==='AIChoicesConfirmed' || v.schemaVersion===2 && v.type==='PromptResponseReceived') {
+  } else if (v.schemaVersion === 1 || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27].includes(v.schemaVersion as number) && v.type === 'PromptRequested' || [2,3,4].includes(v.schemaVersion as number) && v.type==='PhotoSummaryRequested' || [2,3,4,5,6].includes(v.schemaVersion as number) && v.type==='AIChoicesConfirmed' || v.schemaVersion===2 && v.type==='PromptResponseReceived') {
     const previous = p.previousEventId === null || id(p.previousEventId);
     const day = typeof p.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.day) && !isNaN(Date.parse(p.day));
     switch (v.type) {
@@ -158,10 +159,11 @@ export function parseAction(input: unknown): SourceAction {
           && (v.type !== 'PhotoSummaryResponseReceived' || string(p.text, 1000) && string(p.model, 100) && p.finishReason === 'STOP' && v.eventId === `${p.previousEventId}_response`)
           && (v.type !== 'PhotoSummaryFailed' || ['unavailable','blocked','invalid-response'].includes(String(p.reason)) && v.eventId === `${p.previousEventId}_failure`); break;
       }
-      case 'AIChoicesConfirmed': valid = keys(p, ['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance',...(Number(v.schemaVersion)>=2?['provider']:[]),...(Number(v.schemaVersion)>=3?['backupEnabled','backupProvider']:[]),...(Number(v.schemaVersion)>=4?['photoProvider']:[]),...(v.schemaVersion===5?['promptConnectionId','photoConnectionId','backupConnectionId']:[])]) && previous
-        && (Number(v.schemaVersion)<2 || (v.schemaVersion===5?PROVIDERS:['gemini','lm-studio']).includes(String(p.provider) as AIProvider)) && (Number(v.schemaVersion)<3 || typeof p.backupEnabled==='boolean' && (v.schemaVersion===5?PROVIDERS:['gemini','lm-studio']).includes(String(p.backupProvider) as AIProvider)) && (Number(v.schemaVersion)<4 || (v.schemaVersion===5?['prompt',...PROVIDERS]:['prompt','gemini','lm-studio']).includes(String(p.photoProvider)))
-        && (v.schemaVersion!==5 || typeof p.provider==='string'&&typeof p.backupProvider==='string'&&typeof p.photoProvider==='string')
-        && (v.schemaVersion!==5 || ['promptConnectionId','photoConnectionId','backupConnectionId'].every(key=>p[key]===null||id(p[key])))
+      case 'AIChoicesConfirmed': valid = keys(p, ['previousEventId', 'enabled', 'useJournal', 'useFeedback', 'guidance',...(Number(v.schemaVersion)>=2?['provider']:[]),...(Number(v.schemaVersion)>=3?['backupEnabled','backupProvider']:[]),...(Number(v.schemaVersion)>=4?['photoProvider']:[]),...(Number(v.schemaVersion)>=5?['promptConnectionId','photoConnectionId','backupConnectionId']:[])]) && previous
+        && (Number(v.schemaVersion)<2 || (Number(v.schemaVersion)>=5?PROVIDERS:['gemini','lm-studio']).includes(String(p.provider) as AIProvider)) && (Number(v.schemaVersion)<3 || typeof p.backupEnabled==='boolean' && (v.schemaVersion===6?['prompt',...PROVIDERS]:Number(v.schemaVersion)>=5?PROVIDERS:['gemini','lm-studio']).includes(String(p.backupProvider) as AIProvider)) && (Number(v.schemaVersion)<4 || (Number(v.schemaVersion)>=5?['prompt',...PROVIDERS]:['prompt','gemini','lm-studio']).includes(String(p.photoProvider)))
+        && (Number(v.schemaVersion)<5 || typeof p.provider==='string'&&typeof p.backupProvider==='string'&&typeof p.photoProvider==='string')
+        && (Number(v.schemaVersion)<5 || ['promptConnectionId','photoConnectionId','backupConnectionId'].every(key=>p[key]===null||id(p[key])))
+        && (v.schemaVersion!==6 || p.backupProvider!=='prompt' || p.backupConnectionId===null)
         && typeof p.enabled === 'boolean' && typeof p.useJournal === 'boolean' && typeof p.useFeedback === 'boolean' && string(p.guidance, 500, true); break;
       case 'PromptRequested': {
         const modern=Number(v.schemaVersion)>=13;
@@ -287,8 +289,8 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
       if('answersId' in p && p.answersId!==state.onboarding.answersId)throw new Error('Questionnaire answers changed.');
       if('differentFromPromptId' in p&&!state.ai.responses[p.differentFromPromptId])throw new Error('Previous generated prompt is unavailable.');
       if (isEditorRequest(action) && (state.entries.find(entry => entry.id === action.payload.entryId)?.revision ?? 0) !== action.payload.entryRevision) throw new Error('This reflection changed before the prompt request.');
-      if ('connectionId' in action.payload && action.payload.connectionId!==(isBackupRequest(action)?ai.choices.backupConnectionId:ai.choices.promptConnectionId))throw new Error('AI connection changed.');
-      if (requestProvider(action)!==(isBackupRequest(action)?ai.choices.backupProvider:ai.choices.provider)) throw new Error('AI provider changed. Review your model settings.');
+      if ('connectionId' in action.payload && action.payload.connectionId!==(isBackupRequest(action)?backupConnectionId(ai.choices):ai.choices.promptConnectionId))throw new Error('AI connection changed.');
+      if (requestProvider(action)!==(isBackupRequest(action)?backupProvider(ai.choices):ai.choices.provider)) throw new Error('AI provider changed. Review your model settings.');
       if (isBackupRequest(action) && !ai.choices.backupEnabled) throw new Error('Backup generation is disabled.');
       if (!ai.choices.enabled || p.choicesId !== ai.control.choicesId) throw new Error('AI consent is no longer current.');
       if (p.contextMode === 'generic' && (refs.length || p.feedbackIds.length)

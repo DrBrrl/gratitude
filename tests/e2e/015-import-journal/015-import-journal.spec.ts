@@ -1,3 +1,4 @@
+import {settingsSection} from '../helpers/journal-session';
 import { expect,test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -49,6 +50,7 @@ test('import historical entries and photos, edit without losing origin and expor
   }}]);
   await steps.action('reselect','Reselect the same ZIP and keep the same receipt identities',()=>page.getByLabel('Choose journal ZIP').setInputFiles(zip),async()=>{await expect(page.locator('.message[role=status]')).toHaveText('All entries in this ZIP are already imported.',{timeout:15_000});await expect(value('Already imported')).toHaveText('3');});
   await navigate(page,steps,'export-settings','Settings');
+  await settingsSection(page,steps,'parent-export','Privacy & data');
   await steps.action('export','Open journal export',()=>page.getByRole('button',{name:/^Export journal/}).click(),async()=>{await expect(page.getByRole('radio',{name:/JSON/})).toBeVisible();});
   await steps.action('json','Choose structured JSON with provenance',()=>page.getByRole('radio',{name:/JSON/}).check(),async()=>{await expect(page.getByRole('radio',{name:/JSON/})).toBeChecked();});
   await steps.action('prepare','Prepare the complete journal and private photo',()=>page.getByRole('button',{name:'Prepare export',exact:true}).click(),async()=>{await expect(page.getByRole('status')).toHaveText('Export ready',{timeout:15_000});});

@@ -448,9 +448,18 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/049-parent-export-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open journal export
 
-![Open journal export](./screenshots/049-export-mobile-chromium.png)
+![Open journal export](./screenshots/050-export-mobile-chromium.png)
 
 **Verifications:**
 
@@ -459,7 +468,7 @@ Viewport: mobile-chromium.
 
 ## Include saved photo bytes and descriptions in Markdown ZIP
 
-![Include saved photo bytes and descriptions in Markdown ZIP](./screenshots/050-prepare-mobile-chromium.png)
+![Include saved photo bytes and descriptions in Markdown ZIP](./screenshots/051-prepare-mobile-chromium.png)
 
 **Verifications:**
 
@@ -468,7 +477,7 @@ Viewport: mobile-chromium.
 
 ## Download the complete photo journal archive
 
-![Download the complete photo journal archive](./screenshots/051-download-mobile-chromium.png)
+![Download the complete photo journal archive](./screenshots/052-download-mobile-chromium.png)
 
 **Verifications:**
 

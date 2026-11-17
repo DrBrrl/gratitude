@@ -55,7 +55,7 @@
  async function saveBackup(){if(!chosen||kind!=='backup')return;await run(()=>repository.commitAI({eventId:crypto.randomUUID(),type:'BackupTopicChosen',schemaVersion:1,payload:{previousEventId:c.lastEventId,target:chosen,answersId:view.state.onboarding.answersId,topicId:chosenTopic}}));}
 </script>
 <section class="glass classification" aria-label="Classify journal and backup topics">
- <h2>Classify journal and backup topics</h2>
+ <h2>AI classification</h2>
  <p>AI can suggest a category for saved reflections and backup prompts. You can correct every suggestion. Manual categories are kept, including after editing a reflection.</p>
  <p class="hint">Your selected reflection text or backup question and the built-in/custom topic descriptions are sent to <strong>{providerName(connection.provider)} · {destination?.model??connection.model}</strong>. Names, pronouns, friends, photos and other journal entries are not sent. Cloud services may charge for usage. Opening this screen sends nothing.</p>
  {#if connection.provider==='lm-studio'||connection.provider==='ollama'||connection.provider==='openai-compatible'}<p class="hint">Server: {connection.baseUrl}</p>{/if}

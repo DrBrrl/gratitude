@@ -16,10 +16,10 @@ export class ModelCredentialStore {
   private reference;
   private changed: Changed;
 
-  constructor(db: Firestore, uid: string, changed: Changed, restored = false, purpose:'prompts'|'photos'='prompts') {
+  constructor(db: Firestore, uid: string, changed: Changed, restored = false, purpose:'prompts'|'photos'|'backups'='prompts') {
     this.restored = restored;
     this.changed = changed;
-    this.reference = doc(db, `users/${uid}/privateSettings/${purpose==='photos'?'lmStudioPhotos':'lmStudio'}`);
+    this.reference = doc(db, `users/${uid}/privateSettings/${purpose==='photos'?'lmStudioPhotos':purpose==='backups'?'lmStudioBackups':'lmStudio'}`);
   }
 
   start() {

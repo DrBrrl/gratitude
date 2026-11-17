@@ -1,3 +1,4 @@
+import {settingsSection} from '../helpers/journal-session';
 import { test, expect as baseExpect } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 import { startJournal, navigate, expectSynced, signIn, FIXTURE_TIME } from '../helpers/journal-session';
@@ -11,6 +12,7 @@ test('private answers, editable topics and prompt controls sync without enabling
   await page.route(/firebasevertexai\.googleapis\.com|\/v1\/chat\/completions/,route=>{inference++;return route.abort();});
   await startJournal(page,info,steps,'private-answers');
   await navigate(page,steps,'settings','Settings');
+  await settingsSection(page,steps,'parent-answers','Account');
   await steps.action('answers','Open the private questionnaire',()=>page.getByRole('button',{name:/^Personalise your journal/}).click(),async()=>{
     await expect(page.getByLabel('What would you like to be called?')).toHaveValue('');
     await expect(page.getByRole('table').getByRole('button',{pressed:true})).toHaveCount(0);
@@ -42,6 +44,7 @@ test('private answers, editable topics and prompt controls sync without enabling
     await steps.action('second-open','Open another device',()=>second.goto('./journal/'),async()=>{await expect(second.getByRole('link',{name:'Sign in',exact:true})).toBeVisible();});
     await signIn(second,info,steps,'private-answers',true,'Today',false,undefined,'Sam');
     await navigate(second,steps,'second-settings','Settings');
+    await settingsSection(second,steps,'parent-second-answers','Account');
     await steps.action('second-answers','Inspect synchronized answers on the second device',()=>second.getByRole('button',{name:/^Personalise your journal/}).click(),async()=>{
       await expect(second.getByLabel('What would you like to be called?')).toHaveValue('Sam');
       await expect(second.getByRole('button',{name:'Birdwatching',exact:true})).toHaveAttribute('aria-pressed','true');

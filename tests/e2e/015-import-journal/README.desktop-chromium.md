@@ -88,9 +88,18 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/009-parent-first-import-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open the private journal importer
 
-![Open the private journal importer](./screenshots/009-first-import-desktop-chromium.png)
+![Open the private journal importer](./screenshots/010-first-import-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Reject an invalid ZIP without writing journal history
 
-![Reject an invalid ZIP without writing journal history](./screenshots/010-invalid-desktop-chromium.png)
+![Reject an invalid ZIP without writing journal history](./screenshots/011-invalid-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Check the selected fictional ZIP before importing
 
-![Check the selected fictional ZIP before importing](./screenshots/011-preview-desktop-chromium.png)
+![Check the selected fictional ZIP before importing](./screenshots/012-preview-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Review dates, photos and the missing-prompt policy before confirmation
 
-![Review dates, photos and the missing-prompt policy before confirmation](./screenshots/012-counts-desktop-chromium.png)
+![Review dates, photos and the missing-prompt policy before confirmation](./screenshots/013-counts-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Confirm the signed-in destination account
 
-![Confirm the signed-in destination account](./screenshots/013-confirm-account-desktop-chromium.png)
+![Confirm the signed-in destination account](./screenshots/014-confirm-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Import confirmed entries and private photos without AI
 
-![Import confirmed entries and private photos without AI](./screenshots/014-import-desktop-chromium.png)
+![Import confirmed entries and private photos without AI](./screenshots/015-import-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Open the imported journal
 
-![Open the imported journal](./screenshots/015-journal-desktop-chromium.png)
+![Open the imported journal](./screenshots/016-journal-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Read historical reflections in local date order
 
-![Read historical reflections in local date order](./screenshots/016-entries-desktop-chromium.png)
+![Read historical reflections in local date order](./screenshots/017-entries-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Open the imported photo-only reflection
 
-![Open the imported photo-only reflection](./screenshots/017-photo-entry-desktop-chromium.png)
+![Open the imported photo-only reflection](./screenshots/018-photo-entry-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Return to the historical journal
 
-![Return to the historical journal](./screenshots/018-back-desktop-chromium.png)
+![Return to the historical journal](./screenshots/019-back-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Open an entry with a missing source prompt
 
-![Open an entry with a missing source prompt](./screenshots/019-text-entry-desktop-chromium.png)
+![Open an entry with a missing source prompt](./screenshots/020-text-entry-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Edit the imported reflection
 
-![Edit the imported reflection](./screenshots/020-edit-desktop-chromium.png)
+![Edit the imported reflection](./screenshots/021-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Change the reflection without altering its source record
 
-![Change the reflection without altering its source record](./screenshots/021-write-desktop-chromium.png)
+![Change the reflection without altering its source record](./screenshots/022-write-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Open prompt editing
 
-![Open prompt editing](./screenshots/022-prompt-desktop-chromium.png)
+![Open prompt editing](./screenshots/023-prompt-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Write an explicit question
 
-![Write an explicit question](./screenshots/023-prompt-text-desktop-chromium.png)
+![Write an explicit question](./screenshots/024-prompt-text-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Keep the question in the draft
 
-![Keep the question in the draft](./screenshots/024-prompt-save-desktop-chromium.png)
+![Keep the question in the draft](./screenshots/025-prompt-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Choose a different historical local time
 
-![Choose a different historical local time](./screenshots/025-date-desktop-chromium.png)
+![Choose a different historical local time](./screenshots/026-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Save explicit changes while preserving import provenance
 
-![Save explicit changes while preserving import provenance](./screenshots/026-save-desktop-chromium.png)
+![Save explicit changes while preserving import provenance](./screenshots/027-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Return to the journal with the edited entry
 
-![Return to the journal with the edited entry](./screenshots/027-done-desktop-chromium.png)
+![Return to the journal with the edited entry](./screenshots/028-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +270,16 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/028-repeat-settings-desktop-chromium.png)
+![Open Settings](./screenshots/029-repeat-settings-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/030-parent-repeat-import-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Open the private journal importer
 
-![Open the private journal importer](./screenshots/029-repeat-import-desktop-chromium.png)
+![Open the private journal importer](./screenshots/031-repeat-import-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Reopen the same ZIP without reimporting or overwriting edits
 
-![Reopen the same ZIP without reimporting or overwriting edits](./screenshots/030-deduplicated-desktop-chromium.png)
+![Reopen the same ZIP without reimporting or overwriting edits](./screenshots/032-deduplicated-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Reselect the same ZIP and keep the same receipt identities
 
-![Reselect the same ZIP and keep the same receipt identities](./screenshots/031-reselect-desktop-chromium.png)
+![Reselect the same ZIP and keep the same receipt identities](./screenshots/033-reselect-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,16 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/032-export-settings-desktop-chromium.png)
+![Open Settings](./screenshots/034-export-settings-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/035-parent-export-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Open journal export
 
-![Open journal export](./screenshots/033-export-desktop-chromium.png)
+![Open journal export](./screenshots/036-export-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Choose structured JSON with provenance
 
-![Choose structured JSON with provenance](./screenshots/034-json-desktop-chromium.png)
+![Choose structured JSON with provenance](./screenshots/037-json-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Prepare the complete journal and private photo
 
-![Prepare the complete journal and private photo](./screenshots/035-prepare-desktop-chromium.png)
+![Prepare the complete journal and private photo](./screenshots/038-prepare-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +360,7 @@ Viewport: desktop-chromium.
 
 ## Download and verify entries, origin fields and photo bytes
 
-![Download and verify entries, origin fields and photo bytes](./screenshots/036-download-desktop-chromium.png)
+![Download and verify entries, origin fields and photo bytes](./screenshots/039-download-desktop-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +369,7 @@ Viewport: desktop-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/037-today-desktop-chromium.png)
+![Open Today](./screenshots/040-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +378,7 @@ Viewport: desktop-chromium.
 
 ## Leave Today available after historical import
 
-![Leave Today available after historical import](./screenshots/038-historical-desktop-chromium.png)
+![Leave Today available after historical import](./screenshots/041-historical-desktop-chromium.png)
 
 **Verifications:**
 

@@ -457,9 +457,18 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/050-parent-export-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open journal export
 
-![Open journal export](./screenshots/050-export-desktop-chromium.png)
+![Open journal export](./screenshots/051-export-desktop-chromium.png)
 
 **Verifications:**
 
@@ -468,7 +477,7 @@ Viewport: desktop-chromium.
 
 ## Prepare all dated reflections for export
 
-![Prepare all dated reflections for export](./screenshots/051-prepare-desktop-chromium.png)
+![Prepare all dated reflections for export](./screenshots/052-prepare-desktop-chromium.png)
 
 **Verifications:**
 
@@ -477,7 +486,7 @@ Viewport: desktop-chromium.
 
 ## Download local entry dates without system metadata
 
-![Download local entry dates without system metadata](./screenshots/052-download-desktop-chromium.png)
+![Download local entry dates without system metadata](./screenshots/053-download-desktop-chromium.png)
 
 **Verifications:**
 

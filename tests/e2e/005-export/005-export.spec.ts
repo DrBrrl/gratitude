@@ -1,3 +1,4 @@
+import {settingsSection} from '../helpers/journal-session';
 import { expect, test } from '@playwright/test';
 import {selectionLog} from '../helpers/ai-selection-fixture';
 import { readFile } from 'node:fs/promises';
@@ -19,6 +20,7 @@ test('complete Markdown and JSON exports preserve text and exclude drafts', asyn
   await steps.action('draft', 'Leave an unfinished draft', () => editor(page).fill('PRIVATE UNFINISHED DRAFT'), async () => { await expect(page.getByText('Draft saved on this device', { exact: true })).toBeVisible(); });
   await backFromEditor(page, steps, 'leave-draft');
   await navigate(page, steps, 'settings', 'Settings');
+  await settingsSection(page,steps,'parent-export-settings','Privacy & data');
   await steps.action('export-settings', 'Open export settings', () => page.getByRole('button', { name: /^Export journal/ }).click(), async () => { await expect(page.getByRole('radio', { name: /Markdown/ })).toBeChecked(); });
   await steps.action('prepare-markdown', 'Prepare a Markdown journal', () => page.getByRole('button', { name: 'Prepare export' }).click(), async () => { await expect(page.getByRole('status')).toHaveText('Export ready', { timeout: 15_000 }); });
   let markdownContent = '';

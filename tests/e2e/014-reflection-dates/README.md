@@ -403,9 +403,18 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/044-parent-export-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open Markdown export
 
-![Open Markdown export](./screenshots/044-export-mobile-chromium.png)
+![Open Markdown export](./screenshots/045-export-mobile-chromium.png)
 
 **Verifications:**
 
@@ -414,7 +423,7 @@ Viewport: mobile-chromium.
 
 ## Prepare the reflection with its edited date
 
-![Prepare the reflection with its edited date](./screenshots/045-prepare-mobile-chromium.png)
+![Prepare the reflection with its edited date](./screenshots/046-prepare-mobile-chromium.png)
 
 **Verifications:**
 
@@ -423,7 +432,7 @@ Viewport: mobile-chromium.
 
 ## Download the updated local date without system metadata
 
-![Download the updated local date without system metadata](./screenshots/046-download-mobile-chromium.png)
+![Download the updated local date without system metadata](./screenshots/047-download-mobile-chromium.png)
 
 **Verifications:**
 

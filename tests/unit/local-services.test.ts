@@ -87,6 +87,7 @@ test('legacy destinations survive choosing another service and a personal connec
   if(provider==='gemini')saveConnection('account',{...legacy,token:'fictional-old-token'},preferences,secrets,true);
   saveConnection('account',connection,preferences,secrets);
   assert.deepEqual(readProviderConnection('account','lm-studio',preferences,secrets),{...legacy,provider:'lm-studio',token:'fictional-old-token'});
+  assert.ok(!JSON.stringify(Array.from({length:preferences.length},(_,i)=>preferences.getItem(preferences.key(i)!))).includes('fictional-old-token'),'provider history must never persist a tab token');
  }
  assert.deepEqual(validateConnection({provider:'gemini',baseUrl:'',model:'',token:'',connectionId:'deleted-key'}),defaultConnection());
 });

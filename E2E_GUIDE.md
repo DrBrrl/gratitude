@@ -390,3 +390,10 @@ Walkthrough [062](tests/e2e/062-reflection-classification/README.md) grants sepa
 Walkthrough [063](tests/e2e/063-backup-classification/README.md) imports two fictional questions, starts a bounded batch, holds the first response while pausing, reloads and explicitly resumes. It rejects a malformed category, retries to Unknown, corrects a backup manually without consuming it, and withdraws consent. Both viewports use the ordinary action-by-action helper, unmasked full-page comparisons, `maxDiffPixels: 0` and `threshold: 0`; generated walkthroughs embed each screenshot before its checks. Existing AI-settings consumers also retain their updated full-page screenshots for the new classification link.
 
 Authenticated classification tests include twenty-target validation, a forged target near the end of a batch, owner isolation, competing claims, changed external bindings and manual/text/consent/cancel races. Provider integration remains fictional in tests; running checks never classifies a real journal.
+
+
+## Settings and Unknown review
+
+Walkthrough [064](tests/e2e/064-unknown-review/README.md) follows the four-item Settings menu, nested Account/Personalise and Privacy/import/export paths, AI classification above Manual review, and compact reflection/backup Unknown queues. It checks original prompts, searchable right-side topic selection, offline retry, retaining reviewed cards, no backup consumption, full replay without inference, and the preserved What informs your prompts / Prompt feedback sections.
+
+Walkthrough [065](tests/e2e/065-backup-model/README.md) discovers text-only models on two fictional LM Studio computers. It explicitly shares the prompt connection, follows a later prompt-model change, saves separate backup credentials, and reloads without changing prompt/photo choices or enabling refill. Walkthrough 028 retains actual intercepted local/cloud replenishment to thirty with the new selector. Every click, input and selection uses the standard screenshot helper; all comparisons remain unmasked and zero-tolerance, with checks underneath each generated image.
