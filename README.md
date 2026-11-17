@@ -151,6 +151,7 @@ Streaks count saved logical entry dates in the viewing device's timezone. An unf
 - [MVP_DESIGN.md](MVP_DESIGN.md): proposed Firebase/Gemini architecture, source events, and replayable cached projections.
 - [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md): reviewable implementation increments and acceptance gates.
 - [UX_DESIGN.md](UX_DESIGN.md): mobile user stories, generated screen mockups, and interaction behavior.
+- [Settings and Unknown review proposal](docs/ux/SETTINGS_REVIEW.md): nine mobile concepts for review before implementation.
 - [PROMPTS.md](PROMPTS.md): verbatim user instructions given to the coding assistant, recorded chronologically. This is separate from the application's daily gratitude prompts.
 - [LEARNINGS.md](LEARNINGS.md): discoveries, decisions, assumptions, and open questions for the eventual project retrospective.
 - [AGENTS.md](AGENTS.md): instructions for maintaining these records during future assistant work.
