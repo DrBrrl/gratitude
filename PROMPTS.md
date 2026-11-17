@@ -1966,3 +1966,15 @@ Manual and batch first
 ### 2026-11-16 — Resolve classification branch conflicts
 
 There are also some conflicts to resolve in that branch :)
+
+### 2026-11-17 — Settings reorganisation and Unknown review mockups
+
+I merged pr32 and have attempted to classify all the backup prompts and reflections! :) Do you think we can get a new feature in to allow quick manual review of backup prompts and previous reflections that have been classified as "unknown"? Perhaps in the manual review, each prompt/reflection (plus the prompt that originally inspired it) could be presented as a compact card with a drop-down button on the right side of it that has the topics in it. While we are at that, i would like a bit of a settings overhaul - Import and Export journal should live in the Privacy & data menu. Personalise your journal should live under "Account - user". Classify journal and backup topics should be its own top-level menu item, below AI settings. The description text on the top-level AI settings button should read "Model choices, prompt preferences, and backup prompts". Finally, in AI settings, where the model-picker is for Backup prompts, can we get the same model-picker that is used in the photo description model? So it should show "Same as prompt model", etc. Can you mock-up these changes to the settings menu for me for review?
+
+### 2026-11-17 — Unknown review entry point
+
+The unknown review cards should be something one can navigate to from the settings top-level menu item "Classify journal and backup topics" :)
+
+### 2026-11-17 — Review before implementation
+
+Awesome, thank you Casey! We'll review and then you can code up! :)
