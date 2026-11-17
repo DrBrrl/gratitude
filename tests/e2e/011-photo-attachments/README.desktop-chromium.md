@@ -448,9 +448,18 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/049-parent-export-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open journal export
 
-![Open journal export](./screenshots/049-export-desktop-chromium.png)
+![Open journal export](./screenshots/050-export-desktop-chromium.png)
 
 **Verifications:**
 
@@ -459,7 +468,7 @@ Viewport: desktop-chromium.
 
 ## Include saved photo bytes and descriptions in Markdown ZIP
 
-![Include saved photo bytes and descriptions in Markdown ZIP](./screenshots/050-prepare-desktop-chromium.png)
+![Include saved photo bytes and descriptions in Markdown ZIP](./screenshots/051-prepare-desktop-chromium.png)
 
 **Verifications:**
 
@@ -468,7 +477,7 @@ Viewport: desktop-chromium.
 
 ## Download the complete photo journal archive
 
-![Download the complete photo journal archive](./screenshots/051-download-desktop-chromium.png)
+![Download the complete photo journal archive](./screenshots/052-download-desktop-chromium.png)
 
 **Verifications:**
 

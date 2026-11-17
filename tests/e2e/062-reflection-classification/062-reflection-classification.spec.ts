@@ -1,3 +1,4 @@
+import {settingsSection} from '../helpers/journal-session';
 import {test,expect as baseExpect} from '@playwright/test';
 import {TestStepHelper} from '../helpers/test-step-helper';
 import {startJournal,writeReflection,navigate,expectSynced} from '../helpers/journal-session';
@@ -14,7 +15,9 @@ test('explicit classification consent, single-item suggestion, manual correction
  await writeReflection(page,steps,'The birds sang outside my window.','reflection');
  await steps.action('done','Return to the private journal',()=>page.getByRole('button',{name:'Done',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Your journal',exact:true})).toBeVisible();});
  await aiSettings(page,steps,'classify');
- await steps.action('open-classification','Review the separate classification disclosure',()=>page.getByRole('button',{name:'Classify journal and backup topics',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Topic classification',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Classify unclassified reflections',exact:true})).toBeDisabled();expect(calls).toBe(0);});
+ await navigate(page,steps,'root-open-classification','Settings');
+ await steps.action('open-classification','Review the separate classification disclosure',()=>page.getByRole('button',{name:'Classify journal and backup topics',exact:true}).click(),async()=>{await expect(page.getByRole('heading',{name:'Topic classification',exact:true})).toBeVisible();});
+ await steps.action('tools-open-classification','Open the AI classification controls without starting inference',()=>page.locator('.classification-tools > summary').click(),async()=>{await expect(page.getByRole('heading',{name:'AI classification',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Classify unclassified reflections',exact:true})).toBeDisabled();expect(calls).toBe(0);});
  await steps.action('allow','Explicitly allow this connection to classify selected text',()=>page.getByRole('button',{name:'Allow classification with this connection',exact:true}).click(),async()=>{await expect(page.getByRole('button',{name:'Turn classification off',exact:true})).toBeVisible();expect(calls).toBe(0);});
  const id=replay(await selectionLog(page)).entries[0].id;
  await steps.action('choose','Select one saved reflection',()=>page.getByLabel('Item',{exact:true}).selectOption(id),async()=>{await expect(page.getByRole('region',{name:'Classify one item',exact:true})).toContainText('Not yet classified');});

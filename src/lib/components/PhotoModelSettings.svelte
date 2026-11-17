@@ -4,7 +4,7 @@
   import ModelSettings from './ModelSettings.svelte';
   import {readProviderConnection,defaultConnection,validateConnection,type ModelConnection} from '../ai/lm-studio';
   import type {CredentialStatus} from '../firebase/model-credential';
-  let {cloudConnections=null,client=null,provider='prompt',connection,scope,credentialStatus,disabled=false,initialError='',onsave,onsavetoken,onforgettoken,oncomplete}:{cloudConnections?:Record<string,ModelConnection>|null;client?:FirebaseClient|null;provider?:'prompt'|AIProvider;connection:ModelConnection;scope:string;credentialStatus:CredentialStatus;disabled?:boolean;initialError?:string;onsave:(provider:'prompt'|AIProvider,connection?:ModelConnection)=>Promise<void>;onsavetoken:(connection:ModelConnection)=>Promise<void>;onforgettoken:()=>Promise<void>;oncomplete?:(complete:boolean)=>void}=$props();
+  let {task='photos',cloudConnections=null,client=null,provider='prompt',connection,promptConnection,scope,credentialStatus,disabled=false,initialError='',onsave,onsavetoken,onforgettoken,oncomplete}:{task?:'photos'|'backups';cloudConnections?:Record<string,ModelConnection>|null;client?:FirebaseClient|null;provider?:'prompt'|AIProvider;connection:ModelConnection;promptConnection?:ModelConnection;scope:string;credentialStatus:CredentialStatus;disabled?:boolean;initialError?:string;onsave:(provider:'prompt'|AIProvider,connection?:ModelConnection)=>Promise<ModelConnection|void>;onsavetoken:(connection:ModelConnection)=>Promise<void>;onforgettoken:()=>Promise<void>;oncomplete?:(complete:boolean)=>void}=$props();
   let open=$state(false),choice=$state<'prompt'|AIProvider>('prompt'),busy=$state(false),message=$state('');
   let detailComplete=$state(false);
   $effect(()=>{
@@ -17,25 +17,27 @@
     oncomplete(complete&&!busy);
   });
   const id=$props.id();
+  const sharedConnection=$derived(promptConnection??connection);
+  const noun=$derived(task==='photos'?'Photo':'Backup');
   $effect(()=>{choice=provider;});
-  function forChoice():ModelConnection{if(choice==='prompt')return connection;if(choice===connection.provider)return connection;try{return readProviderConnection(scope,choice);}catch{return {...defaultConnection(),provider:choice,token:'',model:choice==='lm-studio'?defaultConnection().model:'',baseUrl:choice==='ollama'?'http://127.0.0.1:11434':choice==='personal-gemini'?'':defaultConnection().baseUrl};}}
-  async function save(){busy=true;message='';try{await onsave(choice);message='Photo model choice saved to your account.';}catch{message='Could not save the photo model. Reconnect and try again.';}finally{busy=false;}}
+  function forChoice():ModelConnection{if(choice==='prompt')return sharedConnection;if(choice===connection.provider&&!(task==='backups'&&provider==='prompt'))return connection;try{return readProviderConnection(scope,choice);}catch{return {...defaultConnection(),provider:choice,token:'',model:choice==='lm-studio'?defaultConnection().model:'',baseUrl:choice==='ollama'?'http://127.0.0.1:11434':choice==='personal-gemini'?'':defaultConnection().baseUrl};}}
+  async function save(){busy=true;message='';try{await onsave(choice);message=`${noun} model choice saved to your account.`;}catch{message=`Could not save the ${noun.toLowerCase()} model. Reconnect and try again.`;}finally{busy=false;}}
 </script>
 <details class="photo-model" bind:open>
-  <summary>Photo description model</summary>
+  <summary>{task==='photos'?'Photo description model':'Backup generation model'}</summary>
   {#if open}
-    <p class="hint">Use the prompt connection, or choose a different model and computer for photos. This does not change your prompt or backup settings.</p>
-    <label for={id}>Photo description connection</label>
+    <p class="hint">{task==='photos'?'Use the prompt connection, or choose a different model and computer for photos. This does not change your prompt or backup settings.':'Use the prompt connection, or choose a different model and computer for backups. This changes backup generation only; automatic refill remains a separate choice.'}</p>
+    <label for={id}>{task==='photos'?'Photo description connection':'Backup generation connection'}</label>
     <select id={id} bind:value={choice} disabled={disabled||busy} onchange={()=>message=''}>
       <option value="prompt">Same as prompt model</option>
       <option value="gemini">Gemini</option>
       <option value="lm-studio">Separate LM Studio connection</option><option value="ollama">Separate Ollama connection</option><option value="openai-compatible">Separate compatible local server</option><option value="personal-gemini">Separate personal Gemini key</option>
     </select>
     {#if choice!=='prompt'&&choice!=='gemini'}
-      <ModelSettings {client} {cloudConnections} purpose="photos" heading="Photo model" regionLabel="Photo model connection" saveMessage="Photo model choice saved to your account; connection settings saved on this device." connection={forChoice()} {scope} {credentialStatus} {onsavetoken} {onforgettoken} {initialError} connectionOnly disabled={disabled||busy} oncomplete={complete=>detailComplete=complete} onchange={async saved=>{await onsave(saved.provider,saved);}} />
+      <ModelSettings {client} {cloudConnections} purpose={task==='photos'?'photos':'prompts'} heading={`${noun} model`} regionLabel={`${noun} model connection`} saveMessage={`${noun} model choice saved to your account; connection settings saved on this device.`} connection={forChoice()} {scope} {credentialStatus} {onsavetoken} {onforgettoken} {initialError} connectionOnly disabled={disabled||busy} oncomplete={complete=>detailComplete=complete} onchange={saved=>onsave(saved.provider,saved)} />
     {:else}
-      <p class="hint">{choice==='prompt'?'Photo summaries will use the same server, model and credentials as prompts. Choose a vision-capable model to describe photos.':'Photo summaries will use this site’s managed Gemini connection, independently of prompts.'} Only the selected photo is sent when you request a summary.</p>
-      <button class="outline" onclick={save} disabled={disabled||busy}>Save photo model</button>
+      {#if task==='photos'}<p class="hint">{choice==='prompt'?'Photo summaries will use the same server, model and credentials as prompts. Choose a vision-capable model to describe photos.':'Photo summaries will use this site’s managed Gemini connection, independently of prompts.'} Only the selected photo is sent when you request a summary.</p>{:else}<p class="hint">{choice==='prompt'?'Backups will use the same server, model and credentials as prompts.':'Backups will use this site’s managed Gemini connection, independently of prompts.'} Choosing a model does not turn automatic refill on.</p>{#if choice==='prompt'}<p class="hint">Current prompt connection: {sharedConnection.provider==='gemini'?'Gemini':`${sharedConnection.baseUrl} · ${sharedConnection.model}`}</p>{/if}{/if}
+      <button class="outline" onclick={save} disabled={disabled||busy}>Save {noun.toLowerCase()} model</button>
     {/if}
     {#if message}<p class="hint" role="status">{message}</p>{/if}
   {/if}

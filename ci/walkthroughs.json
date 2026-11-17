@@ -31,7 +31,9 @@
     "onboarding-return": ["054", "055"],
     "reflection-topics": ["057", "058"],
     "today-buttons": ["061"],
-    "classification": ["062", "063"]
+    "classification": ["062", "063"],
+    "settings-review": ["064"],
+    "backup-model": ["065"]
   },
   "smoke": ["035"],
   "isolated_components": {

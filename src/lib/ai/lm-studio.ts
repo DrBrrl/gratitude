@@ -109,7 +109,7 @@ export function saveConnection(scope:string,input:ModelConnection,storage:Storag
   const prior=storage.getItem(key(scope));
   let priorPreferences:ModelConnection|null=null;
   if(prior){try{priorPreferences=validateConnection({...JSON.parse(prior),token:previous??''});}catch{/* An unreadable cache must not prevent an explicit valid replacement. */}}
-  if(priorPreferences){const parsed=priorPreferences;const provider=parsed.provider==='gemini'&&connection.provider!=='gemini'&&!PROVIDERS.some(value=>storage.getItem(key(JSON.stringify(['provider',scope,value]))))?'lm-studio':parsed.provider;if(provider&&provider!=='gemini'){const previousSlot=key(JSON.stringify(['provider',scope,provider]));storage.setItem(previousSlot,JSON.stringify({...parsed,provider}));if(previous)secrets.setItem(previousSlot,previous);else secrets.removeItem(previousSlot);}}
+  if(priorPreferences){const parsed=priorPreferences;const provider=parsed.provider==='gemini'&&connection.provider!=='gemini'&&!PROVIDERS.some(value=>storage.getItem(key(JSON.stringify(['provider',scope,value]))))?'lm-studio':parsed.provider;if(provider&&provider!=='gemini'){const previousSlot=key(JSON.stringify(['provider',scope,provider]));const {token:priorToken,...previousPreferences}=parsed;storage.setItem(previousSlot,JSON.stringify({...previousPreferences,provider}));if(previous)secrets.setItem(previousSlot,previous);else secrets.removeItem(previousSlot);}}
   storage.setItem(key(scope),JSON.stringify(preferences));
   if(connection.provider!=='gemini'){const slot=key(JSON.stringify(['provider',scope,connection.provider]));storage.setItem(slot,JSON.stringify(preferences));if(token)secrets.setItem(slot,token);else secrets.removeItem(slot);}
   if(token) secrets.setItem(key(scope),token);else secrets.removeItem(key(scope));
@@ -132,3 +132,5 @@ export function localPhotoGenerator(input:ModelConnection,read:()=>Promise<Blob>
 
 /** Keep task slots distinct even when an account ID contains a delimiter. */
 export function photoConnectionScope(scope:string){return JSON.stringify(['photos',scope]);}
+
+export function backupConnectionScope(scope:string){return JSON.stringify(['backups',scope]);}

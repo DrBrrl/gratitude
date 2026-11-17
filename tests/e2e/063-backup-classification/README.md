@@ -124,9 +124,27 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Settings
+
+![Open Settings](./screenshots/013-root-classification-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open the classification disclosure
 
-![Open the classification disclosure](./screenshots/013-classification-mobile-chromium.png)
+![Open the classification disclosure](./screenshots/014-classification-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the AI classification controls without starting inference
+
+![Open the AI classification controls without starting inference](./screenshots/015-tools-classification-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Allow classification only with the displayed connection
 
-![Allow classification only with the displayed connection](./screenshots/014-allow-mobile-chromium.png)
+![Allow classification only with the displayed connection](./screenshots/016-allow-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Start a bounded serial backup batch
 
-![Start a bounded serial backup batch](./screenshots/015-start-batch-mobile-chromium.png)
+![Start a bounded serial backup batch](./screenshots/017-start-batch-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Stop queued calls while the first request is in flight
 
-![Stop queued calls while the first request is in flight](./screenshots/016-pause-mobile-chromium.png)
+![Stop queued calls while the first request is in flight](./screenshots/018-pause-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Retain the already-dispatched response without starting another call
 
-![Retain the already-dispatched response without starting another call](./screenshots/017-received-mobile-chromium.png)
+![Retain the already-dispatched response without starting another call](./screenshots/019-received-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Keep paused source progress across reload
 
-![Keep paused source progress across reload](./screenshots/018-reload-mobile-chromium.png)
+![Keep paused source progress across reload](./screenshots/020-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/019-resume-settings-settings-mobile-chromium.png)
+![Open Settings](./screenshots/021-resume-settings-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,16 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/020-resume-settings-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/022-resume-settings-ai-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Settings
+
+![Open Settings](./screenshots/023-root-restore-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +225,16 @@ Viewport: mobile-chromium.
 
 ## Review the paused batch without dispatching it
 
-![Review the paused batch without dispatching it](./screenshots/021-restore-mobile-chromium.png)
+![Review the paused batch without dispatching it](./screenshots/024-restore-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open the AI classification controls without starting inference
+
+![Open the AI classification controls without starting inference](./screenshots/025-tools-restore-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Explicitly resume the remaining backup
 
-![Explicitly resume the remaining backup](./screenshots/022-resume-mobile-chromium.png)
+![Explicitly resume the remaining backup](./screenshots/026-resume-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Retry the invalid item and retain Unknown as a completed result
 
-![Retry the invalid item and retain Unknown as a completed result](./screenshots/023-retry-mobile-chromium.png)
+![Retry the invalid item and retain Unknown as a completed result](./screenshots/027-retry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Review a backup category
 
-![Review a backup category](./screenshots/024-backup-kind-mobile-chromium.png)
+![Review a backup category](./screenshots/028-backup-kind-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +270,7 @@ Viewport: mobile-chromium.
 
 ## Select a classified backup
 
-![Select a classified backup](./screenshots/025-backup-select-mobile-chromium.png)
+![Select a classified backup](./screenshots/029-backup-select-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +279,7 @@ Viewport: mobile-chromium.
 
 ## Choose a manual category from the same vocabulary as starters
 
-![Choose a manual category from the same vocabulary as starters](./screenshots/026-category-choice-mobile-chromium.png)
+![Choose a manual category from the same vocabulary as starters](./screenshots/030-category-choice-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +288,7 @@ Viewport: mobile-chromium.
 
 ## Keep the backup wording and manually correct its category
 
-![Keep the backup wording and manually correct its category](./screenshots/027-category-save-mobile-chromium.png)
+![Keep the backup wording and manually correct its category](./screenshots/031-category-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +297,7 @@ Viewport: mobile-chromium.
 
 ## Withdraw classification consent without changing existing categories
 
-![Withdraw classification consent without changing existing categories](./screenshots/028-revoke-mobile-chromium.png)
+![Withdraw classification consent without changing existing categories](./screenshots/032-revoke-mobile-chromium.png)
 
 **Verifications:**
 

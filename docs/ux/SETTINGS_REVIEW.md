@@ -1,6 +1,6 @@
 # Settings and Unknown review — proposal
 
-Nine mobile concept screens for review, 17 November 2026. This PR contains designs only; the running app is unchanged. The examples, counts and account details are fictional. These generated mockups illustrate layout and interaction, not executable screenshots. The existing app's typography, colour picker and navigation components remain the implementation reference.
+Nine mobile concept screens for review, 17 November 2026. These designs were approved for implementation, with AI classification above Manual review. The implementation and executable walkthroughs are included in this PR. The examples, counts and account details are fictional. These generated mockups illustrate layout and interaction, not executable screenshots. The existing app's typography, colour picker and navigation components remain the implementation reference.
 
 ## Settings navigation
 
@@ -21,9 +21,9 @@ Use the saved private preferred name after Account when supplied; otherwise show
 
 ![Classification entry point and compact Unknown review cards](mockups/settings-review/02-unknown-review.png)
 
-Path: **Settings → Classify journal and backup topics → Review reflections / Review backup prompts**. A Manual review card appears above the existing AI classification tools. Both links open Review Unknown with the corresponding filter selected. No additional root item or bottom tab is introduced.
+Path: **Settings → Classify journal and backup topics → Review reflections / Review backup prompts**. The AI classification tools appear first, with the Manual review card below them. Both links open Review Unknown with the corresponding filter selected. No additional root item or bottom tab is introduced.
 
-Proposed behaviour:
+Review behaviour:
 
 - Include items whose current topic is **Unknown**. Keep **Not yet classified** distinct. Include a stale Unknown suggestion if its current text still needs review; do not sweep unrelated known or invalid suggestions into this queue.
 - Reflection cards show their saved prompt, reflection and local entry datetime. Preserve `[No prompt]` on imported entries that have no prompt. Use the journal's date-derived card colours and Prompt/Reflection hierarchy. Backup cards show the saved question only, in neutral glass, without an invented reflection or entry date.
@@ -53,10 +53,10 @@ Saving the backup model affects backup generation only. Automatic refill remains
 
 ## Assets and validation
 
-Generated with the built-in image-generation tool using the current [Settings screenshot](../../tests/e2e/006-reflection-editor/screenshots/027-settings-mobile-chromium.png) as a style reference. Exact generation prompts:
+Generated with the built-in image-generation tool using the current [Settings screenshot from merged main](https://github.com/DrBrrl/gratitude/blob/89e98b1c6bd8d1aa1d07c5b479f4a9ec8b45659c/tests/e2e/006-reflection-editor/screenshots/027-settings-mobile-chromium.png) as a style reference. Exact generation prompts:
 
 - [Settings navigation](prompts/settings-review/01-settings-navigation.txt)
 - [Unknown review](prompts/settings-review/02-unknown-review.txt)
 - [Backup model picker](prompts/settings-review/03-backup-model-picker.txt)
 
-The three PNG boards are saved alongside this document under `mockups/settings-review/`. No app code, backend rules or executable screenshot baselines change in this proposal. Review approval precedes implementation and the corresponding step-by-step, unmasked, zero-pixel E2E walkthroughs.
+The three PNG boards are saved alongside this document under `mockups/settings-review/`. The original generated boards are retained as the review record. The implemented screen reverses the S04 section order: **AI classification first, Manual review second**. Both **What informs your prompts** and its **Prompt feedback** section remain in AI settings; the model-detail board only illustrated part of that page. See walkthroughs [064](../../tests/e2e/064-unknown-review/README.md) and [065](../../tests/e2e/065-backup-model/README.md) for the actual step-by-step, unmasked, zero-pixel app screenshots.

@@ -142,9 +142,18 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/015-parent-export-settings-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open export settings
 
-![Open export settings](./screenshots/015-export-settings-desktop-chromium.png)
+![Open export settings](./screenshots/016-export-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Prepare a Markdown journal
 
-![Prepare a Markdown journal](./screenshots/016-prepare-markdown-desktop-chromium.png)
+![Prepare a Markdown journal](./screenshots/017-prepare-markdown-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +171,7 @@ Viewport: desktop-chromium.
 
 ## Download all saved reflections as Markdown
 
-![Download all saved reflections as Markdown](./screenshots/017-markdown-desktop-chromium.png)
+![Download all saved reflections as Markdown](./screenshots/018-markdown-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +180,7 @@ Viewport: desktop-chromium.
 
 ## Select JSON export
 
-![Select JSON export](./screenshots/018-select-json-desktop-chromium.png)
+![Select JSON export](./screenshots/019-select-json-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Prepare a JSON archive
 
-![Prepare a JSON archive](./screenshots/019-prepare-json-desktop-chromium.png)
+![Prepare a JSON archive](./screenshots/020-prepare-json-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Download the same journal as JSON
 
-![Download the same journal as JSON](./screenshots/020-json-desktop-chromium.png)
+![Download the same journal as JSON](./screenshots/021-json-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Disconnect before another export
 
-![Disconnect before another export](./screenshots/021-offline-desktop-chromium.png)
+![Disconnect before another export](./screenshots/022-offline-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Request a complete export while offline
 
-![Request a complete export while offline](./screenshots/022-offline-export-desktop-chromium.png)
+![Request a complete export while offline](./screenshots/023-offline-export-desktop-chromium.png)
 
 **Verifications:**
 

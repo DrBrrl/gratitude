@@ -88,9 +88,18 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/009-parent-first-import-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Open the private journal importer
 
-![Open the private journal importer](./screenshots/009-first-import-mobile-chromium.png)
+![Open the private journal importer](./screenshots/010-first-import-mobile-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +108,7 @@ Viewport: mobile-chromium.
 
 ## Reject an invalid ZIP without writing journal history
 
-![Reject an invalid ZIP without writing journal history](./screenshots/010-invalid-mobile-chromium.png)
+![Reject an invalid ZIP without writing journal history](./screenshots/011-invalid-mobile-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +117,7 @@ Viewport: mobile-chromium.
 
 ## Check the selected fictional ZIP before importing
 
-![Check the selected fictional ZIP before importing](./screenshots/011-preview-mobile-chromium.png)
+![Check the selected fictional ZIP before importing](./screenshots/012-preview-mobile-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +126,7 @@ Viewport: mobile-chromium.
 
 ## Review dates, photos and the missing-prompt policy before confirmation
 
-![Review dates, photos and the missing-prompt policy before confirmation](./screenshots/012-counts-mobile-chromium.png)
+![Review dates, photos and the missing-prompt policy before confirmation](./screenshots/013-counts-mobile-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +135,7 @@ Viewport: mobile-chromium.
 
 ## Confirm the signed-in destination account
 
-![Confirm the signed-in destination account](./screenshots/013-confirm-account-mobile-chromium.png)
+![Confirm the signed-in destination account](./screenshots/014-confirm-account-mobile-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +144,7 @@ Viewport: mobile-chromium.
 
 ## Import confirmed entries and private photos without AI
 
-![Import confirmed entries and private photos without AI](./screenshots/014-import-mobile-chromium.png)
+![Import confirmed entries and private photos without AI](./screenshots/015-import-mobile-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +153,7 @@ Viewport: mobile-chromium.
 
 ## Open the imported journal
 
-![Open the imported journal](./screenshots/015-journal-mobile-chromium.png)
+![Open the imported journal](./screenshots/016-journal-mobile-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Read historical reflections in local date order
 
-![Read historical reflections in local date order](./screenshots/016-entries-mobile-chromium.png)
+![Read historical reflections in local date order](./screenshots/017-entries-mobile-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Open the imported photo-only reflection
 
-![Open the imported photo-only reflection](./screenshots/017-photo-entry-mobile-chromium.png)
+![Open the imported photo-only reflection](./screenshots/018-photo-entry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Return to the historical journal
 
-![Return to the historical journal](./screenshots/018-back-mobile-chromium.png)
+![Return to the historical journal](./screenshots/019-back-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Open an entry with a missing source prompt
 
-![Open an entry with a missing source prompt](./screenshots/019-text-entry-mobile-chromium.png)
+![Open an entry with a missing source prompt](./screenshots/020-text-entry-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +198,7 @@ Viewport: mobile-chromium.
 
 ## Edit the imported reflection
 
-![Edit the imported reflection](./screenshots/020-edit-mobile-chromium.png)
+![Edit the imported reflection](./screenshots/021-edit-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +207,7 @@ Viewport: mobile-chromium.
 
 ## Change the reflection without altering its source record
 
-![Change the reflection without altering its source record](./screenshots/021-write-mobile-chromium.png)
+![Change the reflection without altering its source record](./screenshots/022-write-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +216,7 @@ Viewport: mobile-chromium.
 
 ## Open prompt editing
 
-![Open prompt editing](./screenshots/022-prompt-mobile-chromium.png)
+![Open prompt editing](./screenshots/023-prompt-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Write an explicit question
 
-![Write an explicit question](./screenshots/023-prompt-text-mobile-chromium.png)
+![Write an explicit question](./screenshots/024-prompt-text-mobile-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Keep the question in the draft
 
-![Keep the question in the draft](./screenshots/024-prompt-save-mobile-chromium.png)
+![Keep the question in the draft](./screenshots/025-prompt-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +243,7 @@ Viewport: mobile-chromium.
 
 ## Choose a different historical local time
 
-![Choose a different historical local time](./screenshots/025-date-mobile-chromium.png)
+![Choose a different historical local time](./screenshots/026-date-mobile-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +252,7 @@ Viewport: mobile-chromium.
 
 ## Save explicit changes while preserving import provenance
 
-![Save explicit changes while preserving import provenance](./screenshots/026-save-mobile-chromium.png)
+![Save explicit changes while preserving import provenance](./screenshots/027-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +261,7 @@ Viewport: mobile-chromium.
 
 ## Return to the journal with the edited entry
 
-![Return to the journal with the edited entry](./screenshots/027-done-mobile-chromium.png)
+![Return to the journal with the edited entry](./screenshots/028-done-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +270,16 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/028-repeat-settings-mobile-chromium.png)
+![Open Settings](./screenshots/029-repeat-settings-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/030-parent-repeat-import-mobile-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: mobile-chromium.
 
 ## Open the private journal importer
 
-![Open the private journal importer](./screenshots/029-repeat-import-mobile-chromium.png)
+![Open the private journal importer](./screenshots/031-repeat-import-mobile-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: mobile-chromium.
 
 ## Reopen the same ZIP without reimporting or overwriting edits
 
-![Reopen the same ZIP without reimporting or overwriting edits](./screenshots/030-deduplicated-mobile-chromium.png)
+![Reopen the same ZIP without reimporting or overwriting edits](./screenshots/032-deduplicated-mobile-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: mobile-chromium.
 
 ## Reselect the same ZIP and keep the same receipt identities
 
-![Reselect the same ZIP and keep the same receipt identities](./screenshots/031-reselect-mobile-chromium.png)
+![Reselect the same ZIP and keep the same receipt identities](./screenshots/033-reselect-mobile-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,16 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/032-export-settings-mobile-chromium.png)
+![Open Settings](./screenshots/034-export-settings-mobile-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Open Privacy & data settings
+
+![Open Privacy & data settings](./screenshots/035-parent-export-mobile-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +333,7 @@ Viewport: mobile-chromium.
 
 ## Open journal export
 
-![Open journal export](./screenshots/033-export-mobile-chromium.png)
+![Open journal export](./screenshots/036-export-mobile-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +342,7 @@ Viewport: mobile-chromium.
 
 ## Choose structured JSON with provenance
 
-![Choose structured JSON with provenance](./screenshots/034-json-mobile-chromium.png)
+![Choose structured JSON with provenance](./screenshots/037-json-mobile-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +351,7 @@ Viewport: mobile-chromium.
 
 ## Prepare the complete journal and private photo
 
-![Prepare the complete journal and private photo](./screenshots/035-prepare-mobile-chromium.png)
+![Prepare the complete journal and private photo](./screenshots/038-prepare-mobile-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +360,7 @@ Viewport: mobile-chromium.
 
 ## Download and verify entries, origin fields and photo bytes
 
-![Download and verify entries, origin fields and photo bytes](./screenshots/036-download-mobile-chromium.png)
+![Download and verify entries, origin fields and photo bytes](./screenshots/039-download-mobile-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +369,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/037-today-mobile-chromium.png)
+![Open Today](./screenshots/040-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +378,7 @@ Viewport: mobile-chromium.
 
 ## Leave Today available after historical import
 
-![Leave Today available after historical import](./screenshots/038-historical-mobile-chromium.png)
+![Leave Today available after historical import](./screenshots/041-historical-mobile-chromium.png)
 
 **Verifications:**
 

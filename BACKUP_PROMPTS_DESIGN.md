@@ -37,3 +37,10 @@ Unit tests cover replay, 102 imports, consumption, removal, duplicate variants, 
 Choosing a backup keeps its original ID only in the device draft, including through manual prompt edits and reload. Replacing that choice or discarding the unsaved draft does not consume it. Already-offered questions still follow the same-day no-repeat rule.
 
 Save retains the reflection and its intended prompt use together in the durable local pending record. The reflection is appended first, then the existing literal `PromptAccepted` action for the original question and local save day. Stable action IDs make retries idempotent. The pending record is cleared only after both writes have reached the local projection; failure before the reflection cannot consume a question. A never-attempted offline save can be returned to the editor and discarded. If a save may already have reached the server, recovery checks before abandoning its prompt-use intent. This local provenance is not included in events or exports, and old acceptance events retain their original meaning.
+
+
+## Shared or separate backup connections
+
+AIChoicesConfirmed version 6 adds the literal backupProvider choice `prompt`, with backupConnectionId null. Its effective provider and binding are derived from the current prompt choice at dispatch; no resolved model, server, credentials or counts are placed in the event. Historical explicit providers keep their meaning. Versions 1–5 remain validated with their original permitted values. Firestore Rules and append/replay checks resolve the same effective task binding. Cache version 18 rebuilds once from source events.
+
+The connection UI reuses the photo selector, including service discovery and separate same-provider computers. Device preferences and optional owner-only account credentials have a distinct backup slot. Legacy explicit device preferences are preserved after account credential restoration, without adding cloud credential sharing. Changing a prompt connection must not revise a separate backup binding. Model selection does not enable refill, and refill still uses the existing source requests/responses and pacing.

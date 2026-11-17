@@ -124,3 +124,8 @@ export async function expectDecodedPhotos(page: Page, count: number) {
   await expect.poll(() => images.evaluateAll(nodes => nodes.every(node => (node as HTMLImageElement).complete && (node as HTMLImageElement).naturalWidth > 0)), { timeout: 15_000 }).toBe(true);
   await images.evaluateAll(nodes => Promise.all(nodes.map(node => (node as HTMLImageElement).decode())));
 }
+
+/** Parent menus are real navigation actions and each gets its own screenshot. */
+export async function settingsSection(page:Page,steps:TestStepHelper,id:string,parent:'Privacy & data'|'Account'){
+ await steps.action(id,`Open ${parent} settings`,()=>page.getByRole('button',{name:parent==='Account'?/^Account/:/^Privacy & data/}).click(),async()=>{await expect(page.getByRole('heading',{name:parent==='Account'?/^Account/:/^Privacy & data/})).toBeVisible();});
+}

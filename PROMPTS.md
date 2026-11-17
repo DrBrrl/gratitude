@@ -1978,3 +1978,16 @@ The unknown review cards should be something one can navigate to from the settin
 ### 2026-11-17 — Review before implementation
 
 Awesome, thank you Casey! We'll review and then you can code up! :)
+
+
+### 2026-11-17 — Approve settings implementation and classification order
+
+Love these mockups! Let's just get the AI classification above Manual review in the Topic classification screen and i think we can start the coding! :)
+
+### 2026-11-17 — Preserve AI context and feedback sections
+
+Also, in the AI settings, i don't see the prompt feedback section or the "what informs your prompts" section - those should remain in there
+
+### 2026-11-17 — Follow-up
+
+Awesome, thanks Casey! :) 💛

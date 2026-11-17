@@ -32,7 +32,7 @@ test('choose an account accent, keep rainbow reflections, and grow AI guidance w
   await startJournal(page, info, steps, 'accent');
   await writeReflection(page, steps, 'A fictional bright morning, with a warm cup of tea.', 'reflection');
   await navigate(page, steps, 'settings', 'Settings');
-  await steps.action('account', 'Open Account and its fourteen rainbow accent choices', () => page.getByRole('button', { name: /^Account / }).click(), async () => {
+  await steps.action('account', 'Open Account and its fourteen rainbow accent choices', () => page.getByRole('button', { name: /^Account(?: ·|$)/ }).click(), async () => {
     await expect(page.getByRole('group', { name: 'Choose your accent colour' }).getByRole('button')).toHaveCount(14);
     await expect(page.getByRole('button', { name: 'Yellow', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await checkHighlight(page,accentChoices[0].colour);
@@ -95,7 +95,7 @@ test('choose an account accent, keep rainbow reflections, and grow AI guidance w
     await steps.step('restored-guidance', 'Restore the saved short guidance and its character count', [{ description: 'The field and explicit limit agree on both devices', check: async () => { await expect(other.locator('#ai-guidance')).toHaveValue('Everyday joys.'); await expect(other.locator('#ai-guidance-limit')).toHaveText('14 / 500 characters'); } }]);
   } finally { await context.close(); steps.setPage(page); }
   await navigate(page, steps, 'leave-settings', 'Settings');
-  await steps.action('leave-account', 'Return to Account', () => page.getByRole('button', { name: /^Account / }).click(), async () => { await expect(page.getByRole('button', { name: 'Blue', exact: true })).toHaveAttribute('aria-pressed', 'true'); });
+  await steps.action('leave-account', 'Return to Account', () => page.getByRole('button', { name: /^Account(?: ·|$)/ }).click(), async () => { await expect(page.getByRole('button', { name: 'Blue', exact: true })).toHaveAttribute('aria-pressed', 'true'); });
   await steps.action('signout', 'Return public pages to yellow on sign-out', () => page.getByRole('button', { name: 'Sign out', exact: true }).click(), async () => { await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible(); await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))).toBe(accentChoices[0].colour); });
   await steps.generateDocs('Your favourite accent colour', 'Account accents use the fourteen supplied hex points independently of the date rainbow, sync independently of AI consent, light the smoke and recolour the glass, and preserve reflection date colours. The picker uses the exact supplied hex points; the smoke keeps its neutral texture with a subdued lighting hue from the selected point; icons use their strongest readable tint, with matching wordmark-star colour and the same border opacity. AI guidance grows with its content and states its 500-character limit.');
 });

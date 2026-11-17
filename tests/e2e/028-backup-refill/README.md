@@ -151,27 +151,9 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Choose the backup refill provider independently from normal prompts
+## Open the independent backup model selector
 
-![Choose the backup refill provider independently from normal prompts](./screenshots/016-preferences-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Save a local backup preference with automatic generation still off
-
-![Save a local backup preference with automatic generation still off](./screenshots/017-save-local-choice-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open device-private local backup credentials
-
-![Open device-private local backup credentials](./screenshots/018-open-connection-mobile-chromium.png)
+![Open the independent backup model selector](./screenshots/016-open-connection-mobile-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +162,7 @@ Viewport: mobile-chromium.
 
 ## Enter a fictional local server token for this browser tab
 
-![Enter a fictional local server token for this browser tab](./screenshots/019-token-mobile-chromium.png)
+![Enter a fictional local server token for this browser tab](./screenshots/017-token-mobile-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +171,7 @@ Viewport: mobile-chromium.
 
 ## Save local connection settings without changing the foreground Gemini provider
 
-![Save local connection settings without changing the foreground Gemini provider](./screenshots/020-save-connection-mobile-chromium.png)
+![Save local connection settings without changing the foreground Gemini provider](./screenshots/018-save-connection-mobile-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +180,7 @@ Viewport: mobile-chromium.
 
 ## Reopen backup preferences
 
-![Reopen backup preferences](./screenshots/021-refill-preferences-mobile-chromium.png)
+![Reopen backup preferences](./screenshots/019-refill-preferences-mobile-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +189,7 @@ Viewport: mobile-chromium.
 
 ## Enable automatic refill below thirty
 
-![Enable automatic refill below thirty](./screenshots/022-automatic-mobile-chromium.png)
+![Enable automatic refill below thirty](./screenshots/020-automatic-mobile-chromium.png)
 
 **Verifications:**
 
@@ -216,16 +198,7 @@ Viewport: mobile-chromium.
 
 ## Save the preference and let the selected local LLM replenish one question
 
-![Save the preference and let the selected local LLM replenish one question](./screenshots/023-local-refill-mobile-chromium.png)
-
-**Verifications:**
-
-- [x] The expected result of this action is visible
-- [x] Screenshot matches the committed baseline (zero differing pixels)
-
-## Open the independent refill preference again
-
-![Open the independent refill preference again](./screenshots/024-cloud-preferences-mobile-chromium.png)
+![Save the preference and let the selected local LLM replenish one question](./screenshots/021-local-refill-mobile-chromium.png)
 
 **Verifications:**
 
@@ -234,16 +207,16 @@ Viewport: mobile-chromium.
 
 ## Choose Gemini for future backup refills
 
-![Choose Gemini for future backup refills](./screenshots/025-choose-cloud-mobile-chromium.png)
+![Choose Gemini for future backup refills](./screenshots/022-choose-cloud-mobile-chromium.png)
 
 **Verifications:**
 
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Save the cloud preference without generating above the minimum
+## Save the cloud model without generating above the minimum
 
-![Save the cloud preference without generating above the minimum](./screenshots/026-save-cloud-mobile-chromium.png)
+![Save the cloud model without generating above the minimum](./screenshots/023-save-cloud-mobile-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +225,7 @@ Viewport: mobile-chromium.
 
 ## Open Today
 
-![Open Today](./screenshots/027-today-mobile-chromium.png)
+![Open Today](./screenshots/024-today-mobile-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +234,7 @@ Viewport: mobile-chromium.
 
 ## Background generation preserves the current daily question
 
-![Background generation preserves the current daily question](./screenshots/028-today-unchanged-mobile-chromium.png)
+![Background generation preserves the current daily question](./screenshots/025-today-unchanged-mobile-chromium.png)
 
 **Verifications:**
 
@@ -271,7 +244,7 @@ Viewport: mobile-chromium.
 
 ## Choose from the complete reserve
 
-![Choose from the complete reserve](./screenshots/029-picker-mobile-chromium.png)
+![Choose from the complete reserve](./screenshots/026-picker-mobile-chromium.png)
 
 **Verifications:**
 
@@ -280,7 +253,7 @@ Viewport: mobile-chromium.
 
 ## Choose a reserve prompt without consuming it or triggering a refill
 
-![Choose a reserve prompt without consuming it or triggering a refill](./screenshots/030-choose-mobile-chromium.png)
+![Choose a reserve prompt without consuming it or triggering a refill](./screenshots/027-choose-mobile-chromium.png)
 
 **Verifications:**
 
@@ -289,7 +262,7 @@ Viewport: mobile-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/031-editor-mobile-chromium.png)
+![Open the reflection editor](./screenshots/028-editor-mobile-chromium.png)
 
 **Verifications:**
 
@@ -298,7 +271,7 @@ Viewport: mobile-chromium.
 
 ## Write a reflection using the selected reserve prompt
 
-![Write a reflection using the selected reserve prompt](./screenshots/032-write-mobile-chromium.png)
+![Write a reflection using the selected reserve prompt](./screenshots/029-write-mobile-chromium.png)
 
 **Verifications:**
 
@@ -307,7 +280,7 @@ Viewport: mobile-chromium.
 
 ## Save the reflection, consume its prompt and replenish through Gemini
 
-![Save the reflection, consume its prompt and replenish through Gemini](./screenshots/033-save-mobile-chromium.png)
+![Save the reflection, consume its prompt and replenish through Gemini](./screenshots/030-save-mobile-chromium.png)
 
 **Verifications:**
 
@@ -316,7 +289,7 @@ Viewport: mobile-chromium.
 
 ## Open Journal after successful replenishment
 
-![Open Journal after successful replenishment](./screenshots/034-done-mobile-chromium.png)
+![Open Journal after successful replenishment](./screenshots/031-done-mobile-chromium.png)
 
 **Verifications:**
 
@@ -325,7 +298,7 @@ Viewport: mobile-chromium.
 
 ## Reload a full reserve without new inference
 
-![Reload a full reserve without new inference](./screenshots/035-reload-mobile-chromium.png)
+![Reload a full reserve without new inference](./screenshots/032-reload-mobile-chromium.png)
 
 **Verifications:**
 
@@ -334,7 +307,7 @@ Viewport: mobile-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/036-complete-settings-mobile-chromium.png)
+![Open Settings](./screenshots/033-complete-settings-mobile-chromium.png)
 
 **Verifications:**
 
@@ -343,7 +316,7 @@ Viewport: mobile-chromium.
 
 ## Open AI sharing choices
 
-![Open AI sharing choices](./screenshots/037-complete-ai-mobile-chromium.png)
+![Open AI sharing choices](./screenshots/034-complete-ai-mobile-chromium.png)
 
 **Verifications:**
 
@@ -352,7 +325,7 @@ Viewport: mobile-chromium.
 
 ## Verify cloud/local output and consumption through complete and cached replay
 
-![Verify cloud/local output and consumption through complete and cached replay](./screenshots/038-replay-mobile-chromium.png)
+![Verify cloud/local output and consumption through complete and cached replay](./screenshots/035-replay-mobile-chromium.png)
 
 **Verifications:**
 

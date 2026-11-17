@@ -1,3 +1,4 @@
+import {backupProvider} from '../ai/backup-connection.ts';
 import {isClassificationAction} from '../classification.ts';
 import {appendClassification} from './classification.ts';
 import { isOnboardingAction } from '../onboarding.ts';
@@ -109,7 +110,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
           if('differentFromPromptId' in action.payload){const prior=await tx.get(doc(db,`${stream.path}/events/${action.payload.differentFromPromptId}`));if(prior.get('type')!=='PromptResponseReceived')throw new Error('Previous generated prompt is unavailable.');}
           if (action.payload.choicesId !== control.choicesId) throw new Error('AI consent changed. Please try again.');
           const choices = await tx.get(doc(db, `${stream.path}/events/${action.payload.choicesId}`));
-          if ((isBackupRequest(action)?choices.get('payload.backupProvider'):(choices.get('payload.provider')??'gemini'))!==requestProvider(action)) throw new Error('AI provider changed. Review your model settings.');
+          if ((isBackupRequest(action)?backupProvider(choices.get('payload')):(choices.get('payload.provider')??'gemini'))!==requestProvider(action)) throw new Error('AI provider changed. Review your model settings.');
           if(isBackupRequest(action)) {
             if(!choices.get('payload.backupEnabled')) throw new Error('Backup generation is disabled.');
             if(control.requestId) {const pending=await tx.get(doc(db,`${stream.path}/events/${control.requestId}`));if(pending.exists() && Date.now()-pending.get('recordedAt').toMillis()<BACKUP_LEASE_MS) throw new Error('Another prompt is being generated.');}

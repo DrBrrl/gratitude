@@ -1,3 +1,4 @@
+import {settingsSection} from '../helpers/journal-session';
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { TestStepHelper } from '../helpers/test-step-helper';
@@ -111,6 +112,7 @@ test('backfill a local date, preserve its draft and save multiple independent en
     await expect(cards).toHaveCount(3); await expect(cards.last().locator('time')).toHaveText('Tue 29 Sep 2026, 9:15 AM');
   });
   await navigate(page, steps, 'export-settings', 'Settings');
+  await settingsSection(page,steps,'parent-export','Privacy & data');
   await steps.action('export', 'Open journal export', () => page.getByRole('button', { name: /^Export journal/ }).click(), async () => { await expect(page.getByRole('radio', { name: /Markdown/ })).toBeChecked(); });
   await steps.action('prepare', 'Prepare all dated reflections for export', () => page.getByRole('button', { name: 'Prepare export', exact: true }).click(), async () => { await expect(page.getByRole('status')).toHaveText('Export ready'); });
   const download = page.waitForEvent('download');

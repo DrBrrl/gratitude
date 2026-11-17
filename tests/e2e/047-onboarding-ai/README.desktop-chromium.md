@@ -88,9 +88,18 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Open Account settings
+
+![Open Account settings](./screenshots/009-parent-answers-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Choose private answers separately from AI use
 
-![Choose private answers separately from AI use](./screenshots/009-answers-desktop-chromium.png)
+![Choose private answers separately from AI use](./screenshots/010-answers-desktop-chromium.png)
 
 **Verifications:**
 
@@ -99,7 +108,7 @@ Viewport: desktop-chromium.
 
 ## Choose a name for the private journal
 
-![Choose a name for the private journal](./screenshots/010-name-desktop-chromium.png)
+![Choose a name for the private journal](./screenshots/011-name-desktop-chromium.png)
 
 **Verifications:**
 
@@ -108,7 +117,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly provide pronouns
 
-![Explicitly provide pronouns](./screenshots/011-pronouns-desktop-chromium.png)
+![Explicitly provide pronouns](./screenshots/012-pronouns-desktop-chromium.png)
 
 **Verifications:**
 
@@ -117,7 +126,7 @@ Viewport: desktop-chromium.
 
 ## Select a description to inform prompts
 
-![Select a description to inform prompts](./screenshots/012-music-desktop-chromium.png)
+![Select a description to inform prompts](./screenshots/013-music-desktop-chromium.png)
 
 **Verifications:**
 
@@ -126,7 +135,7 @@ Viewport: desktop-chromium.
 
 ## Choose the broad scope
 
-![Choose the broad scope](./screenshots/013-scope-desktop-chromium.png)
+![Choose the broad scope](./screenshots/014-scope-desktop-chromium.png)
 
 **Verifications:**
 
@@ -135,7 +144,7 @@ Viewport: desktop-chromium.
 
 ## Focus the word limit control
 
-![Focus the word limit control](./screenshots/014-focus-limit-desktop-chromium.png)
+![Focus the word limit control](./screenshots/015-focus-limit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -144,7 +153,7 @@ Viewport: desktop-chromium.
 
 ## Choose the 200-word option
 
-![Choose the 200-word option](./screenshots/015-limit-desktop-chromium.png)
+![Choose the 200-word option](./screenshots/016-limit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -153,7 +162,7 @@ Viewport: desktop-chromium.
 
 ## Explicitly share selected questionnaire answers
 
-![Explicitly share selected questionnaire answers](./screenshots/016-consent-desktop-chromium.png)
+![Explicitly share selected questionnaire answers](./screenshots/017-consent-desktop-chromium.png)
 
 **Verifications:**
 
@@ -162,7 +171,16 @@ Viewport: desktop-chromium.
 
 ## Confirm only literal questionnaire inputs
 
-![Confirm only literal questionnaire inputs](./screenshots/017-save-answers-desktop-chromium.png)
+![Confirm only literal questionnaire inputs](./screenshots/018-save-answers-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Return from Personalise to Account
+
+![Return from Personalise to Account](./screenshots/019-back-account-desktop-chromium.png)
 
 **Verifications:**
 
@@ -171,7 +189,7 @@ Viewport: desktop-chromium.
 
 ## Return to Settings
 
-![Return to Settings](./screenshots/018-back-settings-desktop-chromium.png)
+![Return to Settings](./screenshots/020-back-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -180,7 +198,7 @@ Viewport: desktop-chromium.
 
 ## Open AI settings and inspect the confirmed sources
 
-![Open AI settings and inspect the confirmed sources](./screenshots/019-ai-desktop-chromium.png)
+![Open AI settings and inspect the confirmed sources](./screenshots/021-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -189,7 +207,7 @@ Viewport: desktop-chromium.
 
 ## Choose to enable AI prompts
 
-![Choose to enable AI prompts](./screenshots/020-enable-desktop-chromium.png)
+![Choose to enable AI prompts](./screenshots/022-enable-desktop-chromium.png)
 
 **Verifications:**
 
@@ -198,7 +216,7 @@ Viewport: desktop-chromium.
 
 ## Allow saved reflections for future generation
 
-![Allow saved reflections for future generation](./screenshots/021-history-consent-desktop-chromium.png)
+![Allow saved reflections for future generation](./screenshots/023-history-consent-desktop-chromium.png)
 
 **Verifications:**
 
@@ -207,7 +225,7 @@ Viewport: desktop-chromium.
 
 ## Save these explicit sharing choices
 
-![Save these explicit sharing choices](./screenshots/022-save-ai-desktop-chromium.png)
+![Save these explicit sharing choices](./screenshots/024-save-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Open the personalised Today heading
 
-![Open the personalised Today heading](./screenshots/023-today-desktop-chromium.png)
+![Open the personalised Today heading](./screenshots/025-today-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Generate with the reviewed instruction and descriptions-only JSON
 
-![Generate with the reviewed instruction and descriptions-only JSON](./screenshots/024-cloud-desktop-chromium.png)
+![Generate with the reviewed instruction and descriptions-only JSON](./screenshots/026-cloud-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Inspect the actual weighted source count
 
-![Inspect the actual weighted source count](./screenshots/025-why-desktop-chromium.png)
+![Inspect the actual weighted source count](./screenshots/027-why-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/026-editor-desktop-chromium.png)
+![Open the reflection editor](./screenshots/028-editor-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Edit a question above the old 600-character cap
 
-![Edit a question above the old 600-character cap](./screenshots/027-edit-prompt-desktop-chromium.png)
+![Edit a question above the old 600-character cap](./screenshots/029-edit-prompt-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Retain a long personal edit
 
-![Retain a long personal edit](./screenshots/028-manual-desktop-chromium.png)
+![Retain a long personal edit](./screenshots/030-manual-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Keep the edited question in the local draft
 
-![Keep the edited question in the local draft](./screenshots/029-keep-prompt-desktop-chromium.png)
+![Keep the edited question in the local draft](./screenshots/031-keep-prompt-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Write a short reflection under the long question
 
-![Write a short reflection under the long question](./screenshots/030-write-desktop-chromium.png)
+![Write a short reflection under the long question](./screenshots/032-write-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Recover the long question and reflection draft
 
-![Recover the long question and reflection draft](./screenshots/031-reload-draft-desktop-chromium.png)
+![Recover the long question and reflection draft](./screenshots/033-reload-draft-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Open the reflection editor
 
-![Open the reflection editor](./screenshots/032-resume-desktop-chromium.png)
+![Open the reflection editor](./screenshots/034-resume-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Save the long edited prompt without truncation
 
-![Save the long edited prompt without truncation](./screenshots/033-save-reflection-desktop-chromium.png)
+![Save the long edited prompt without truncation](./screenshots/035-save-reflection-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Return to the named journal
 
-![Return to the named journal](./screenshots/034-done-desktop-chromium.png)
+![Return to the named journal](./screenshots/036-done-desktop-chromium.png)
 
 **Verifications:**
 
@@ -324,7 +342,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/035-settings-local-desktop-chromium.png)
+![Open Settings](./screenshots/037-settings-local-desktop-chromium.png)
 
 **Verifications:**
 
@@ -333,7 +351,7 @@ Viewport: desktop-chromium.
 
 ## Open AI connection settings
 
-![Open AI connection settings](./screenshots/036-local-ai-desktop-chromium.png)
+![Open AI connection settings](./screenshots/038-local-ai-desktop-chromium.png)
 
 **Verifications:**
 
@@ -342,7 +360,7 @@ Viewport: desktop-chromium.
 
 ## Choose LM Studio
 
-![Choose LM Studio](./screenshots/037-local-desktop-chromium.png)
+![Choose LM Studio](./screenshots/039-local-desktop-chromium.png)
 
 **Verifications:**
 
@@ -351,7 +369,7 @@ Viewport: desktop-chromium.
 
 ## Enter a fictional device token
 
-![Enter a fictional device token](./screenshots/038-token-desktop-chromium.png)
+![Enter a fictional device token](./screenshots/040-token-desktop-chromium.png)
 
 **Verifications:**
 
@@ -360,7 +378,7 @@ Viewport: desktop-chromium.
 
 ## Save the explicit local connection
 
-![Save the explicit local connection](./screenshots/039-connection-desktop-chromium.png)
+![Save the explicit local connection](./screenshots/041-connection-desktop-chromium.png)
 
 **Verifications:**
 
@@ -369,7 +387,7 @@ Viewport: desktop-chromium.
 
 ## Return to Today with saved prompt controls
 
-![Return to Today with saved prompt controls](./screenshots/040-today-local-desktop-chromium.png)
+![Return to Today with saved prompt controls](./screenshots/042-today-local-desktop-chromium.png)
 
 **Verifications:**
 
@@ -378,7 +396,7 @@ Viewport: desktop-chromium.
 
 ## Open an independent reflection composer
 
-![Open an independent reflection composer](./screenshots/041-another-reflection-desktop-chromium.png)
+![Open an independent reflection composer](./screenshots/043-another-reflection-desktop-chromium.png)
 
 **Verifications:**
 
@@ -387,7 +405,7 @@ Viewport: desktop-chromium.
 
 ## Apply the same instruction and context policy to the local provider
 
-![Apply the same instruction and context policy to the local provider](./screenshots/042-generate-local-desktop-chromium.png)
+![Apply the same instruction and context policy to the local provider](./screenshots/044-generate-local-desktop-chromium.png)
 
 **Verifications:**
 
