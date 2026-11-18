@@ -6,7 +6,7 @@ import {importedBackup} from '../../src/lib/backup-prompts.ts';
 const at='2026-10-01T04:31:07.000Z';
 const events=(actions:SourceAction[]):JournalEvent[]=>actions.map((a,i)=>({...a,sequence:i+1,recordedAt:at}));
 test('Unknown review excludes unclassified and known writing, preserves source prompts and includes edited Unknown',()=>{
- const writing=(id:string):SourceAction=>({eventId:'write_'+id,type:'ReflectionWritten',schemaVersion:6,payload:{entryId:id,expectedRevision:0,text:'A fictional memory.',promptId:STARTER_ID,promptText:null,entryAt:at,photoSlot:null}});
+ const writing=(id:string):Extract<SourceAction,{type:"ReflectionWritten";schemaVersion:6|7}>=>({eventId:'write_'+id,type:'ReflectionWritten',schemaVersion:6,payload:{entryId:id,expectedRevision:0,text:'A fictional memory.',promptId:STARTER_ID,promptText:null,entryAt:at,photoSlot:null}});
  const topic=(id:string,topicId:string):SourceAction=>({eventId:'topic_'+id,type:'ReflectionTopicChosen',schemaVersion:1,payload:{entryId:id,expectedRevision:1,previousEventId:null,answersId:null,topicId}});
  const log=events([writing('unknown'),writing('known'),writing('unclassified'),topic('unknown','unknown'),topic('known','music'),{...writing('unknown'),eventId:'edit',payload:{...writing('unknown').payload,expectedRevision:1,text:'A changed memory.'}} as SourceAction]);
  const state=replay(log);assert.deepEqual(unknownTargets(state,'reflection').map(t=>[t.id,t.revision]),[['unknown',2]]);assert.equal(state.entries[0].prompt,replay(log.slice(0,3)).entries[0].prompt);

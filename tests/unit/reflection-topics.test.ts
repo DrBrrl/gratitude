@@ -12,7 +12,7 @@ test('manual categories preserve writing identity, dates and revisions through f
  const log=[writing,event(choose('nature'))],full=replay(log),tail=replay(log.slice(1),replay(log.slice(0,1)));
  assert.equal(full.version,PROJECTION_VERSION);assert.deepEqual(full,tail);assert.deepEqual(full.entries[0],replay([writing]).entries[0]);
  assert.equal(topicLabel(full.topics.entry,full.onboarding.answers),'Nature & outdoors');
- const edited={...writing,eventId:'edit',sequence:3,payload:{...writing.payload,expectedRevision:1,text:'A different quiet moment.'}} as JournalEvent;
+ const edited={...writing,eventId:'edit',sequence:3,payload:{...writing.payload,expectedRevision:1,text:'A different quiet moment.'}} as Extract<JournalEvent,{type:"ReflectionWritten"}>;
  assert.deepEqual(replay([...log,edited]).topics,full.topics);
 });
 test('unclassified, explicit unknown and clearing a manual topic are distinct source actions',()=>{
@@ -58,20 +58,20 @@ test('legacy imported writing keeps its original identity, prompt and date after
 
 test('opaque entry IDs cannot inherit phantom categories from ordinary object properties',()=>{
  for(const id of ['constructor','__proto__','toString']){
-  const source={...writing,payload:{...writing.payload,entryId:id}} as JournalEvent;
+  const source={...writing,payload:{...writing.payload,entryId:id}} as Extract<JournalEvent,{type:"ReflectionWritten"}>;
   const state=replay([source]);assert.equal('topic' in JSON.parse(exportJournal(state,'json').content).entries[0],false);
   const chosen=applyEvent(state,event(choose('nature',{entryId:id})));assert.equal(JSON.parse(exportJournal(chosen,'json').content).entries[0].topic.id,'nature');
  }
 });
 
 test('editor topic and writing save atomically, retain literal choice and replay without inference',()=>{
- const action={...writing,schemaVersion:8,payload:{...writing.payload,topic:{topicId:'music',previousEventId:null,answersId:null}}} as JournalEvent;
+ const action={...writing,schemaVersion:8,payload:{...writing.payload,topic:{topicId:'music',previousEventId:null,answersId:null}}} as Extract<JournalEvent,{type:"ReflectionWritten"}>;
  const {sequence,recordedAt:timestamp,...source}=action;
  const parsed=parseAction(source);assert.equal(parsed.schemaVersion,8);
  const state=replay([action]);assert.equal(state.topics.entry.topicId,'music');assert.equal(state.topics.entry.lastEventId,'write');assert.equal(state.entries[0].revision,1);
- const edit={...action,eventId:'edit',sequence:2,payload:{...action.payload,expectedRevision:1,topic:{topicId:'nature',previousEventId:'write',answersId:null}}} as JournalEvent;
+ const edit={...action,eventId:'edit',sequence:2,payload:{...action.payload,expectedRevision:1,topic:{topicId:'nature',previousEventId:'write',answersId:null}}} as Extract<JournalEvent,{type:"ReflectionWritten"}>;
  const log=[action,edit],full=replay(log);assert.equal(full.topics.entry.topicId,'nature');assert.deepEqual(replay(log.slice(1),state),full);
- for(const topic of [{topicId:'music',previousEventId:null,answersId:null},{topicId:'custom_missing',previousEventId:'write',answersId:null},{topicId:'music',previousEventId:'write',answersId:'stale'}])assert.throws(()=>applyEvent(state,{...edit,payload:{...edit.payload,topic}} as JournalEvent));
+ for(const topic of [{topicId:'music',previousEventId:null,answersId:null},{topicId:'custom_missing',previousEventId:'write',answersId:null},{topicId:'music',previousEventId:'write',answersId:'stale'}])assert.throws(()=>applyEvent(state,{...edit,payload:{...edit.payload,topic}} as Extract<JournalEvent,{type:"ReflectionWritten"}>));
  for(const topic of [null,{topicId:'music',previousEventId:null,answersId:null,label:'Music'},{topicId:'bad',previousEventId:null,answersId:null}])assert.throws(()=>parseAction({...source,payload:{...action.payload,topic}}));
  assert.equal(replay([writing]).topics.entry,undefined,'historical writing is never retroactively assigned a category');
 });

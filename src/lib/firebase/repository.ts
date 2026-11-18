@@ -1,3 +1,4 @@
+import type {ModeInput} from '../ai/modes.ts';
 import {classificationDestination} from '../ai/classification-connection.ts';
 import type {ModelConnection} from '../ai/connection-contract.ts';
 import {CLASSIFICATION_SYSTEM,classificationContext,targetMatches,batchRequests,type ClassificationAction,type ClassificationTarget,type ClassificationReply} from '../classification.ts';
@@ -319,7 +320,7 @@ export class JournalRepository {
     }
     this.emit();
   }
-  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string, backup=false, differentFromPromptId?:string) {
+  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string, backup=false, differentFromPromptId?:string, modeInput?:ModeInput) {
     if (this.generating) throw new Error('A prompt is being generated. You can use a saved backup immediately.');
     if(backup && availableBackups(this.state,this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),this.pending&&'promptId' in this.pending.payload?this.pending.payload.promptId:undefined).length>=BACKUP_MINIMUM) return;
     if (this.aiResult) throw new Error('Sync the received prompt before requesting another.');
@@ -328,7 +329,7 @@ export class JournalRepository {
       await this.syncBackups();
       if(this.backupActions.length)throw new Error('Reconnect to sync prompt choices before generating a new prompt.');
       const snapshot = this.state;
-      const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId, undefined, generate.target, backup,differentFromPromptId);
+      const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId, undefined, generate.target, backup,differentFromPromptId,modeInput);
       const committed = await this.commitAI(request);
       if (!committed.created) return; // Only the transaction winner may dispatch this request.
       const control = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/ai/control`));

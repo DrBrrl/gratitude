@@ -1,7 +1,7 @@
 import {parseAction, type Action, type SourceAction} from './domain.ts';
 
 /** Device-only selection provenance; never part of a journal event or export. */
-export type ReflectionDraft = Action & {selectedPromptId?: string; saveDay?: string; saveAttempted?: boolean};
+export type ReflectionDraft = Action & {selectedPromptId?: string; saveDay?: string; saveAttempted?: boolean; generationMode?: import('./ai/modes.ts').PromptMode};
 
 export function draftSaveActions(draft: ReflectionDraft): {reflection: Action; acceptance: SourceAction | null} {
   const reflection = parseAction({eventId:draft.eventId,type:draft.type,schemaVersion:draft.schemaVersion,payload:draft.payload}) as Action;

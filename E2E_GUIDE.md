@@ -408,3 +408,5 @@ The existing prompt-selection fixture seed now also provides literal request-sel
 Scenario `068-editor-topics` covers Today AI/backup topic badges, visible editor defaults, generated-option acceptance, manual overrides, edited prompt wording, topic-only draft recovery, untouched-starter classification eligibility, atomic save/edit, and full/cached replay on mobile and desktop. Each action has an unmasked full-page screenshot with zero pixel tolerance.
 
 When planning a UI screenshot refresh, include indirect helper callers: `writeReflection` opens the editor even when a scenario does not mention `openEditor` or the screen text itself. Cross-check `ci/walkthroughs.json` and CI failures; literal source-text searches alone do not establish complete affected coverage.
+
+Scenario `069-review-prompts` covers manual one-topic Review, the thirty-day context, topic rotation, honest explanations, Regular escape, edited question/date provenance and replay in both viewports.
