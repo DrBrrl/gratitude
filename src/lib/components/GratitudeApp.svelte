@@ -459,9 +459,9 @@
   const currentResponse = $derived(view.state.ai.responses[currentPromptId]);
   const currentRequest = $derived(currentResponse ? view.state.ai.requests[currentResponse.payload.requestId] : null);
   const pendingDailyRequest = $derived(view.state.ai.control.requestId ? view.state.ai.requests[view.state.ai.control.requestId] : null);
-  const dailyRequestPending = $derived(pendingDailyRequest && !view.state.rotation.offers.some(o=>o.surface==='today'&&o.day===today&&o.sequence>(view.state.rotation.requests[pendingDailyRequest.eventId]??0)) && !isBackupRequest(pendingDailyRequest) && !isEditorRequest(pendingDailyRequest) && pendingDailyRequest.payload.day === today);
+  const dailyRequestPending = $derived(pendingDailyRequest && !view.state.rotation.offers.some(o=>o.kind!=='ai'&&o.surface==='today'&&o.day===today&&o.sequence>(view.state.rotation.requests[pendingDailyRequest.eventId]??0)) && !isBackupRequest(pendingDailyRequest) && !isEditorRequest(pendingDailyRequest) && pendingDailyRequest.payload.day === today);
   const failedDailyRequest = $derived(view.state.ai.failure ? view.state.ai.requests[view.state.ai.failure.payload.requestId] : null);
-  const dailyRequestFailed = $derived(failedDailyRequest && !view.state.rotation.offers.some(o=>o.surface==='today'&&o.day===today&&o.sequence>(view.state.rotation.requests[failedDailyRequest.eventId]??0)) && !isBackupRequest(failedDailyRequest) && !isEditorRequest(failedDailyRequest) && failedDailyRequest.payload.day === today);
+  const dailyRequestFailed = $derived(failedDailyRequest && !view.state.rotation.offers.some(o=>o.kind!=='ai'&&o.surface==='today'&&o.day===today&&o.sequence>(view.state.rotation.requests[failedDailyRequest.eventId]??0)) && !isBackupRequest(failedDailyRequest) && !isEditorRequest(failedDailyRequest) && failedDailyRequest.payload.day === today);
   let aiBusy = $state(false);
   let generatingPrompt = $state(false);
   let aiMessage = $state('');

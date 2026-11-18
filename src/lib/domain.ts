@@ -11,7 +11,7 @@ import { SELECTOR_VERSION, validSelection, selectReflections, selectedEntries } 
 import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 19;
+export const PROJECTION_VERSION = 20;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
@@ -111,7 +111,7 @@ export type JournalEvent = SourceAction & { sequence: number; recordedAt: string
 /** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 19; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 20; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     requestPools:Record<string,Record<'anniversary'|'rediscovery'|'fallback'|'recent',number>>; requestTopics:Record<string,PromptTopic|null>; requestUnits: Record<string,number>; requestedAt: Record<string,string>; usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
@@ -242,7 +242,7 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
     if(action.schemaVersion===2&&(!response||isBackupRequest(state.ai.requests[response.payload.requestId])))throw new Error('Not a visible generated prompt.');
     if(action.type==='PromptViewed'){
       if(!response&&!!starter===(action.payload.surface==='backup'))throw new Error('Prompt source and surface disagree.');
-      return {...next,ai:action.payload.surface==='today'?{...state.ai,days:{...state.ai.days,[day]:promptId}}:state.ai,rotation:{...state.rotation,offers:[...state.rotation.offers,{eventId:action.eventId,day,promptId,kind:response?'ai':starter?'starter':'backup',surface:action.payload.surface,sequence:event.sequence,text:response?.payload.text??starter?.text??backup!.text,topicId:promptTopicId(state,promptId)}]}};
+      return {...next,ai:action.schemaVersion===1&&action.payload.surface==='today'?{...state.ai,days:{...state.ai.days,[day]:promptId}}:state.ai,rotation:{...state.rotation,offers:[...state.rotation.offers,{eventId:action.eventId,day,promptId,kind:response?'ai':starter?'starter':'backup',surface:action.payload.surface,sequence:event.sequence,text:response?.payload.text??starter?.text??backup!.text,topicId:promptTopicId(state,promptId)}]}};
     }
     return {...next,rotation:{...state.rotation,acceptedText:{...state.rotation.acceptedText,[promptId]:starter?.text??backup!.text},accepted:{...state.rotation.accepted,[promptId]:day> (state.rotation.accepted[promptId]??'')?day:state.rotation.accepted[promptId]}},backups:backup?{...state.backups,[promptId]:{...backup,used:true}}:state.backups};
   }
@@ -344,7 +344,7 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
       const usage = Object.fromEntries([...new Set(requestEntryRefs(request).map(ref=>ref.entryId))].map(entryId=>[entryId, {count:(ai.usage[entryId]?.count??0)+1,lastSequence:event.sequence}]));
       ai.usage = { ...ai.usage, ...usage };
       if (isBackupRequest(request)) return {...next, ai:{...ai,failure:null},backups:{...state.backups,[action.eventId]:{text:action.payload.text,removed:false}}};
-      if (!isEditorRequest(request)&&!state.rotation.offers.some(o=>o.surface==='today'&&o.day===request.payload.day&&o.sequence>(state.rotation.requests[request.eventId]??0))) ai.days = { ...ai.days, [request.payload.day]: action.eventId }; ai.failure = null; break;
+      if (!isEditorRequest(request)&&!state.rotation.offers.some(o=>o.kind!=='ai'&&o.surface==='today'&&o.day===request.payload.day&&o.sequence>(state.rotation.requests[request.eventId]??0))) ai.days = { ...ai.days, [request.payload.day]: action.eventId }; ai.failure = null; break;
     }
     case 'AIRequestFailed': ai.failure = action; break;
     case 'StarterPromptChosen': ai.days = { ...ai.days, [action.payload.day]: STARTER_ID }; ai.failure = null; break;
