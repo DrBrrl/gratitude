@@ -28,6 +28,9 @@ test('recover staged photos and received summaries, retain photos through text e
   await steps.action('attach-no-ai', 'Attach without enabling Gemini or prompt personalization', () => page.getByRole('button', { name: 'Attach without AI', exact: true }).click(), async () => { await expect(page.locator('.photo-card .photo-image img')).toBeVisible({ timeout: 15_000 }); expect(calls).toBe(0); await expectDecodedPhotos(page,1);});
   await context.setOffline(true);
   await steps.action('pending-save', 'Keep an offline save and its attached photo ready for recovery', () => page.getByRole('button', { name: 'Save reflection', exact: true }).click(), async () => { await expect(page.getByRole('button', { name: 'Return text to editor', exact: true })).toBeVisible();
+    // Saving first opens the pending journal, then the rejected offline write
+    // publishes its error. Compare the completed outcome, not that transition.
+    await expect(page.getByText('You are offline. Your text is saved on this device.', { exact: true })).toBeVisible();
     // Keep rendering inputs in the report without recording reflection content.
     await info.attach('pending-save-layout.json', { contentType: 'application/json', body: JSON.stringify(await page.locator('.pending .primary').evaluate(el => ({ rect: el.getBoundingClientRect().toJSON(), section: el.parentElement!.getBoundingClientRect().toJSON(), scrollY, dpr: devicePixelRatio, background: getComputedStyle(el).backgroundImage }))) });
   });
