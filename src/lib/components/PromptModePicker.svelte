@@ -1,0 +1,8 @@
+<script lang="ts">
+ import {modeLabel,type PromptMode} from '../ai/modes';
+ let {value,onchoose,disabled=false,discovery=false}:{value:PromptMode;onchoose:(mode:PromptMode)=>void;disabled?:boolean;discovery?:boolean}=$props();
+</script>
+<details class="mode-picker"><summary>Prompt type: {modeLabel(value)}</summary><label>Prompt type<select value={value} onchange={event=>onchoose(event.currentTarget.value as PromptMode)} {disabled}><option value="regular">Regular</option>{#if discovery}<option value="discovery">Discovery</option>{/if}<option value="review">Monthly review</option></select></label><p>{value==='review'?'Review one topic from your previous 30 complete days. Another review rotates to another topic with writing.':value==='discovery'?'Notice something new, choosing topics you reflected on least over the previous 30 complete days.':'A fresh invitation informed by one interest and your chosen sharing settings.'}</p>{#if value!=='regular'}<button type="button" onclick={()=>onchoose('regular')} {disabled}>Regular prompt instead</button>{/if}</details>
+<style>
+ .mode-picker{margin:12px 0;color:#c7cbd3;font:400 .85rem/1.5 Arial,Helvetica,sans-serif}summary{cursor:pointer;color:var(--accent-text)}label{display:flex;align-items:center;gap:10px;margin-top:10px}select{min-width:0;flex:1;background:#15191f;color:#e2e6ed;border:1px solid #ffffff30;border-radius:8px;padding:8px;font:inherit}p{margin:10px 0 0}button{margin-top:10px;background:transparent;border:1px solid #ffffff40;border-radius:8px;color:#e2e6ed;padding:7px 10px;font:inherit;cursor:pointer}select:focus-visible{outline:2px solid #bfc5ce;outline-offset:2px}
+</style>

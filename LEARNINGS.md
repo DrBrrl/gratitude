@@ -1593,3 +1593,11 @@ Maintenance lesson: generated walkthrough image paths begin with `./screenshots/
 - The old handoff said failed calls should reuse a request identity. Current snapshot/consent guards require explicit retries to create fresh request actions; only synchronization of an already received result reuses its original identity. Updated the handoff to preserve this distinction and the editor-topic behaviour delivered in #38.
 
 - Follow-up confirmation on 19 November: Jamie approved choosing the first Review topic randomly from selected topics with writing in the previous thirty complete local days, rotating within that pool on regeneration. This settles the remaining topic-selection question; operational scheduling defaults are still clearly marked as proposals.
+
+### 2026-11-19 — Manual one-topic Review implementation
+
+- New request schemas 43–57 (excluding backup variants), template gratitude-v6 and selector modes-v1 preserve the frozen regular 28–42 contract. Review draws a selected topic with writing in thirty complete local days, rotates visible successes, and supplies only matching writing under the twenty-unit 600/601-character budget. Date windows and counts remain projections, never request-event fields.
+- ReflectionWritten schema 9 records the literal accepted generated-question identity, retaining mode provenance through manual question wording/date edits. A nullable topic choice preserves unclassified eligibility and unchanged category provenance. JSON adds optional promptMode with version 6 only when needed; Markdown stays unchanged.
+- Focused unit selection/replay tests and authenticated Firebase mode/provenance tests cover malformed inputs and partial writes. Civil-date validation uses bounded regexes to leave Firestore Rules expression headroom; the current request validator has a dedicated dispatch path rather than evaluating unrelated legacy variants.
+
+- Manual Review validation: 189 core unit tests pass; both authenticated mode/provenance tests and both mobile/desktop walkthrough 069 cases pass. The walkthrough caught a date-edit bug for a previously edited question: the editor must carry its manual question text forward with the accepted generated-source identity. The fix preserves both rather than assigning a different mode on reopen.

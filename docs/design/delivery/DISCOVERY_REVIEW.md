@@ -1,6 +1,6 @@
 # Discovery and review prompts: implementation handoff
 
-Status: draft specification only. Stage 5 of the [approved workflow](../TOPIC_AWARE_PROMPTS.md), following the implemented one-topic regular generation and editor topic choices from PRs #33 and #38. No scheduler, lunar dependency or new AI instruction is enabled by this PR.
+Status: implementation in progress on PR #34. Manual one-topic Review, visible mode selection, Regular escape and accepted-question provenance are implemented and covered by walkthrough 069. Discovery controls and opt-in lunar scheduling are the next working commits. Existing Regular requests keep their original contract.
 
 ## Confirmed behaviour
 

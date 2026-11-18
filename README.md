@@ -239,3 +239,7 @@ JSON version 5 adds AI request/revision/staleness metadata when present, plus ba
 
 
 Manual topic review shows each reflection’s saved prompt, writing, attached photographs and current photo descriptions. Reviewing a picture or correcting a topic makes no additional AI request. **Why this prompt?** shows the chosen topic and actual supplied history counts; private name/pronouns, topic IDs and titles stay out of provider JSON. Historical requests and saved questions retain their original instruction, context and exact response on replay.
+
+## Review prompt mode
+
+AI users can choose **Monthly review** under **Prompt type** on Today or in the editor. Review chooses a selected topic with writing in the previous thirty complete local days, supplies only matching-topic excerpts within the twenty-unit limit, and rotates topics when regenerated. **Regular prompt instead** changes the next generator choice without erasing the current draft. Accepted Review provenance survives question wording and entry-date edits, sync and full replay. JSON adds optional `promptMode` (version 6 when present); Markdown keeps the existing readable format. Lunar scheduling remains a separate implementation step.
