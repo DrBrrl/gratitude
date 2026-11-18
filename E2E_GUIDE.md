@@ -410,3 +410,5 @@ Scenario `068-editor-topics` covers Today AI/backup topic badges, visible editor
 When planning a UI screenshot refresh, include indirect helper callers: `writeReflection` opens the editor even when a scenario does not mention `openEditor` or the screen text itself. Cross-check `ci/walkthroughs.json` and CI failures; literal source-text searches alone do not establish complete affected coverage.
 
 Scenario `069-review-prompts` covers manual one-topic Review, the thirty-day context, topic rotation, honest explanations, Regular escape, edited question/date provenance and replay in both viewports.
+
+Scenario `070-discovery-prompts` proves the fourteen-/thirty-day topic-count difference, unchanged Regular instruction, explicit requests, matching history, reload and Discovery topic rotation.

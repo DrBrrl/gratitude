@@ -1125,7 +1125,7 @@
           {#if !daily.entry && !hasTodayDraft}
             {#if view.state.ai.choices.enabled}
               <PromptModePicker value={dailyEffectiveMode} onchoose={value=>dailyMode=value} disabled={generatingPrompt||aiBusy} />
-              <button class="outline ai-generate" onclick={generatePrompt} disabled={aiBusy || generatingPrompt || offering || !!view.rotationPending || !!view.aiResultPending || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : dailyRequestPending || dailyRequestFailed ? 'Try another request' : currentResponse ? dailyEffectiveMode==='review'?'Another review':'Another prompt' : dailyEffectiveMode==='review'?'Generate a review':'Generate a prompt'}</button>
+              <button class="outline ai-generate" onclick={generatePrompt} disabled={aiBusy || generatingPrompt || offering || !!view.rotationPending || !!view.aiResultPending || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : dailyRequestPending || dailyRequestFailed ? 'Try another request' : currentResponse ? dailyEffectiveMode==='review'?'Another review':dailyEffectiveMode==='discovery'?'Another discovery prompt':'Another prompt' : dailyEffectiveMode==='review'?'Generate a review':dailyEffectiveMode==='discovery'?'Generate a discovery prompt':'Generate a prompt'}</button>
             {/if}
           {/if}
           {#if !daily.entry}
