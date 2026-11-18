@@ -10,9 +10,11 @@ Jamie confirmed these choices on 19 November 2026:
 - **Full moon: Review.** One selected topic per question, using matching-topic reflections from the previous **30 complete local days**, up to twenty units. A trimmed reflection above 600 characters costs two units, as in Regular generation. Do not use the anniversary pool or unrelated writing to fill this review context.
 - **Another Review changes the topic.** Rotate through the eligible review topics before repeating, avoiding the immediately preceding topic when alternatives remain. A sparse vocabulary can only offer the topics the user actually shares.
 
-## Remaining decision
+## Confirmed Review topic selection
 
-Which topics are eligible for the first Review question? The pending choice is between selected topics that have writing in the previous thirty days (recommended), and Regular's least-reflected-on rule, which can choose a topic with no recent writing. Regeneration rotates within the chosen eligible pool. A no-history case still needs an honest open review invitation; it must never imply that writing was supplied when it was not.
+Choose the first Review topic randomly among the user's selected topics that have saved reflections in the previous thirty complete local days. Use logical entry dates, including imported and backfilled writing, and current topic assignments. Regenerating a Review shifts to another topic from this eligible pool before repeating; avoid the immediately preceding topic when alternatives remain.
+
+A topic with no recent writing does not enter this pool merely because it is least reflected on. With no eligible topics or no shared history, the open-invitation fallback below remains an operational proposal and must not imply that writing was supplied.
 
 ## Proposed operational defaults
 
