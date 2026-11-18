@@ -2015,3 +2015,7 @@ Noticed something! :) When the AI generates a prompt (which they do based on the
 ### 2026-11-18 — Today prompt topic labels
 
 (also on the today page - the [AI prompt] button should have the topic beside it like the starter prompts have :) same for backup prompts)
+
+### 2026-11-18 — Investigate PR #38 checks
+
+Got some failed checks :) Can you have a look for me, Casey?
