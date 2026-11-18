@@ -1,8 +1,8 @@
 # One-topic prompt generation: implementation handoff
 
-Status: draft specification, with no change to live prompts. Stage 4 of the [approved workflow](../TOPIC_AWARE_PROMPTS.md). Builds on [manual topics](https://github.com/DrBrrl/gratitude/pull/30) and classified history; it does not require every historic reflection to be classified first.
+Status: implemented in PR #33; browser validation and preview publication are tracked in that PR. Stage 4 of the [approved workflow](../TOPIC_AWARE_PROMPTS.md). Builds on [manual topics](https://github.com/DrBrrl/gratitude/pull/30) and classified history; it does not require every historic reflection to be classified first.
 
-## Policy proposed for review
+## Implemented policy
 
 Use fourteen complete local days before the reference reflection date to count saved reflections per selected interest. Count logical entry dates, including imports/backfills and corrected dates/topics, rather than arrival timestamps. Multiple reflections on a day count separately. Unknown and Not yet classified are not interests to rotate through.
 
@@ -10,7 +10,7 @@ Choose among the least-reflected-on selected topics not offered that local day; 
 
 A visible prompt offer counts toward rotation, including a selected backup with known topic provenance. Reserve generation alone does not count as an offer. Discarding an unsaved draft retains the visible offer but does not consume the starter/backup. Existing reserve prompts without topic provenance stay usable and are not guessed into a category.
 
-These are concrete proposed defaults, still open for review: fourteen days, ±28-day anniversaries, and Unknown permitted only in rediscovery/fallback. They implement the draft policy rather than silently claiming Jamie has selected every boundary.
+Implementation uses the recommended defaults after approval to proceed: fourteen days, ±28-day anniversaries, and Unknown permitted only in rediscovery/fallback. With no consented selected interest, a regular prompt has no topic or journal excerpts; independently approved guidance and feedback remain available in personal mode.
 
 ## History selection
 
@@ -31,7 +31,7 @@ Introduce a new instruction and selector version; old persisted requests keep th
 
 Before making a provider call, validate the saved input against current consent, referenced entry revisions and topic/vocabulary revisions. If invalidated, visibly replace the pending request through a new action rather than silently changing its context under the same ID. A retry of the same still-valid pending request uses the same seed and input. Persist external AI responses, then replay them without another AI call. The selected prompt's topic is provenance, not proof of the reflection's eventual content.
 
-Use instruction candidate A from the parent design as the recommended baseline, subject to wording review. Preserve saved scope and word limit. The provider receives one topic **description**, with consent, and no topic title/internal ID, name/pronouns or connection credentials in the context. Include explicit prompt/feedback pairs only when their sharing switch permits it. Every generation adapter, including personal Gemini keys, local services and reserve refill, must use the same versioned context builder.
+Use instruction A from the parent design for new `gratitude-v5` requests. Preserve saved scope and word limit. The provider receives one topic **description**, with consent, and no topic title/internal ID, name/pronouns or connection credentials in the context. Include explicit prompt/feedback pairs only when their sharing switch permits it. Every generation adapter, including personal Gemini keys, local services and reserve refill, must use the same versioned context builder.
 
 “Why this prompt?” should show the topic title locally, regular mode, supplied history count and source switches. Its explanation must match the actual request, including sparse contexts and fallbacks. AI settings should explain the one-topic selection without implying that all interests are sent each time.
 
@@ -54,3 +54,16 @@ Use instruction candidate A from the parent design as the recommended baseline, 
 - Each walkthrough action followed by an unmasked zero-pixel screenshot, with generated checks beneath the image. Full shared-domain/Rules CI remains required.
 
 Lunar scheduling and curated long-term user notes are outside this implementation stage.
+
+
+## Persistence and compatibility
+
+New request schemas 28–42 retain the existing daily/editor/backup and connection variants and add `snapshotId`, a literal reference to the confirmed source-stream head. Selector `topic-v1` derives the topic from that snapshot and the recorded random seed. No selected topic, frequencies, calculated pools or generated notes are added to action payloads. Existing request schemas 1–27 keep their historical selectors and instructions; received results remain immutable source events.
+
+Transactions and Rules reject a request if its snapshot head changed. Before dispatch the browser checks that the request is still the current stream head; personal Gemini repeats that check in the relay. A changed source requires a fresh explicit request rather than inference with silently substituted context. Consent, answer and connection revisions retain their existing checks. Projection version 19 rebuilds old checkpoints once, derives per-request topic/count explanations, and validates topic-filtered source references during replay.
+
+A new `PromptViewed` schema 2 records a displayed foreground AI question by identity, local reference day and surface. Background generation and failed calls do not create topic offers. Hidden tabs defer their AI offer until visible. Backups reuse existing viewed actions, deriving known topic provenance locally; explicit category corrections (including Unknown or clearing a category) take precedence. Existing reserves remain available. Draft discard and save-time consumption rules are unchanged. Offline devices may independently offer the same topic; subsequent synced draws include both recorded offers.
+
+Manual Unknown review and individual classification tools also display attached photos and their current saved descriptions alongside the prompt and reflection. These are private, read-only review aids: opening or correcting a topic neither requests a description nor sends image data to the classifier. Removed photos stay absent and unavailable images retain their description and the ordinary retry control.
+
+Walkthroughs [066](../../../tests/e2e/066-topic-prompts/README.md) and [067](../../../tests/e2e/067-topic-review-photos/README.md) exercise new generation and photographic review. Existing provider, weighted-history, backup-refill and onboarding walkthroughs retain their assertions under the new policy. Lunar discovery/review scheduling remains PR #34; curated user notes remain outside this delivery.

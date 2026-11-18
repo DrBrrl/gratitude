@@ -323,17 +323,19 @@ export class JournalRepository {
     if (this.generating) throw new Error('A prompt is being generated. You can use a saved backup immediately.');
     if(backup && availableBackups(this.state,this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),this.pending&&'promptId' in this.pending.payload?this.pending.payload.promptId:undefined).length>=BACKUP_MINIMUM) return;
     if (this.aiResult) throw new Error('Sync the received prompt before requesting another.');
-    const snapshot = this.state;
-    const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId, undefined, generate.target, backup,differentFromPromptId);
     this.generating = true;
     try {
+      await this.syncBackups();
+      if(this.backupActions.length)throw new Error('Reconnect to sync prompt choices before generating a new prompt.');
+      const snapshot = this.state;
+      const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId, undefined, generate.target, backup,differentFromPromptId);
       const committed = await this.commitAI(request);
       if (!committed.created) return; // Only the transaction winner may dispatch this request.
       const control = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/ai/control`));
       if (this.stopped || control.get('requestId') !== request.eventId || control.get('choicesId') !== request.payload.choicesId) throw new Error('AI sharing choices changed.');
       if('answersId' in request.payload){const setup=await getDocFromServer(doc(this.client.db,`users/${this.uid}/streams/${GENERATION}/onboarding/control`));if((setup.get('answersId')??null)!==request.payload.answersId)throw new Error('Questionnaire answers changed.');}
       let output;
-      try {if('connectionId' in request.payload)await checkModelBinding(this.client.db,this.uid,request.payload); const options={...promptOptions(snapshot,request),requestId:request.eventId};output = await generate(boundContext(buildContext(snapshot, request),options),options);validatePromptOutput(output,options); }
+      try {if('snapshotId' in request.payload){const head=await getDocFromServer(doc(this.client.db,`users/${this.uid}/streams/${GENERATION}`));if(head.get('lastEventId')!==request.eventId)throw new Error('Prompt context changed. Request a fresh prompt.');}if('connectionId' in request.payload)await checkModelBinding(this.client.db,this.uid,request.payload); const options={...promptOptions(snapshot,request),requestId:request.eventId};output = await generate(boundContext(buildContext(snapshot, request),options),options);validatePromptOutput(output,options); }
       catch (cause) {
         if (this.stopped) return;
         const reason = cause instanceof Error && ['blocked', 'invalid-response'].includes(cause.message) ? cause.message as 'blocked' | 'invalid-response' : 'unavailable';

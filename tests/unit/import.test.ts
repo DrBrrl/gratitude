@@ -1,3 +1,4 @@
+// Historical request contracts deliberately use the frozen legacy builder. Current topic requests are covered in topic-prompt-selection.test.ts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { zipSync, strToU8 } from 'fflate';
@@ -74,7 +75,7 @@ test('686 records, five images, three missing prompts and one photo-only record 
   assert.equal(state.entries.length,686);assert.equal(Object.keys(state.photos).length,5);
   assert.deepEqual(replay(events.slice(700),replay(events.slice(0,700))),state);
   const counts=Object.values(state.imports).filter(r=>r.completedId).length;assert.equal(counts,686);
-  const {makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
+  const {makeLegacyRequest:makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
   const shared=applyEvent(state,{eventId:'scale-choices',type:'AIChoicesConfirmed',schemaVersion:1,payload:{previousEventId:null,enabled:true,useJournal:true,useFeedback:false,guidance:''},sequence:state.cursor+1,recordedAt:time});
   const request=makeRequest(shared,'2026-10-01','personal','scale-selection',undefined,{timeZone:'Australia/Hobart',selectionSeed:'0123456789abcdef0123456789abcdef'});
   assert.equal(Object.keys(request.payload.entryRefs).length,20);
@@ -94,7 +95,7 @@ test('imported rainbow colour follows the original logical date rather than impo
 
 
 test('imported reflections inform Gemini by original entry date and photo-only imports stay out',async()=>{
- const {makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
+ const {makeLegacyRequest:makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
  const archive=await plans({count:3,photos:[0],missing:[]});
  const actions:SourceAction[]=[...archive.records.flatMap(actionsFor),{eventId:'choices',type:'AIChoicesConfirmed',schemaVersion:1,payload:{previousEventId:null,enabled:true,useJournal:true,useFeedback:false,guidance:''}}];
  const state=replay(log(actions));

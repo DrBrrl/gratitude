@@ -107,6 +107,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
           if(action.type==='PromptResponseReceived' && (action.schemaVersion===2)!==(request.schemaVersion>=13))throw new Error('Prompt response schema does not match its request.');
         }
         if (action.type === 'PromptRequested') {
+          if('snapshotId' in action.payload&&action.payload.snapshotId!==head.get('lastEventId'))throw new Error('Prompt context changed. Request a fresh prompt.');
           if('differentFromPromptId' in action.payload){const prior=await tx.get(doc(db,`${stream.path}/events/${action.payload.differentFromPromptId}`));if(prior.get('type')!=='PromptResponseReceived')throw new Error('Previous generated prompt is unavailable.');}
           if (action.payload.choicesId !== control.choicesId) throw new Error('AI consent changed. Please try again.');
           const choices = await tx.get(doc(db, `${stream.path}/events/${action.payload.choicesId}`));

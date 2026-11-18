@@ -1991,3 +1991,15 @@ Also, in the AI settings, i don't see the prompt feedback section or the "what i
 ### 2026-11-17 — Follow-up
 
 Awesome, thanks Casey! :) 💛
+
+### 2026-11-18 — Implement one-topic prompt generation (PR #33)
+
+> It's looking really good, thank you Casey! Let's get going on PR33 now! :)
+
+### 2026-11-18 — Photos in topic review
+
+> I noticed in the prompt classification review that neither the photo nor the photo description made it into the review screen :) I think that should be fixed!
+
+### 2026-11-18 — Resolve PR #33 conflicts
+
+> Also it looks like there are some conflicts with PR 33 :)

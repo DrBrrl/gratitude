@@ -1,3 +1,4 @@
+import { requestTopic, promptTopicId, type PromptTopic } from './ai/topic-selection.ts';
 import {backupProvider,backupConnectionId} from './ai/backup-connection.ts';
 import {emptyClassification,isClassificationAction,validClassificationAction,applyClassification,type ClassificationAction,type ClassificationState} from './classification.ts';
 import { reflectionTopic, topicChoices, validTopicId, type TopicAction, type ReflectionTopic } from './reflection-topics.ts';
@@ -6,15 +7,15 @@ import {PROVIDERS,validExternalTarget,type AIProvider,type ExternalTarget} from 
 import { emptyOnboarding, applyOnboarding, isOnboardingAction, validOnboardingAction, type OnboardingAction, type OnboardingState } from './onboarding.ts';
 import { validLocalTarget, type LocalModelTarget } from './ai/local-contract.ts';
 import { dayInZone } from './civil-date.ts';
-import { SELECTOR_VERSION, validSelection } from './ai/selection.ts';
+import { SELECTOR_VERSION, validSelection, selectReflections, selectedEntries } from './ai/selection.ts';
 import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 18;
+export const PROJECTION_VERSION = 19;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
-export type PromptTemplateVersion = 'gratitude-v1' | typeof TEMPLATE_VERSION | 'gratitude-v3' | 'gratitude-v4';
+export type PromptTemplateVersion = 'gratitude-v1' | typeof TEMPLATE_VERSION | 'gratitude-v3' | 'gratitude-v4' | 'gratitude-v5';
 type Envelope<T extends string, P, V extends number = 1> = { eventId: string; type: T; schemaVersion: V; payload: P };
 type ReflectionPayload = { entryId: string; text: string; expectedRevision: number };
 export type Action = Envelope<'ReflectionWritten', ReflectionPayload & { starterId: typeof STARTER_ID }>
@@ -31,7 +32,7 @@ export type ChoicesAction = Envelope<'AIChoicesConfirmed', Previous & LegacyAICh
 type RequestPayload = Previous & { choicesId: string; day: string; templateVersion: PromptTemplateVersion;
   contextMode: 'generic' | 'personal'; feedbackIds: string[] };
 type LegacyRequestPayload = RequestPayload & { entryRefs: { entryId: string; revision: number }[] };
-type SelectorPayload = RequestPayload & { entryRefs: Record<string, string>; selectorVersion: typeof SELECTOR_VERSION | 'mixed-v2' | 'weighted-v1' | 'weighted-v2'; timeZone: string; selectionSeed: string };
+type SelectorPayload = RequestPayload & { entryRefs: Record<string, string>; selectorVersion: typeof SELECTOR_VERSION | 'mixed-v2' | 'weighted-v1' | 'weighted-v2' | 'topic-v1'; timeZone: string; selectionSeed: string };
 type LegacyRequestAction = Envelope<'PromptRequested', LegacyRequestPayload> | Envelope<'PromptRequested', LegacyRequestPayload & { entryId: string; entryRevision: number }, 2>
   | Envelope<'PromptRequested', SelectorPayload, 3> | Envelope<'PromptRequested', SelectorPayload & { entryId: string; entryRevision: number }, 4>
   | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget, 5> | Envelope<'PromptRequested', SelectorPayload & LocalModelTarget & { entryId: string; entryRevision: number }, 6>
@@ -41,7 +42,7 @@ type LegacyRequestAction = Envelope<'PromptRequested', LegacyRequestPayload> | E
 
 type ExternalPayload<V extends 5|6|8|11|12> = Omit<Extract<LegacyRequestAction,{schemaVersion:V}>['payload'],keyof LocalModelTarget> & ExternalTarget & {answersId:string|null};
 type ExternalRequestAction = Envelope<'PromptRequested', ExternalPayload<5>,23> | Envelope<'PromptRequested', ExternalPayload<6>,24> | Envelope<'PromptRequested', ExternalPayload<8>,25> | Envelope<'PromptRequested', ExternalPayload<11>,26> | Envelope<'PromptRequested', ExternalPayload<12>,27>;
-export type RequestAction = LegacyRequestAction | ExternalRequestAction
+export type HistoricalRequestAction = LegacyRequestAction | ExternalRequestAction
   | (Omit<Extract<LegacyRequestAction,{schemaVersion:3}>, 'schemaVersion'|'payload'> & {schemaVersion:13;payload:Extract<LegacyRequestAction,{schemaVersion:3}>['payload'] & {answersId:string|null}})
   | (Omit<Extract<LegacyRequestAction,{schemaVersion:4}>, 'schemaVersion'|'payload'> & {schemaVersion:14;payload:Extract<LegacyRequestAction,{schemaVersion:4}>['payload'] & {answersId:string|null}})
   | (Omit<Extract<LegacyRequestAction,{schemaVersion:5}>, 'schemaVersion'|'payload'> & {schemaVersion:15;payload:Extract<LegacyRequestAction,{schemaVersion:5}>['payload'] & {answersId:string|null}})
@@ -53,10 +54,26 @@ export type RequestAction = LegacyRequestAction | ExternalRequestAction
   | (Omit<Extract<LegacyRequestAction,{schemaVersion:11}>, 'schemaVersion'|'payload'> & {schemaVersion:21;payload:Extract<LegacyRequestAction,{schemaVersion:11}>['payload'] & {answersId:string|null}})
   | (Omit<Extract<LegacyRequestAction,{schemaVersion:12}>, 'schemaVersion'|'payload'> & {schemaVersion:22;payload:Extract<LegacyRequestAction,{schemaVersion:12}>['payload'] & {answersId:string|null}})
 ;
-export const requestSchema = (request: RequestAction) => request.schemaVersion >=23 ? ({23:5,24:6,25:8,26:11,27:12} as Record<number,number>)[request.schemaVersion] : request.schemaVersion >= 13 ? request.schemaVersion - 10 : request.schemaVersion;
-export function isEditorRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 2|4|6|10|12|14|16|20|22|24|27}> { return [2,4,6,10,12].includes(requestSchema(request)); }
+export type RequestAction = HistoricalRequestAction
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:13}>['payload'] & {snapshotId:string}, 28>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:14}>['payload'] & {snapshotId:string}, 29>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:15}>['payload'] & {snapshotId:string}, 30>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:16}>['payload'] & {snapshotId:string}, 31>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:17}>['payload'] & {snapshotId:string}, 32>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:18}>['payload'] & {snapshotId:string}, 33>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:19}>['payload'] & {snapshotId:string}, 34>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:20}>['payload'] & {snapshotId:string}, 35>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:21}>['payload'] & {snapshotId:string}, 36>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:22}>['payload'] & {snapshotId:string}, 37>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:23}>['payload'] & {snapshotId:string}, 38>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:24}>['payload'] & {snapshotId:string}, 39>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:25}>['payload'] & {snapshotId:string}, 40>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:26}>['payload'] & {snapshotId:string}, 41>
+  | Envelope<'PromptRequested', Extract<HistoricalRequestAction,{schemaVersion:27}>['payload'] & {snapshotId:string}, 42>;
+export const requestSchema = (request: RequestAction) => {const v=request.schemaVersion>=28?request.schemaVersion-15:request.schemaVersion;return v>=23?({23:5,24:6,25:8,26:11,27:12} as Record<number,number>)[v]:v>=13?v-10:v;};
+export function isEditorRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion: 2|4|6|10|12|14|16|20|22|24|27|29|31|35|37|39|42}> { return [2,4,6,10,12].includes(requestSchema(request)); }
 export function isMixedRequest(request: RequestAction): request is Exclude<RequestAction, {schemaVersion:1|2}> { return request.schemaVersion >= 3; }
-export function isLocalRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion:5|6|8|11|12|15|16|18|21|22|23|24|25|26|27}> { return [5,6,8,11,12].includes(requestSchema(request)); }
+export function isLocalRequest(request: RequestAction): request is Extract<RequestAction, {schemaVersion:5|6|8|11|12|15|16|18|21|22|23|24|25|26|27|30|31|33|36|37|38|39|40|41|42}> { return [5,6,8,11,12].includes(requestSchema(request)); }
 export function requestProvider(request:RequestAction):AIProvider{return isLocalRequest(request)?request.payload.provider:'gemini';}
 export function isBackupRequest(request: RequestAction) { return [7,8].includes(requestSchema(request)); }
 /** New wire maps enforce unique IDs and use canonical positive-decimal revision strings. */
@@ -86,7 +103,7 @@ export type ImportReceipt = { confirmationId: string; input: ImportInput; comple
 export type BackupAction = Envelope<'BackupPromptImported', {text:string},1|2> | Envelope<'BackupPromptRemoved', {promptId:string}>;
 export function isBackupAction(action:SourceAction): action is BackupAction { return action.type==='BackupPromptImported' || action.type==='BackupPromptRemoved'; }
 export type AppearanceAction = Envelope<'AccentColourChosen', Previous & { colourIndex: number }>;
-export type RotationAction = Envelope<'PromptViewed', {day:string;promptId:string;surface:'today'|'editor'|'backup'}> | Envelope<'PromptAccepted',{day:string;promptId:string}>;
+export type RotationAction = Envelope<'PromptViewed', {day:string;promptId:string;surface:'today'|'editor'|'backup'},1|2> | Envelope<'PromptAccepted',{day:string;promptId:string}>;
 export function isRotationAction(action:SourceAction):action is RotationAction{return action.type==='PromptViewed'||action.type==='PromptAccepted';}
 export type SourceAction = ClassificationAction | TopicAction | RotationAction | OnboardingAction | AppearanceAction | Action | AIAction | PhotoAction | ImportAction | BackupAction;
 export function isPhotoAction(action: SourceAction): action is PhotoAction { return action.type.startsWith('Photo'); }
@@ -94,13 +111,13 @@ export type JournalEvent = SourceAction & { sequence: number; recordedAt: string
 /** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 18; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 19; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
-    requestUnits: Record<string,number>; requestedAt: Record<string,string>; usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
+    requestPools:Record<string,Record<'anniversary'|'rediscovery'|'fallback'|'recent',number>>; requestTopics:Record<string,PromptTopic|null>; requestUnits: Record<string,number>; requestedAt: Record<string,string>; usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
 export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, classification:emptyClassification(), topics: {}, rotation:emptyRotation(), onboarding: emptyOnboarding(), appearance: { colourIndex: 0, lastEventId: null }, backups: {}, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
   control: emptyControl(), choices: { enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' },
-  requests: {}, requestUnits:{}, requestedAt:{}, responses: {}, usage: {}, days: {}, feedback: [], failure: null
+  requests: {}, requestPools:{}, requestTopics:{}, requestUnits:{}, requestedAt:{}, responses: {}, usage: {}, days: {}, feedback: [], failure: null
 } }; }
 const idPattern = /^[a-zA-Z0-9_-]{1,80}$/;
 function id(value: unknown): value is string { return typeof value === 'string' && idPattern.test(value); }
@@ -138,7 +155,7 @@ export function parseAction(input: unknown): SourceAction {
   } else if (v.type === 'ReflectionImported') {
     valid = v.schemaVersion === 1 && keys(p, ['sourceKey','confirmationId','entryId','expectedRevision','photoSlot']) && typeof p.sourceKey === 'string' && /^[a-f0-9]{64}$/.test(p.sourceKey) && p.entryId === `e_${p.sourceKey}` && p.expectedRevision === 0 && v.eventId === `iw_${p.sourceKey}` && p.confirmationId === `ic_${p.sourceKey}` && (p.photoSlot === null || p.photoSlot === 0);
   } else if (v.type==='PromptViewed'||v.type==='PromptAccepted') {
-    valid=v.schemaVersion===1&&keys(p,v.type==='PromptViewed'?['day','promptId','surface']:['day','promptId'])&&typeof p.day==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(p.day)&&Number.isFinite(Date.parse(p.day+'T12:00:00Z'))&&new Date(p.day+'T12:00:00Z').toISOString().slice(0,10)===p.day&&id(p.promptId)&&(v.type==='PromptViewed'?typeof p.surface==='string'&&['today','editor','backup'].includes(p.surface)&&v.eventId===`v${p.day}_${String(p.surface)[0]}${p.promptId}`:v.eventId===`a_${p.day}_${p.promptId}`);
+    valid=(v.schemaVersion===1||v.type==='PromptViewed'&&v.schemaVersion===2&&p.surface!=='backup')&&keys(p,v.type==='PromptViewed'?['day','promptId','surface']:['day','promptId'])&&typeof p.day==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(p.day)&&Number.isFinite(Date.parse(p.day+'T12:00:00Z'))&&new Date(p.day+'T12:00:00Z').toISOString().slice(0,10)===p.day&&id(p.promptId)&&(v.type==='PromptViewed'?typeof p.surface==='string'&&['today','editor','backup'].includes(p.surface)&&v.eventId===`v${p.day}_${String(p.surface)[0]}${p.promptId}`:v.eventId===`a_${p.day}_${p.promptId}`);
   } else if (v.type === 'ReflectionWritten') {
     valid = (v.schemaVersion === 1 && keys(p, ['entryId', 'text', 'expectedRevision', 'starterId']) && p.starterId === STARTER_ID
       || v.schemaVersion === 2 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId']) && id(p.promptId)
@@ -146,7 +163,7 @@ export function parseAction(input: unknown): SourceAction {
       || (v.schemaVersion === 5 || v.schemaVersion === 6 || v.schemaVersion === 7) && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.promptText === null || p.promptId === v.eventId && string(p.promptText, v.schemaVersion===7?4000:600)) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4)
       || v.schemaVersion === 4 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4))
       && id(p.entryId) && string(p.text, 10_000, (v.schemaVersion === 4 || v.schemaVersion === 5 || v.schemaVersion === 6 || v.schemaVersion === 7)) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
-  } else if (v.schemaVersion === 1 || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27].includes(v.schemaVersion as number) && v.type === 'PromptRequested' || [2,3,4].includes(v.schemaVersion as number) && v.type==='PhotoSummaryRequested' || [2,3,4,5,6].includes(v.schemaVersion as number) && v.type==='AIChoicesConfirmed' || v.schemaVersion===2 && v.type==='PromptResponseReceived') {
+  } else if (v.schemaVersion === 1 || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42].includes(v.schemaVersion as number) && v.type === 'PromptRequested' || [2,3,4].includes(v.schemaVersion as number) && v.type==='PhotoSummaryRequested' || [2,3,4,5,6].includes(v.schemaVersion as number) && v.type==='AIChoicesConfirmed' || v.schemaVersion===2 && v.type==='PromptResponseReceived') {
     const previous = p.previousEventId === null || id(p.previousEventId);
     const day = typeof p.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.day) && !isNaN(Date.parse(p.day));
     switch (v.type) {
@@ -166,20 +183,23 @@ export function parseAction(input: unknown): SourceAction {
         && (v.schemaVersion!==6 || p.backupProvider!=='prompt' || p.backupConnectionId===null)
         && typeof p.enabled === 'boolean' && typeof p.useJournal === 'boolean' && typeof p.useFeedback === 'boolean' && string(p.guidance, 500, true); break;
       case 'PromptRequested': {
-        const modern=Number(v.schemaVersion)>=13;
-        const external=Number(v.schemaVersion)>=23;
-        const schema=external?({23:5,24:6,25:8,26:11,27:12} as Record<number,number>)[Number(v.schemaVersion)]:modern?Number(v.schemaVersion)-10:Number(v.schemaVersion);
+        const topic=Number(v.schemaVersion)>=28;
+        const version=topic?Number(v.schemaVersion)-15:Number(v.schemaVersion);
+        const modern=version>=13;
+        const external=version>=23;
+        const schema=external?({23:5,24:6,25:8,26:11,27:12} as Record<number,number>)[version]:modern?version-10:version;
         const mixed = [3,4,5,6,7,8,9,10,11,12].includes(schema);
         const local = schema===5 || schema===6 || schema===8 || schema===11 || schema===12;
         const editor = schema === 2 || schema === 4 || schema===6 || schema===10 || schema===12;
-        valid = keys(p, [...(modern?['answersId']:[]),...(external?['connectionId','connectionRevision']:[]),'previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(editor ? ['entryId', 'entryRevision'] : []), ...(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []), ...(local ? ['provider','model','thinking'] : []),...([7,8].includes(schema)?['purpose']:[]),...(schema>=9?['differentFromPromptId']:[])])
+        valid = keys(p, [...(topic?['snapshotId']:[]),...(modern?['answersId']:[]),...(external?['connectionId','connectionRevision']:[]),'previousEventId', 'choicesId', 'day', 'templateVersion', 'contextMode', 'entryRefs', 'feedbackIds', ...(editor ? ['entryId', 'entryRevision'] : []), ...(mixed ? ['selectorVersion','timeZone','selectionSeed'] : []), ...(local ? ['provider','model','thinking'] : []),...([7,8].includes(schema)?['purpose']:[]),...(schema>=9?['differentFromPromptId']:[])])
+          && (!topic || id(p.snapshotId))
           && (!modern || (p.answersId===null||id(p.answersId)))
           && (schema<9 || id(p.differentFromPromptId))
           && (![7,8].includes(schema) || p.purpose==='backup')
           && (!local || (external?validExternalTarget(p):validLocalTarget(p)))
           && (!editor || id(p.entryId) && Number.isSafeInteger(p.entryRevision) && Number(p.entryRevision) >= 0) && previous
-          && (!mixed || p.selectorVersion === (modern?(schema>=9?'weighted-v2':'weighted-v1'):(schema>=9?'mixed-v2':SELECTOR_VERSION)) && validSelection(p as unknown as Parameters<typeof validSelection>[0]))
-          && id(p.choicesId) && day && (modern ? ['gratitude-v3','gratitude-v4'].includes(String(p.templateVersion)) : ['gratitude-v1', TEMPLATE_VERSION].includes(String(p.templateVersion))) && ['generic', 'personal'].includes(String(p.contextMode))
+          && (!mixed || p.selectorVersion === (topic?'topic-v1':modern?(schema>=9?'weighted-v2':'weighted-v1'):(schema>=9?'mixed-v2':SELECTOR_VERSION)) && validSelection(p as unknown as Parameters<typeof validSelection>[0]))
+          && id(p.choicesId) && day && (topic ? p.templateVersion==='gratitude-v5' : modern ? ['gratitude-v3','gratitude-v4'].includes(String(p.templateVersion)) : ['gratitude-v1', TEMPLATE_VERSION].includes(String(p.templateVersion))) && ['generic', 'personal'].includes(String(p.contextMode))
           && (mixed ? !!p.entryRefs && typeof p.entryRefs === 'object' && !Array.isArray(p.entryRefs) && Object.keys(p.entryRefs).length <= 20
             && Object.entries(p.entryRefs).every(([key,value])=>id(key) && typeof value === 'string' && /^[1-9][0-9]{0,14}$/.test(value) && Number.isSafeInteger(Number(value)))
             : Array.isArray(p.entryRefs) && p.entryRefs.length <= 5 && p.entryRefs.every(ref => ref && keys(ref, ['entryId', 'revision']) && id(ref.entryId) && Number.isSafeInteger(ref.revision) && ref.revision > 0))
@@ -217,10 +237,12 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
   if(isClassificationAction(action)) return applyClassification(next,action,event.recordedAt);
   if(isRotationAction(action)){
     const {promptId,day}=action.payload,starter=starterPrompt(promptId),backup=state.backups[promptId];
-    if(!starter&&!backup)throw new Error('Unknown rotation prompt.');
+    const response=action.schemaVersion===2&&action.type==='PromptViewed'?state.ai.responses[promptId]:undefined;
+    if(!starter&&!backup&&!response)throw new Error('Unknown rotation prompt.');
+    if(action.schemaVersion===2&&(!response||isBackupRequest(state.ai.requests[response.payload.requestId])))throw new Error('Not a visible generated prompt.');
     if(action.type==='PromptViewed'){
-      if(!!starter===(action.payload.surface==='backup'))throw new Error('Prompt source and surface disagree.');
-      return {...next,ai:action.payload.surface==='today'?{...state.ai,days:{...state.ai.days,[day]:promptId}}:state.ai,rotation:{...state.rotation,offers:[...state.rotation.offers,{eventId:action.eventId,day,promptId,kind:starter?'starter':'backup',surface:action.payload.surface,sequence:event.sequence,text:starter?.text??backup!.text}]}};
+      if(!response&&!!starter===(action.payload.surface==='backup'))throw new Error('Prompt source and surface disagree.');
+      return {...next,ai:action.payload.surface==='today'?{...state.ai,days:{...state.ai.days,[day]:promptId}}:state.ai,rotation:{...state.rotation,offers:[...state.rotation.offers,{eventId:action.eventId,day,promptId,kind:response?'ai':starter?'starter':'backup',surface:action.payload.surface,sequence:event.sequence,text:response?.payload.text??starter?.text??backup!.text,topicId:promptTopicId(state,promptId)}]}};
     }
     return {...next,rotation:{...state.rotation,acceptedText:{...state.rotation.acceptedText,[promptId]:starter?.text??backup!.text},accepted:{...state.rotation.accepted,[promptId]:day> (state.rotation.accepted[promptId]??'')?day:state.rotation.accepted[promptId]}},backups:backup?{...state.backups,[promptId]:{...backup,used:true}}:state.backups};
   }
@@ -286,6 +308,15 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
     }
     case 'PromptRequested': {
       const p = action.payload, refs = requestEntryRefs(action);
+      if('snapshotId' in p&&p.snapshotId!==state.lastEventId)throw new Error('Prompt context changed. Request a fresh prompt.');
+      ai.requestTopics={...ai.requestTopics,[action.eventId]:requestTopic(state,action)};
+      if('snapshotId' in p){
+        const previous='differentFromPromptId' in p?state.ai.requests[state.ai.responses[p.differentFromPromptId]?.payload.requestId]:undefined;
+        const groups=p.contextMode==='personal'&&ai.choices.useJournal?selectReflections(state,{day:p.day,timeZone:p.timeZone,selectionSeed:p.selectionSeed,weighted:true,topic:{id:ai.requestTopics[action.eventId]?.id??null},entryId:isEditorRequest(action)?action.payload.entryId:undefined,avoidEntryIds:previous?requestEntryRefs(previous).map(r=>r.entryId):[]}):{anniversary:[],rediscovery:[],fallback:[],recent:[]};
+        const expected=selectedEntries(groups);
+        if(expected.length!==refs.length||expected.some(e=>p.entryRefs[e.id]!==String(e.revision)))throw new Error('Topic history selection changed.');
+        ai.requestPools={...ai.requestPools,[action.eventId]:Object.fromEntries(Object.entries(groups).map(([pool,items])=>[pool,items.length])) as Projection['ai']['requestPools'][string]};
+      }
       if('answersId' in p && p.answersId!==state.onboarding.answersId)throw new Error('Questionnaire answers changed.');
       if('differentFromPromptId' in p&&!state.ai.responses[p.differentFromPromptId])throw new Error('Previous generated prompt is unavailable.');
       if (isEditorRequest(action) && (state.entries.find(entry => entry.id === action.payload.entryId)?.revision ?? 0) !== action.payload.entryRevision) throw new Error('This reflection changed before the prompt request.');

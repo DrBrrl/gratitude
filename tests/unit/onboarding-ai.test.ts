@@ -1,9 +1,10 @@
+// Historical request contracts deliberately use the frozen legacy builder. Current topic requests are covered in topic-prompt-selection.test.ts.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import { externalTarget } from '../../src/lib/ai/connection-contract.ts';
 import {replay,parseAction,STARTER_ID,type SourceAction,type JournalEvent,type Projection} from '../../src/lib/domain.ts';
 import {defaultAnswers,answersInput} from '../../src/lib/onboarding.ts';
-import {makeRequest,buildContext,promptOptions,validatePromptOutput,boundContext,SYSTEM_PROMPT} from '../../src/lib/ai/context.ts';
+import {makeLegacyRequest as makeRequest,buildContext,promptOptions,validatePromptOutput,boundContext,SYSTEM_PROMPT} from '../../src/lib/ai/context.ts';
 import {selectReflections,selectedEntries} from '../../src/lib/ai/selection.ts';
 import {exportJournal} from '../../src/lib/export.ts';
 import {importedBackup} from '../../src/lib/backup-prompts.ts';

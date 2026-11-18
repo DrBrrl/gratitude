@@ -1,6 +1,9 @@
 # Personalised Gemini reflection selection
 
-New onboarding-aware requests use the [implemented weighted policy and prompt controls](ONBOARDING_DESIGN.md#implementation-notes): twenty units, with complete trimmed reflections over 600 UTF-16 code units costing two. `gratitude-v3` uses the confirmed scope/word limit and only explicitly shared private identity/selected descriptions. Existing mixed-v1/v2 request versions below remain replay-compatible.
+New requests use the [implemented one-topic regular policy](docs/design/delivery/TOPIC_PROMPTS.md): fourteen-day reflected-topic counts, visible-offer rotation, one consented topic description, and same-topic 8/7/5 history with ±28-day anniversaries and 30-day recency. Unknown can fill rediscovery/fallback; unrelated and unclassified entries are excluded. The twenty-unit budget still charges two units above 600 trimmed characters. All five adapters, including reserve generation, share `gratitude-v5` / `topic-v1`. Historical versions below retain their original behaviour and never redo inference on replay.
+
+
+Earlier onboarding-aware requests use the [historical weighted policy and prompt controls](ONBOARDING_DESIGN.md#implementation-notes): twenty units, with complete trimmed reflections over 600 UTF-16 code units costing two. `gratitude-v3` uses the confirmed scope/word limit and only explicitly shared private identity/selected descriptions. Existing mixed-v1/v2 request versions below remain replay-compatible.
 
 ## Legacy request contracts
 

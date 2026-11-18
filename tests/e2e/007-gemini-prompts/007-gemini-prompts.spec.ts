@@ -70,10 +70,10 @@ test('consent, personalized prompts, freeform feedback and immutable journal his
   });
   await saveChoices(page, steps, 'save-journal-context');
   await navigate(page, steps, 'new-day', 'Today');
-  await steps.action('next-prompt', 'Request a new day’s prompt using the chosen context', () => page.getByRole('button', { name: 'Generate a prompt', exact: true }).click(), async () => {
+  await steps.action('next-prompt', 'Request a new day’s prompt with feedback and no shared interest', () => page.getByRole('button', { name: 'Generate a prompt', exact: true }).click(), async () => {
     await expect(page.locator('.daily-prompt h2')).toHaveText(SECOND_PROMPT, { timeout: 15_000 }); expect(requests).toHaveLength(2);
     expect(JSON.parse(JSON.parse(requests[1]).contents[0].parts[0].text).promptFeedback).toEqual([{prompt:FIRST_PROMPT,feedback:'More questions about sounds, please.'}]);
-    expect(requests[1]).toContain('More questions about sounds, please.'); expect(requests[1]).toContain('Someone held the door');
+    expect(requests[1]).toContain('More questions about sounds, please.'); expect(requests[1]).not.toContain('Someone held the door');expect(Object.values(JSON.parse(JSON.parse(requests[1]).contents[0].parts[0].text).reflections).flat()).toEqual([]);
   });
   await navigate(page, steps, 'history', 'Journal');
   await steps.action('original-entry', 'Read the old reflection after the model changed', () => page.getByRole('button', { name: 'View entry', exact: true }).click(), async () => {

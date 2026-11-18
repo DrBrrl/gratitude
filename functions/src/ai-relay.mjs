@@ -101,7 +101,7 @@ export function createAIRelay({db,project,keyring,fetcher=fetch,now=Date.now,tim
    let classificationBatch;
    if(classification){classificationBatch=await db.doc(`${stream}/events/${p.batchId}`).get();const consent=await db.doc(`${stream}/events/${classificationBatch.get('payload.consentId')}`).get();p={...consent.get('payload'),answersId:classificationBatch.get('payload.answersId'),target:p.target,batchId:p.batchId,consentId:consent.id};}
    const photo=source.get('type')==='PhotoSummaryRequested';
-   if(!(classification|| (photo?source.get('schemaVersion')===4:source.get('type')==='PromptRequested'&&[23,24,25,26,27].includes(source.get('schemaVersion'))))||p?.provider!=='personal-gemini'||p.connectionId!==data.connectionId||p.connectionRevision!==data.revision||p.model!==saved.metadata.get('model'))fail('permission-denied','The recorded request does not authorize this cloud connection.');
+   if(!(classification|| (photo?source.get('schemaVersion')===4:source.get('type')==='PromptRequested'&&[23,24,25,26,27,38,39,40,41,42].includes(source.get('schemaVersion'))))||p?.provider!=='personal-gemini'||p.connectionId!==data.connectionId||p.connectionRevision!==data.revision||p.model!==saved.metadata.get('model'))fail('permission-denied','The recorded request does not authorize this cloud connection.');
    const stillAuthorized=async(afterDispatch=false)=>{
     if(classification){
      const [control,current,setup,batch,target,chosen,claim]=await Promise.all([db.doc(`${stream}/classification/control`).get(),saved.ref.get(),db.doc(`${stream}/onboarding/control`).get(),db.doc(`${stream}/classificationBatches/${p.batchId}`).get(),db.doc(`${stream}/${p.target.kind==='reflection'?'entries':'backups'}/${p.target.id}`).get(),db.doc(`${stream}/${p.target.kind==='reflection'?'topics':'backupTopics'}/${p.target.id}`).get(),db.doc(`${stream}/classificationClaims/${data.requestId}`).get()]);
@@ -116,6 +116,7 @@ export function createAIRelay({db,project,keyring,fetcher=fetch,now=Date.now,tim
     const choices=await db.doc(`${stream}/events/${p.choicesId}`).get();if(!choices.get('payload.enabled')&&!photo)fail('permission-denied','Enable AI prompts before requesting a question.');
    };
    await stillAuthorized();
+   if(source.get('schemaVersion')>=28&&source.get('type')==='PromptRequested'){const head=await db.doc(stream).get();if(head.get('lastEventId')!==data.requestId)fail('failed-precondition','Prompt context changed. Request a fresh prompt.');}
    let parts;
    if(photo){
     if(!saved.metadata.get('allowPersonal'))fail('failed-precondition','Review this cloud connection’s terms before sending a photo.');

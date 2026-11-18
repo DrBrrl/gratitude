@@ -1,9 +1,10 @@
+// Historical request contracts deliberately use the frozen legacy builder. Current topic requests are covered in topic-prompt-selection.test.ts.
 import {spawnSync} from 'node:child_process';
 import {OllamaAccessError,ollamaOriginCommand} from '../../src/lib/ai/local-services.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {discoverLocalModels,generateLocal,defaultConnection,saveConnection,readProviderConnection,validateConnection,wasAccountConnection,clearConnectionToken,type ModelConnection} from '../../src/lib/ai/lm-studio.ts';
-import {makeRequest,buildContext,promptOptions} from '../../src/lib/ai/context.ts';
+import {makeLegacyRequest as makeRequest,buildContext,promptOptions} from '../../src/lib/ai/context.ts';
 import {externalTarget} from '../../src/lib/ai/connection-contract.ts';
 import {replay,parseAction,requestProvider,isEditorRequest,isBackupRequest,type JournalEvent} from '../../src/lib/domain.ts';
 

@@ -1,5 +1,6 @@
+// Historical request contracts deliberately use the frozen legacy builder. Current topic requests are covered in topic-prompt-selection.test.ts.
 import {commitDraft,draftSaveActions,type ReflectionDraft} from '../../src/lib/reflection-draft.ts';
-import {makeRequest} from '../../src/lib/ai/context.ts';
+import {makeLegacyRequest as makeRequest} from '../../src/lib/ai/context.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {STARTER_CATALOGUE as catalogue} from '../../src/lib/starter-catalogue.ts';

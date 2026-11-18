@@ -20,7 +20,7 @@ test('generic configuration never shares personal journal context', async ({ pag
   await steps.action('generate', 'Request a prompt without personal context', () => page.getByRole('button', { name: 'Generate a prompt', exact: true }).click(), async () => {
     await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT, { timeout: 15_000 }); expect(requests).toHaveLength(1);
     const request = JSON.parse(requests[0]);
-    expect(request.contents).toEqual([{ role: 'user', parts: [{ text: 'Offer a fresh question about an ordinary everyday moment. No personal context is supplied.' }] }]);
+    expect(JSON.parse(request.contents[0].parts[0].text)).toMatchObject({mode:'regular',task:'Offer a fresh question about an ordinary everyday moment. No personal context is supplied.',reflections:{anniversary:[],rediscovery:[],fallback:[],recent:[]},promptFeedback:[]});
     expect(requests[0]).not.toContain('Fictional private context');
   }, 'Only the fixed generic instruction reaches the provider; the saved reflection is excluded');
   await steps.action('why', 'Read the generic prompt disclosure', () => page.getByRole('button', { name: 'Why this prompt?' }).click(), async () => {

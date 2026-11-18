@@ -1,11 +1,13 @@
 <script lang="ts">
+ import ReviewPhotos from './ReviewPhotos.svelte';
+ import type {FirebaseClient} from '../firebase/client';
  import {tick} from 'svelte';
  import type {JournalView,JournalStore} from '../firebase/repository';
  import {currentTarget,targetTopic,targetAvailable,type ClassificationTarget} from '../classification';
  import {topicChoices,topicLabel} from '../reflection-topics';
  import {cardDateTime,entryTimestamp,entryColour} from '../journal';
  import ReflectionText from './ReflectionText.svelte';
- let {view,repository,target}:{view:JournalView;repository:JournalStore;target:Pick<ClassificationTarget,'kind'|'id'>}=$props();
+ let {view,repository,target,client,uid}:{client?:FirebaseClient|null;uid?:string;view:JournalView;repository:JournalStore;target:Pick<ClassificationTarget,'kind'|'id'>}=$props();
  let overflowing=$state(false);
  let content=$state<HTMLDivElement>();
  $effect(()=>{const node=content;const text=question;const body=entry?.text;if(!node||expanded)return;const measure=()=>{overflowing=Array.from(node.querySelectorAll('.collapsed')).some(e=>e.scrollHeight>e.clientHeight);};const observer=new ResizeObserver(measure);observer.observe(node);measure();return()=>observer.disconnect();});
@@ -44,6 +46,7 @@
  <h2>Prompt</h2><p class="prompt" class:collapsed={!expanded}>{question}</p>
  {#if target.kind==='reflection'&&entry}<h2>Reflection</h2><div class="reflection" class:collapsed={!expanded}><ReflectionText text={entry.text}/></div>{/if}
  {#if overflowing||expanded}<button class="expand" onclick={()=>expanded=!expanded}>{expanded?'(see less)':'(see more)'}</button>{/if}
+ {#if target.kind==='reflection'&&entry}<ReviewPhotos state={view.state} entryId={entry.id} {client} {uid}/>{/if}
  </div>
  <div class="topic"><button class="trigger" aria-label={`Change ${target.kind==='reflection'?'reflection':'backup'} topic`} aria-haspopup="listbox" aria-expanded={open} onclick={begin} disabled={busy||!view.ready||!available}>{label} ⌄</button>
  {#if saved}<small role="status">Saved</small>{/if}

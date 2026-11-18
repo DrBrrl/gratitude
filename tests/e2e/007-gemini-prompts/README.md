@@ -313,9 +313,9 @@ Viewport: mobile-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
-## Request a new day’s prompt using the chosen context
+## Request a new day’s prompt with feedback and no shared interest
 
-![Request a new day’s prompt using the chosen context](./screenshots/034-next-prompt-mobile-chromium.png)
+![Request a new day’s prompt with feedback and no shared interest](./screenshots/034-next-prompt-mobile-chromium.png)
 
 **Verifications:**
 

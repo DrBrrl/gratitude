@@ -4,7 +4,7 @@ import {doc,setDoc,deleteDoc,Timestamp} from 'firebase/firestore';
 import {TestStepHelper} from '../helpers/test-step-helper';
 import {startJournal,signIn,expectSynced,navigate,seedHistory,FIXTURE_TIME} from '../helpers/journal-session';
 import {aiSettings,toggleAI,saveChoices} from '../helpers/gemini';
-import {selectionLog} from '../helpers/ai-selection-fixture';
+import {selectionLog,seedPromptTopics} from '../helpers/ai-selection-fixture';
 const expect=baseExpect.configure({timeout:15000});
 const KEY='fictional-personal-gemini-key-never-live',MODEL='gemini-3.6-flash';
 test('a personal cloud key is write-only, defaults to generic context, restores on another device and can be removed',async({page,context},info)=>{
@@ -35,6 +35,7 @@ test('a personal cloud key is write-only, defaults to generic context, restores 
   uid=await page.evaluate(async()=>{const name=(await indexedDB.databases()).find(db=>db.name?.startsWith('gratitude:demo-gratitude:'))?.name;if(!name)throw Error('No journal');return name.split(':').at(-2)!;});
   await environment.withSecurityRulesDisabled(async admin=>setDoc(doc(admin.firestore(),`users/${uid}/privateSettings/lmStudio`),{schemaVersion:1,baseUrl:'https://fictional-legacy-laptop.example.test',model:'legacy/text-model',token:'fictional-legacy-lm-token',updatedAt:Timestamp.fromDate(new Date(FIXTURE_TIME))}));
   await seedHistory(page,[{text:'Fictional kettle and sunshine, private context.',recordedAt:'2026-09-30T01:00:00Z'}]);
+  await seedPromptTopics(page,['nature']);
   await aiSettings(page,steps,'ai');
   await steps.action('own-key','Choose a personal Gemini connection',()=>page.getByLabel('AI provider',{exact:true}).selectOption('personal-gemini'),async()=>{await expect(page.getByRole('region',{name:'Personal Gemini connection'})).toBeVisible();await expect(page.getByRole('button',{name:'Save private cloud connection'})).toBeDisabled();});
   await steps.action('key','Enter a fictional key only into the private password field',()=>page.getByLabel('Gemini API key',{exact:true}).fill(KEY),async()=>{await expect(page.getByLabel('Gemini API key',{exact:true})).toHaveValue(KEY);expect(calls).toHaveLength(0);});

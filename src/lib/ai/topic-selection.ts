@@ -1,4 +1,4 @@
-import type { Projection } from '../domain.ts';
+import type { Projection, RequestAction } from '../domain.ts';
 import { TOPICS } from '../onboarding.ts';
 import { reflectionTopic } from '../reflection-topics.ts';
 import { civilDate, dayInZone } from '../civil-date.ts';
@@ -29,4 +29,16 @@ export function chooseTopic(state:Projection,input:SelectionInput,personal:boole
  if(!pool.length)pool=eligible;
  if(pool.length>1&&previous)pool=pool.filter(t=>t.id!==previous);
  return pool[randomSource(input.selectionSeed)(pool.length)];
+}
+export function requestTopic(state:Projection,request:RequestAction):PromptTopic|null {
+ if(!('snapshotId' in request.payload))return null;
+ return chooseTopic(state,{day:request.payload.day,timeZone:request.payload.timeZone,selectionSeed:request.payload.selectionSeed,entryId:'entryId' in request.payload?request.payload.entryId:undefined},request.payload.contextMode==='personal');
+}
+
+/** Explicit corrections (including Unknown/unclassified) take precedence over provenance. */
+export function promptTopicId(state:Projection,promptId:string):string|null {
+ const assigned=reflectionTopic(state.classification.backupTopics,promptId);
+ if(assigned)return assigned.topicId;
+ const response=state.ai.responses[promptId];
+ return response?state.ai.requestTopics[response.payload.requestId]?.id??null:null;
 }

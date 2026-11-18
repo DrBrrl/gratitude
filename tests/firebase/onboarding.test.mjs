@@ -1,3 +1,4 @@
+// Historical requests remain pinned; providers.test.mjs covers current topic request versions.
 import { before, after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -83,7 +84,7 @@ test('Rules preserve the same string bounds for supplementary Unicode characters
 });
 
 test('new provider requests bind the exact answers revision, preserve long output and reject revoked answers',async()=>{
-  const {makeRequest,buildContext,promptOptions}=await import('../../src/lib/ai/context.ts');
+  const {makeLegacyRequest:makeRequest,buildContext,promptOptions}=await import('../../src/lib/ai/context.ts');
   for(const provider of ['gemini','lm-studio']){
     const uid=`setup-ai-${provider}`,db=client(uid),target=provider==='lm-studio'?{provider,model:'fictional/model',thinking:false}:undefined;
     await appendReflection(db,uid,confirmed('ai-answers',null,{pronouns:'they/them',selectedTopics:['music'],useAnswers:true,wordLimit:200}));
