@@ -1,4 +1,6 @@
 <script lang="ts">
+ import ReviewPhotos from './ReviewPhotos.svelte';
+ import type {FirebaseClient} from '../firebase/client';
  import {onDestroy} from 'svelte';
  import {classificationDestination} from '../ai/classification-connection';
  import type {JournalStore,JournalView} from '../firebase/repository';
@@ -9,7 +11,7 @@
  import {topicChoices,topicLabel} from '../reflection-topics';
  import {availableBackups} from '../backup-prompts';
  import {cardDateTime,entryTimestamp} from '../journal';
- let {view,repository,connection,allowed,generate,onconfigure}:{view:JournalView;repository:JournalStore;connection:ModelConnection;allowed:boolean;generate:()=>GeneratePrompt;onconfigure:()=>void}=$props();
+ let {view,repository,connection,allowed,generate,onconfigure,client,uid}:{client?:FirebaseClient|null;uid?:string;view:JournalView;repository:JournalStore;connection:ModelConnection;allowed:boolean;generate:()=>GeneratePrompt;onconfigure:()=>void}=$props();
  let workerEpoch=0,lastCloudDispatch=0;
  let busy=$state(false),running=$state(false),alive=true,message=$state(''),kind=$state<'reflection'|'backup'>('reflection'),chosenId=$state(''),chosenTopic=$state<string|null>(null);
  const c=$derived(view.state.classification),consent=$derived(c.consent);
@@ -83,7 +85,7 @@
  <section aria-label="Classify one item"><h3>Review or classify one item</h3>
  <label for="class-kind">Item type</label><select id="class-kind" bind:value={kind} onchange={()=>chosenId=''}><option value="reflection">Reflection</option><option value="backup">Backup prompt</option></select>
  <label for="class-item">Item</label><select id="class-item" bind:value={chosenId} onchange={event=>chosenTopic=targetTopic(view.state,currentTarget(view.state,kind,event.currentTarget.value))?.topicId??null}><option value="">Choose an item</option>{#each items as item}<option value={item.id}>{item.label}</option>{/each}</select>
- {#if chosen}<p class="item-text">{kind==='reflection'?view.state.entries.find(e=>e.id===chosen.id)?.text:view.state.backups[chosen.id]?.text}</p><p><strong>{topicLabel(activeTopic,view.state.onboarding.answers)}</strong>{activeTopic?.origin==='ai'?topicStale(view.state,chosen)?' · AI suggestion needs review after editing':' · AI suggestion':''}</p>
+ {#if chosen}{#if kind==='reflection'}<p class="item-text"><strong>Prompt</strong><br/>{view.state.entries.find(e=>e.id===chosen.id)?.prompt}</p>{/if}<p class="item-text">{kind==='reflection'?view.state.entries.find(e=>e.id===chosen.id)?.text:view.state.backups[chosen.id]?.text}</p>{#if kind==='reflection'}<ReviewPhotos state={view.state} entryId={chosen.id} {client} {uid}/>{/if}<p><strong>{topicLabel(activeTopic,view.state.onboarding.answers)}</strong>{activeTopic?.origin==='ai'?topicStale(view.state,chosen)?' · AI suggestion needs review after editing':' · AI suggestion':''}</p>
  <button class="outline" onclick={()=>start([chosen!])} disabled={busy||running||!matches||!allowed||activeTopic?.origin==='user'||!!pending||!!batch&&batch.status!=='cancelled'&&progress.remaining>0}>Classify this item</button>
  {#if kind==='backup'}<label for="backup-topic">Backup category</label><select id="backup-topic" bind:value={chosenTopic}><option value={null}>Not yet classified</option>{#each topicChoices(view.state.onboarding.answers) as option}<option value={option.id}>{option.label}</option>{/each}</select><button class="outline" onclick={saveBackup} disabled={busy||running}>Save backup category</button>{/if}
  {/if}</section>

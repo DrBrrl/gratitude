@@ -2,7 +2,7 @@ import {test,expect as baseExpect} from '@playwright/test';
 import {TestStepHelper} from '../helpers/test-step-helper';
 import {startJournal,navigate,openEditor,editor,expectEditor,expectSynced} from '../helpers/journal-session';
 import {aiSettings,saveChoices,toggleAI,AI_ENDPOINT,respond,FIRST_PROMPT,SECOND_PROMPT} from '../helpers/gemini';
-import {seedSelectionHistory,selectionLog} from '../helpers/ai-selection-fixture';
+import {seedSelectionHistory,selectionLog,seedPromptTopics} from '../helpers/ai-selection-fixture';
 import {replay,isMixedRequest} from '../../../src/lib/domain';
 import {buildContext} from '../../../src/lib/ai/context';
 const expect=baseExpect.configure({timeout:15_000});
@@ -16,6 +16,7 @@ test('personalised generation mixes twenty logical-date reflections and replays 
   });
   await startJournal(page,info,steps,'mixed-reflections');
   await seedSelectionHistory(page);
+  await seedPromptTopics(page,['nature']);
   await steps.step('history','Replay imported and in-app history with old entry dates and today’s receipt time',[{description:'Historical entries leave Today ready for a new reflection without provider calls',check:async()=>{await expect(page.getByRole('button',{name:'Write a response',exact:true})).toBeVisible();expect(contexts).toHaveLength(0);}}]);
   await aiSettings(page,steps,'configure');
   await toggleAI(page,steps,'enable',true);
@@ -27,7 +28,7 @@ test('personalised generation mixes twenty logical-date reflections and replays 
     // This commits a request with twenty source references, then its received result.
     await expect(page.locator('.daily-prompt h2')).toHaveText(FIRST_PROMPT,{timeout:30_000});expect(contexts).toHaveLength(1);
     const c=contexts[0];expect(Object.values(c.reflections).map(g=>g.length)).toEqual([8,7,0,5]);
-    expect(c.referenceDate).toBe('2026-10-01');expect(c.timeZone).toBe('Australia/Hobart');
+    expect(c.referenceDate).toBe('2026-10-01');expect(c.timeZone).toBe('Australia/Hobart');expect(c).toHaveProperty('topic.description');expect(c).not.toHaveProperty('topics');
     expect(c.reflections.anniversary).toContainEqual({date:'2025-10-01',text:'An imported anniversary walk.'});
     expect(c.reflections.recent.every(e=>e.date>='2026-09-17'&&e.date<'2026-10-01')).toBe(true);
     expect(new Set(Object.values(c.reflections).flat().map(e=>e.text)).size).toBe(20);
@@ -41,7 +42,7 @@ test('personalised generation mixes twenty logical-date reflections and replays 
   await steps.action('another','Rediscover sources that have not yet informed a successful prompt',()=>page.getByRole('button',{name:'Another prompt',exact:true}).click(),async()=>{
     await expect(page.locator('.daily-prompt h2')).toHaveText(SECOND_PROMPT,{timeout:30_000});expect(contexts).toHaveLength(2);
     const previous=new Set(Object.values(contexts[0].reflections).flat().map(e=>e.text));
-    expect(contexts[1].differentPromptRequest).toBe(`The user has requested a different prompt. Your new prompt's wording and topics should vary from your previously generated prompt: ${JSON.stringify(FIRST_PROMPT)}`);
+    expect(contexts[1].differentPromptRequest).toBe(`The user has requested a different prompt. Vary your wording from your previously generated prompt: ${JSON.stringify(FIRST_PROMPT)}`);
     expect(Object.keys(contexts[1]).at(-1)).toBe('differentPromptRequest');
     expect(contexts[1].reflections.anniversary.every(e=>!previous.has(e.text))).toBe(true);
     expect(contexts[1].reflections.recent.some(e=>!previous.has(e.text))).toBe(true);

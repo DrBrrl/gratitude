@@ -10,7 +10,7 @@ test('shared backups follow prompt bindings and replay without changing photo or
  let state=replay(events([shared]));assert.equal(backupProvider(state.ai.choices),'ollama');assert.equal(backupConnectionId(state.ai.choices),'prompt-one');
  const target={provider:'ollama' as const,model:'fictional/text',thinking:false as const,connectionId:'prompt-one',connectionRevision:'revision'};
  const request=makeRequest(state,'2026-10-01','personal','request',undefined,undefined,target,true);
- assert.equal(request.schemaVersion,25);assert.equal(replay(events([shared,request])).ai.control.requestId,'request');
+ assert.equal(request.schemaVersion,40);assert.equal(replay(events([shared,request])).ai.control.requestId,'request');
  const changed={...shared,eventId:'changed',payload:{...shared.payload,previousEventId:'choice',provider:'openai-compatible',promptConnectionId:'prompt-two'}} as SourceAction;
  state=replay(events([shared,changed]));assert.equal(backupProvider(state.ai.choices),'openai-compatible');assert.equal(backupConnectionId(state.ai.choices),'prompt-two');assert.equal(state.ai.choices.photoProvider,'gemini');assert.equal(state.ai.choices.backupEnabled,true);
  assert.throws(()=>makeRequest(state,'2026-10-01','personal','wrong',undefined,undefined,target,true),/provider changed/);

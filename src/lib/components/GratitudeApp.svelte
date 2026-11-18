@@ -425,6 +425,21 @@
     if (busy || !promptBuffer.trim() || promptBuffer.length > 4000) return;
     editorManualPrompt = promptBuffer; editingPrompt = false; await persistDraft();
   }
+  let pageVisible=$state(true);
+  const recordingOffers=new Set<string>();
+  async function recordGeneratedOffer(surface:'today'|'editor',day:string,id:string|undefined){
+    const active=repository,response=id?view.state.ai.responses[id]:undefined,request=response?view.state.ai.requests[response.payload.requestId]:undefined;
+    if(!active||!id||!request||isBackupRequest(request)||!('snapshotId' in request.payload)||document.visibilityState!=='visible'||(surface==='today'?!todayPromptVisible:!editorPromptVisible))return;
+    const eventId=`v${day}_${surface[0]}${id}`;
+    if(recordingOffers.has(eventId)||view.state.rotation.offers.some(o=>o.day===day&&o.promptId===id))return;
+    recordingOffers.add(eventId);
+    try{await active.queueBackup({eventId,type:'PromptViewed',schemaVersion:2,payload:{day,promptId:id,surface}});}finally{recordingOffers.delete(eventId);}
+  }
+  $effect(()=>{
+    const id=editorPromptVisible&&showPromptCandidate?promptCandidate?.eventId:todayPromptVisible?currentPromptId:undefined;
+    const day=writing?localDay(editorEntryAt):today,surface=writing?'editor':'today';
+    if(pageVisible&&!generatingPrompt&&view.ready&&id)untrack(()=>{void recordGeneratedOffer(surface,day,id).catch(()=>{aiMessage='This prompt is ready. Reconnect to sync its offer history.';});});
+  });
   async function generateEditorPrompt() {
     const active = repository;
     if (!active || !client) return;
@@ -433,6 +448,7 @@
       if (!draft) await persistDraft();
       if (!draft || !draftStatus.startsWith('Draft saved')) throw new Error('Save this draft on your device before requesting a prompt.');
       await active.requestPrompt(localDay(editorEntryAt), personalContextAvailable ? 'personal' : 'generic', promptGenerator(), draft.payload.entryId,false,promptCandidate?.eventId??(view.state.ai.responses[editorPromptId]?editorPromptId:undefined));
+      if(repository===active&&editorPromptVisible&&showPromptCandidate)await recordGeneratedOffer('editor',localDay(editorEntryAt),promptCandidate?.eventId);
     } catch (cause) { if (repository === active) aiMessage = cause instanceof Error ? cause.message : 'Could not request a prompt.'; }
     finally { if (repository === active) generatingPrompt = false; }
   }
@@ -467,7 +483,7 @@
     if (!active || !client) return;
     const requestedDay=today,initialStarter=todayStarter;
     generatingPrompt = true; aiMessage = '';dailyPromptError=null;
-    try { await active.requestPrompt(requestedDay, personalContextAvailable ? 'personal' : 'generic', promptGenerator(),undefined,false,currentResponse?.eventId); }
+    try { await active.requestPrompt(requestedDay, personalContextAvailable ? 'personal' : 'generic', promptGenerator(),undefined,false,currentResponse?.eventId);if(repository===active&&today===requestedDay&&todayPromptVisible&&currentPromptId===view.state.ai.days[requestedDay])await recordGeneratedOffer('today',requestedDay,currentPromptId); }
     catch (cause) { if (repository === active && todayStarter===initialStarter) dailyPromptError={day:requestedDay,text:cause instanceof Error ? cause.message : 'Could not request a prompt.'}; }
     finally { if (repository === active) generatingPrompt = false; }
   }
@@ -517,6 +533,8 @@
   let appliedFlow = '';
   const frame = $derived(flow?.trail.at(-1));
   const calendarShown = $derived(frame?.kind === 'calendar' && !writing && !savedId);
+  const todayPromptVisible=$derived(!writing&&tab==='today'&&!landing&&!setupOpen&&!calendarShown&&!savedId&&!selectedId);
+  const editorPromptVisible=$derived(writing&&tab==='today'&&!landing&&!setupOpen&&!calendarShown);
   const navOwner = $derived(user ? `${client?.projectId ?? 'ui-review'}:${base}:${user.uid}:v1` : '');
   const navKey = $derived(`gratitude:calendar:${navOwner}`);
   function rememberFlow(next:CalendarFlow) {try {sessionStorage.setItem(navKey,JSON.stringify(next));} catch { /* History state remains usable without session storage. */ }}
@@ -640,8 +658,8 @@
     return () => { cancelled = true; };
   });
   onMount(() => {
-    setupOnline=navigator.onLine;
-    const updateDay = () => { currentInstant = new Date(); zone = Intl.DateTimeFormat().resolvedOptions().timeZone; };
+    setupOnline=navigator.onLine;pageVisible=document.visibilityState==='visible';
+    const updateDay = () => { pageVisible=document.visibilityState==='visible';currentInstant = new Date(); zone = Intl.DateTimeFormat().resolvedOptions().timeZone; };
     const timer = window.setInterval(updateDay, 30_000);
     window.addEventListener('focus', updateDay);
     document.addEventListener('visibilitychange', updateDay);
@@ -1030,7 +1048,7 @@
             {#if !view.state.ai.choices.enabled}<p class="hint prompt-hint">Enable AI prompts in Settings to generate a question. You can still edit it yourself.</p>{/if}
           {/if}
           {#if showPromptCandidate && promptCandidate}
-            <aside class="prompt-option" aria-label="Generated prompt option"><p class="hint">Generated option</p><p class="writing-prompt">{promptCandidate.payload.text}</p><div class="prompt-actions"><button class="card-action" type="button" onclick={useEditorPrompt} disabled={busy || editingPrompt}>Use this prompt</button><button class="card-action" type="button" onclick={() => dismissedPrompt = promptCandidate!.eventId}>Keep current prompt</button></div></aside>
+            <aside class="prompt-option" aria-label="Generated prompt option"><p class="hint">Generated option</p>{#if view.state.ai.requestTopics[promptCandidate.payload.requestId]}<p class="hint">Regular prompt · {view.state.ai.requestTopics[promptCandidate.payload.requestId]!.label}</p>{/if}<p class="writing-prompt">{promptCandidate.payload.text}</p><div class="prompt-actions"><button class="card-action" type="button" onclick={useEditorPrompt} disabled={busy || editingPrompt}>Use this prompt</button><button class="card-action" type="button" onclick={() => dismissedPrompt = promptCandidate!.eventId}>Keep current prompt</button></div></aside>
           {/if}
           <button class="outline card-action" onclick={anotherStarter} disabled={busy||editingPrompt||offering}>Another starter prompt</button>
           <BackupPicker onoffer={offerBackup} prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||editingPrompt} />
@@ -1078,7 +1096,7 @@
           {/if}
           {#if view.aiResultPending}<section class="glass"><p>A prompt arrived and is saved on this device. Sync it without another AI request.</p><button class="outline" onclick={syncPrompt} disabled={aiBusy}>Sync received prompt</button></section>{/if}
           <button class="text-button today-secondary" onclick={() => navigate('journal')}>Browse your journal</button>
-          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<div class="glass explanation">{#if starterPrompt(currentPromptId)}<p>A starter prompt from the {starterPrompt(currentPromptId)!.category} collection. It works without AI or a connection. Accepted starters rest for 30 days.</p>{:else if currentRequest}<p>This question was generated by {'provider' in currentRequest.payload ? serviceName(currentRequest.payload.provider) : 'Gemini'}.{currentRequest.payload.contextMode === 'generic' ? ' No journal text, preferences or feedback was shared.' : ` It used your saved preferences, ${requestEntryRefs(currentRequest).length} saved reflections (${view.state.ai.requestUnits[currentRequest.eventId]??requestEntryRefs(currentRequest).length} of 20 context units) and ${currentRequest.payload.feedbackIds.length} pieces of feedback.`}</p>{:else if view.state.backups[currentPromptId]}<p>A personalised question from your saved backup prompts. No AI request was needed to choose it.</p>{:else if currentPromptId !== STARTER_ID}<p>You wrote this prompt. It is saved with your reflection.</p>{:else}<p>A simple starting point for noticing something good. You can write as little or as much as you like. This starter works without sending anything to AI.</p>{/if}<button class="underlined" onclick={openFeedback} disabled={!resolvePrompt(view.state, currentPromptId)}>Give prompt feedback</button>{#if feedbackOpen}<label class="ai-label" for="prompt-feedback">What would make prompts better for you?</label><textarea id="prompt-feedback" maxlength="500" rows="3" bind:value={feedbackText}></textarea><p class="hint">A short note in your own words. Clear the text to remove it from future personalization.</p><button class="outline" onclick={saveFeedback} disabled={aiBusy}>Save feedback</button>{/if}</div>{/if}</div>
+          <div class="prompt-explanation"><button class="underlined today-secondary" aria-expanded={showPromptInfo} onclick={() => showPromptInfo = !showPromptInfo}>Why this prompt?</button>{#if showPromptInfo}<div class="glass explanation">{#if starterPrompt(currentPromptId)}<p>A starter prompt from the {starterPrompt(currentPromptId)!.category} collection. It works without AI or a connection. Accepted starters rest for 30 days.</p>{:else if currentRequest}<p>This question was generated by {'provider' in currentRequest.payload ? serviceName(currentRequest.payload.provider) : 'Gemini'}.{currentRequest.payload.contextMode === 'generic' ? ' No journal text, preferences or feedback was shared.' : ` It used your saved preferences, ${requestEntryRefs(currentRequest).length} saved reflections (${view.state.ai.requestUnits[currentRequest.eventId]??requestEntryRefs(currentRequest).length} of 20 context units) and ${currentRequest.payload.feedbackIds.length} pieces of feedback.`}</p>{#if 'snapshotId' in currentRequest.payload}<p>Regular prompt · {view.state.ai.requestTopics[currentRequest.eventId]?.label ?? 'No shared topic'}. One shared interest is chosen at a time, favouring topics you have reflected on less over the previous fourteen days.</p><p class="hint">{requestEntryRefs(currentRequest).length?'Matching history: '+Object.entries(view.state.ai.requestPools[currentRequest.eventId]??{}).map(([pool,count])=>`${pool}: ${count}`).join(', ')+'. Unknown is allowed in rediscovery and fallback.':'No journal excerpts were supplied.'} Fewer than twenty units is normal when matching history is sparse.</p>{/if}{:else if view.state.backups[currentPromptId]}<p>A personalised question from your saved backup prompts. No AI request was needed to choose it.</p>{:else if currentPromptId !== STARTER_ID}<p>You wrote this prompt. It is saved with your reflection.</p>{:else}<p>A simple starting point for noticing something good. You can write as little or as much as you like. This starter works without sending anything to AI.</p>{/if}<button class="underlined" onclick={openFeedback} disabled={!resolvePrompt(view.state, currentPromptId)}>Give prompt feedback</button>{#if feedbackOpen}<label class="ai-label" for="prompt-feedback">What would make prompts better for you?</label><textarea id="prompt-feedback" maxlength="500" rows="3" bind:value={feedbackText}></textarea><p class="hint">A short note in your own words. Clear the text to remove it from future personalization.</p><button class="outline" onclick={saveFeedback} disabled={aiBusy}>Save feedback</button>{/if}</div>{/if}</div>
         {/if}
       {/if}
     {:else if tab === 'journal'}
@@ -1145,11 +1163,11 @@
         {:else}<p role="status">Opening your answers…</p>{/if}
       {:else if settingsPage === 'classification'}
         <h1 class="page-heading">Topic classification</h1>
-        {#if repository}<details class="glass classification-tools" bind:open={classificationOpen}><summary><span>AI classification</span><small>{providerName}{activeConnection.provider==='gemini'?'':` · ${activeConnection.model}`}</small></summary>{#if classificationOpen}<Classification {view} {repository} connection={activeConnection} allowed={canShare(activeConnection)&&!uiReview&&aiAvailable&&configuredConnection(activeConnection,view.state.ai.choices.promptConnectionId)} generate={promptGenerator} onconfigure={()=>openSettings('ai')} />{/if}</details>
+        {#if repository}<details class="glass classification-tools" bind:open={classificationOpen}><summary><span>AI classification</span><small>{providerName}{activeConnection.provider==='gemini'?'':` · ${activeConnection.model}`}</small></summary>{#if classificationOpen}<Classification {view} {repository} {client} uid={user.uid} connection={activeConnection} allowed={canShare(activeConnection)&&!uiReview&&aiAvailable&&configuredConnection(activeConnection,view.state.ai.choices.promptConnectionId)} generate={promptGenerator} onconfigure={()=>openSettings('ai')} />{/if}</details>
         <section class="glass" aria-label="Manual review"><h2>Manual review</h2><p class="hint">Choose topics for items marked Unknown. No AI request is needed.</p><div class="settings-menu">{#each [{kind:'reflection',label:'Review reflections',count:unknownReflections},{kind:'backup',label:'Review backup prompts',count:unknownBackups}] as item}<button class="outline" onclick={()=>{reviewKind=item.kind as typeof reviewKind;void openSettings('unknown');}}>{item.label} ({item.count})<Icon name="next" size={18}/></button>{/each}</div></section>{/if}
       {:else if settingsPage === 'unknown'}
         <h1 class="page-heading">Review Unknown</h1>
-        {#if repository}<UnknownReview {view} {repository} bind:kind={reviewKind} />{/if}
+        {#if repository}<UnknownReview {view} {repository} {client} uid={user.uid} bind:kind={reviewKind} />{/if}
       {:else if settingsPage === 'ai'}
         <h1 class="page-heading">AI settings</h1>
         <ModelSettings {client} cloudConnections={connectionMetadata} credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={aiBusy||generatingPrompt||!!view.aiResultPending||uiReview} initialError={modelConnectionError} onchange={selectPromptConnection} />
@@ -1169,7 +1187,7 @@
         {:else if activeConnection.provider==='personal-gemini'}<p class="hint">This personal cloud connection has not been approved for personal context. Only a generic instruction with your selected scope and word limit is sent. Review your project’s provider terms in the connection settings before sharing reflections, feedback, questionnaire answers or photos.</p>{:else}<p class="hint">This site uses Gemini’s free service: Google may review inputs and outputs to improve its products. Only a generic instruction with your selected scope and word limit is sent. Journal entries, preferences and feedback stay out of Gemini. Personalization needs a privately configured paid service.</p>{/if}
         <button class="primary" onclick={saveChoices} disabled={aiBusy || !aiAvailable || uiReview}>Save AI choices</button>
 
-        <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {serviceName(photoConnection.provider)} processing for each photo.</p><p class="hint">Questionnaire answers: {view.state.onboarding.answers.useAnswers&&personalContextAvailable?'shared when AI prompts are enabled':'not shared'}.</p><p class="hint">Your private name and pronouns are excluded from AI instructions and questionnaire context.</p><dl class="hint"><dt>Selected descriptions</dt><dd>{#each selectedDescriptions(view.state.onboarding.answers) as description}<p>{description}</p>{:else}None{/each}</dd><dt>Prompt controls</dt><dd>{SCOPE_OPTIONS.find(([value])=>value===view.state.onboarding.answers.scope)?.[1]} · under {view.state.onboarding.answers.wordLimit} words</dd></dl><button class="outline" onclick={()=>openSettings('answers')}>Edit my answers</button><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
+        <section class="glass prompt-sources"><h2>What informs your prompts</h2><p class="hint">Each regular prompt focuses on one shared interest. We favour topics you reflected on least in the previous fourteen complete days and rotate through topics offered that day. Matching history uses entry dates, including imported and backfilled writing; Unknown may fill rediscovery gaps. A sparse history is fine.</p><p class="muted">{view.state.ai.choices.enabled ? personalContextAvailable ? 'Only the sources you have chosen above. There is no hidden profile.' : 'Generic instructions only. No personal context.' : 'AI prompts are off. Your journal uses a starter prompt.'}</p><p class="hint">Changes take effect when saved and cancel unfinished requests. Previously saved reflections keep their original prompts. Photo summaries are separate: attaching a photo never shares other journal content. You choose {serviceName(photoConnection.provider)} processing for each photo.</p><p class="hint">Questionnaire answers: {view.state.onboarding.answers.useAnswers&&personalContextAvailable?'shared when AI prompts are enabled':'not shared'}.</p><p class="hint">Your private name and pronouns are excluded from AI instructions and questionnaire context.</p><dl class="hint"><dt>Selected descriptions</dt><dd>{#each selectedDescriptions(view.state.onboarding.answers) as description}<p>{description}</p>{:else}None{/each}</dd><dt>Prompt controls</dt><dd>{SCOPE_OPTIONS.find(([value])=>value===view.state.onboarding.answers.scope)?.[1]} · under {view.state.onboarding.answers.wordLimit} words</dd></dl><button class="outline" onclick={()=>openSettings('answers')}>Edit my answers</button><PromptFeedback projection={view.state} sharing={personalContextAvailable&&view.state.ai.choices.enabled&&view.state.ai.choices.useFeedback} disabled={aiBusy||!view.ready||uiReview} onupdate={updateSavedFeedback} /></section>
         {#if repository}<BackupPrompts {view} {repository} email={user.email??'your account'} disabled={aiBusy||uiReview} onconfigure={configureBackups}>{#snippet modelPicker()}<PhotoModelSettings task="backups" promptConnection={activeConnection} {client} cloudConnections={connectionMetadata} provider={view.state.ai.choices.backupProvider??'lm-studio'} connection={localBackupConnection} scope={backupModelScope} credentialStatus={backupCredentialStatus} onsavetoken={saveBackupToken} onforgettoken={forgetBackupToken} onsave={saveBackupModel} initialError={backupConnectionProblem} disabled={aiBusy||uiReview} />{/snippet}</BackupPrompts>
 
         {#if refillStatus}<p class="hint" role="status">{refillStatus}</p>{#if backups.length<BACKUP_MINIMUM}<button class="outline" onclick={()=>{refiller.reset();refillMessage='';}}>Retry backup refill</button>{/if}{/if}{/if}

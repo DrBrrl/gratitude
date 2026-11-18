@@ -33,7 +33,9 @@
     "today-buttons": ["061"],
     "classification": ["062", "063"],
     "settings-review": ["064"],
-    "backup-model": ["065"]
+    "backup-model": ["065"],
+    "topic-prompts": ["066"],
+    "topic-review-photos": ["067"]
   },
   "smoke": ["035"],
   "isolated_components": {

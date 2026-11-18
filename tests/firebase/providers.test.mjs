@@ -1,3 +1,4 @@
+import {answersInput,defaultAnswers} from '../../src/lib/onboarding.ts';
 import {before,after,test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -44,18 +45,20 @@ test('replacing a local revision rejects new and late forged requests independen
 });
 test('personal-cloud follow-up requests with journal context fit Rules validation after prompt rotation actions',async()=>{
  const uid='provider-follow-up',db=client(uid),log=[];
- const save=async action=>{const receipt=await appendReflection(db,uid,action);log.push({...action,sequence:receipt.sequence,recordedAt:at});};
+ const save=async action=>{const receipt=await appendReflection(db,uid,action).catch(error=>{error.message=action.eventId+': '+error.message;throw error;});log.push({...action,sequence:receipt.sequence,recordedAt:at});};
  await environment.withSecurityRulesDisabled(admin=>setDoc(doc(admin.firestore(),`users/${uid}/privateConnections/connection`),{schemaVersion:1,provider:'personal-gemini',model,revision:'revision',allowPersonal:true,updatedAt:serverTimestamp()}));
  await save({eventId:'setup',type:'OnboardingFinished',schemaVersion:1,payload:{version:1,outcome:'skipped'}});
  await save({eventId:'v2026-10-01_tstarter-v1-001',type:'PromptViewed',schemaVersion:1,payload:{day:'2026-10-01',promptId:'starter-v1-001',surface:'today'}});
  await save({eventId:'reflection',type:'ReflectionWritten',schemaVersion:6,payload:{entryId:'entry',expectedRevision:0,text:'A fictional kettle and a friendly hello.',promptId:'starter-v1-001',promptText:null,entryAt:'2026-09-30T01:00:00.000Z',photoSlot:null}});
+ await save({eventId:'answers',type:'OnboardingAnswersConfirmed',schemaVersion:1,payload:{...answersInput({...defaultAnswers(),selectedTopics:['nature'],useAnswers:true}),previousEventId:null}});
+ await save({eventId:'topic',type:'ReflectionTopicChosen',schemaVersion:1,payload:{entryId:'entry',expectedRevision:1,previousEventId:null,topicId:'nature',answersId:'answers'}});
  const action=choices('personal-gemini');action.payload.useJournal=true;action.payload.useFeedback=true;await save(action);
  for(let i=1;i<=20;i++)await save({eventId:'feedback-'+i,type:'PromptFeedbackSubmitted',schemaVersion:1,payload:{previousEventId:replay(log).ai.control.lastEventId,promptId:'starter-v1-'+String(i).padStart(3,'0'),text:'A fictional preference '+i+'.'}});
  const target={provider:'personal-gemini',model,thinking:'provider-default',connectionId:'connection',connectionRevision:'revision'};
  await save(makeRequest(replay(log),'2026-10-01','personal','first',undefined,selection,target));
  await save({eventId:'first_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'first',text:'What fictional kindness did you appreciate?',model,finishReason:'STOP'}});
  const next=makeRequest(replay(log),'2026-10-01','personal','follow-up',undefined,selection,target,false,'first_response');
- assert.equal(next.schemaVersion,26);assert.equal(Object.keys(next.payload.entryRefs).length,1);assert.equal(next.payload.feedbackIds.length,20);
+ assert.equal(next.schemaVersion,41);assert.equal(Object.keys(next.payload.entryRefs).length,1);assert.equal(next.payload.feedbackIds.length,20);
  await save(next);
  await save({eventId:'follow-up_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'follow-up',text:'What fictional detail made you smile?',model,finishReason:'STOP'}});
  assert.equal(replay(log).ai.days['2026-10-01'],'follow-up_response');
@@ -94,4 +97,23 @@ test('Rules reject forged shared choices and legacy schemas independently of the
  await assertFails(raw({...action,schemaVersion:5}));
  await assertFails(raw({...action,payload:{...action.payload,token:'never-in-events'}}));
  await raw(action);
+});
+
+test('current topic requests reject stale snapshots and raw forged inputs; visible offers use received questions only',async()=>{
+ const uid='topic-snapshot',db=client(uid),log=[];
+ const save=async action=>{const receipt=await appendReflection(db,uid,action).catch(error=>{error.message=action.eventId+': '+error.message;throw error;});log.push({...action,sequence:receipt.sequence,recordedAt:at});};
+ await save({...choices('gemini'),payload:{...choices('gemini').payload,promptConnectionId:null,backupConnectionId:null}});
+ const stale=makeRequest(replay(log),'2026-10-01','generic','stale',undefined,selection);
+ await save({eventId:'appearance',type:'AccentColourChosen',schemaVersion:1,payload:{previousEventId:null,colourIndex:2}});
+ await assert.rejects(appendReflection(db,uid,stale),/context changed/);
+ const raw=async action=>{const root=`users/${uid}/streams/v1`,batch=writeBatch(db);batch.set(doc(db,root+'/events/'+action.eventId),{...action,sequence:log.length+1,recordedAt:serverTimestamp()});batch.set(doc(db,root),{sequence:log.length+1,lastEventId:action.eventId});batch.set(doc(db,root+'/ai/control'),{lastEventId:action.eventId,choicesId:'choices',requestId:action.eventId});return batch.commit();};
+ await assertFails(raw(stale));
+ const current=makeRequest(replay(log),'2026-10-01','generic','current',undefined,selection);
+ await assertFails(raw({...current,payload:{...current.payload,topicId:'nature'}}));
+ await assertFails(raw({...current,payload:{...current.payload,templateVersion:'gratitude-v4'}}));
+ await assertFails(raw({...current,payload:{...current.payload,selectorVersion:'weighted-v1'}}));
+ await save(current);await save({eventId:'current_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'current',text:'What fictional moment made you smile?',model:'fixture',finishReason:'STOP'}});
+ const offer={eventId:'v2026-10-01_tcurrent_response',type:'PromptViewed',schemaVersion:2,payload:{day:'2026-10-01',promptId:'current_response',surface:'today'}};await save(offer);
+ assert.equal(replay(log).rotation.offers.length,1);assert.equal(replay(log).rotation.offers[0].kind,'ai');
+ await assert.rejects(appendReflection(db,uid,{...offer,eventId:'v2026-10-01_tstarter-v1-001',payload:{...offer.payload,promptId:'starter-v1-001'}}));
 });

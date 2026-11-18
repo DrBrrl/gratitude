@@ -51,3 +51,25 @@ export async function selectionLog(page:Page) {
     log=result.docs.map(item=>decodeEvent(item.data()));
   });return log;} finally {await environment.cleanup();}
 }
+
+/** Fictional literal topic choices, persisted through the same append contract. */
+export async function seedPromptTopics(page:Page,selected?:('nature'|'music')[],assignments?:Record<string,'nature'|'music'|'unknown'>){
+ const {appendReflection}=await import('../../../src/lib/firebase/append');
+ const {answersInput,defaultAnswers}=await import('../../../src/lib/onboarding');
+ const state=replay(await selectionLog(page)),account=await uid(page);
+ const actions:SourceAction[]=[];
+ const answersId=selected?'fixture-prompt-answers':state.onboarding.answersId;
+ if(selected)actions.push({eventId:answersId!,type:'OnboardingAnswersConfirmed',schemaVersion:1,payload:{...answersInput({...defaultAnswers(),selectedTopics:selected,useAnswers:true}),previousEventId:state.onboarding.answersId}});
+ for(const [entryId,topicId] of Object.entries(assignments??Object.fromEntries(state.entries.map(e=>[e.id,'nature'])))){
+  const e=state.entries.find(e=>e.id===entryId)!;
+  actions.push({eventId:'fixture-topic-'+entryId,type:'ReflectionTopicChosen',schemaVersion:1,payload:{entryId,expectedRevision:e.revision,previousEventId:state.topics[entryId]?.lastEventId??null,answersId,topicId}});
+ }
+ const environment=await initializeTestEnvironment({projectId:'demo-gratitude',firestore:{host:'127.0.0.1',port:18080}});
+ let cursor=state.cursor;
+ try{await environment.withSecurityRulesDisabled(async c=>{for(const a of actions){const receipt=await appendReflection(c.firestore() as unknown as import('firebase/firestore').Firestore,account,a);cursor=receipt.sequence;}});}finally{await environment.cleanup();}
+ // Wait for the real event listener/checkpoint, rather than an older Synced label.
+ await page.waitForFunction(async({cursor})=>{
+  const name=(await indexedDB.databases()).find(d=>d.name?.startsWith('gratitude:demo-gratitude:'))?.name;if(!name)return false;
+  return new Promise<boolean>(resolve=>{const open=indexedDB.open(name);open.onsuccess=()=>{const db=open.result;const get=db.transaction('cache').objectStore('cache').get('checkpoint');get.onsuccess=()=>{db.close();resolve((get.result?.state.cursor??0)>=cursor);};get.onerror=()=>{db.close();resolve(false);};};open.onerror=()=>resolve(false);});
+ },{cursor},{timeout:30000});
+}

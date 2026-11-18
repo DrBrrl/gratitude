@@ -1,3 +1,4 @@
+// Historical requests remain pinned; providers.test.mjs covers current topic request versions.
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -144,7 +145,7 @@ test('AI transaction claim has one winner, response deduplicates and saved promp
   const b = await device('ai-claim@example.test', 'ai-claim-b');
   const choices = { eventId: 'choices', type: 'AIChoicesConfirmed', schemaVersion: 1, payload: { previousEventId: null, enabled: true, useJournal: false, useFeedback: false, guidance: '' } };
   await a.append(choices);
-  const { makeRequest } = await import('../../src/lib/ai/context.ts');
+  const { makeLegacyRequest:makeRequest } = await import('../../src/lib/ai/context.ts');
   const state = replay(await events(a));
   const request = makeRequest(state, '2026-10-01', 'generic', 'request');
   const duplicate = await Promise.all([a.append(request), b.append(request)]);
@@ -166,7 +167,7 @@ test('AI Rules reject stale consent, fabricated response references, extra compu
   const root = `users/${a.uid}/streams/v1`;
   const choices = { eventId: 'choices', type: 'AIChoicesConfirmed', schemaVersion: 1, payload: { previousEventId: null, enabled: true, useJournal: false, useFeedback: false, guidance: '' } };
   await a.append(choices);
-  const { makeRequest } = await import('../../src/lib/ai/context.ts');
+  const { makeLegacyRequest:makeRequest } = await import('../../src/lib/ai/context.ts');
   const request = makeRequest(replay(await events(a)), '2026-10-01', 'generic', 'request');
   await a.append(request);
   const revoked = { ...choices, eventId: 'revoke', payload: { ...choices.payload, previousEventId: 'request', enabled: false } };
@@ -325,7 +326,7 @@ test('editor prompts save manual source text and AI references across devices wi
   forged.set(doc(a.db, `${root}/entries/entry`), { lastEventId: 'forged' });
   await assertFails(forged.commit());
   await a.append({ eventId: 'choices', type: 'AIChoicesConfirmed', schemaVersion: 1, payload: { previousEventId: null, enabled: true, useJournal: false, useFeedback: false, guidance: '' } });
-  const { makeRequest } = await import('../../src/lib/ai/context.ts');
+  const { makeLegacyRequest:makeRequest } = await import('../../src/lib/ai/context.ts');
   const request = makeRequest(replay(await events(a)), '2026-10-01', 'generic', 'editor-request', 'entry');
   await a.append(request);
   const response = { eventId: 'editor-request_response', type: 'PromptResponseReceived', schemaVersion: 1, payload: { requestId: request.eventId, text: 'What everyday sound did you enjoy?', model: 'fictional-model', finishReason: 'STOP' } };
@@ -454,7 +455,7 @@ test('import Rules reject forged phases, detached receipts, computed state and p
   await assertFails(forged({...edit,schemaVersion:5},3,{receipt:false}));
   assert.equal((await events(client)).length,2);
   await client.append({eventId:'import-ai-choices',type:'AIChoicesConfirmed',schemaVersion:1,payload:{previousEventId:null,enabled:true,useJournal:true,useFeedback:true,guidance:''}});
-  const {makeRequest}=await import('../../src/lib/ai/context.ts');
+  const {makeLegacyRequest:makeRequest}=await import('../../src/lib/ai/context.ts');
   const state=replay(await events(client));
   const request=makeRequest(state,'2026-10-01','personal','import-ai-request',plan.input.entryId);
   await client.append(request);
@@ -463,7 +464,7 @@ test('import Rules reject forged phases, detached receipts, computed state and p
 
 test('AI Rules accept both instruction versions and reject an unknown version', async () => {
   const client = await device('ai-template-versions@example.test', 'ai-template-versions');
-  const { makeRequest } = await import('../../src/lib/ai/context.ts');
+  const { makeLegacyRequest:makeRequest } = await import('../../src/lib/ai/context.ts');
   const { writeBatch, serverTimestamp } = await import('firebase/firestore');
   await client.append({eventId:'choices',type:'AIChoicesConfirmed',schemaVersion:1,payload:{previousEventId:null,enabled:true,useJournal:false,useFeedback:false,guidance:''}});
   const mixed = makeRequest(replay(await events(client)), '2026-10-01', 'generic', 'legacy-template');
@@ -493,7 +494,7 @@ test('AI Rules accept both instruction versions and reject an unknown version', 
 test('twenty-source requests fit Rules budgets with full feedback, reject malformed writes and pin revisions', async () => {
   const a=await device('ai-twenty@example.test','ai-twenty-a');
   const b=await device('ai-twenty@example.test','ai-twenty-b');
-  const {makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
+  const {makeLegacyRequest:makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
   const {writeBatch,serverTimestamp}=await import('firebase/firestore');
   await a.append({eventId:'choices',type:'AIChoicesConfirmed',schemaVersion:1,payload:{previousEventId:null,enabled:true,useJournal:true,useFeedback:true,guidance:'x'.repeat(500)}});
   let previous='choices';
@@ -600,7 +601,7 @@ test('twenty-source requests fit Rules budgets with full feedback, reject malfor
 
 test('backup prompts are private, idempotent source events, with independent provider consent and cross-device refill claims',async()=>{
   const {importedBackup,availableBackups}=await import('../../src/lib/backup-prompts.ts');
-  const {makeRequest}=await import('../../src/lib/ai/context.ts');
+  const {makeLegacyRequest:makeRequest}=await import('../../src/lib/ai/context.ts');
   const a=await device('backup-owner@example.test','backup-owner'),b=await device('backup-owner@example.test','backup-second');
   const choices={eventId:'backup-choices',type:'AIChoicesConfirmed',schemaVersion:3,payload:{previousEventId:null,enabled:true,useJournal:false,useFeedback:false,guidance:'',provider:'gemini',backupEnabled:true,backupProvider:'lm-studio'}};
   await a.append(choices);
@@ -748,7 +749,7 @@ test('account accents sync and rebuild without touching AI control; Rules reject
 
 test('different-prompt requests bind a known AI response and retain cloud/local editor contracts',async()=>{
  const a=await device('different-prompt@example.test','different-prompt');
- const {makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
+ const {makeLegacyRequest:makeRequest,buildContext}=await import('../../src/lib/ai/context.ts');
  const {writeBatch}=await import('firebase/firestore');
  await a.append({eventId:'choices',type:'AIChoicesConfirmed',schemaVersion:2,payload:{previousEventId:null,enabled:true,useJournal:true,useFeedback:true,guidance:'x'.repeat(500),provider:'gemini'}});
  let prior='choices';

@@ -80,9 +80,9 @@ service cloud.firestore {
       }
       function validRotation(e) {
         let p=e.payload;
-        return e.schemaVersion == 1 && p.keys().hasAll(e.type == 'PromptViewed' ? ['day','promptId','surface'] : ['day','promptId']) && p.keys().hasOnly(e.type == 'PromptViewed' ? ['day','promptId','surface'] : ['day','promptId']) && validDay(p.day) && validId(p.promptId)
-          && (e.type == 'PromptViewed' ? p.surface in ['today','editor','backup'] && (cataloguePrompt(p.promptId) ? p.surface != 'backup' : p.surface == 'backup') && e.eventId == 'v' + p.day + '_' + (p.surface == 'today' ? 't' : p.surface == 'editor' ? 'e' : 'b') + p.promptId : e.eventId == 'a_' + p.day + '_' + p.promptId)
-          && (cataloguePrompt(p.promptId) || get(eventPath(p.promptId)).data.type == 'BackupPromptImported' || get(eventPath(p.promptId)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.promptId)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25])
+        return (e.schemaVersion == 1 || e.type == 'PromptViewed' && e.schemaVersion == 2 && p.surface in ['today','editor']) && p.keys().hasAll(e.type == 'PromptViewed' ? ['day','promptId','surface'] : ['day','promptId']) && p.keys().hasOnly(e.type == 'PromptViewed' ? ['day','promptId','surface'] : ['day','promptId']) && validDay(p.day) && validId(p.promptId)
+          && (e.type == 'PromptViewed' ? p.surface in ['today','editor','backup'] && (e.schemaVersion == 2 ? p.surface != 'backup' : cataloguePrompt(p.promptId) ? p.surface != 'backup' : p.surface == 'backup') && e.eventId == 'v' + p.day + '_' + (p.surface == 'today' ? 't' : p.surface == 'editor' ? 'e' : 'b') + p.promptId : e.eventId == 'a_' + p.day + '_' + p.promptId)
+          && (e.schemaVersion == 2 ? get(eventPath(p.promptId)).data.type == 'PromptResponseReceived' && !(get(eventPath(get(eventPath(p.promptId)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25,32,33,40]) : cataloguePrompt(p.promptId) || get(eventPath(p.promptId)).data.type == 'BackupPromptImported' || get(eventPath(p.promptId)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.promptId)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25,32,33,40])
           && getAfter(/databases/$(database)/documents/users/$(uid)/streams/$(generation)/rotation/control).data.lastEventId == e.eventId;
       }
       function validReflection(e) {
@@ -137,7 +137,7 @@ service cloud.firestore {
         let c=get(/databases/$(database)/documents/users/$(uid)/privateConnections/$(p.connectionId)).data;
         return c.provider == p.provider && c.model == p.model && c.revision == p.connectionRevision;
       }
-      function validRequest(p, before, version) {
+      function validHistoricalRequest(p, before, version) {
         let modern = version >= 13;
         let external = version >= 23;
         let schema = external ? (version == 23 ? 5 : version == 24 ? 6 : version == 25 ? 8 : version == 26 ? 11 : 12) : modern ? version - 10 : version;
@@ -160,12 +160,39 @@ service cloud.firestore {
           && (p.contextMode != 'generic' || (p.entryRefs.size() == 0 && p.feedbackIds.size() == 0))
           && (choices.useJournal || p.entryRefs.size() == 0) && (choices.useFeedback || p.feedbackIds.size() == 0);
       }
+      function validRequest(p,before,version) {
+        return version >= 28 ? validTopicRequest(p,before,version) : validHistoricalRequest(p,before,version);
+      }
+      function validTopicRequest(p,before,version) {
+        let external=version >= 38;
+        let local=version in [30,31,33,36,37,38,39,40,41,42];
+        let editor=version in [29,31,35,37,39,42];
+        let backup=version in [32,33,40];
+        let different=version in [34,35,36,37,41,42];
+        let choices=get(eventPath(before.choicesId)).data.payload;
+        return p.keys().hasOnly(['snapshotId','answersId','previousEventId','choicesId','day','templateVersion','selectorVersion','timeZone','selectionSeed','contextMode','entryRefs','feedbackIds'].concat(local?['provider','model','thinking']:[]).concat(external?['connectionId','connectionRevision']:[]).concat(editor?['entryId','entryRevision']:[]).concat(backup?['purpose']:[]).concat(different?['differentFromPromptId']:[]))
+          && validId(p.snapshotId) && p.snapshotId == get(root()).data.lastEventId
+          && p.answersId == setupBefore().answersId && (p.answersId == null || validId(p.answersId))
+          && p.choicesId == before.choicesId && choices.enabled == true
+          && (backup && choices.get('backupProvider','lm-studio') != 'prompt' ? choices.get('backupProvider','lm-studio') : choices.get('provider','gemini')) == (local ? p.provider : 'gemini')
+          && (!external || p.connectionId == choices.get(backup && choices.get('backupProvider','lm-studio') != 'prompt' ? 'backupConnectionId' : 'promptConnectionId',null) && validExternal(p) && currentConnection(p))
+          && (!local || external || validLocal(p))
+          && (!editor || validId(p.entryId) && p.entryRevision is int && p.entryRevision == nextRevision(p.entryId))
+          && (!backup || p.purpose == 'backup' && choices.get('backupEnabled',false) == true && (before.requestId == null || request.time > get(eventPath(before.requestId)).data.recordedAt + duration.value(180,'s')))
+          && (!different || validId(p.differentFromPromptId) && get(eventPath(p.differentFromPromptId)).data.type == 'PromptResponseReceived')
+          && validDay(p.day) && p.templateVersion == 'gratitude-v5' && p.selectorVersion == 'topic-v1' && p.contextMode in ['generic','personal']
+          && p.timeZone is string && p.timeZone.size() <= 100 && p.timeZone.matches('^[A-Za-z_+-]+(/[A-Za-z0-9_+-]+)*$') && p.selectionSeed is string && p.selectionSeed.matches('^[a-f0-9]{32}$')
+          && p.entryRefs is map && p.entryRefs.size() <= 20 && validRefMap(p.entryRefs)
+          && p.feedbackIds is list && p.feedbackIds.size() <= 20 && p.feedbackIds.toSet().size() == p.feedbackIds.size() && validFeedbackIds(p.feedbackIds)
+          && (p.contextMode != 'generic' || p.entryRefs.size() == 0 && p.feedbackIds.size() == 0)
+          && (choices.useJournal || p.entryRefs.size() == 0) && (choices.useFeedback || p.feedbackIds.size() == 0);
+      }
       function validAI(e) {
         let p = e.payload;
         let before = aiBefore();
         let after = getAfter(aiPath()).data;
         let result = e.type in ['PromptResponseReceived', 'AIRequestFailed'];
-        return (e.schemaVersion == 1 || e.type == 'PromptResponseReceived' && e.schemaVersion == 2 || e.type == 'AIChoicesConfirmed' && e.schemaVersion in [2,3,4,5,6] || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]) && after.lastEventId == e.eventId
+        return (e.schemaVersion == 1 || e.type == 'PromptResponseReceived' && e.schemaVersion == 2 || e.type == 'AIChoicesConfirmed' && e.schemaVersion in [2,3,4,5,6] || e.type == 'PromptRequested' && e.schemaVersion in [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]) && after.lastEventId == e.eventId
           && after.choicesId == (e.type == 'AIChoicesConfirmed' ? e.eventId : before.choicesId)
           && after.requestId == (e.type == 'PromptRequested' ? e.eventId : e.type == 'PromptFeedbackSubmitted' ? before.requestId : null)
           && (result ? validId(p.requestId) && p.requestId == before.requestId : p.previousEventId == before.lastEventId)
@@ -177,7 +204,7 @@ service cloud.firestore {
             || (e.type == 'PromptResponseReceived' && p.keys().hasOnly(['requestId', 'text', 'model', 'finishReason'])
               && (e.schemaVersion == 2) == (get(eventPath(p.requestId)).data.schemaVersion >= 13)
               && (get(eventPath(p.requestId)).data.schemaVersion < 13 || get(eventPath(p.requestId)).data.payload.answersId == setupBefore().answersId)
-              && (get(eventPath(p.requestId)).data.schemaVersion < 23 || currentConnection(get(eventPath(p.requestId)).data.payload))
+              && (!(get(eventPath(p.requestId)).data.schemaVersion in [23,24,25,26,27,38,39,40,41,42]) || currentConnection(get(eventPath(p.requestId)).data.payload))
               && e.eventId == p.requestId + '_response' && text(p.text, e.schemaVersion == 2 ? 4000 : 600) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
               && text(p.model, 100) && p.model.size() > 0 && p.finishReason == 'STOP')
             || (e.type == 'AIRequestFailed' && p.keys().hasOnly(['requestId', 'reason'])
@@ -193,7 +220,7 @@ service cloud.firestore {
         let id=e.type == 'BackupPromptImported' ? e.eventId : p.promptId;
         return (e.schemaVersion == 1 || e.type == 'BackupPromptImported' && e.schemaVersion == 2) && getAfter(backupPath(id)).data.lastEventId == e.eventId &&
           (e.type == 'BackupPromptImported' ? p.keys().hasAll(['text']) && p.keys().hasOnly(['text']) && e.eventId.matches('^bp_[a-f0-9]{64}$') && text(p.text,e.schemaVersion == 2 ? 4000 : 600) && p.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
-          : e.type == 'BackupPromptRemoved' && p.keys().hasAll(['promptId']) && p.keys().hasOnly(['promptId']) && validId(p.promptId) && (exists(backupPath(p.promptId)) || get(eventPath(p.promptId)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.promptId)).data.payload.requestId)).data.schemaVersion in [7,8,17,18]));
+          : e.type == 'BackupPromptRemoved' && p.keys().hasAll(['promptId']) && p.keys().hasOnly(['promptId']) && validId(p.promptId) && (exists(backupPath(p.promptId)) || get(eventPath(p.promptId)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.promptId)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25,32,33,40]));
       }
       function photoPath(entryId, slot) { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/photos/$(entryId + '_' + string(slot)); }
       function photoBefore(entryId, slot) { let pointer = get(photoPath(entryId, slot)); return pointer == null ? null : get(eventPath(pointer.data.lastEventId)).data; }
@@ -439,7 +466,7 @@ service cloud.firestore {
           let p=e.payload;
           return e.type == 'ClassificationRequested' && id == p.batchId + '_' + p.target.kind + '_' + p.target.id && p.retryOf == (resource == null ? null : resource.data.requestId) && classTargetCurrent(p.target)
             && (p.target.previousTopicId == null || get(eventPath(p.target.previousTopicId)).data.type == 'ClassificationResponseReceived')
-            && (p.target.kind == 'reflection' || get(eventPath(p.target.id)).data.type == 'BackupPromptImported' || get(eventPath(p.target.id)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.target.id)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25]);
+            && (p.target.kind == 'reflection' || get(eventPath(p.target.id)).data.type == 'BackupPromptImported' || get(eventPath(p.target.id)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.target.id)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25,32,33,40]);
         }
       }
       match /classificationTargetClaims/{id} {
@@ -464,7 +491,7 @@ service cloud.firestore {
         allow create,update: if owns(uid) && generation == 'v1' && request.resource.data.keys().hasAll(['lastEventId']) && request.resource.data.keys().hasOnly(['lastEventId']) && !exists(eventPath(request.resource.data.lastEventId)) && classTopicWrite(getAfter(eventPath(request.resource.data.lastEventId)).data,'backup',id);
         allow delete: if false;
       }
-      function classKnownBackup(id) { return get(eventPath(id)).data.type == 'BackupPromptImported' || get(eventPath(id)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(id)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25]; }
+      function classKnownBackup(id) { return get(eventPath(id)).data.type == 'BackupPromptImported' || get(eventPath(id)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(id)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25,32,33,40]; }
       function classTopicWrite(e,kind,id) {
         return e.type == 'BackupTopicChosen' ? kind == 'backup' && e.payload.target.id == id && classTargetCurrent(e.payload.target)
           : e.type == 'ClassificationResponseReceived' && get(eventPath(e.payload.requestId)).data.payload.target.kind == kind && get(eventPath(e.payload.requestId)).data.payload.target.id == id && classCanApply(e);
