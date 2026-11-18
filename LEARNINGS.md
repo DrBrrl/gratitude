@@ -1601,3 +1601,7 @@ Maintenance lesson: generated walkthrough image paths begin with `./screenshots/
 - Focused unit selection/replay tests and authenticated Firebase mode/provenance tests cover malformed inputs and partial writes. Civil-date validation uses bounded regexes to leave Firestore Rules expression headroom; the current request validator has a dedicated dispatch path rather than evaluating unrelated legacy variants.
 
 - Manual Review validation: 189 core unit tests pass; both authenticated mode/provenance tests and both mobile/desktop walkthrough 069 cases pass. The walkthrough caught a date-edit bug for a previously edited question: the editor must carry its manual question text forward with the accepted generated-source identity. The fix preserves both rather than assigning a different mode on reopen.
+
+### 2026-11-19 — Manual Discovery implementation
+
+- Discovery uses the thirty-day count window with the existing regular fresh-invitation instruction and history pools. Walkthrough 070 uses a fixture whose fourteen-/thirty-day counts force different topics, then verifies Discovery rotation and mode restoration after reload. Both mobile and desktop cases pass. Regular defaults/old requests remain unchanged.

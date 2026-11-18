@@ -1,6 +1,6 @@
 <script lang="ts">
  import {modeLabel,type PromptMode} from '../ai/modes';
- let {value,onchoose,disabled=false,discovery=false}:{value:PromptMode;onchoose:(mode:PromptMode)=>void;disabled?:boolean;discovery?:boolean}=$props();
+ let {value,onchoose,disabled=false,discovery=true}:{value:PromptMode;onchoose:(mode:PromptMode)=>void;disabled?:boolean;discovery?:boolean}=$props();
 </script>
 <details class="mode-picker"><summary>Prompt type: {modeLabel(value)}</summary><label>Prompt type<select value={value} onchange={event=>onchoose(event.currentTarget.value as PromptMode)} {disabled}><option value="regular">Regular</option>{#if discovery}<option value="discovery">Discovery</option>{/if}<option value="review">Monthly review</option></select></label><p>{value==='review'?'Review one topic from your previous 30 complete days. Another review rotates to another topic with writing.':value==='discovery'?'Notice something new, choosing topics you reflected on least over the previous 30 complete days.':'A fresh invitation informed by one interest and your chosen sharing settings.'}</p>{#if value!=='regular'}<button type="button" onclick={()=>onchoose('regular')} {disabled}>Regular prompt instead</button>{/if}</details>
 <style>
