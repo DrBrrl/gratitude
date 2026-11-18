@@ -2003,3 +2003,15 @@ Awesome, thanks Casey! :) 💛
 ### 2026-11-18 — Resolve PR #33 conflicts
 
 > Also it looks like there are some conflicts with PR 33 :)
+
+### 2026-11-18 — Example initial and repeat AI requests
+
+So can you show me what an example prompt looks like for our AI gratitude prompt generation? And what a repeat request might look like?
+
+### 2026-11-18 — Default reflection topics and editor selector
+
+Noticed something! :) When the AI generates a prompt (which they do based on the topic in their JSON), the reflection isn't given that topic category as a default, and there is nowhere in the Your reflection screen that shows the topic that will be assigned to the reflection (currently they all get "not yet classified"). What i would like is a) reflections are given the topic of used by the AI when they generate the prompt as a default b) in the reflection writing/editing screens, between the coloured card and the "add photo" button, there should be a little section (no outline or anything required) **Reflection topic:** [dropdown with topics, defaulting to the topic used by the AI in generating the prompt]. When the user re-generates the AI prompt in these screens and the re-generated prompt is selected, the default topic should also update. Can we go ahead and make that magic happen? :)
+
+### 2026-11-18 — Today prompt topic labels
+
+(also on the today page - the [AI prompt] button should have the topic beside it like the starter prompts have :) same for backup prompts)

@@ -73,3 +73,17 @@ export async function seedPromptTopics(page:Page,selected?:('nature'|'music')[],
   return new Promise<boolean>(resolve=>{const open=indexedDB.open(name);open.onsuccess=()=>{const db=open.result;const get=db.transaction('cache').objectStore('cache').get('checkpoint');get.onsuccess=()=>{db.close();resolve((get.result?.state.cursor??0)>=cursor);};get.onerror=()=>{db.close();resolve(false);};};open.onerror=()=>resolve(false);});
  },{cursor},{timeout:30000});
 }
+
+export async function seedClassifiedBackup(page:Page){
+ const {importedBackup}=await import('../../../src/lib/backup-prompts');
+ const {appendReflection}=await import('../../../src/lib/firebase/append');
+ const state=replay(await selectionLog(page)),account=await uid(page),backup=await importedBackup('What small flavour have you enjoyed today?');
+ const environment=await initializeTestEnvironment({projectId:'demo-gratitude',firestore:{host:'127.0.0.1',port:18080}});
+ try{await environment.withSecurityRulesDisabled(async context=>{
+  const db=context.firestore() as unknown as import('firebase/firestore').Firestore;
+  await appendReflection(db,account,backup);
+  await appendReflection(db,account,{eventId:'fixture-backup-topic',type:'BackupTopicChosen',schemaVersion:1,payload:{previousEventId:state.classification.lastEventId,target:{kind:'backup',id:backup.eventId,revision:1,previousTopicId:null},answersId:state.onboarding.answersId,topicId:'food'}});
+ });}finally{await environment.cleanup();}
+ await page.waitForFunction(async id=>{const name=(await indexedDB.databases()).find(d=>d.name?.startsWith('gratitude:demo-gratitude:'))?.name;if(!name)return false;return new Promise<boolean>(resolve=>{const open=indexedDB.open(name);open.onsuccess=()=>{const db=open.result,get=db.transaction('cache').objectStore('cache').get('checkpoint');get.onsuccess=()=>{db.close();resolve(!!get.result?.state.classification.backupTopics[id]);};};});},backup.eventId);
+ return backup;
+}

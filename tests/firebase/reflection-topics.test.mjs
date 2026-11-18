@@ -49,3 +49,18 @@ test('unselected custom topics require the current saved vocabulary and manual c
  const events=(await getDocs(query(collection(db,`users/${uid}/streams/v1/events`),orderBy('sequence')))).docs.map(row=>decodeEvent(row.data()));
  assert.equal(replay(events).topics.entry.topicId,'food');assert.equal(replay(events).entries[0].revision,2);
 });
+
+test('atomic editor saves require matching topic, vocabulary and entry guards; retries deduplicate both pointers',async()=>{
+ const uid='editor-topics',db=client(uid),root=`users/${uid}/streams/v1`;
+ const first={...write,schemaVersion:8,payload:{...write.payload,topic:{topicId:'music',previousEventId:null,answersId:null}}};
+ await appendReflection(db,uid,first);assert.equal((await appendReflection(db,uid,first)).created,false);
+ assert.equal((await getDoc(doc(db,`${root}/topics/entry`))).get('lastEventId'),'write');
+ const edit={...first,eventId:'edit',payload:{...first.payload,text:'A fresh thought.',expectedRevision:1,topic:{topicId:'nature',previousEventId:'write',answersId:null}}};
+ // Bypass append checks: Rules must independently reject forged, stale or partial commits.
+ async function attempt(action,includeTopic=true){const head=await getDoc(doc(db,root)),batch=writeBatch(db);batch.set(doc(db,`${root}/events/${action.eventId}`),{...action,sequence:head.get('sequence')+1,recordedAt:serverTimestamp()});batch.set(doc(db,root),{sequence:head.get('sequence')+1,lastEventId:action.eventId});batch.set(doc(db,`${root}/entries/entry`),{lastEventId:action.eventId});if(includeTopic)batch.set(doc(db,`${root}/topics/entry`),{lastEventId:action.eventId});return batch.commit();}
+ for(const topic of [{topicId:'nature',previousEventId:null,answersId:null},{topicId:'custom_forged',previousEventId:'write',answersId:null},{topicId:'nature',previousEventId:'write',answersId:'stale'},{topicId:'nature',previousEventId:'write',answersId:null,count:5}])await assertFails(attempt({...edit,eventId:'invalid',payload:{...edit.payload,topic}}));
+ await assertFails(attempt(edit,false));assert.equal((await getDoc(doc(db,`${root}/entries/entry`))).get('lastEventId'),'write');
+ await appendReflection(db,uid,edit);assert.equal((await getDoc(doc(db,`${root}/topics/entry`))).get('lastEventId'),'edit');
+ const events=(await getDocs(query(collection(db,`${root}/events`),orderBy('sequence')))).docs.map(row=>decodeEvent(row.data()));assert.equal(replay(events).topics.entry.topicId,'nature');assert.equal(replay(events).entries[0].revision,2);
+ await assert.rejects(appendReflection(db,uid,{...edit,eventId:'stale',payload:{...edit.payload,expectedRevision:2}}),/topic changed/);
+});

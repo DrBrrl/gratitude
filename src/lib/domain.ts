@@ -11,7 +11,7 @@ import { SELECTOR_VERSION, validSelection, selectReflections, selectedEntries } 
 import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 20;
+export const PROJECTION_VERSION = 21;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
@@ -23,7 +23,8 @@ export type Action = Envelope<'ReflectionWritten', ReflectionPayload & { starter
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; entryAt: string }, 3>
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; entryAt: string | null; photoSlot: number | null }, 4>
   | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 5>
-  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 6|7>;
+  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null }, 6|7>
+  | Envelope<'ReflectionWritten', ReflectionPayload & { promptId: string; promptText: string | null; entryAt: string | null; photoSlot: number | null; topic: {topicId:string|null;previousEventId:string|null;answersId:string|null} }, 8>;
 type LegacyAIChoices = { enabled: boolean; useJournal: boolean; useFeedback: boolean; guidance: string };
 type ProviderChoice = {provider:AIProvider};
 export type AIChoices = LegacyAIChoices & ProviderChoice & { backupEnabled?: boolean; backupProvider?: AIProvider | 'prompt'; photoProvider?: 'prompt'|AIProvider; promptConnectionId?:string|null; photoConnectionId?:string|null; backupConnectionId?:string|null };
@@ -111,7 +112,7 @@ export type JournalEvent = SourceAction & { sequence: number; recordedAt: string
 /** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 20; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 21; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     requestPools:Record<string,Record<'anniversary'|'rediscovery'|'fallback'|'recent',number>>; requestTopics:Record<string,PromptTopic|null>; requestUnits: Record<string,number>; requestedAt: Record<string,string>; usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
@@ -126,6 +127,11 @@ function string(value: unknown, max: number, empty = false): value is string {
 }
 function keys(object: Record<string, unknown>, expected: string[]) {
   return Object.keys(object).length === expected.length && expected.every(key => Object.hasOwn(object, key));
+}
+function validWritingTopic(value:unknown):boolean {
+ if(!value||typeof value!=='object'||Array.isArray(value))return false;
+ const t=value as Record<string,unknown>;
+ return keys(t,['topicId','previousEventId','answersId'])&&validTopicId(t.topicId)&&(t.previousEventId===null||id(t.previousEventId))&&(t.answersId===null||id(t.answersId));
 }
 export function promptId(action: Action) { return action.schemaVersion === 1 ? action.payload.starterId : action.payload.promptId; }
 export function validEntryTime(value: unknown): value is string {
@@ -160,9 +166,9 @@ export function parseAction(input: unknown): SourceAction {
     valid = (v.schemaVersion === 1 && keys(p, ['entryId', 'text', 'expectedRevision', 'starterId']) && p.starterId === STARTER_ID
       || v.schemaVersion === 2 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId']) && id(p.promptId)
       || v.schemaVersion === 3 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt']) && id(p.promptId) && validEntryTime(p.entryAt)
-      || (v.schemaVersion === 5 || v.schemaVersion === 6 || v.schemaVersion === 7) && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.promptText === null || p.promptId === v.eventId && string(p.promptText, v.schemaVersion===7?4000:600)) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4)
+      || (v.schemaVersion === 5 || v.schemaVersion === 6 || v.schemaVersion === 7 || v.schemaVersion === 8) && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'promptText', 'entryAt', 'photoSlot',...(v.schemaVersion===8?['topic']:[])]) && (v.schemaVersion!==8 || validWritingTopic(p.topic)) && id(p.promptId) && (p.promptText === null || p.promptId === v.eventId && string(p.promptText, Number(v.schemaVersion)>=7?4000:600)) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4)
       || v.schemaVersion === 4 && keys(p, ['entryId', 'text', 'expectedRevision', 'promptId', 'entryAt', 'photoSlot']) && id(p.promptId) && (p.entryAt === null || validEntryTime(p.entryAt)) && (p.photoSlot === null || Number.isInteger(p.photoSlot) && Number(p.photoSlot) >= 0 && Number(p.photoSlot) < 4))
-      && id(p.entryId) && string(p.text, 10_000, (v.schemaVersion === 4 || v.schemaVersion === 5 || v.schemaVersion === 6 || v.schemaVersion === 7)) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
+      && id(p.entryId) && string(p.text, 10_000, (v.schemaVersion === 4 || v.schemaVersion === 5 || v.schemaVersion === 6 || v.schemaVersion === 7 || v.schemaVersion === 8)) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) >= 0;
   } else if (v.schemaVersion === 1 || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42].includes(v.schemaVersion as number) && v.type === 'PromptRequested' || [2,3,4].includes(v.schemaVersion as number) && v.type==='PhotoSummaryRequested' || [2,3,4,5,6].includes(v.schemaVersion as number) && v.type==='AIChoicesConfirmed' || v.schemaVersion===2 && v.type==='PromptResponseReceived') {
     const previous = p.previousEventId === null || id(p.previousEventId);
     const day = typeof p.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.day) && !isNaN(Date.parse(p.day));
@@ -285,20 +291,29 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
   if (action.type === 'ReflectionWritten') {
     const existing = state.entries.find(entry => entry.id === action.payload.entryId);
     if ((existing?.revision ?? 0) !== action.payload.expectedRevision) throw new Error('Conflicting reflection revision');
-    if (!action.payload.text.trim() && !((action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6 || action.schemaVersion === 7) && entryPhotos(state, action.payload.entryId).some(photo => photo.slot === action.payload.photoSlot))) throw new Error('Write a reflection or attach a photo.');
-    if (existing?.origin && action.schemaVersion !== 6 && action.schemaVersion !== 7) throw new Error('Use the current editor for imported reflections');
+    if (!action.payload.text.trim() && !((action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6 || action.schemaVersion === 7 || action.schemaVersion === 8) && entryPhotos(state, action.payload.entryId).some(photo => photo.slot === action.payload.photoSlot))) throw new Error('Write a reflection or attach a photo.');
+    if (existing?.origin && action.schemaVersion !== 6 && action.schemaVersion !== 7 && action.schemaVersion !== 8) throw new Error('Use the current editor for imported reflections');
     const chosen = promptId(action);
-    if (existing && action.schemaVersion !== 5 && action.schemaVersion !== 6 && action.schemaVersion !== 7 && chosen !== (existing.promptId ?? STARTER_ID)) throw new Error('A saved reflection keeps its original prompt.');
-    const chosenAt = action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6 || action.schemaVersion === 7 ? action.payload.entryAt ?? undefined : undefined;
-    if (existing && action.schemaVersion !== 6 && action.schemaVersion !== 7 && existing.entryAt !== chosenAt) throw new Error('A saved reflection keeps its original entry date.');
+    if (existing && action.schemaVersion !== 5 && action.schemaVersion !== 6 && action.schemaVersion !== 7 && action.schemaVersion !== 8 && chosen !== (existing.promptId ?? STARTER_ID)) throw new Error('A saved reflection keeps its original prompt.');
+    const chosenAt = action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6 || action.schemaVersion === 7 || action.schemaVersion === 8 ? action.payload.entryAt ?? undefined : undefined;
+    if (existing && action.schemaVersion !== 6 && action.schemaVersion !== 7 && action.schemaVersion !== 8 && existing.entryAt !== chosenAt) throw new Error('A saved reflection keeps its original entry date.');
     if (chosenAt && chosenAt > new Date(event.recordedAt).toISOString()) throw new Error('An entry cannot be dated in the future.');
-    const manual = action.schemaVersion === 5 || action.schemaVersion === 6 || action.schemaVersion === 7 ? action.payload.promptText : null;
+    const manual = action.schemaVersion === 5 || action.schemaVersion === 6 || action.schemaVersion === 7 || action.schemaVersion === 8 ? action.payload.promptText : null;
     const prompt = manual ?? resolvePrompt(state, chosen);
     if (!prompt) throw new Error('Missing prompt response');
     const entry: Entry = { id: action.payload.entryId, text: action.payload.text, prompt, promptId: chosen,
       revision: action.payload.expectedRevision + 1, colour: existing?.colour ?? state.entries.length % 7, recordedAt: existing?.recordedAt ?? event.recordedAt,
       ...(chosenAt ? { entryAt: chosenAt } : {}), ...(existing?.origin ? { origin: existing.origin } : {}) };
-    return { ...next, backups:state.backups[chosen]?{...state.backups,[chosen]:{...state.backups[chosen],used:true}}:state.backups, prompts: manual === null ? state.prompts : { ...state.prompts, [action.eventId]: manual }, entries: existing ? state.entries.map(old => old.id === entry.id ? entry : old) : [...state.entries, entry] };
+    let topics=state.topics;
+    if(action.schemaVersion===8){
+      const t=action.payload.topic,prior=reflectionTopic(state.topics,entry.id);
+      if((prior?.lastEventId??null)!==t.previousEventId)throw new Error('The topic changed on another device. Reopen this reflection before saving.');
+      if(state.onboarding.answersId!==t.answersId)throw new Error('Your topics changed. Reopen this reflection before saving.');
+      const choice=topicChoices(state.onboarding.answers).find(option=>option.id===t.topicId);
+      if(t.topicId!==null&&!choice)throw new Error('This topic is no longer available. Choose another topic.');
+      topics={...topics,[entry.id]:{topicId:t.topicId,label:choice?.label??'Not yet classified',lastEventId:action.eventId,origin:'user'}};
+    }
+    return { ...next, topics, backups:state.backups[chosen]?{...state.backups,[chosen]:{...state.backups[chosen],used:true}}:state.backups, prompts: manual === null ? state.prompts : { ...state.prompts, [action.eventId]: manual }, entries: existing ? state.entries.map(old => old.id === entry.id ? entry : old) : [...state.entries, entry] };
   }
   const ai = { ...state.ai, control: nextControl(state.ai.control, action) };
   switch (action.type) {

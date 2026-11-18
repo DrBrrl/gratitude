@@ -8,7 +8,7 @@ import { isRotationAction, GENERATION, parseAction, promptId, emptyControl, next
 import {BACKUP_LEASE_MS} from '../backup-prompts.ts';
 
 export function decodeEvent(data: DocumentData): JournalEvent {
-  const payload = data.type === 'ReflectionWritten' && (data.schemaVersion === 3 || data.schemaVersion === 4 || data.schemaVersion === 5 || data.schemaVersion === 6 || data.schemaVersion === 7) && data.payload.entryAt
+  const payload = data.type === 'ReflectionWritten' && (data.schemaVersion === 3 || data.schemaVersion === 4 || data.schemaVersion === 5 || data.schemaVersion === 6 || data.schemaVersion === 7 || data.schemaVersion === 8) && data.payload.entryAt
     ? { ...data.payload, entryAt: typeof data.payload.entryAt === 'string' ? data.payload.entryAt : data.payload.entryAt.toDate().toISOString() } : data.payload;
   return { ...data, payload, recordedAt: typeof data.recordedAt === 'string' ? data.recordedAt : data.recordedAt.toDate().toISOString() } as JournalEvent;
 }
@@ -72,13 +72,18 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
           const previous = await tx.get(doc(db, `${stream.path}/events/${latest.get('lastEventId')}`));
           if (!previous.exists()) throw new Error('Incomplete reflection history.');
           revision = previous.get('payload.expectedRevision') + 1;
-          if (latest.get('importId') && action.schemaVersion !== 6 && action.schemaVersion !== 7) throw new Error('Use the current editor for imported reflections.');
+          if (latest.get('importId') && action.schemaVersion !== 6 && action.schemaVersion !== 7 && action.schemaVersion !== 8) throw new Error('Use the current editor for imported reflections.');
           const original = previous.get('payload.promptId') ?? STARTER_ID;
-          if (action.schemaVersion !== 5 && action.schemaVersion !== 6 && action.schemaVersion !== 7 && promptId(action) !== original) throw new Error('A saved reflection keeps its original prompt.');
+          if (action.schemaVersion !== 5 && action.schemaVersion !== 6 && action.schemaVersion !== 7 && action.schemaVersion !== 8 && promptId(action) !== original) throw new Error('A saved reflection keeps its original prompt.');
           const previousAt = previous.get('payload.entryAt') as Timestamp | undefined;
-          if (action.schemaVersion !== 6 && action.schemaVersion !== 7 && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 ? (previousAt?.toDate().toISOString() ?? null) !== action.payload.entryAt : !!previousAt)) throw new Error('A saved reflection keeps its original entry date.');
+          if (action.schemaVersion !== 6 && action.schemaVersion !== 7 && action.schemaVersion !== 8 && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 ? (previousAt?.toDate().toISOString() ?? null) !== action.payload.entryAt : !!previousAt)) throw new Error('A saved reflection keeps its original entry date.');
         }
         if (revision !== action.payload.expectedRevision) throw new Error('This reflection changed on another device. Your text has been kept; reload the reflection before editing again.');
+        if(action.schemaVersion===8){
+          const [topic,setup]=await Promise.all([tx.get(doc(db,`${stream.path}/topics/${action.payload.entryId}`)),tx.get(doc(db,`${stream.path}/onboarding/control`))]);
+          if((topic.get('lastEventId')??null)!==action.payload.topic.previousEventId)throw new Error('The topic changed on another device. Reopen this reflection before saving.');
+          if((setup.get('answersId')??null)!==action.payload.topic.answersId)throw new Error('Your topics changed. Reopen this reflection before saving.');
+        }
         metadata = { lastEventId: action.eventId, ...(latest.get('importId') ? { importId: latest.get('importId') } : {}) };
       } else if (isPhotoAction(action)) {
         if(action.type==='PhotoSummaryRequested') {
@@ -132,11 +137,12 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
         }
       }
       const sequence = (head.get('sequence') ?? 0) + 1;
-      const payload = action.type === 'ReflectionWritten' && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6 || action.schemaVersion === 7) && action.payload.entryAt
+      const payload = action.type === 'ReflectionWritten' && (action.schemaVersion === 3 || action.schemaVersion === 4 || action.schemaVersion === 5 || action.schemaVersion === 6 || action.schemaVersion === 7 || action.schemaVersion === 8) && action.payload.entryAt
         ? { ...action.payload, entryAt: Timestamp.fromDate(new Date(action.payload.entryAt)) } : action.payload;
       tx.set(event, { ...action, payload, sequence, recordedAt: serverTimestamp() });
       tx.set(stream, { sequence, lastEventId: action.eventId });
       tx.set(pointer, metadata);
+      if(action.type==='ReflectionWritten'&&action.schemaVersion===8)tx.set(doc(db,`${stream.path}/topics/${action.payload.entryId}`),{lastEventId:action.eventId});
       if (action.type === 'ReflectionImported') tx.set(doc(db, `${stream.path}/imports/${action.payload.sourceKey}`), { confirmationId: action.payload.confirmationId, lastEventId: action.eventId });
       return { sequence, eventId: action.eventId, created: true };
     }); } catch (error) {
