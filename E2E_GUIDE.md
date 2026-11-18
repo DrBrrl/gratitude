@@ -412,3 +412,7 @@ When planning a UI screenshot refresh, include indirect helper callers: `writeRe
 Scenario `069-review-prompts` covers manual one-topic Review, the thirty-day context, topic rotation, honest explanations, Regular escape, edited question/date provenance and replay in both viewports.
 
 Scenario `070-discovery-prompts` proves the fourteen-/thirty-day topic-count difference, unchanged Regular instruction, explicit requests, matching history, reload and Discovery topic rotation.
+
+### Lunar prompt timing (071)
+
+`071-lunar-prompts` opts in on a deterministic full-moon day, captures the account timezone, verifies opening Today does not call AI, retries an unavailable provider, and reuses visible output on a second device whose local date differs. Choosing Regular survives reload. Walkthroughs 069 and 070 separately cover manual Review, editor/date/wording provenance and thirty-day Discovery counts/rotation. All actions keep the same full-page, unmasked, zero-pixel screenshot contract. Unit phase fixtures come from the independently published USNO 2026 table; the two-minute astronomy fixture tolerance does not change screenshot tolerances.

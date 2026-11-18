@@ -2,7 +2,7 @@
 
 # One-topic monthly reviews
 
-Choose an explicit review, rotate topics with recent writing and inspect the real source window. Keep the accepted mode through manual wording and date edits, switch the generator back to Regular without erasing writing, and replay without inference. Every action has an unmasked full-page screenshot and zero-pixel comparison with checks beneath it.
+Choose an explicit review, rotate topics with recent writing and inspect the real source window. Generate and accept another Review inside the editor with a matching mode caption. Keep the accepted mode through manual wording and date edits, switch the generator back to Regular without erasing writing, and replay without inference. Every action has an unmasked full-page screenshot and zero-pixel comparison with checks beneath it.
 
 Viewport: desktop-chromium.
 
@@ -205,9 +205,27 @@ Viewport: desktop-chromium.
 - [x] The expected result of this action is visible
 - [x] Screenshot matches the committed baseline (zero differing pixels)
 
+## Generate a Monthly review option inside the reflection editor
+
+![Generate a Monthly review option inside the reflection editor](./screenshots/022-editor-generate-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
+## Accept the review question and its topic in the editor
+
+![Accept the review question and its topic in the editor](./screenshots/023-editor-use-desktop-chromium.png)
+
+**Verifications:**
+
+- [x] The expected result of this action is visible
+- [x] Screenshot matches the committed baseline (zero differing pixels)
+
 ## Write a fictional review reflection
 
-![Write a fictional review reflection](./screenshots/022-reflection-desktop-chromium.png)
+![Write a fictional review reflection](./screenshots/024-reflection-desktop-chromium.png)
 
 **Verifications:**
 
@@ -216,7 +234,7 @@ Viewport: desktop-chromium.
 
 ## Open the question for a small wording edit
 
-![Open the question for a small wording edit](./screenshots/023-edit-prompt-desktop-chromium.png)
+![Open the question for a small wording edit](./screenshots/025-edit-prompt-desktop-chromium.png)
 
 **Verifications:**
 
@@ -225,7 +243,7 @@ Viewport: desktop-chromium.
 
 ## Adjust the accepted review question
 
-![Adjust the accepted review question](./screenshots/024-wording-desktop-chromium.png)
+![Adjust the accepted review question](./screenshots/026-wording-desktop-chromium.png)
 
 **Verifications:**
 
@@ -234,7 +252,7 @@ Viewport: desktop-chromium.
 
 ## Keep edited wording and the original Review provenance
 
-![Keep edited wording and the original Review provenance](./screenshots/025-keep-wording-desktop-chromium.png)
+![Keep edited wording and the original Review provenance](./screenshots/027-keep-wording-desktop-chromium.png)
 
 **Verifications:**
 
@@ -243,7 +261,7 @@ Viewport: desktop-chromium.
 
 ## Open the next-generation mode choice
 
-![Open the next-generation mode choice](./screenshots/026-editor-mode-desktop-chromium.png)
+![Open the next-generation mode choice](./screenshots/028-editor-mode-desktop-chromium.png)
 
 **Verifications:**
 
@@ -252,7 +270,7 @@ Viewport: desktop-chromium.
 
 ## Return the generator to Regular without replacing this draft
 
-![Return the generator to Regular without replacing this draft](./screenshots/027-regular-escape-desktop-chromium.png)
+![Return the generator to Regular without replacing this draft](./screenshots/029-regular-escape-desktop-chromium.png)
 
 **Verifications:**
 
@@ -261,7 +279,7 @@ Viewport: desktop-chromium.
 
 ## Save the edited Review question, category and writing
 
-![Save the edited Review question, category and writing](./screenshots/028-save-desktop-chromium.png)
+![Save the edited Review question, category and writing](./screenshots/030-save-desktop-chromium.png)
 
 **Verifications:**
 
@@ -270,7 +288,7 @@ Viewport: desktop-chromium.
 
 ## Open a saved Review for a date correction
 
-![Open a saved Review for a date correction](./screenshots/029-edit-saved-desktop-chromium.png)
+![Open a saved Review for a date correction](./screenshots/031-edit-saved-desktop-chromium.png)
 
 **Verifications:**
 
@@ -279,7 +297,7 @@ Viewport: desktop-chromium.
 
 ## Correct the entry date without regenerating or changing modes
 
-![Correct the entry date without regenerating or changing modes](./screenshots/030-date-desktop-chromium.png)
+![Correct the entry date without regenerating or changing modes](./screenshots/032-date-desktop-chromium.png)
 
 **Verifications:**
 
@@ -288,7 +306,7 @@ Viewport: desktop-chromium.
 
 ## Retain Review provenance after the date edit
 
-![Retain Review provenance after the date edit](./screenshots/031-save-edit-desktop-chromium.png)
+![Retain Review provenance after the date edit](./screenshots/033-save-edit-desktop-chromium.png)
 
 **Verifications:**
 
@@ -297,7 +315,7 @@ Viewport: desktop-chromium.
 
 ## Open Settings
 
-![Open Settings](./screenshots/032-settings-desktop-chromium.png)
+![Open Settings](./screenshots/034-settings-desktop-chromium.png)
 
 **Verifications:**
 
@@ -306,7 +324,7 @@ Viewport: desktop-chromium.
 
 ## Open recovery
 
-![Open recovery](./screenshots/033-privacy-desktop-chromium.png)
+![Open recovery](./screenshots/035-privacy-desktop-chromium.png)
 
 **Verifications:**
 
@@ -315,7 +333,7 @@ Viewport: desktop-chromium.
 
 ## Rebuild exact modes, questions, topics and request JSON without inference
 
-![Rebuild exact modes, questions, topics and request JSON without inference](./screenshots/034-rebuild-desktop-chromium.png)
+![Rebuild exact modes, questions, topics and request JSON without inference](./screenshots/036-rebuild-desktop-chromium.png)
 
 **Verifications:**
 

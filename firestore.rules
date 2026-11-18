@@ -86,6 +86,7 @@ service cloud.firestore {
         return (e.schemaVersion == 1 || e.type == 'PromptViewed' && e.schemaVersion == 2 && p.surface in ['today','editor']) && p.keys().hasAll(e.type == 'PromptViewed' ? ['day','promptId','surface'] : ['day','promptId']) && p.keys().hasOnly(e.type == 'PromptViewed' ? ['day','promptId','surface'] : ['day','promptId']) && validDay(p.day) && validId(p.promptId)
           && (e.type == 'PromptViewed' ? p.surface in ['today','editor','backup'] && (e.schemaVersion == 2 ? p.surface != 'backup' : cataloguePrompt(p.promptId) ? p.surface != 'backup' : p.surface == 'backup') && e.eventId == 'v' + p.day + '_' + (p.surface == 'today' ? 't' : p.surface == 'editor' ? 'e' : 'b') + p.promptId : e.eventId == 'a_' + p.day + '_' + p.promptId)
           && (e.schemaVersion == 2 ? get(eventPath(p.promptId)).data.type == 'PromptResponseReceived' && !(get(eventPath(get(eventPath(p.promptId)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25,32,33,40]) : cataloguePrompt(p.promptId) || get(eventPath(p.promptId)).data.type == 'BackupPromptImported' || get(eventPath(p.promptId)).data.type == 'PromptResponseReceived' && get(eventPath(get(eventPath(p.promptId)).data.payload.requestId)).data.schemaVersion in [7,8,17,18,25,32,33,40])
+          && (e.schemaVersion != 2 || validLunarView(e))
           && getAfter(/databases/$(database)/documents/users/$(uid)/streams/$(generation)/rotation/control).data.lastEventId == e.eventId;
       }
       function validReflection(e) {
@@ -176,16 +177,16 @@ service cloud.firestore {
         let different=version in [34,35,36,37,41,42];
         let choices=get(eventPath(before.choicesId)).data.payload;
         return p.keys().hasOnly(['snapshotId','answersId','previousEventId','choicesId','day','templateVersion','selectorVersion','timeZone','selectionSeed','contextMode','entryRefs','feedbackIds'].concat(modes?['promptMode','scheduleId','displayDay','lunarVersion']:[]).concat(local?['provider','model','thinking']:[]).concat(external?['connectionId','connectionRevision']:[]).concat(editor?['entryId','entryRevision']:[]).concat(backup?['purpose']:[]).concat(different?['differentFromPromptId']:[]))
-          && (!modes || p.promptMode in ['discovery','review'] && p.scheduleId == null && p.displayDay == p.day && validCivilDay(p.day) && p.lunarVersion == 'ae-2.1.19-v1' && !backup)
+          && (!modes || p.promptMode in ['discovery','review'] && validScheduleRequest(p,editor) && validCivilDay(p.displayDay) && validCivilDay(p.day) && p.lunarVersion == 'ae-2.1.19-v1' && !backup)
           && validId(p.snapshotId) && p.snapshotId == get(root()).data.lastEventId
           && p.answersId == setupBefore().answersId && (p.answersId == null || validId(p.answersId))
           && p.choicesId == before.choicesId && choices.enabled == true
           && (backup && choices.get('backupProvider','lm-studio') != 'prompt' ? choices.get('backupProvider','lm-studio') : choices.get('provider','gemini')) == (local ? p.provider : 'gemini')
-          && (!external || p.connectionId == choices.get(backup && choices.get('backupProvider','lm-studio') != 'prompt' ? 'backupConnectionId' : 'promptConnectionId',null) && validExternal(p) && currentConnection(p))
+          && (!external || p.connectionId == choices.get(backup && choices.get('backupProvider','lm-studio') != 'prompt' ? 'backupConnectionId' : 'promptConnectionId',null) && validExternal(p) && (modes || currentConnection(p)))
           && (!local || external || validLocal(p))
-          && (!editor || validId(p.entryId) && p.entryRevision is int && p.entryRevision == nextRevision(p.entryId))
+          && (!editor || validId(p.entryId) && p.entryRevision is int && p.entryRevision >= 0 && (modes || p.entryRevision == nextRevision(p.entryId)))
           && (!backup || p.purpose == 'backup' && choices.get('backupEnabled',false) == true && (before.requestId == null || request.time > get(eventPath(before.requestId)).data.recordedAt + duration.value(180,'s')))
-          && (!different || validId(p.differentFromPromptId) && get(eventPath(p.differentFromPromptId)).data.type == 'PromptResponseReceived')
+          && (!different || validId(p.differentFromPromptId) && (modes || get(eventPath(p.differentFromPromptId)).data.type == 'PromptResponseReceived'))
           && validDay(p.day) && p.templateVersion == (modes?'gratitude-v6':'gratitude-v5') && p.selectorVersion == (modes?'modes-v1':'topic-v1') && p.contextMode in ['generic','personal']
           && p.timeZone is string && p.timeZone.size() <= 100 && p.timeZone.matches('^[A-Za-z_+-]+(/[A-Za-z0-9_+-]+)*$') && p.selectionSeed is string && p.selectionSeed.matches('^[a-f0-9]{32}$')
           && p.entryRefs is map && p.entryRefs.size() <= 20 && validRefMap(p.entryRefs)
@@ -193,11 +194,55 @@ service cloud.firestore {
           && (p.contextMode != 'generic' || p.entryRefs.size() == 0 && p.feedbackIds.size() == 0)
           && (choices.useJournal || p.entryRefs.size() == 0) && (choices.useFeedback || p.feedbackIds.size() == 0);
       }
-      function validModeRequestAction(e) {
+      function lunarPath() {return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/lunar/control;}
+      function lunarBefore() {let d=get(lunarPath());return d == null ? {'lastEventId':null,'settingsId':null,'declines':{},'offers':{},'lastOfferId':null} : d.data;}
+      function lunarKey(p) {return p.timeZone + '|' + p.day;}
+      function scheduledCurrent(p) {
+        let c=lunarBefore();let settings=get(eventPath(p.scheduleId)).data;
+        return c.settingsId == p.scheduleId && settings.type == 'LunarScheduleChosen' && settings.payload.enabled && settings.payload.timeZone == p.timeZone && settings.payload.lunarVersion == p.lunarVersion && !(lunarKey(p) in c.declines) && !(lunarKey(p) in c.offers);
+      }
+      function validScheduleRequest(p,editor) {
+        return p.scheduleId == null ? p.displayDay == p.day : validId(p.scheduleId) && !editor;
+      }
+      // Every new request must atomically advance AI control to its fresh event ID.
+      // Validate live references and scheduled consent/lease on that required write.
+      // This keeps each validator within its expression budget at full context size.
+      function validAIControlRequest(e) {
+        let before=aiBefore();let p=e.payload;
+        return e.type != 'PromptRequested' || e.schemaVersion < 43 ||
+          (!('entryId' in p) || p.entryRevision == nextRevision(p.entryId))
+          && (!('differentFromPromptId' in p) || get(eventPath(p.differentFromPromptId)).data.type == 'PromptResponseReceived')
+          && (!('connectionId' in p) || currentConnection(p))
+          && (p.scheduleId == null || scheduledCurrent(p) && (before.requestId == null || request.time > get(eventPath(before.requestId)).data.recordedAt + duration.value(180,'s')));
+      }
+      function validScheduledResponse(id) {
+        let p=get(eventPath(id)).data.payload;
+        return p.get('scheduleId',null) == null || scheduledCurrent(p);
+      }
+      function validLunarView(e) {
+        let p=get(eventPath(get(eventPath(e.payload.promptId)).data.payload.requestId)).data.payload;
+        return p.get('scheduleId',null) == null || lunarOfferRecorded(e,p);
+      }
+      function validLunarOfferPointer(e) {
+        let p=get(eventPath(get(eventPath(e.payload.promptId)).data.payload.requestId)).data.payload;
+        return e.type == 'PromptViewed' && e.schemaVersion == 2 && p.get('scheduleId',null) != null && lunarOfferRecorded(e,p);
+      }
+      function lunarOfferRecorded(e,p) {
+        let before=lunarBefore();let after=getAfter(lunarPath()).data;let key=lunarKey(p);
+        return key in before.offers || after.lastEventId == before.lastEventId && after.settingsId == before.settingsId && after.declines == before.declines && after.lastOfferId == e.eventId && after.offers.diff(before.offers).affectedKeys().hasOnly([key]) && after.offers[key] == e.eventId;
+      }
+      function validLunar(e) {
+        let p=e.payload;let before=lunarBefore();let after=getAfter(lunarPath()).data;
+        return e.schemaVersion == 1 && p.previousEventId == before.lastEventId && after.lastEventId == e.eventId && after.offers == before.offers && after.lastOfferId == before.lastOfferId
+          && p.lunarVersion == 'ae-2.1.19-v1' && p.timeZone is string && p.timeZone.size() <= 100 && p.timeZone.matches('^[A-Za-z_+-]+(/[A-Za-z0-9_+-]+)*$')
+          && (e.type == 'LunarScheduleChosen' ? p.keys().hasAll(['previousEventId','enabled','timeZone','lunarVersion']) && p.keys().hasOnly(['previousEventId','enabled','timeZone','lunarVersion']) && p.enabled is bool && after.settingsId == e.eventId && after.declines == before.declines
+          : p.keys().hasAll(['previousEventId','settingsId','day','timeZone','lunarVersion']) && p.keys().hasOnly(['previousEventId','settingsId','day','timeZone','lunarVersion']) && p.settingsId == before.settingsId && validCivilDay(p.day) && get(eventPath(p.settingsId)).data.payload.enabled && get(eventPath(p.settingsId)).data.payload.timeZone == p.timeZone && after.settingsId == before.settingsId && after.declines.diff(before.declines).affectedKeys().hasOnly([lunarKey(p)]) && after.declines[lunarKey(p)] == e.eventId);
+      }
+      function validModernRequestAction(e) {
         let before=aiBefore();let after=getAfter(aiPath()).data;
-        return e.type == 'PromptRequested' && e.schemaVersion in [43,44,45,46,49,50,51,52,53,54,56,57]
+        return e.type == 'PromptRequested' && e.schemaVersion in [28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,49,50,51,52,53,54,56,57]
           && after.lastEventId == e.eventId && after.choicesId == before.choicesId && after.requestId == e.eventId
-          && e.payload.previousEventId == before.lastEventId && validTopicRequest(e.payload,before,e.schemaVersion-15,true);
+          && e.payload.previousEventId == before.lastEventId && validTopicRequest(e.payload,before,e.schemaVersion >= 43 ? e.schemaVersion-15 : e.schemaVersion,e.schemaVersion >= 43);
       }
       function validAI(e) {
         let p = e.payload;
@@ -214,6 +259,7 @@ service cloud.firestore {
               && (!(e.schemaVersion in [4,5,6]) || p.photoProvider in (e.schemaVersion >= 5 ? ['prompt','gemini','lm-studio','ollama','openai-compatible','personal-gemini'] : ['prompt','gemini','lm-studio'])) && (e.schemaVersion < 5 || (p.promptConnectionId == null || validId(p.promptConnectionId)) && (p.photoConnectionId == null || validId(p.photoConnectionId)) && (p.backupConnectionId == null || validId(p.backupConnectionId))) && (e.schemaVersion != 6 || p.backupProvider != 'prompt' || p.backupConnectionId == null) && p.enabled is bool && p.useJournal is bool && p.useFeedback is bool && text(p.guidance, 500))
             || (e.type == 'PromptRequested' && validRequest(p, before, e.schemaVersion))
             || (e.type == 'PromptResponseReceived' && p.keys().hasOnly(['requestId', 'text', 'model', 'finishReason'])
+              && validScheduledResponse(p.requestId)
               && (e.schemaVersion == 2) == (get(eventPath(p.requestId)).data.schemaVersion >= 13)
               && (get(eventPath(p.requestId)).data.schemaVersion < 13 || get(eventPath(p.requestId)).data.payload.answersId == setupBefore().answersId)
               && (!(get(eventPath(p.requestId)).data.schemaVersion in [23,24,25,26,27,38,39,40,41,42,53,54,56,57]) || currentConnection(get(eventPath(p.requestId)).data.payload))
@@ -521,7 +567,7 @@ service cloud.firestore {
 
       function validStreamAction(e) {
         let kind = e.type;
-        return kind == 'PromptRequested' && e.schemaVersion >= 43 ? validModeRequestAction(e) : kind in ['AIChoicesConfirmed','PromptRequested','PromptResponseReceived','AIRequestFailed','PromptFeedbackSubmitted','StarterPromptChosen'] ? validAI(e)
+        return kind in ['LunarScheduleChosen','LunarPromptDeclined'] ? validLunar(e) : kind == 'PromptRequested' && e.schemaVersion >= 28 ? validModernRequestAction(e) : kind in ['AIChoicesConfirmed','PromptRequested','PromptResponseReceived','AIRequestFailed','PromptFeedbackSubmitted','StarterPromptChosen'] ? validAI(e)
           : kind in ['PromptViewed','PromptAccepted'] ? validRotation(e)
           : kind in ['OnboardingAnswersConfirmed','OnboardingAnswersCleared','OnboardingFinished'] ? validSetup(e)
           : kind == 'AccentColourChosen' ? validAppearance(e)
@@ -542,6 +588,13 @@ service cloud.firestore {
           && validStreamAction(request.resource.data);
         allow update, delete: if false;
       }
+      match /lunar/{id} {
+        allow read: if owns(uid);
+        allow create,update: if owns(uid) && generation == 'v1' && id == 'control' && request.resource.data.keys().hasAll(['lastEventId','settingsId','declines','offers','lastOfferId']) && request.resource.data.keys().hasOnly(['lastEventId','settingsId','declines','offers','lastOfferId']) && request.resource.data.declines is map && request.resource.data.offers is map
+          && (request.resource.data.lastEventId != lunarBefore().lastEventId ? !exists(eventPath(request.resource.data.lastEventId)) && getAfter(eventPath(request.resource.data.lastEventId)).data.type in ['LunarScheduleChosen','LunarPromptDeclined']
+          : request.resource.data.lastOfferId != lunarBefore().lastOfferId && !exists(eventPath(request.resource.data.lastOfferId)) && getAfter(eventPath(request.resource.data.lastOfferId)).data.type == 'PromptViewed' && validLunarOfferPointer(getAfter(eventPath(request.resource.data.lastOfferId)).data));
+        allow delete: if false;
+      }
       match /rotation/{id} {
         allow read: if owns(uid);
         allow create, update: if owns(uid) && generation == 'v1' && id == 'control'
@@ -555,7 +608,8 @@ service cloud.firestore {
         allow create, update: if owns(uid) && generation == 'v1' && id == 'control'
           && request.resource.data.keys().hasOnly(['lastEventId', 'choicesId', 'requestId'])
           && validId(request.resource.data.lastEventId) && !exists(eventPath(request.resource.data.lastEventId))
-          && getAfter(eventPath(request.resource.data.lastEventId)).data.type in ['AIChoicesConfirmed', 'PromptRequested', 'PromptResponseReceived', 'AIRequestFailed', 'PromptFeedbackSubmitted', 'StarterPromptChosen'];
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.type in ['AIChoicesConfirmed', 'PromptRequested', 'PromptResponseReceived', 'AIRequestFailed', 'PromptFeedbackSubmitted', 'StarterPromptChosen']
+          && validAIControlRequest(getAfter(eventPath(request.resource.data.lastEventId)).data);
         allow delete: if false;
       }
       match /backups/{id} {

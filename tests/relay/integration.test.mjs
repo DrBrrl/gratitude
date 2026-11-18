@@ -31,7 +31,7 @@ async function prepareCloud(uid,options={}){
  const saved=await invoke({auth:auth(uid),data:{operation:'save',connectionId:'connection',revision:null,key,model,allowPersonal:options.allowPersonal??false}});
  const db=client(uid),action=choices('personal-gemini');await appendReflection(db,uid,action);
  const state=replay([{...action,sequence:1,recordedAt:at}]);
- const request=makeRequest(state,'2026-10-01','generic','request',undefined,selection,{provider:'personal-gemini',model,thinking:'provider-default',connectionId:'connection',connectionRevision:saved.revision});
+ const request=makeRequest(state,'2026-10-01','generic','request',undefined,selection,{provider:'personal-gemini',model,thinking:'provider-default',connectionId:'connection',connectionRevision:saved.revision},false,undefined,options.promptMode?{promptMode:options.promptMode,scheduleId:null,displayDay:'2026-10-01',lunarVersion:'ae-2.1.19-v1'}:undefined);
  await appendReflection(db,uid,request);
  const data={operation:'generate',connectionId:'connection',revision:saved.revision,requestId:'request',system:'Write one fictional gratitude prompt.',context:'Offer a fresh question about an ordinary everyday moment. No personal context is supplied.',max:4000};
  return {db,invoke,saved,request,data,network};
@@ -125,4 +125,8 @@ test('pausing a personal-cloud batch retains an in-flight answer, while cancella
   if(operation==='pause')assert.equal((await pending).finishReason,'STOP');else await assert.rejects(pending,error=>error.code==='failed-precondition');
   assert.equal(f.network.calls.filter(c=>c.init.method==='POST').length,1);
  }
+});
+
+test('personal-key relay accepts source-versioned manual Discovery and Review requests',async()=>{
+ for(const promptMode of ['discovery','review']){const uid='relay-mode-'+promptMode,f=await prepareCloud(uid,{promptMode});assert.equal(f.request.schemaVersion,53);const result=await f.invoke({auth:auth(uid),data:f.data});assert.equal(result.finishReason,'STOP');assert.equal(f.network.calls.filter(c=>c.init.method==='POST').length,1);}
 });

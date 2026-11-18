@@ -1,10 +1,17 @@
-import type {Projection,RequestAction} from '../domain.ts';
+import type {ReflectionDraft} from '../reflection-draft.ts';
+import type {Projection,RequestAction,Entry} from '../domain.ts';
 import {selectReflections,randomSource,type SelectionInput,type Selection} from './selection.ts';
 import {reflectionTopic} from '../reflection-topics.ts';
 import {civilDate,dayInZone} from '../civil-date.ts';
 export type PromptMode='regular'|'discovery'|'review';
 export type ModeInput={promptMode:Exclude<PromptMode,'regular'>;scheduleId:string|null;displayDay:string;lunarVersion:'ae-2.1.19-v1'};
 export function requestMode(request:RequestAction|undefined|null):PromptMode{return request&&'promptMode' in request.payload?request.payload.promptMode:'regular';}
+/** A replacement draft owns its question; the saved entry is only a fallback without a draft. */
+export function acceptedModeSource(state:Projection,id:string,draft:ReflectionDraft|null,entry:Entry|undefined):string|null {
+ if(draft?.schemaVersion===9)return draft.payload.promptSourceId;
+ if(!draft&&entry?.promptSourceId)return entry.promptSourceId;
+ return requestMode(state.ai.requests[state.ai.responses[id]?.payload.requestId])==='regular'?null:id;
+}
 export const modeLabel=(mode:PromptMode)=>mode==='review'?'Monthly review':mode==='discovery'?'Discovery':'Regular';
 export function selectModeReflections(state:Projection,input:SelectionInput,mode:PromptMode):Selection {
  if(mode!=='review')return selectReflections(state,input);

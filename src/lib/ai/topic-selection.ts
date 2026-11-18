@@ -14,7 +14,7 @@ export function chooseTopic(state:Projection,input:SelectionInput,personal:boole
  if(!choices.length)return null;
  const counts=new Map(choices.map(t=>[t.id,0]));const end=+civilDate(input.day);
  for(const e of state.entries){
-  if(e.id===input.entryId)continue;
+  if(e.id===input.entryId||mode==='review'&&!e.text.trim())continue;
   const days=(end-+civilDate(dayInZone(e.entryAt??e.recordedAt,input.timeZone)))/86400000,t=reflectionTopic(state.topics,e.id);
   if(days>=1&&days<=(mode==='regular'?14:30)&&t?.topicId&&counts.has(t.topicId)&&(t.origin!=='ai'||t.revision===e.revision))counts.set(t.topicId,counts.get(t.topicId)!+1);
  }
@@ -25,8 +25,10 @@ export function chooseTopic(state:Projection,input:SelectionInput,personal:boole
  // A round ends once every currently selected interest has appeared, including backups.
  let seen=new Set<string>();for(const o of offers){if(seen.size===choices.length)seen=new Set();seen.add(o.topicId!);}
  const newRound=seen.size===choices.length;if(newRound)seen.clear();
- const previous=offers.at(-1)?.topicId;
- const eligible=choices.filter(t=>!seen.has(t.id)&&(!newRound||choices.length===1||t.id!==previous));
+ const previous=input.avoidTopicId??offers.at(-1)?.topicId;
+ let eligible=choices.filter(t=>!seen.has(t.id)&&(!newRound||choices.length===1||t.id!==previous));
+ if(mode!=='regular'&&input.avoidTopicId&&eligible.length>1)eligible=eligible.filter(t=>t.id!==input.avoidTopicId);
+ if(!eligible.length)eligible=choices.filter(t=>choices.length===1||t.id!==previous);
  const minimum=Math.min(...counts.values());
  let pool=mode==='review'?eligible:eligible.filter(t=>counts.get(t.id)===minimum);
  if(!pool.length)pool=eligible;
@@ -35,7 +37,7 @@ export function chooseTopic(state:Projection,input:SelectionInput,personal:boole
 }
 export function requestTopic(state:Projection,request:RequestAction):PromptTopic|null {
  if(!('snapshotId' in request.payload))return null;
- return chooseTopic(state,{day:request.payload.day,timeZone:request.payload.timeZone,selectionSeed:request.payload.selectionSeed,entryId:'entryId' in request.payload?request.payload.entryId:undefined},request.payload.contextMode==='personal',requestMode(request));
+ return chooseTopic(state,{day:request.payload.day,timeZone:request.payload.timeZone,selectionSeed:request.payload.selectionSeed,...('promptMode' in request.payload&&'differentFromPromptId' in request.payload?{avoidTopicId:state.ai.requestTopics[state.ai.responses[request.payload.differentFromPromptId]?.payload.requestId]?.id}:{}),entryId:'entryId' in request.payload?request.payload.entryId:undefined},request.payload.contextMode==='personal',requestMode(request));
 }
 
 /** Explicit corrections (including Unknown/unclassified) take precedence over provenance. */

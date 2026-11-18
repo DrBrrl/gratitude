@@ -1,3 +1,4 @@
+import {emptyLunar,isLunarAction,validLunarAction,applyLunar,assertScheduledRequest,assertScheduledResponse,type LunarState,type LunarAction} from './ai/lunar-state.ts';
 import {selectModeReflections,requestMode,type ModeInput} from './ai/modes.ts';
 import { requestTopic, promptTopicId, type PromptTopic } from './ai/topic-selection.ts';
 import {backupProvider,backupConnectionId} from './ai/backup-connection.ts';
@@ -12,7 +13,7 @@ import { SELECTOR_VERSION, validSelection, selectReflections, selectedEntries } 
 import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 22;
+export const PROJECTION_VERSION = 23;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
@@ -111,17 +112,17 @@ export function isBackupAction(action:SourceAction): action is BackupAction { re
 export type AppearanceAction = Envelope<'AccentColourChosen', Previous & { colourIndex: number }>;
 export type RotationAction = Envelope<'PromptViewed', {day:string;promptId:string;surface:'today'|'editor'|'backup'},1|2> | Envelope<'PromptAccepted',{day:string;promptId:string}>;
 export function isRotationAction(action:SourceAction):action is RotationAction{return action.type==='PromptViewed'||action.type==='PromptAccepted';}
-export type SourceAction = ClassificationAction | TopicAction | RotationAction | OnboardingAction | AppearanceAction | Action | AIAction | PhotoAction | ImportAction | BackupAction;
+export type SourceAction = LunarAction | ClassificationAction | TopicAction | RotationAction | OnboardingAction | AppearanceAction | Action | AIAction | PhotoAction | ImportAction | BackupAction;
 export function isPhotoAction(action: SourceAction): action is PhotoAction { return action.type.startsWith('Photo'); }
 export type JournalEvent = SourceAction & { sequence: number; recordedAt: string };
 /** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin;promptSourceId?:string };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 22; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 23; lunar:LunarState; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     requestPools:Record<string,Record<'anniversary'|'rediscovery'|'fallback'|'recent',number>>; requestTopics:Record<string,PromptTopic|null>; requestUnits: Record<string,number>; requestedAt: Record<string,string>; usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
-export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, classification:emptyClassification(), topics: {}, rotation:emptyRotation(), onboarding: emptyOnboarding(), appearance: { colourIndex: 0, lastEventId: null }, backups: {}, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
+export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, lunar:emptyLunar(),classification:emptyClassification(), topics: {}, rotation:emptyRotation(), onboarding: emptyOnboarding(), appearance: { colourIndex: 0, lastEventId: null }, backups: {}, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
   control: emptyControl(), choices: { enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' },
   requests: {}, requestPools:{}, requestTopics:{}, requestUnits:{}, requestedAt:{}, responses: {}, usage: {}, days: {}, feedback: [], failure: null
 } }; }
@@ -153,6 +154,7 @@ export function parseAction(input: unknown): SourceAction {
     valid = validClassificationAction(v);
   } else if (isOnboardingAction(v as {type:string})) {
     valid = validOnboardingAction(v);
+  } else if (isLunarAction(v as {type:string})) {valid=validLunarAction(v);
   } else if (v.type === 'ReflectionTopicChosen') {
     valid = v.schemaVersion === 1 && keys(p, ['entryId','expectedRevision','previousEventId','topicId','answersId']) && id(p.entryId) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) > 0 && (p.previousEventId === null || id(p.previousEventId)) && (p.answersId === null || id(p.answersId)) && validTopicId(p.topicId);
   } else if (v.type === 'AccentColourChosen') {
@@ -247,6 +249,7 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
   const action = parseAction({ eventId: event.eventId, type: event.type, schemaVersion: event.schemaVersion, payload: event.payload });
   if (event.sequence !== state.cursor + 1 || !Number.isFinite(Date.parse(event.recordedAt))) throw new Error('Incomplete or invalid event stream');
   const next = { ...state, cursor: event.sequence, lastEventId: event.eventId,rotation:action.type==='PromptRequested'?{...state.rotation,requests:{...state.rotation.requests,[action.eventId]:event.sequence}}:state.rotation };
+  if(isLunarAction(action))return {...next,lunar:applyLunar(state.lunar,action)};
   if(isClassificationAction(action)) return applyClassification(next,action,event.recordedAt);
   if(isRotationAction(action)){
     const {promptId,day}=action.payload,starter=starterPrompt(promptId),backup=state.backups[promptId];
@@ -331,6 +334,7 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
     }
     case 'PromptRequested': {
       const p = action.payload, refs = requestEntryRefs(action);
+      assertScheduledRequest(state,action,event.recordedAt);
       if('snapshotId' in p&&p.snapshotId!==state.lastEventId)throw new Error('Prompt context changed. Request a fresh prompt.');
       ai.requestTopics={...ai.requestTopics,[action.eventId]:requestTopic(state,action)};
       if('snapshotId' in p){
@@ -360,6 +364,7 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
     }
     case 'PromptResponseReceived': {
       const request = ai.requests[action.payload.requestId];
+      if(request)assertScheduledResponse(state,request);
       if(request && 'answersId' in request.payload && request.payload.answersId!==state.onboarding.answersId)throw new Error('Questionnaire answers changed.');
       if((action.schemaVersion===2)!==(!!request && request.schemaVersion>=13))throw new Error('Prompt response schema does not match its request.');
       if (!request || request.payload.choicesId !== ai.control.choicesId || !ai.choices.enabled) throw new Error('AI consent is no longer current.');

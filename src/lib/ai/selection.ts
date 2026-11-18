@@ -3,7 +3,7 @@ import { reflectionTopic } from '../reflection-topics.ts';
 import { civilDate, dayInZone, validDay } from '../civil-date.ts';
 
 export const SELECTOR_VERSION = 'mixed-v1';
-export type SelectionInput = { day: string; timeZone: string; selectionSeed: string; entryId?: string; weighted?:boolean; avoidEntryIds?: readonly string[]; topic?: {id:string|null} };
+export type SelectionInput = { day: string; timeZone: string; selectionSeed: string; entryId?: string; weighted?:boolean; avoidEntryIds?: readonly string[]; topic?: {id:string|null}; avoidTopicId?:string|null };
 export type Selection = { anniversary: Entry[]; rediscovery: Entry[]; fallback: Entry[]; recent: Entry[] };
 export function validTimeZone(value: unknown): value is string {
   if (typeof value !== 'string' || value.length > 100 || !/^[A-Za-z_+-]+(?:\/[A-Za-z0-9_+-]+)*$/.test(value)) return false;

@@ -112,6 +112,7 @@ export function createAIRelay({db,project,keyring,fetcher=fetch,now=Date.now,tim
     }
     const [control,current,setup]=await Promise.all([db.doc(`${stream}/ai/control`).get(),saved.ref.get(),db.doc(`${stream}/onboarding/control`).get()]);
     if(control.get('choicesId')!==p.choicesId||current.get('revision')!==data.revision||!photo&&(control.get('requestId')!==data.requestId||(setup.get('answersId')??null)!==p.answersId))fail('failed-precondition','The request or its sharing choices changed. The late result was discarded.');
+    if(!photo&&p.scheduleId){const lunar=await db.doc(`${stream}/lunar/control`).get(),settings=await db.doc(`${stream}/events/${p.scheduleId}`).get(),occasion=p.timeZone+'|'+p.day;if(lunar.get('settingsId')!==p.scheduleId||!settings.get('payload.enabled')||settings.get('payload.timeZone')!==p.timeZone||lunar.get('declines')?.[occasion]||lunar.get('offers')?.[occasion])fail('failed-precondition','This lunar occasion changed. The late prompt was discarded.');}
     if(photo){const pointer=await db.doc(`${stream}/photos/${p.entryId}_${p.slot}`).get();if(pointer.get('lastEventId')!==data.requestId)fail('failed-precondition','The photo changed. The late result was discarded.');}
     const choices=await db.doc(`${stream}/events/${p.choicesId}`).get();if(!choices.get('payload.enabled')&&!photo)fail('permission-denied','Enable AI prompts before requesting a question.');
    };
