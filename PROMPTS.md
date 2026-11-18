@@ -2035,3 +2035,9 @@ One topic, and regenerating the review would shift the topic
 ### 2026-11-19 — PR #34: Discovery count window
 
 Use a 30-day window
+
+### 2026-11-19 — Approve the Review topic pool
+
+Context: approve random selection among selected topics with writing in the previous thirty days, rotating that pool on regeneration.
+
+I like your recommendation! :)
