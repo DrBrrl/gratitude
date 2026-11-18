@@ -1,6 +1,8 @@
 <script lang="ts">
   import Classification from './Classification.svelte';
   import ReflectionTopic from './ReflectionTopic.svelte';
+  import {reflectionTopic,topicChoices} from '../reflection-topics';
+  import {defaultPromptTopic,generatedPromptTopicLabel} from '../ai/prompt-topic';
   import type {ReflectionDraft} from '../reflection-draft';
   import {STARTER_CATALOGUE} from '../starter-catalogue';
   import {choosePrompt,starterPrompt,promptRandom,type PromptKind} from '../prompt-rotation';
@@ -221,9 +223,9 @@
     try{
       const chosen=await offerPrompt('starter');if(repository!==active||today!==offeredDay)return;starterAttemptDay=today;
       if(!chosen){starterMessage='No unseen starter prompts are available today. Try a backup, generate a prompt, or write your own.';return;}
-      if(writing){editorSelectedPromptId=chosen.id;editorPromptId=chosen.id;editorManualPrompt=null;await persistDraft();}
+      if(writing){editorSelectedPromptId=chosen.id;editorPromptId=chosen.id;editorTopicChosen=editorTopicId!==null;editorTopicId=null;editorManualPrompt=null;await persistDraft();}
       else if(replaceEmpty&&todayDraft){
-        todayDraft={...todayDraft,selectedPromptId:chosen.id,schemaVersion:6,payload:{...todayDraft.payload,promptId:chosen.id,promptText:null,entryAt:'entryAt'in todayDraft.payload?todayDraft.payload.entryAt:null,photoSlot:'photoSlot'in todayDraft.payload?todayDraft.payload.photoSlot:null}};
+        todayDraft={...todayDraft,selectedPromptId:chosen.id,schemaVersion:6,payload:{entryId:todayDraft.payload.entryId,text:todayDraft.payload.text,expectedRevision:todayDraft.payload.expectedRevision,promptId:chosen.id,promptText:null,entryAt:'entryAt'in todayDraft.payload?todayDraft.payload.entryAt:null,photoSlot:'photoSlot'in todayDraft.payload?todayDraft.payload.photoSlot:null}};
         await repository!.writeDraft($state.snapshot(todayDraft),todayKey);
       }
     }catch(cause){error=cause instanceof Error?cause.message:'Could not keep this prompt offer. Please try again.';}finally{offering=false;}
@@ -233,7 +235,7 @@
   });
   async function selectBackup(id:string){
     if(!repository||!resolvePrompt(view.state,id))return;
-    if(writing){editorSelectedPromptId=id;editorPromptId=id;editorManualPrompt=null;await persistDraft();}
+    if(writing){editorSelectedPromptId=id;editorPromptId=id;editorTopicId=defaultPromptTopic(view.state,id);editorTopicChosen=editorTopicId!==null||!!editing&&!!reflectionTopic(view.state.topics,editing.id);editorManualPrompt=null;await persistDraft();}
     else{
       const previous=todayDraftDay===today?todayDraft:null;
       const action:ReflectionDraft={selectedPromptId:id,eventId:previous?.eventId??crypto.randomUUID(),type:'ReflectionWritten',schemaVersion:6,payload:{
@@ -402,14 +404,28 @@
     : new Date(chosenEntryAt(editorDateTime)!) > currentInstant ? 'Choose a date and time that is now or earlier.' : '');
   const daily = $derived(todayReflection(view.state.entries, today));
   const todayStarter=$derived(view.state.rotation.offers.filter(o=>o.day===today&&o.kind==='starter'&&o.surface==='today').at(-1)?.promptId);
-  const hasTodayDraft = $derived(todayDraftDay === today && !!todayDraft && (!!todayDraft.payload.text.trim() || entryPhotos(view.state, todayDraft.payload.entryId).length > 0 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7) && todayDraft.payload.entryAt !== null || (todayDraft.schemaVersion === 5 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7)) && (todayDraft.payload.promptText !== null || todayDraft.payload.promptId !== (daily.entry?.promptId ?? (view.state.ai.days[today]===STARTER_ID?todayStarter:view.state.ai.days[today]) ?? todayStarter ?? STARTER_ID))));
+  const hasTodayDraft = $derived.by(() => {
+    const candidate=todayDraft;
+    if(todayDraftDay!==today||!candidate)return false;
+    // Accepting a topic is meaningful even before writing or attaching a photo.
+    if(candidate.schemaVersion===8)return true;
+    if(candidate.payload.text.trim()||entryPhotos(view.state,candidate.payload.entryId).length)return true;
+    if((candidate.schemaVersion===6||candidate.schemaVersion===7)&&candidate.payload.entryAt!==null)return true;
+    const selected=daily.entry?.promptId??(view.state.ai.days[today]===STARTER_ID?todayStarter:view.state.ai.days[today])??todayStarter??STARTER_ID;
+    return 'promptText' in candidate.payload&&(candidate.payload.promptText!==null||candidate.payload.promptId!==selected);
+  });
   const todayDraftEntry = $derived(hasTodayDraft ? view.state.entries.find(entry => entry.id === todayDraft?.payload.entryId) : undefined);
   const todayColour = $derived(colourForDay(today));
   const editorColour = $derived(colourForDay(validDay(editorDateTime.slice(0,10)) ? editorDateTime.slice(0,10) : editorEntryAt ? localDay(editorEntryAt) : today));
   let editorPromptId = $state(STARTER_ID);
+  let editorTopicChosen=$state(false);
+  let editorTopicId=$state<string|null>(null);
+  let editorTopicBase=$state<string|null>(null);
+  let editorTopicAnswers=$state<string|null>(null);
+  const editorTopicChoices=$derived(topicChoices(view.state.onboarding.answers));
   let editorSelectedPromptId = $state<string | undefined>(undefined);
   const currentPromptId = $derived((hasTodayDraft && todayDraft ? promptId(todayDraft) : daily.entry?.promptId ?? (view.state.ai.days[today]===STARTER_ID?todayStarter:view.state.ai.days[today]) ?? todayStarter) ?? STARTER_ID);
-  const currentPrompt = $derived(hasTodayDraft && todayDraft ? ((todayDraft.schemaVersion === 5 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7)) ? todayDraft.payload.promptText : null) ?? resolvePrompt(view.state, promptId(todayDraft)) ?? todayDraftEntry?.prompt ?? STARTER_PROMPT : daily.entry?.prompt ?? resolvePrompt(view.state, currentPromptId) ?? STARTER_PROMPT);
+  const currentPrompt = $derived(hasTodayDraft && todayDraft ? ((todayDraft.schemaVersion === 5 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7 || todayDraft.schemaVersion === 8)) ? todayDraft.payload.promptText : null) ?? resolvePrompt(view.state, promptId(todayDraft)) ?? todayDraftEntry?.prompt ?? STARTER_PROMPT : daily.entry?.prompt ?? resolvePrompt(view.state, currentPromptId) ?? STARTER_PROMPT);
   let editorManualPrompt = $state<string | null>(null);
   let editingPrompt = $state(false);
   let promptBuffer = $state('');
@@ -454,7 +470,7 @@
   }
   async function useEditorPrompt() {
     if (!promptCandidate || editingPrompt || busy) return;
-    editorSelectedPromptId=undefined; editorPromptId = promptCandidate.eventId; editorManualPrompt = null; await persistDraft();
+    editorSelectedPromptId=undefined; editorPromptId = promptCandidate.eventId; editorTopicId=defaultPromptTopic(view.state,editorPromptId); editorTopicChosen=editorTopicId!==null||!!editing&&!!reflectionTopic(view.state.topics,editing.id); editorManualPrompt = null; await persistDraft();
   }
   const currentResponse = $derived(view.state.ai.responses[currentPromptId]);
   const currentRequest = $derived(currentResponse ? view.state.ai.requests[currentResponse.payload.requestId] : null);
@@ -733,13 +749,18 @@
       const original = stored ? view.state.entries.find(item => item.id === stored.payload.entryId) : entry;
       editing = original ? { ...original, revision: stored?.payload.expectedRevision ?? original.revision } : null;
       editorPromptId = stored ? promptId(stored) : original?.promptId ?? initialPromptId ?? (resolvePrompt(view.state, currentPromptId) ? currentPromptId : STARTER_ID);
+      const savedTopic=original?reflectionTopic(view.state.topics,original.id):undefined;
+      editorTopicId=stored?.schemaVersion===8?stored.payload.topic.topicId:original?savedTopic?.topicId??null:defaultPromptTopic(view.state,stored?.selectedPromptId??editorPromptId);
+      editorTopicChosen=stored?.schemaVersion===8||!original&&editorTopicId!==null;
+      editorTopicBase=savedTopic?.lastEventId??null;
+      editorTopicAnswers=view.state.onboarding.answersId;
       editorSelectedPromptId=stored?.selectedPromptId??(!original&&(starterPrompt(editorPromptId)||view.state.backups[editorPromptId])?editorPromptId:undefined);
-      editorManualPrompt = manualEmpty?'[No prompt]':(stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7)) ? stored.payload.promptText : null;
+      editorManualPrompt = manualEmpty?'[No prompt]':(stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7 || stored?.schemaVersion === 8)) ? stored.payload.promptText : null;
       editingPrompt = false; dismissedPrompt = '';
       currentInstant = new Date();
-      editorDateTime = localDateTime((stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7)) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
+      editorDateTime = localDateTime((stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7 || stored?.schemaVersion === 8)) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant);
       editorDateChanged = !!stored && 'entryAt' in stored.payload && stored.payload.entryAt !== null;
-      editorEntryAt = (stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7)) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant.toISOString();
+      editorEntryAt = (stored?.schemaVersion === 3 || stored?.schemaVersion === 4 || stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7 || stored?.schemaVersion === 8)) && stored.payload.entryAt ? stored.payload.entryAt : original ? entryTimestamp(original) : currentInstant.toISOString();
       text = stored?.payload.text ?? original?.text ?? '';
       draftStatus = stored ? 'Draft saved on this device' : '';
       draftWrite++; tab = 'today'; writing = true; savedId = null; selectedId = null;
@@ -772,13 +793,15 @@
     const version = ++draftWrite;
     const eventId = draft?.eventId ?? crypto.randomUUID();
     if (editorManualPrompt !== null) editorPromptId = eventId;
-    draft = { selectedPromptId:editorSelectedPromptId, eventId, type: 'ReflectionWritten', schemaVersion: editorManualPrompt && editorManualPrompt.length>600 ? 7 : 6, payload: {
+    const payload = {
       entryId: editing?.id ?? draft?.payload.entryId ?? crypto.randomUUID(), text,
       expectedRevision: editing?.revision ?? draft?.payload.expectedRevision ?? 0,
       promptId: editorPromptId, promptText: editorManualPrompt,
       entryAt: editorDateChanged || editorDraftKey === newEntryKey ? editorEntryAt : editing?.entryAt ?? null,
       photoSlot: entryPhotos(view.state, editing?.id ?? draft?.payload.entryId ?? '')[0]?.slot ?? null
-    } };
+    };
+    const action:Action=editorTopicChosen?{eventId,type:'ReflectionWritten',schemaVersion:8,payload:{...payload,topic:{topicId:editorTopicId,previousEventId:editorTopicBase,answersId:editorTopicAnswers}}}:{eventId,type:'ReflectionWritten',schemaVersion:editorManualPrompt&&editorManualPrompt.length>600?7:6,payload};
+    draft={selectedPromptId:editorSelectedPromptId,...action};
     if (editorDraftKey === todayKey) { todayDraft = draft; todayDraftDay = today; }
     draftStatus = 'Saving draft on this device…';
     try { await repository.writeDraft($state.snapshot(draft), editorDraftKey); if (version === draftWrite) draftStatus = 'Draft saved on this device'; }
@@ -978,10 +1001,14 @@
       editing = view.state.entries.find((entry) => entry.id === pending.payload.entryId) ?? null;
       editorPromptId = promptId(pending);
       editorSelectedPromptId=pending.selectedPromptId;
-      editorManualPrompt = (pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7)) ? pending.payload.promptText : null; editingPrompt = false;
-      editorDraftKey = editing ? keyForEntry(editing) : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7)) && !!pending.payload.entryAt ? newEntryKey : todayKey;
-      editorDateTime = localDateTime((pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7)) && !!pending.payload.entryAt ? pending.payload.entryAt : currentInstant);
-      editorEntryAt = (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7)) && !!pending.payload.entryAt ? pending.payload.entryAt : chosenEntryAt(editorDateTime)!;
+      editorTopicId=pending.schemaVersion===8?pending.payload.topic.topicId:editing?reflectionTopic(view.state.topics,editing.id)?.topicId??null:defaultPromptTopic(view.state,pending.selectedPromptId??editorPromptId);
+      editorTopicChosen=pending.schemaVersion===8;
+      editorTopicBase=editing?reflectionTopic(view.state.topics,editing.id)?.lastEventId??null:null;
+      editorTopicAnswers=view.state.onboarding.answersId;
+      editorManualPrompt = (pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7 || pending.schemaVersion === 8)) ? pending.payload.promptText : null; editingPrompt = false;
+      editorDraftKey = editing ? keyForEntry(editing) : (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7 || pending.schemaVersion === 8)) && !!pending.payload.entryAt ? newEntryKey : todayKey;
+      editorDateTime = localDateTime((pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7 || pending.schemaVersion === 8)) && !!pending.payload.entryAt ? pending.payload.entryAt : currentInstant);
+      editorEntryAt = (pending.schemaVersion === 3 || pending.schemaVersion === 4 || pending.schemaVersion === 5 || (pending.schemaVersion === 6 || pending.schemaVersion === 7 || pending.schemaVersion === 8)) && !!pending.payload.entryAt ? pending.payload.entryAt : chosenEntryAt(editorDateTime)!;
       editorDateChanged = 'entryAt' in pending.payload && pending.payload.entryAt !== null;
       draft = { ...pending, eventId: crypto.randomUUID() }; tab = 'today'; writing = true; await persistDraft();
     } catch (cause) { error = cause instanceof Error ? cause.message : 'Please try again.'; }
@@ -1054,6 +1081,7 @@
           <BackupPicker onoffer={offerBackup} prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||editingPrompt} />
           <ReflectionEditor value={text} oninput={value => void persistDraft(value)} disabled={busy || !draftRestored} />
         </section>
+        <div class="reflection-topic-field"><label for="reflection-topic"><strong>Reflection topic:</strong></label><select id="reflection-topic" value={editorTopicId??''} onchange={event=>{editorTopicId=event.currentTarget.value||null;editorTopicChosen=true;void persistDraft();}} disabled={busy||!draftRestored}><option value="">Not yet classified</option>{#each editorTopicChoices as choice}<option value={choice.id}>{choice.label}</option>{/each}{#if editorTopicId&&!editorTopicChoices.some(t=>t.id===editorTopicId)}<option value={editorTopicId}>Previously selected topic (choose another)</option>{/if}</select></div>
         {#if client && repository}<PhotoPanel connection={photoConnection} connectionError={photoConnectionProblem} {client} {repository} {view} uid={user.uid} entryId={draft?.payload.entryId ?? editing?.id ?? null} ensureEntry={ensurePhotoEntry} colour={editorColour} disabled={busy || !draftRestored} draft={!editing} onbusy={value => photoBusy = value} />{/if}
         <p class="hint draft-status" aria-live="polite">{draftStatus || 'Drafts stay on this device until you save.'}</p>
         <button class="primary" onclick={save} disabled={busy || photoBusy || editingPrompt || !text.trim() && !entryPhotos(view.state, draft?.payload.entryId ?? editing?.id ?? '').length || !!view.pending || !!entryDateError}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Save reflection'}</button>
@@ -1072,7 +1100,7 @@
         <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} photos={calendarPhotos} />
         <h1 class="today-heading">{privateName ? `Reflection time, ${privateName}!` : 'Reflection time'}</h1>
         {#if view.ready}
-          <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID || starterPrompt(currentPromptId) ? 'Starter prompt' : view.state.backups[currentPromptId] ? 'Backup prompt' : currentResponse ? 'AI prompt' : 'Your prompt'}{#if starterPrompt(currentPromptId)} · {starterPrompt(currentPromptId)!.category}{/if}</span><h2>{currentPromptId===STARTER_ID&&!daily.entry&&!hasTodayDraft&&!todayStarter?(starterAttemptDay===today?'No starter prompts remain today. You can write your own prompt.':'Choosing a starter prompt…'):currentPrompt}</h2></section>
+          <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID || starterPrompt(currentPromptId) ? 'Starter prompt' : view.state.backups[currentPromptId] ? 'Backup prompt' : currentResponse ? 'AI prompt' : 'Your prompt'}{#if starterPrompt(currentPromptId)} · {starterPrompt(currentPromptId)!.category}{:else if currentResponse||view.state.backups[currentPromptId]}{' · '}{generatedPromptTopicLabel(view.state,currentPromptId)}{/if}</span><h2>{currentPromptId===STARTER_ID&&!daily.entry&&!hasTodayDraft&&!todayStarter?(starterAttemptDay===today?'No starter prompts remain today. You can write your own prompt.':'Choosing a starter prompt…'):currentPrompt}</h2></section>
           <button class="primary today-response" onclick={beginWriting} disabled={busy || offering || !draftLoaded || todayDraftDay !== today || currentPromptId===STARTER_ID&&!todayStarter&&!daily.entry&&!hasTodayDraft&&starterAttemptDay!==today}>{hasTodayDraft || daily.entry ? 'Continue your reflection' : 'Write a response'}</button>
           {#if starterMessage}<p class="hint" role="status">{starterMessage}</p>{/if}
           {#if daily.entry}<button class="outline additional-response" onclick={newEntry} disabled={busy || !draftLoaded || !!view.pending}>Write another reflection</button>{/if}
@@ -1230,6 +1258,11 @@
 </main>
 {/if}
 <style>
+  .reflection-topic-field{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0;font:400 .85rem/1.5 Arial,Helvetica,sans-serif;color:#c7cbd3}
+  .reflection-topic-field select{min-width:0;max-width:100%;flex:1;background:#ffffff09;color:#e2e6ed;border:1px solid #ffffff30;border-radius:8px;padding:7px 9px;font:inherit;outline:none}
+  .reflection-topic-field select:focus-visible{outline:2px solid #bfc5ce;outline-offset:2px}
+  .reflection-topic-field option{background:#15191f;color:#e2e6ed}
+
   .classification-tools{padding:18px 22px;margin:24px 0;box-sizing:border-box}.classification-tools>summary{cursor:pointer;min-height:44px;color:#d8dce2;font-size:1rem;line-height:24px}.classification-tools>summary small{display:block;margin-top:6px;color:#b6beca;font-size:.8rem;overflow-wrap:anywhere}.classification-tools :global(.classification){padding:0;margin:22px 0 0;border:0;background:transparent}
 
   /* Keep the dynamic settings document on a whole-pixel scroll boundary. */

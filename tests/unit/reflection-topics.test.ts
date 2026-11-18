@@ -63,3 +63,15 @@ test('opaque entry IDs cannot inherit phantom categories from ordinary object pr
   const chosen=applyEvent(state,event(choose('nature',{entryId:id})));assert.equal(JSON.parse(exportJournal(chosen,'json').content).entries[0].topic.id,'nature');
  }
 });
+
+test('editor topic and writing save atomically, retain literal choice and replay without inference',()=>{
+ const action={...writing,schemaVersion:8,payload:{...writing.payload,topic:{topicId:'music',previousEventId:null,answersId:null}}} as JournalEvent;
+ const {sequence,recordedAt:timestamp,...source}=action;
+ const parsed=parseAction(source);assert.equal(parsed.schemaVersion,8);
+ const state=replay([action]);assert.equal(state.topics.entry.topicId,'music');assert.equal(state.topics.entry.lastEventId,'write');assert.equal(state.entries[0].revision,1);
+ const edit={...action,eventId:'edit',sequence:2,payload:{...action.payload,expectedRevision:1,topic:{topicId:'nature',previousEventId:'write',answersId:null}}} as JournalEvent;
+ const log=[action,edit],full=replay(log);assert.equal(full.topics.entry.topicId,'nature');assert.deepEqual(replay(log.slice(1),state),full);
+ for(const topic of [{topicId:'music',previousEventId:null,answersId:null},{topicId:'custom_missing',previousEventId:'write',answersId:null},{topicId:'music',previousEventId:'write',answersId:'stale'}])assert.throws(()=>applyEvent(state,{...edit,payload:{...edit.payload,topic}} as JournalEvent));
+ for(const topic of [null,{topicId:'music',previousEventId:null,answersId:null,label:'Music'},{topicId:'bad',previousEventId:null,answersId:null}])assert.throws(()=>parseAction({...source,payload:{...action.payload,topic}}));
+ assert.equal(replay([writing]).topics.entry,undefined,'historical writing is never retroactively assigned a category');
+});

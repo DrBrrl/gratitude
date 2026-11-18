@@ -35,7 +35,8 @@
     "settings-review": ["064"],
     "backup-model": ["065"],
     "topic-prompts": ["066"],
-    "topic-review-photos": ["067"]
+    "topic-review-photos": ["067"],
+    "editor-topics": ["068"]
   },
   "smoke": ["035"],
   "isolated_components": {

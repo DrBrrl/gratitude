@@ -74,3 +74,13 @@ test('a delayed AI-view observation neither suppresses nor replaces a newer dail
   assert.equal(s.ai.days[input.day],'second_response');assert.equal(s.rotation.offers[0].promptId,'first_response');
  }
 });
+
+test('prompt defaults follow captured generation topics and explicit backup corrections, never inventing unavailable topics',async()=>{
+ const {defaultPromptTopic,generatedPromptTopicLabel}=await import('../../src/lib/ai/prompt-topic.ts');
+ let s=setup();const r=makeRequest(s,input.day,'personal','prompt-topic',undefined,input);s=apply(s,r);s=apply(s,{eventId:'prompt-topic_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:r.eventId,text:'A fictional question?',model:'fixture',finishReason:'STOP'}});
+ assert.equal(defaultPromptTopic(s,'prompt-topic_response'),s.ai.requestTopics[r.eventId]!.id);assert.equal(generatedPromptTopicLabel(s,'prompt-topic_response'),s.ai.requestTopics[r.eventId]!.label);
+ s={...s,classification:{...s.classification,backupTopics:{prompt_topic:{topicId:'music',label:'Music',lastEventId:'chosen',origin:'user'}}}};
+ assert.equal(defaultPromptTopic(s,'prompt_topic'),'music');assert.equal(generatedPromptTopicLabel(s,'prompt_topic'),'Music');
+ s.classification.backupTopics.prompt_topic={topicId:'custom_retired',label:'Retired',lastEventId:'retired',origin:'user'};assert.equal(defaultPromptTopic(s,'prompt_topic'),null);assert.equal(generatedPromptTopicLabel(s,'prompt_topic'),'Retired');
+ assert.equal(defaultPromptTopic(s,'missing'),null);
+});
