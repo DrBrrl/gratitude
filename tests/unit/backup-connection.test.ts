@@ -17,7 +17,7 @@ test('shared backups follow prompt bindings and replay without changing photo or
  for(let cut=0;cut<=2;cut++)assert.deepEqual(replay(events([shared,changed]).slice(cut),replay(events([shared,changed]).slice(0,cut))),state);
 });
 test('legacy explicit backups never become shared merely because providers match',()=>{
- const fixed={...shared,schemaVersion:5,payload:{...shared.payload,backupProvider:'ollama',backupConnectionId:'backup-one'}} as SourceAction;
+ const fixed={...shared,schemaVersion:5,payload:{...shared.payload,backupProvider:'ollama',backupConnectionId:'backup-one'}} as Extract<SourceAction,{type:'AIChoicesConfirmed'}>;
  const changed={...fixed,eventId:'changed',payload:{...fixed.payload,previousEventId:'choice',provider:'gemini',promptConnectionId:null}} as SourceAction;
  const state=replay(events([fixed,changed]));assert.equal(backupProvider(state.ai.choices),'ollama');assert.equal(backupConnectionId(state.ai.choices),'backup-one');
  assert.throws(()=>parseAction({...shared,schemaVersion:5}));assert.throws(()=>parseAction({...shared,payload:{...shared.payload,backupConnectionId:'hidden-separate'}}));

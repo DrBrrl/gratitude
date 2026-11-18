@@ -1,3 +1,4 @@
+import {assertScheduledRequest} from './lunar-state.ts';
 import {requestMode,selectModeReflections,reviewWindow,type ModeInput} from './modes.ts';
 import { requestTopic } from './topic-selection.ts';
 import {backupProvider,backupConnectionId} from './backup-connection.ts';
@@ -46,6 +47,7 @@ export function makeRequest(...args:[...Parameters<typeof makeLegacyRequest>,Mod
  input[0]={...state,onboarding:{...state.onboarding,version:Math.max(1,state.onboarding.version)}};
  const old=makeLegacyRequest(...input);
  const request={...old,schemaVersion:old.schemaVersion+(modeInput?30:15),payload:{...old.payload,...modeInput,snapshotId:state.lastEventId!,templateVersion:modeInput?'gratitude-v6':'gratitude-v5',selectorVersion:modeInput?'modes-v1':'topic-v1'}} as RequestAction;
+ assertScheduledRequest(state,request,new Date().toISOString());
  const topic=requestTopic(state,request),p=request.payload;
  if(!('timeZone' in p))throw new Error('Missing topic selection input.');
  const previous='differentFromPromptId' in p?state.ai.requests[state.ai.responses[p.differentFromPromptId].payload.requestId]:undefined;

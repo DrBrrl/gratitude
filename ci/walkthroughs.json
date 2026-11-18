@@ -38,7 +38,8 @@
     "topic-review-photos": ["067"],
     "editor-topics": ["068"],
     "review-prompts": ["069"],
-    "discovery-prompts": ["070"]
+    "discovery-prompts": ["070"],
+    "lunar-prompts": ["071"]
   },
   "smoke": ["035"],
   "isolated_components": {

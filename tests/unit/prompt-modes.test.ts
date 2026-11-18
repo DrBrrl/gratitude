@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {emptyProjection,parseAction,replay,STARTER_ID,type SourceAction,type JournalEvent,type Projection} from '../../src/lib/domain.ts';
 import {defaultAnswers,answersInput} from '../../src/lib/onboarding.ts';
 import {makeRequest,buildContext,promptOptions} from '../../src/lib/ai/context.ts';
-import {requestMode,selectModeReflections} from '../../src/lib/ai/modes.ts';
+import {acceptedModeSource,requestMode,selectModeReflections} from '../../src/lib/ai/modes.ts';
 import {chooseTopic} from '../../src/lib/ai/topic-selection.ts';
 import {exportJournal} from '../../src/lib/export.ts';
 import {eligibleTargets} from '../../src/lib/classification.ts';
@@ -58,4 +58,18 @@ test('accepted Review provenance survives manual wording/date edits and complete
  assert.deepEqual(replay([{...action,sequence:before.cursor+1,recordedAt:at}],before),s);
  const edit={...action,eventId:'edit',payload:{...action.payload,expectedRevision:1,promptId:'edit',entryAt:'2026-11-19T01:00:00.000Z'}};s=apply(s,edit);assert.equal(JSON.parse(exportJournal(s,'json').content).entries[0].promptMode,'review');
  assert.throws(()=>apply(before,{...action,payload:{...action.payload,promptSourceId:'missing'}}));
+});
+
+test('photo-only and blank writing do not make a topic eligible for Monthly review',()=>{
+ const base=writing(writing(setup(),'photo','2026-11-20','nature'),'blank','2026-11-19','music');
+ const s={...base,entries:base.entries.map(e=>({...e,text:e.id==='photo'?'':'   '}))};
+ assert.equal(chooseTopic(s,{...selection,day},true,'review'),null);
+ const context=JSON.parse(buildContext(s,request(s)));assert.ok(!('topic' in context));assert.deepEqual(context.reflections.recent,[]);
+});
+
+test('reopening a replacement draft does not inherit the saved entry’s former Review source',()=>{
+ let s=setup();s=apply(s,request(s,'review'));s=apply(s,{eventId:'review_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'review',text:'Review your month?',model:'fixture',finishReason:'STOP'}});
+ const writing:Extract<SourceAction,{type:'ReflectionWritten';schemaVersion:9}>={eventId:'saved',type:'ReflectionWritten',schemaVersion:9,payload:{entryId:'entry',expectedRevision:0,text:'A fictional month.',promptId:'saved',promptText:'My edited review?',promptSourceId:'review_response',entryAt:null,photoSlot:null,topic:null}};s=apply(s,writing);
+ const entry=s.entries[0],replacement={eventId:'replacement',type:'ReflectionWritten' as const,schemaVersion:6 as const,payload:{entryId:'entry',expectedRevision:1,text:'My draft.',promptId:STARTER_ID,promptText:null,entryAt:null,photoSlot:null}};
+ assert.equal(acceptedModeSource(s,STARTER_ID,replacement,entry),null);assert.equal(acceptedModeSource(s,'saved',writing,entry),'review_response');assert.equal(acceptedModeSource(s,'saved',null,entry),'review_response');assert.equal(acceptedModeSource(s,'review_response',null,undefined),'review_response');
 });

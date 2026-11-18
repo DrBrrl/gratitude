@@ -1,3 +1,4 @@
+import type {LunarAction} from '../ai/lunar-state.ts';
 import type {ClassificationAction,ClassificationTarget} from '../classification';
 import type { TopicAction } from '../reflection-topics';
 import {commitDraft,type ReflectionDraft} from '../reflection-draft';
@@ -73,7 +74,7 @@ export class ReviewRepository implements JournalStore {
   }
   async requestClassification(_batchId:string,_target:ClassificationTarget,_generate:unknown){throw new Error('Classification needs a connected account.');}
   async syncClassifications(){}
-  async commitAI(action: ClassificationAction | TopicAction | RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
+  async commitAI(action: LunarAction | ClassificationAction | TopicAction | RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) { await this.save(action); return { sequence: this.events.length, eventId: action.eventId, created: true }; }
   async requestPrompt() { throw new Error('Use the Firebase preview to try Gemini. UI review stays entirely on this device.'); }
   async queueBackups(actions:(BackupAction|RotationAction)[]) {for(const action of actions)await this.save(action);}
   async queueBackup(action:BackupAction|RotationAction) {await this.save(action);}

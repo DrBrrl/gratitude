@@ -1,3 +1,5 @@
+import type {LunarAction} from '../ai/lunar-state.ts';
+import {newSelectionSeed} from '../ai/selection.ts';
 import type {ModeInput} from '../ai/modes.ts';
 import {classificationDestination} from '../ai/classification-connection.ts';
 import type {ModelConnection} from '../ai/connection-contract.ts';
@@ -85,7 +87,7 @@ export class JournalRepository {
     if (checkpoint) {
       try {
         const s = checkpoint.state;
-        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.requestUnits || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance || !s.onboarding || !s.classification || !s.topics || !s.rotation || !Array.isArray(s.rotation.offers) || !s.rotation.accepted || !s.rotation.acceptedText || !s.rotation.requests ||
+        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.requestUnits || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance || !s.onboarding || !s.classification || !s.topics || !s.lunar || !s.rotation || !Array.isArray(s.rotation.offers) || !s.rotation.accepted || !s.rotation.acceptedText || !s.rotation.requests ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
           if (!s.lastEventId) throw new Error('Invalid checkpoint anchor');
@@ -256,7 +258,7 @@ export class JournalRepository {
     });
     return this.draftChain;
   }
-  async commitAI(action: ClassificationAction | TopicAction | RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
+  async commitAI(action: LunarAction | ClassificationAction | TopicAction | RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
     if (!this.ready || this.stopped || !navigator.onLine) throw new Error('Connect and wait for your journal to sync first.');
     const result = await appendReflection(this.client.db, this.uid, action);
     await this.awaitSequence(result.sequence);
@@ -320,7 +322,7 @@ export class JournalRepository {
     }
     this.emit();
   }
-  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string, backup=false, differentFromPromptId?:string, modeInput?:ModeInput) {
+  async requestPrompt(day: string, mode: 'generic' | 'personal', generate: GeneratePrompt, entryId?: string, backup=false, differentFromPromptId?:string, modeInput?:ModeInput & {referenceDay?:string;referenceTimeZone?:string}) {
     if (this.generating) throw new Error('A prompt is being generated. You can use a saved backup immediately.');
     if(backup && availableBackups(this.state,this.backupActions.filter(a=>a.type==='BackupPromptRemoved').map(a=>a.payload.promptId),this.pending&&'promptId' in this.pending.payload?this.pending.payload.promptId:undefined).length>=BACKUP_MINIMUM) return;
     if (this.aiResult) throw new Error('Sync the received prompt before requesting another.');
@@ -329,7 +331,8 @@ export class JournalRepository {
       await this.syncBackups();
       if(this.backupActions.length)throw new Error('Reconnect to sync prompt choices before generating a new prompt.');
       const snapshot = this.state;
-      const request = makeRequest(snapshot, day, mode, crypto.randomUUID(), entryId, undefined, generate.target, backup,differentFromPromptId,modeInput);
+      const {referenceDay,referenceTimeZone,...capturedMode}=modeInput??{};
+      const request = makeRequest(snapshot, referenceDay??day, mode, crypto.randomUUID(), entryId, referenceTimeZone?{timeZone:referenceTimeZone,selectionSeed:newSelectionSeed()}:undefined, generate.target, backup,differentFromPromptId,modeInput?capturedMode as ModeInput:undefined);
       const committed = await this.commitAI(request);
       if (!committed.created) return; // Only the transaction winner may dispatch this request.
       const control = await getDocFromServer(doc(this.client.db, `users/${this.uid}/streams/${GENERATION}/ai/control`));
@@ -411,7 +414,10 @@ export class JournalRepository {
     try { await this.commitAI(result); }
     catch (cause) {
       // Revocation/replacement invalidates a late result. Network failures retain it.
-      if (!(cause instanceof Error) || !(/no longer current|Questionnaire answers changed|Model connection changed/.test(cause.message))) throw cause;
+      if (!(cause instanceof Error) || !(/no longer current|Questionnaire answers changed|Model connection changed|This lunar occasion changed/.test(cause.message))) throw cause;
+      if(cause.message.startsWith('This lunar occasion changed')&&this.state.ai.control.requestId===result.payload.requestId){
+        try{await this.commitAI({eventId:result.payload.requestId+'_failure',type:'AIRequestFailed',schemaVersion:1,payload:{requestId:result.payload.requestId,reason:'unavailable'}});}catch{/* A concurrent replacement or offline state can be resolved by the next explicit request. */}
+      }
       await this.db.delete('outbox', 'ai-result'); this.aiResult = null; this.emit();
       throw new Error('That request was replaced or AI sharing changed. The late prompt was discarded.');
     }

@@ -1,6 +1,8 @@
 <script lang="ts">
+  import LunarSettings from './LunarSettings.svelte';
+  import {scheduledOffer,scheduledPrompt,scheduledPhase,occasionDeclined,LUNAR_VERSION} from '../ai/lunar-state';
   import PromptModePicker from './PromptModePicker.svelte';
-  import {requestMode,modeLabel,type PromptMode,type ModeInput} from '../ai/modes';
+  import {acceptedModeSource,requestMode,modeLabel,type PromptMode,type ModeInput} from '../ai/modes';
   import Classification from './Classification.svelte';
   import ReflectionTopic from './ReflectionTopic.svelte';
   import {reflectionTopic,topicChoices} from '../reflection-topics';
@@ -233,7 +235,7 @@
     }catch(cause){error=cause instanceof Error?cause.message:'Could not keep this prompt offer. Please try again.';}finally{offering=false;}
   }
   $effect(()=>{
-    if(repository&&view.ready&&!busy&&!setupOpen&&!landing&&!calendarShown&&!savedId&&!selectedId&&tab==='today'&&!writing&&!daily.entry&&!hasTodayDraft&&(!view.state.ai.days[today]||view.state.ai.days[today]===STARTER_ID)&&!todayStarter&&!offering&&starterAttemptDay!==today&&(view.status==='Synced'||!navigator.onLine))void anotherStarter();
+    if(repository&&view.ready&&!busy&&!setupOpen&&!landing&&!calendarShown&&!savedId&&!selectedId&&tab==='today'&&!writing&&!daily.entry&&!hasTodayDraft&&(!view.state.ai.days[today]||view.state.ai.days[today]===STARTER_ID)&&!todayStarter&&!phasePromptId&&!offering&&starterAttemptDay!==today&&(view.status==='Synced'||!navigator.onLine))void anotherStarter();
   });
   async function selectBackup(id:string){
     if(!repository||!resolvePrompt(view.state,id))return;
@@ -405,6 +407,9 @@
   const entryDateError = $derived(!chosenEntryAt(editorDateTime) ? 'Choose a valid entry date and time.'
     : new Date(chosenEntryAt(editorDateTime)!) > currentInstant ? 'Choose a date and time that is now or earlier.' : '');
   const daily = $derived(todayReflection(view.state.entries, today));
+  const lunarDue=$derived(scheduledOffer(view.state,currentInstant));
+  const currentPhase=$derived(scheduledPhase(view.state,currentInstant));
+  const phasePromptId=$derived(scheduledPrompt(view.state,currentInstant,today));
   const todayStarter=$derived(view.state.rotation.offers.filter(o=>o.day===today&&o.kind==='starter'&&o.surface==='today').at(-1)?.promptId);
   const hasTodayDraft = $derived.by(() => {
     const candidate=todayDraft;
@@ -423,7 +428,15 @@
   $effect(()=>{const owner=user?.uid,day=today;untrack(()=>{dailyMode=null;});});
   let editorPromptSourceId=$state<string|null>(null);
   let editorMode=$state<PromptMode>('regular');
-  function modeInput(mode:PromptMode,day:string):ModeInput|undefined{return mode==='regular'?undefined:{promptMode:mode,displayDay:day,scheduleId:null,lunarVersion:'ae-2.1.19-v1'};}
+  function modeInput(mode:PromptMode,day:string,scheduled=false):(ModeInput & {referenceDay?:string;referenceTimeZone?:string})|undefined{
+    if(mode==='regular')return;
+    return {promptMode:mode,displayDay:day,scheduleId:scheduled&&lunarDue?.mode===mode?view.state.lunar.settingsId:null,lunarVersion:LUNAR_VERSION,...(scheduled&&lunarDue?.mode===mode?{referenceDay:lunarDue.day,referenceTimeZone:lunarDue.timeZone}:{})};
+  }
+  async function chooseDailyMode(mode:PromptMode){
+    if(!repository||aiBusy)return;
+    aiBusy=true;error='';
+    try{if(currentPhase&&mode!==currentPhase.mode&&!occasionDeclined(view.state,currentPhase))await repository.commitAI({eventId:crypto.randomUUID(),type:'LunarPromptDeclined',schemaVersion:1,payload:{previousEventId:view.state.lunar.lastEventId,settingsId:view.state.lunar.settingsId!,day:currentPhase.day,timeZone:currentPhase.timeZone,lunarVersion:LUNAR_VERSION}});dailyMode=mode;}catch(cause){error=cause instanceof Error?cause.message:'Could not save your choice.';}finally{aiBusy=false;}
+  }
   let editorPromptId = $state(STARTER_ID);
   let editorTopicChosen=$state(false);
   let editorTopicId=$state<string|null>(null);
@@ -431,7 +444,7 @@
   let editorTopicAnswers=$state<string|null>(null);
   const editorTopicChoices=$derived(topicChoices(view.state.onboarding.answers));
   let editorSelectedPromptId = $state<string | undefined>(undefined);
-  const currentPromptId = $derived((hasTodayDraft && todayDraft ? promptId(todayDraft) : daily.entry?.promptId ?? (view.state.ai.days[today]===STARTER_ID?todayStarter:view.state.ai.days[today]) ?? todayStarter) ?? STARTER_ID);
+  const currentPromptId = $derived((hasTodayDraft && todayDraft ? promptId(todayDraft) : daily.entry?.promptId ?? phasePromptId ?? (view.state.ai.days[today]===STARTER_ID?todayStarter:view.state.ai.days[today]) ?? todayStarter) ?? STARTER_ID);
   const currentPrompt = $derived(hasTodayDraft && todayDraft ? ((todayDraft.schemaVersion === 5 || (todayDraft.schemaVersion === 6 || todayDraft.schemaVersion === 7 || todayDraft.schemaVersion === 8 || todayDraft.schemaVersion === 9)) ? todayDraft.payload.promptText : null) ?? resolvePrompt(view.state, promptId(todayDraft)) ?? todayDraftEntry?.prompt ?? STARTER_PROMPT : daily.entry?.prompt ?? resolvePrompt(view.state, currentPromptId) ?? STARTER_PROMPT);
   let editorManualPrompt = $state<string | null>(null);
   let editingPrompt = $state(false);
@@ -470,7 +483,7 @@
     try {
       if (!draft) await persistDraft();
       if (!draft || !draftStatus.startsWith('Draft saved')) throw new Error('Save this draft on your device before requesting a prompt.');
-      await active.requestPrompt(localDay(editorEntryAt), personalContextAvailable ? 'personal' : 'generic', promptGenerator(), draft.payload.entryId,false,promptCandidate?.eventId??(view.state.ai.responses[editorPromptId]?editorPromptId:undefined),modeInput(editorMode,localDay(editorEntryAt)));
+      await active.requestPrompt(localDay(editorEntryAt), personalContextAvailable ? 'personal' : 'generic', promptGenerator(), draft.payload.entryId,false,promptCandidate?.eventId??editorPromptSourceId??(view.state.ai.responses[editorPromptId]?editorPromptId:undefined),modeInput(editorMode,localDay(editorEntryAt)));
       if(repository===active&&editorPromptVisible&&showPromptCandidate)await recordGeneratedOffer('editor',localDay(editorEntryAt),promptCandidate?.eventId);
     } catch (cause) { if (repository === active) aiMessage = cause instanceof Error ? cause.message : 'Could not request a prompt.'; }
     finally { if (repository === active) generatingPrompt = false; }
@@ -481,11 +494,11 @@
   }
   const currentResponse = $derived(view.state.ai.responses[currentPromptId]);
   const currentRequest = $derived(currentResponse ? view.state.ai.requests[currentResponse.payload.requestId] : null);
-  const dailyEffectiveMode=$derived(dailyMode??requestMode(currentRequest));
+  const dailyEffectiveMode=$derived(dailyMode??(currentPhase&&occasionDeclined(view.state,currentPhase)?'regular':currentResponse?requestMode(currentRequest):lunarDue?.mode??'regular'));
   const pendingDailyRequest = $derived(view.state.ai.control.requestId ? view.state.ai.requests[view.state.ai.control.requestId] : null);
-  const dailyRequestPending = $derived(pendingDailyRequest && !view.state.rotation.offers.some(o=>o.kind!=='ai'&&o.surface==='today'&&o.day===today&&o.sequence>(view.state.rotation.requests[pendingDailyRequest.eventId]??0)) && !isBackupRequest(pendingDailyRequest) && !isEditorRequest(pendingDailyRequest) && pendingDailyRequest.payload.day === today);
+  const dailyRequestPending = $derived(pendingDailyRequest && !view.state.rotation.offers.some(o=>o.kind!=='ai'&&o.surface==='today'&&o.day===today&&o.sequence>(view.state.rotation.requests[pendingDailyRequest.eventId]??0)) && !isBackupRequest(pendingDailyRequest) && !isEditorRequest(pendingDailyRequest) && ('displayDay' in pendingDailyRequest.payload?pendingDailyRequest.payload.displayDay:pendingDailyRequest.payload.day) === today);
   const failedDailyRequest = $derived(view.state.ai.failure ? view.state.ai.requests[view.state.ai.failure.payload.requestId] : null);
-  const dailyRequestFailed = $derived(failedDailyRequest && !view.state.rotation.offers.some(o=>o.kind!=='ai'&&o.surface==='today'&&o.day===today&&o.sequence>(view.state.rotation.requests[failedDailyRequest.eventId]??0)) && !isBackupRequest(failedDailyRequest) && !isEditorRequest(failedDailyRequest) && failedDailyRequest.payload.day === today);
+  const dailyRequestFailed = $derived(failedDailyRequest && !view.state.rotation.offers.some(o=>o.kind!=='ai'&&o.surface==='today'&&o.day===today&&o.sequence>(view.state.rotation.requests[failedDailyRequest.eventId]??0)) && !isBackupRequest(failedDailyRequest) && !isEditorRequest(failedDailyRequest) && ('displayDay' in failedDailyRequest.payload?failedDailyRequest.payload.displayDay:failedDailyRequest.payload.day) === today);
   let aiBusy = $state(false);
   let generatingPrompt = $state(false);
   let aiMessage = $state('');
@@ -507,7 +520,7 @@
     if (!active || !client) return;
     const requestedDay=today,initialStarter=todayStarter;
     generatingPrompt = true; aiMessage = '';dailyPromptError=null;
-    try { await active.requestPrompt(requestedDay, personalContextAvailable ? 'personal' : 'generic', promptGenerator(),undefined,false,currentResponse?.eventId,modeInput(dailyEffectiveMode,requestedDay));if(repository===active&&today===requestedDay&&todayPromptVisible&&currentPromptId===view.state.ai.days[requestedDay])await recordGeneratedOffer('today',requestedDay,currentPromptId); }
+    try { await active.requestPrompt(requestedDay, personalContextAvailable ? 'personal' : 'generic', promptGenerator(),undefined,false,currentResponse?.eventId,modeInput(dailyEffectiveMode,requestedDay,true));if(repository===active&&today===requestedDay&&todayPromptVisible&&currentPromptId===view.state.ai.days[requestedDay])await recordGeneratedOffer('today',requestedDay,currentPromptId); }
     catch (cause) { if (repository === active && todayStarter===initialStarter) dailyPromptError={day:requestedDay,text:cause instanceof Error ? cause.message : 'Could not request a prompt.'}; }
     finally { if (repository === active) generatingPrompt = false; }
   }
@@ -762,9 +775,10 @@
       editorTopicChosen=(stored?.schemaVersion===8||stored?.schemaVersion===9)&&!!stored.payload.topic||!original&&editorTopicId!==null;
       editorTopicBase=savedTopic?.lastEventId??null;
       editorTopicAnswers=view.state.onboarding.answersId;
-      editorPromptSourceId=stored?.schemaVersion===9?stored.payload.promptSourceId:original?.promptSourceId??(requestMode(view.state.ai.requests[view.state.ai.responses[editorPromptId]?.payload.requestId])!=='regular'?editorPromptId:null);
+      editorPromptSourceId=acceptedModeSource(view.state,editorPromptId,stored,original);
       editorMode=stored?.generationMode??requestMode(view.state.ai.requests[view.state.ai.responses[editorPromptSourceId??editorPromptId]?.payload.requestId]);
       editorSelectedPromptId=stored?.selectedPromptId??(!original&&(starterPrompt(editorPromptId)||view.state.backups[editorPromptId])?editorPromptId:undefined);
+      if(manualEmpty){editorPromptId=STARTER_ID;editorPromptSourceId=null;editorMode='regular';editorTopicId=null;editorTopicChosen=false;editorSelectedPromptId=undefined;}
       editorManualPrompt = manualEmpty?'[No prompt]':(stored?.schemaVersion === 5 || (stored?.schemaVersion === 6 || stored?.schemaVersion === 7 || stored?.schemaVersion === 8 || stored?.schemaVersion === 9)) ? stored.payload.promptText : null;
       if(editorPromptSourceId&&editorPromptId!==editorPromptSourceId&&editorManualPrompt===null)editorManualPrompt=resolvePrompt(view.state,editorPromptId)??original?.prompt??null;
       editingPrompt = false; dismissedPrompt = '';
@@ -1039,7 +1053,7 @@
     {/snippet}
   </WelcomePage>
 {:else}
-<main data-prompt-offer-busy={offering||view.ready&&!!user&&!setupOpen&&!landing&&!calendarShown&&!savedId&&!selectedId&&tab==='today'&&!writing&&!daily.entry&&!hasTodayDraft&&!todayStarter&&(!view.state.ai.days[today]||view.state.ai.days[today]===STARTER_ID)&&starterAttemptDay!==today} data-prompt-rotation-pending={!!view.rotationPending} data-onboarding-pending={!!view.onboardingPending} data-journal-ready={view.ready&&!chooseInitialPage} class:composing={writing} class:friendsPage={tab==='friends'} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:classificationPage={tab==='settings'&&(settingsPage==='classification'||settingsPage==='unknown')} class:calendarView={calendarShown}>
+<main data-prompt-offer-busy={offering||view.ready&&!!user&&!setupOpen&&!landing&&!calendarShown&&!savedId&&!selectedId&&tab==='today'&&!writing&&!daily.entry&&!hasTodayDraft&&!todayStarter&&!phasePromptId&&(!view.state.ai.days[today]||view.state.ai.days[today]===STARTER_ID)&&starterAttemptDay!==today} data-prompt-rotation-pending={!!view.rotationPending} data-onboarding-pending={!!view.onboardingPending} data-journal-ready={view.ready&&!chooseInitialPage} class:composing={writing} class:friendsPage={tab==='friends'} class:aiSettings={tab==='settings'&&settingsPage==='ai'} class:classificationPage={tab==='settings'&&(settingsPage==='classification'||settingsPage==='unknown')} class:calendarView={calendarShown}>
   {#if !initialized}
     <p role="status" class="loading">Opening Gratitude…</p>
   {:else if setupOpen}
@@ -1092,7 +1106,7 @@
             {#if !view.state.ai.choices.enabled}<p class="hint prompt-hint">Enable AI prompts in Settings to generate a question. You can still edit it yourself.</p>{/if}
           {/if}
           {#if showPromptCandidate && promptCandidate}
-            <aside class="prompt-option" aria-label="Generated prompt option"><p class="hint">Generated option · {modeLabel(requestMode(view.state.ai.requests[promptCandidate.payload.requestId]))}</p>{#if view.state.ai.requestTopics[promptCandidate.payload.requestId]}<p class="hint">Regular prompt · {view.state.ai.requestTopics[promptCandidate.payload.requestId]!.label}</p>{/if}<p class="writing-prompt">{promptCandidate.payload.text}</p><div class="prompt-actions"><button class="card-action" type="button" onclick={useEditorPrompt} disabled={busy || editingPrompt}>Use this prompt</button><button class="card-action" type="button" onclick={() => dismissedPrompt = promptCandidate!.eventId}>Keep current prompt</button></div></aside>
+            <aside class="prompt-option" aria-label="Generated prompt option"><p class="hint">Generated option · {modeLabel(requestMode(view.state.ai.requests[promptCandidate.payload.requestId]))}</p>{#if view.state.ai.requestTopics[promptCandidate.payload.requestId]}<p class="hint">{modeLabel(requestMode(view.state.ai.requests[promptCandidate.payload.requestId]))} prompt · {view.state.ai.requestTopics[promptCandidate.payload.requestId]!.label}</p>{/if}<p class="writing-prompt">{promptCandidate.payload.text}</p><div class="prompt-actions"><button class="card-action" type="button" onclick={useEditorPrompt} disabled={busy || editingPrompt}>Use this prompt</button><button class="card-action" type="button" onclick={() => dismissedPrompt = promptCandidate!.eventId}>Keep current prompt</button></div></aside>
           {/if}
           <button class="outline card-action" onclick={anotherStarter} disabled={busy||editingPrompt||offering}>Another starter prompt</button>
           <BackupPicker onoffer={offerBackup} prompts={backups} onuse={selectBackup} onremove={removeBackup} disabled={busy||editingPrompt} />
@@ -1121,10 +1135,13 @@
           <button class="primary today-response" onclick={beginWriting} disabled={busy || offering || !draftLoaded || todayDraftDay !== today || currentPromptId===STARTER_ID&&!todayStarter&&!daily.entry&&!hasTodayDraft&&starterAttemptDay!==today}>{hasTodayDraft || daily.entry ? 'Continue your reflection' : 'Write a response'}</button>
           {#if starterMessage}<p class="hint" role="status">{starterMessage}</p>{/if}
           {#if daily.entry}<button class="outline additional-response" onclick={newEntry} disabled={busy || !draftLoaded || !!view.pending}>Write another reflection</button>{/if}
-          {#if !daily.entry && !hasTodayDraft && !generatingPrompt && (dailyPromptError?.day===today || dailyRequestFailed)}<p class="ai-message hint prompt-request-error" role="status">{dailyPromptError?.day===today ? dailyPromptError.text : view.state.ai.failure?.payload.reason==='invalid-response' ? 'The AI returned an incomplete or invalid prompt. Try again or choose a backup prompt.' : 'No new prompt arrived. Check your AI connection, try again, or choose a backup prompt.'}</p>{/if}
           {#if !daily.entry && !hasTodayDraft}
             {#if view.state.ai.choices.enabled}
-              <PromptModePicker value={dailyEffectiveMode} onchoose={value=>dailyMode=value} disabled={generatingPrompt||aiBusy} />
+              {#if lunarDue}<p class="hint">{lunarDue.mode==='discovery'?'New moon · Discovery':'Full moon · Monthly review'} · {lunarDue.day} ({lunarDue.timeZone}). Generate it when you’re ready, or choose Regular instead.</p>{/if}
+              <PromptModePicker value={dailyEffectiveMode} onchoose={chooseDailyMode} disabled={generatingPrompt||aiBusy} />
+            {/if}
+            {#if !generatingPrompt && (dailyPromptError?.day===today || dailyRequestFailed)}<p class="ai-message hint prompt-request-error" role="status">{dailyPromptError?.day===today ? dailyPromptError.text : view.state.ai.failure?.payload.reason==='invalid-response' ? 'The AI returned an incomplete or invalid prompt. Try again or choose a backup prompt.' : 'No new prompt arrived. Check your AI connection, try again, or choose a backup prompt.'}</p>{/if}
+            {#if view.state.ai.choices.enabled}
               <button class="outline ai-generate" onclick={generatePrompt} disabled={aiBusy || generatingPrompt || offering || !!view.rotationPending || !!view.aiResultPending || !aiAvailable || uiReview}>{generatingPrompt ? 'Finding a prompt…' : dailyRequestPending || dailyRequestFailed ? 'Try another request' : currentResponse ? dailyEffectiveMode==='review'?'Another review':dailyEffectiveMode==='discovery'?'Another discovery prompt':'Another prompt' : dailyEffectiveMode==='review'?'Generate a review':dailyEffectiveMode==='discovery'?'Generate a discovery prompt':'Generate a prompt'}</button>
             {/if}
           {/if}
@@ -1218,6 +1235,7 @@
         <h1 class="page-heading">AI settings</h1>
         <ModelSettings {client} cloudConnections={connectionMetadata} credentialStatus={credentialStatus} onsavetoken={saveAccountToken} onforgettoken={forgetAccountToken} connection={activeConnection} scope={modelScope} disabled={aiBusy||generatingPrompt||!!view.aiResultPending||uiReview} initialError={modelConnectionError} onchange={selectPromptConnection} />
         <PhotoModelSettings {client} cloudConnections={connectionMetadata} provider={view.state.ai.choices.photoProvider??'prompt'} connection={view.state.ai.choices.photoProvider==='personal-gemini'?photoConnection:photoModelConnection} scope={photoModelScope} credentialStatus={photoCredentialStatus} onsavetoken={savePhotoToken} onforgettoken={forgetPhotoToken} onsave={savePhotoModel} initialError={photoConnectionError} disabled={aiBusy||photoBusy||uiReview} />
+        {#if repository}{#key view.state.lunar.settingsId}<LunarSettings value={view.state.lunar} disabled={aiBusy||generatingPrompt||uiReview} onsave={action=>repository!.commitAI(action)} />{/key}{/if}
         <p class="hint">Ask {providerName} for a gentle gratitude question. Prompt context is sent when you request a question or enable automatic backup refills.</p>
         {#if !aiAvailable || uiReview}<p class="hint">Live AI is available only on a configured Firebase site.</p>{/if}
         <section class="glass preferences">

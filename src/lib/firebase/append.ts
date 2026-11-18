@@ -1,3 +1,4 @@
+import {isLunarAction,lunarKey} from '../ai/lunar-state.ts';
 import {backupProvider} from '../ai/backup-connection.ts';
 import {isClassificationAction} from '../classification.ts';
 import {appendClassification} from './classification.ts';
@@ -19,7 +20,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
   if(isClassificationAction(action))return appendClassification(db,uid,action);
   const stream = doc(db, `users/${uid}/streams/${GENERATION}`);
   const event = doc(db, `${stream.path}/events/${action.eventId}`);
-  const pointer = doc(db, action.type==='ReflectionTopicChosen'?`${stream.path}/topics/${action.payload.entryId}`:isRotationAction(action)?`${stream.path}/rotation/control`:isOnboardingAction(action) ? `${stream.path}/onboarding/control` : action.type === 'AccentColourChosen' ? `${stream.path}/appearance/control` : action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
+  const pointer = doc(db, isLunarAction(action)?`${stream.path}/lunar/control`:action.type==='ReflectionTopicChosen'?`${stream.path}/topics/${action.payload.entryId}`:isRotationAction(action)?`${stream.path}/rotation/control`:isOnboardingAction(action) ? `${stream.path}/onboarding/control` : action.type === 'AccentColourChosen' ? `${stream.path}/appearance/control` : action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
   const resultFromPrior = (value: DocumentData) => {
     const decoded = decodeEvent(value);
     const original = parseAction({ eventId: decoded.eventId, type: decoded.type, schemaVersion: decoded.schemaVersion, payload: decoded.payload });
@@ -32,7 +33,14 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
       const [prior,head,latest] = await Promise.all([tx.get(event),tx.get(stream),tx.get(pointer)]);
       if (prior.exists()) return resultFromPrior(prior.data());
       let metadata: Record<string, unknown>;
-      if(action.type==='ReflectionTopicChosen') {
+      let lunarOffer:Record<string,unknown>|undefined;
+      const lunarRef=doc(db,`${stream.path}/lunar/control`);
+      if(isLunarAction(action)) {
+        if((latest.get('lastEventId')??null)!==action.payload.previousEventId)throw new Error('Lunar settings changed on another device. Reopen them before saving.');
+        if(action.type==='LunarPromptDeclined'&&(latest.get('settingsId')!==action.payload.settingsId))throw new Error('Lunar settings changed. Reopen Today.');
+        metadata={lastEventId:action.eventId,settingsId:action.type==='LunarScheduleChosen'?action.eventId:latest.get('settingsId'),declines:latest.get('declines')??{},offers:latest.get('offers')??{},lastOfferId:latest.get('lastOfferId')??null};
+        if(action.type==='LunarPromptDeclined')metadata.declines={...metadata.declines as Record<string,string>,[lunarKey(action.payload.day,action.payload.timeZone)]:action.eventId};
+      } else if(action.type==='ReflectionTopicChosen') {
         const p=action.payload;
         const [entry,setup]=await Promise.all([tx.get(doc(db,`${stream.path}/entries/${p.entryId}`)),tx.get(doc(db,`${stream.path}/onboarding/control`))]);
         if(!entry.exists())throw new Error('This reflection is no longer available.');
@@ -42,6 +50,11 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
         if((setup.get('answersId')??null)!==p.answersId)throw new Error('Your topics changed. Please reopen the picker.');
         metadata={lastEventId:action.eventId};
       } else if(isRotationAction(action)){metadata={lastEventId:action.eventId};
+        if(action.type==='PromptViewed'&&action.schemaVersion===2){
+          const response=await tx.get(doc(db,`${stream.path}/events/${action.payload.promptId}`));
+          const request=await tx.get(doc(db,`${stream.path}/events/${response.get('payload.requestId')}`));
+          if(request.get('payload.scheduleId')){const control=await tx.get(lunarRef),p=request.get('payload'),key=lunarKey(p.day,p.timeZone);if(!control.get('offers')?.[key])lunarOffer={...control.data(),offers:{...control.get('offers'),[key]:action.eventId},lastOfferId:action.eventId};}
+        }
       } else if (isOnboardingAction(action)) {
         const answersId = latest.get('answersId') ?? null;
         const version = latest.get('version') ?? 0;
@@ -108,6 +121,11 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
         metadata = nextControl(control, action);
         if(action.type==='PromptRequested' && 'answersId' in action.payload || action.type==='PromptResponseReceived'){
           const request=action.type==='PromptRequested'?action:decodeEvent((await tx.get(doc(db,`${stream.path}/events/${action.payload.requestId}`))).data()!) as Extract<SourceAction,{type:'PromptRequested'}>;
+          if('promptMode' in request.payload&&request.payload.scheduleId){
+            const lunar=await tx.get(lunarRef),settings=lunar.get('settingsId')?await tx.get(doc(db,`${stream.path}/events/${lunar.get('settingsId')}`)):null,p=request.payload,key=lunarKey(p.day,p.timeZone);
+            if(lunar.get('settingsId')!==p.scheduleId||!settings?.get('payload.enabled')||settings.get('payload.timeZone')!==p.timeZone||lunar.get('declines')?.[key]||lunar.get('offers')?.[key])throw new Error('This lunar occasion changed or has already been offered. Request another prompt manually.');
+            if(action.type==='PromptRequested'&&control.requestId){const pending=await tx.get(doc(db,`${stream.path}/events/${control.requestId}`));if(Date.now()-pending.get('recordedAt').toMillis()<180000)throw new Error('A prompt is already being generated.');}
+          }
           if('connectionId' in request.payload){const bound=await tx.get(doc(db,`users/${uid}/privateConnections/${request.payload.connectionId}`));if(bound.get('provider')!==request.payload.provider||bound.get('model')!==request.payload.model||bound.get('revision')!==request.payload.connectionRevision)throw new Error('Model connection changed or was removed.');}
           if('answersId' in request.payload){const setup=await tx.get(doc(db,`${stream.path}/onboarding/control`));if((setup.get('answersId')??null)!==request.payload.answersId)throw new Error('Questionnaire answers changed.');}
           if(action.type==='PromptResponseReceived' && (action.schemaVersion===2)!==(request.schemaVersion>=13))throw new Error('Prompt response schema does not match its request.');
@@ -143,6 +161,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
       tx.set(event, { ...action, payload, sequence, recordedAt: serverTimestamp() });
       tx.set(stream, { sequence, lastEventId: action.eventId });
       tx.set(pointer, metadata);
+      if(lunarOffer)tx.set(lunarRef,lunarOffer);
       if(action.type==='ReflectionWritten'&&(action.schemaVersion===8||action.schemaVersion===9)&&action.payload.topic!==null)tx.set(doc(db,`${stream.path}/topics/${action.payload.entryId}`),{lastEventId:action.eventId});
       if (action.type === 'ReflectionImported') tx.set(doc(db, `${stream.path}/imports/${action.payload.sourceKey}`), { confirmationId: action.payload.confirmationId, lastEventId: action.eventId });
       return { sequence, eventId: action.eventId, created: true };
