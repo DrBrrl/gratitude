@@ -2019,3 +2019,19 @@ Noticed something! :) When the AI generates a prompt (which they do based on the
 ### 2026-11-18 — Investigate PR #38 checks
 
 Got some failed checks :) Can you have a look for me, Casey?
+
+### 2026-11-19 — Resume PR #34 and clarify discovery/review choices
+
+About to go to sleep :) I have rebased and merged 38, let's go back to 34 and you can maybe ask me the questions you need answers to to get going on that one? :) Also re-targetting to main would be good and resolving any conflicts!
+
+### 2026-11-19 — PR #34: Lunar timing
+
+New-moon Discovery and full-moon Review
+
+### 2026-11-19 — PR #34: Review topic and regeneration
+
+One topic, and regenerating the review would shift the topic
+
+### 2026-11-19 — PR #34: Discovery count window
+
+Use a 30-day window
