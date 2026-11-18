@@ -63,3 +63,14 @@ test('Unknown gets only rediscovery/fallback and explicit cleared backup categor
  assert.equal(promptTopicId(s,'backup_response'),'nature');s={...s,classification:{...s.classification,backupTopics:{backup_response:{topicId:null,label:'Not yet classified',origin:'user',lastEventId:'clear'}}}};assert.equal(promptTopicId(s,'backup_response'),null);
 });
 
+
+test('a delayed AI-view observation neither suppresses nor replaces a newer daily response',()=>{
+ for(const viewedBeforeReply of [true,false]){
+  let s=setup();const first=makeRequest(s,input.day,'personal','first',undefined,input);s=apply(s,first);s=apply(s,{eventId:'first_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'first',text:'The first fictional question?',model:'fixture',finishReason:'STOP'}});
+  const second=makeRequest(s,input.day,'personal','second',undefined,input,undefined,false,'first_response');s=apply(s,second);
+  const view:SourceAction={eventId:'v2026-10-27_tfirst_response',type:'PromptViewed',schemaVersion:2,payload:{day:input.day,promptId:'first_response',surface:'today'}};
+  const reply:SourceAction={eventId:'second_response',type:'PromptResponseReceived',schemaVersion:2,payload:{requestId:'second',text:'The newer fictional question?',model:'fixture',finishReason:'STOP'}};
+  for(const a of viewedBeforeReply?[view,reply]:[reply,view])s=apply(s,a);
+  assert.equal(s.ai.days[input.day],'second_response');assert.equal(s.rotation.offers[0].promptId,'first_response');
+ }
+});
