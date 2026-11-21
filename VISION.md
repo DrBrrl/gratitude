@@ -6,13 +6,15 @@ Users receive a daily starter prompt or choose an AI-generated gratitude prompt 
 
 Users can revisit previous reflections, request an alternative prompt, or skip a day. They control what information informs personalization and can inspect, reset, or disable it.
 
-Users see Sunday-first current-week summaries on Today and Journal, with their streak, entry-coloured saved dates and subdued future dates. They explore their reflections through an infinitely scrolling calendar and a single-month landing calendar with previous/current/next controls and editable Month and Year dropdowns on its heading. Both use the same date-selection behaviour. Gentle streaks reflect the dates of their entries, and backfilling a missed day restores continuity without penalties. Opening an entry from the calendar preserves the month they return to.
+Users choose any day to start their week and see current-week summaries on Today and Journal, with their streak, entry-coloured saved dates and subdued future dates. They explore their reflections through an infinitely scrolling calendar and a single-month landing calendar with previous/current/next controls and editable Month and Year dropdowns on its heading. Both use the same date-selection behaviour. Gentle streaks reflect the dates of their entries, and backfilling a missed day restores continuity without penalties. Opening an entry from the calendar preserves the month they return to.
 
 Users choose their favourite accent from fourteen rainbow shades in Account settings. Their choice colours the smoke, controls and glass borders across devices, independently of their reflections’ date colours.
 
 Reflections share a smooth 28-day rainbow cycle based on their local dates, with yellow on an anchor Sunday and the same shade every four weeks. Cards, drafts and calendar circles agree; imported and backfilled entries fit their historical dates.
 
 Users choose AI services and models for reflection prompts, photo descriptions and backup generation, using a shared connection or independent connections. They connect models on their own computers and cloud services with their own API keys. Their choices follow their account, and they control whether connection credentials sync across devices.
+
+Portrait and landscape photographs remain fully visible in their natural proportions alongside reflections.
 
 Reflections are private. Users can export and delete their data and understand what information is shared with an AI service.
 

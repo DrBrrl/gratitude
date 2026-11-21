@@ -1,5 +1,6 @@
 import {emptyLunar,isLunarAction,validLunarAction,applyLunar,assertScheduledRequest,assertScheduledResponse,type LunarState,type LunarAction} from './ai/lunar-state.ts';
 import {selectModeReflections,requestMode,type ModeInput} from './ai/modes.ts';
+import {validWeekStart,type CalendarPreferenceAction} from './calendar-preferences.ts';
 import { requestTopic, promptTopicId, type PromptTopic } from './ai/topic-selection.ts';
 import {backupProvider,backupConnectionId} from './ai/backup-connection.ts';
 import {emptyClassification,isClassificationAction,validClassificationAction,applyClassification,type ClassificationAction,type ClassificationState} from './classification.ts';
@@ -13,7 +14,7 @@ import { SELECTOR_VERSION, validSelection, selectReflections, selectedEntries } 
 import { validImportInput, NO_PROMPT, type ImportInput, type ImportOrigin } from './import-source.ts';
 /** Pure source-event contract. Replay never imports Firebase or an AI adapter. */
 export const GENERATION = 'v1';
-export const PROJECTION_VERSION = 23;
+export const PROJECTION_VERSION = 24;
 export const STARTER_ID = 'small-moment-v1';
 export const STARTER_PROMPT = 'What is one small thing you appreciated today?';
 export const TEMPLATE_VERSION = 'gratitude-v2';
@@ -112,17 +113,17 @@ export function isBackupAction(action:SourceAction): action is BackupAction { re
 export type AppearanceAction = Envelope<'AccentColourChosen', Previous & { colourIndex: number }>;
 export type RotationAction = Envelope<'PromptViewed', {day:string;promptId:string;surface:'today'|'editor'|'backup'},1|2> | Envelope<'PromptAccepted',{day:string;promptId:string}>;
 export function isRotationAction(action:SourceAction):action is RotationAction{return action.type==='PromptViewed'||action.type==='PromptAccepted';}
-export type SourceAction = LunarAction | ClassificationAction | TopicAction | RotationAction | OnboardingAction | AppearanceAction | Action | AIAction | PhotoAction | ImportAction | BackupAction;
+export type SourceAction = LunarAction | CalendarPreferenceAction | ClassificationAction | TopicAction | RotationAction | OnboardingAction | AppearanceAction | Action | AIAction | PhotoAction | ImportAction | BackupAction;
 export function isPhotoAction(action: SourceAction): action is PhotoAction { return action.type.startsWith('Photo'); }
 export type JournalEvent = SourceAction & { sequence: number; recordedAt: string };
 /** colour is a legacy creation index for checkpoint compatibility; visible colour is date-derived. */
 export type Entry = { id: string; text: string; prompt: string; promptId?: string; revision: number; colour: number; recordedAt: string; entryAt?: string; origin?: ImportOrigin;promptSourceId?:string };
 export type AIControl = { lastEventId: string | null; choicesId: string | null; requestId: string | null };
-export type Projection = { version: 23; lunar:LunarState; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
+export type Projection = { version: 24; calendarPreferences: {weekStartsOn:number;lastEventId:string|null}; lunar:LunarState; classification:ClassificationState; topics: Record<string, ReflectionTopic>; rotation:RotationState; onboarding: OnboardingState; appearance: { colourIndex: number; lastEventId: string | null }; backups: Record<string, { text: string; removed: boolean; used?: boolean }>; imports: Record<string, ImportReceipt>; prompts: Record<string, string>; photos: Record<string, Photo>; cursor: number; lastEventId: string | null; entries: Entry[];
   ai: { control: AIControl; choices: AIChoices; requests: Record<string, RequestAction>; responses: Record<string, ResponseAction>;
     requestPools:Record<string,Record<'anniversary'|'rediscovery'|'fallback'|'recent',number>>; requestTopics:Record<string,PromptTopic|null>; requestUnits: Record<string,number>; requestedAt: Record<string,string>; usage: Record<string, { count: number; lastSequence: number }>; days: Record<string, string>; feedback: FeedbackAction[]; failure: FailureAction | null } };
 export function emptyControl(): AIControl { return { lastEventId: null, choicesId: null, requestId: null }; }
-export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, lunar:emptyLunar(),classification:emptyClassification(), topics: {}, rotation:emptyRotation(), onboarding: emptyOnboarding(), appearance: { colourIndex: 0, lastEventId: null }, backups: {}, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
+export function emptyProjection(): Projection { return { version: PROJECTION_VERSION, calendarPreferences:{weekStartsOn:0,lastEventId:null}, lunar:emptyLunar(),classification:emptyClassification(), topics: {}, rotation:emptyRotation(), onboarding: emptyOnboarding(), appearance: { colourIndex: 0, lastEventId: null }, backups: {}, imports: {}, prompts: {}, photos: {}, cursor: 0, lastEventId: null, entries: [], ai: {
   control: emptyControl(), choices: { enabled: false, useJournal: false, useFeedback: false, guidance: '',provider:'gemini' },
   requests: {}, requestPools:{}, requestTopics:{}, requestUnits:{}, requestedAt:{}, responses: {}, usage: {}, days: {}, feedback: [], failure: null
 } }; }
@@ -157,6 +158,8 @@ export function parseAction(input: unknown): SourceAction {
   } else if (isLunarAction(v as {type:string})) {valid=validLunarAction(v);
   } else if (v.type === 'ReflectionTopicChosen') {
     valid = v.schemaVersion === 1 && keys(p, ['entryId','expectedRevision','previousEventId','topicId','answersId']) && id(p.entryId) && Number.isSafeInteger(p.expectedRevision) && Number(p.expectedRevision) > 0 && (p.previousEventId === null || id(p.previousEventId)) && (p.answersId === null || id(p.answersId)) && validTopicId(p.topicId);
+  } else if (v.type === 'WeekStartChosen') {
+    valid = v.schemaVersion === 1 && keys(p, ['previousEventId','weekStartsOn']) && (p.previousEventId === null || id(p.previousEventId)) && validWeekStart(p.weekStartsOn);
   } else if (v.type === 'AccentColourChosen') {
     valid = v.schemaVersion === 1 && keys(p, ['previousEventId', 'colourIndex']) && (p.previousEventId === null || id(p.previousEventId)) && Number.isInteger(p.colourIndex) && Number(p.colourIndex) >= 0 && Number(p.colourIndex) < 28 && Number(p.colourIndex) % 2 === 0;
   } else if (v.type==='BackupPromptImported') {
@@ -271,6 +274,10 @@ export function applyEvent(state: Projection, event: JournalEvent): Projection {
     const choice = topicChoices(state.onboarding.answers).find(option => option.id === p.topicId);
     if (p.topicId !== null && !choice) throw new Error('This topic is no longer available.');
     return { ...next, topics: { ...state.topics, [p.entryId]: { topicId:p.topicId, label:choice?.label ?? 'Not yet classified', lastEventId:action.eventId, origin:'user' } } };
+  }
+  if (action.type === 'WeekStartChosen') {
+    if(action.payload.previousEventId !== state.calendarPreferences.lastEventId)throw new Error('Your week start changed on another device. Please choose again.');
+    return {...next,calendarPreferences:{weekStartsOn:action.payload.weekStartsOn,lastEventId:action.eventId}};
   }
   if (action.type === 'AccentColourChosen') {
     if (action.payload.previousEventId !== state.appearance.lastEventId) throw new Error('Your accent colour changed on another device. Please choose again.');

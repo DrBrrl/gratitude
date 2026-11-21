@@ -1,4 +1,5 @@
 <script lang="ts">
+ import {weekdayLabels} from '../calendar-preferences';
   import { tick } from 'svelte';
   import { monthCells, monthLabel, shiftMonth, validMonth, type DayIndex } from '$lib/calendar';
   import type { CalendarAnchor } from '$lib/calendar-navigation';
@@ -6,14 +7,14 @@
   import Icon from './Icon.svelte';
   import type { CalendarPhotos } from '$lib/calendar-photos';
 
-  let { index, today, anchor, onanchor, onchoose, disabled=false, photos=null }: {
+  let { index, today, anchor, onanchor, onchoose, disabled=false, photos=null,weekStartsOn=0 }: {
     index: DayIndex;
     today: string;
     anchor: CalendarAnchor;
     onanchor: (anchor: CalendarAnchor) => void;
     onchoose: (day: string) => void;
     disabled?: boolean;
-    photos?: CalendarPhotos | null;
+    photos?: CalendarPhotos | null; weekStartsOn?:number;
   } = $props();
   let choosingMonth = $state(false);
   let monthInput = $state<HTMLInputElement>();
@@ -83,8 +84,8 @@
       <button aria-label="Next month" disabled={disabled || !next} class="arrow" onclick={() => chooseMonth(next)}><Icon name="next" size={16} /></button>
     </div>
   </header>
-  <div class="weekdays" aria-hidden="true">{#each ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as day}<span>{day}</span>{/each}</div>
-  <div class="month-dates">{#each monthCells(index, anchor.month, today) as cell, i (i)}{#if cell}<CalendarDay {cell} {onchoose} {disabled} {photos} />{:else}<span></span>{/if}{/each}</div>
+  <div class="weekdays" aria-hidden="true">{#each weekdayLabels(weekStartsOn) as day}<span>{day}</span>{/each}</div>
+  <div class="month-dates">{#each monthCells(index, anchor.month, today,weekStartsOn) as cell, i (i)}{#if cell}<CalendarDay {cell} {onchoose} {disabled} {photos} />{:else}<span></span>{/if}{/each}</div>
 </section>
 
 <style>

@@ -9,6 +9,8 @@
   const assetOwner = $derived(uid);
   const assetId = $derived(photoId);
   let url = $state('');
+  let portraitURL = $state('');
+  function imageLoaded(event: Event) { const image=event.currentTarget as HTMLImageElement;portraitURL=image.naturalHeight>image.naturalWidth?image.src:''; }
   let failed = $state(false);
   let retry = $state(0);
   onMount(() => {
@@ -29,13 +31,15 @@
   });
 </script>
 <div class="photo-image">
-  {#if url}<img src={url} alt={summary || 'Attached journal photo'} />
+  {#if url}<img src={url} alt={summary || 'Attached journal photo'} class:portrait={portraitURL===url} onload={imageLoaded} />
   {:else if failed}<button onclick={() => retry++}>Photo unavailable · Retry</button>
   {:else}<span role="status">Loading photo…</span>{/if}
 </div>
 <style>
   .photo-image { width: 100%; aspect-ratio: 4 / 3; background: #ffffff08; border-radius: 12px; overflow: hidden; display: grid; place-items: center; }
+  .photo-image:has(img.portrait) { aspect-ratio: auto; }
   img { width: 100%; height: 100%; object-fit: contain; }
+  img.portrait { display: block; height: auto; }
   span, button { font: 14px Arial, sans-serif; color: #bbc0c9; background: none; border: 0; }
   button { cursor: pointer; min-height: 44px; }
 </style>

@@ -39,7 +39,9 @@
     "editor-topics": ["068"],
     "review-prompts": ["069"],
     "discovery-prompts": ["070"],
-    "lunar-prompts": ["071"]
+    "lunar-prompts": ["071"],
+    "week-start": ["072"],
+    "portrait-photos": ["073"]
   },
   "smoke": ["035"],
   "isolated_components": {

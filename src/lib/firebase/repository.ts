@@ -1,6 +1,7 @@
 import type {LunarAction} from '../ai/lunar-state.ts';
 import {newSelectionSeed} from '../ai/selection.ts';
 import type {ModeInput} from '../ai/modes.ts';
+import type {CalendarPreferenceAction} from '../calendar-preferences.ts';
 import {classificationDestination} from '../ai/classification-connection.ts';
 import type {ModelConnection} from '../ai/connection-contract.ts';
 import {CLASSIFICATION_SYSTEM,classificationContext,targetMatches,batchRequests,type ClassificationAction,type ClassificationTarget,type ClassificationReply} from '../classification.ts';
@@ -87,7 +88,7 @@ export class JournalRepository {
     if (checkpoint) {
       try {
         const s = checkpoint.state;
-        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.requestUnits || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.appearance || !s.onboarding || !s.classification || !s.topics || !s.lunar || !s.rotation || !Array.isArray(s.rotation.offers) || !s.rotation.accepted || !s.rotation.acceptedText || !s.rotation.requests ||
+        if (s.version !== PROJECTION_VERSION || !Number.isSafeInteger(s.cursor) || s.cursor < 0 || !Array.isArray(s.entries) || !s.ai?.control || !s.ai.responses || !s.ai.requests || !s.ai.requestedAt || !s.ai.requestUnits || !s.ai.usage || !s.photos || !s.prompts || !s.imports || !s.backups || !s.calendarPreferences || !Number.isInteger(s.calendarPreferences.weekStartsOn) || s.calendarPreferences.weekStartsOn<0 || s.calendarPreferences.weekStartsOn>6 || !s.appearance || !s.onboarding || !s.classification || !s.topics || !s.lunar || !s.rotation || !Array.isArray(s.rotation.offers) || !s.rotation.accepted || !s.rotation.acceptedText || !s.rotation.requests ||
             await digest(s) !== checkpoint.digest) throw new Error('Invalid checkpoint');
         if (s.cursor > 0) {
           if (!s.lastEventId) throw new Error('Invalid checkpoint anchor');
@@ -258,7 +259,7 @@ export class JournalRepository {
     });
     return this.draftChain;
   }
-  async commitAI(action: LunarAction | ClassificationAction | TopicAction | RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
+  async commitAI(action: LunarAction | CalendarPreferenceAction | ClassificationAction | TopicAction | RotationAction | AIAction | PhotoAction | ImportAction | BackupAction | AppearanceAction | OnboardingAction) {
     if (!this.ready || this.stopped || !navigator.onLine) throw new Error('Connect and wait for your journal to sync first.');
     const result = await appendReflection(this.client.db, this.uid, action);
     await this.awaitSequence(result.sequence);

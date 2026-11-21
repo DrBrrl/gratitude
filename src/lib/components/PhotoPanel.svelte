@@ -1,4 +1,6 @@
 <script lang="ts">
+  let portraitPreview=$state('');
+  function previewLoaded(event:Event){const image=event.currentTarget as HTMLImageElement;portraitPreview=image.naturalHeight>image.naturalWidth?image.src:'';}
   import {isLocalService,providerName} from '../ai/connection-contract';
   import {personalGeminiPhotoGenerator} from '../ai/personal-gemini';
   import {defaultConnection,localPhotoGenerator,type ModelConnection} from '$lib/ai/lm-studio';
@@ -134,7 +136,7 @@
   {/each}
   {#if staged}
     <div class="photo-card selection">
-      {#if preview}<img class="selected-photo" src={preview} alt="Attachment preview" />{/if}
+      {#if preview}<img class="selected-photo" class:portrait={portraitPreview===preview} onload={previewLoaded} src={preview} alt="Attachment preview" />{/if}
       {#if local}<p>If you choose to summarize this photo, it goes directly to your {providerName(connection.provider)} server at {connection.baseUrl}. Only this photo is sent, without location metadata or journal text. Your saved photo still syncs through Firebase.</p>{:else if connection.provider==='personal-gemini'}<p>If you choose to summarize this photo, Gratitude’s authenticated relay sends it to Google using your saved Gemini key. Only this photo is sent, without location metadata or journal text. Your Gemini project’s terms and usage charges apply.</p>{:else}<p>This photo will be sent to Gemini to create a text summary if you choose to summarize it. Only this photo is sent, without location metadata or journal text. Google processes it using this site’s paid service.</p>{/if}
       <p class="hint">Photos sync to your account when attached. Reflection text stays on this device until saved.</p>
       {#if !online}<p class="hint" role="status">Connect to attach this photo. Your selection is saved on this device.</p>{/if}
@@ -168,6 +170,7 @@
   textarea { width: 100%; font: inherit; font-size: .9rem; color: #eee; resize: vertical; border: 1px solid var(--glass-border); background: #ffffff09; border-radius: 8px; padding: 10px; }
   textarea:focus { outline: none; border-color: var(--entry-colour, var(--accent-text)); }
   .selected-photo { width: 100%; max-height: 220px; object-fit: contain; border-radius: 10px; }
+  .selected-photo.portrait { display: block; height: auto; max-height: none; }
   .selection p { line-height: 1.5; font-size: .85rem; }
   .attach, .add-photo { display: block; width: 100%; padding: 12px; margin-top: 14px; border: 1px solid var(--action-border); border-radius: 12px; text-align: center; }
   .attach { min-height: 36px; padding: 6px 8px; margin-bottom: 8px; line-height: 1.25; }
