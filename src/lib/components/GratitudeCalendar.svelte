@@ -1,10 +1,11 @@
 <script lang="ts">
+ import {weekdayLabels} from '../calendar-preferences';
  import {onMount,tick,untrack} from 'svelte';
  import {monthOrdinal,monthFromOrdinal,validMonth,monthLabel,monthCells,type DayIndex} from '$lib/calendar';
  import CalendarDay from './CalendarDay.svelte';
  import type {CalendarPhotos} from '$lib/calendar-photos';
  export type CalendarAnchor={month:string;offset:number};
- let {index,today,anchor,onanchor,onchoose,photos=null}:{index:DayIndex;today:string;anchor:CalendarAnchor;onanchor:(anchor:CalendarAnchor)=>void;onchoose:(day:string)=>void;photos?:CalendarPhotos|null}=$props();
+ let {index,today,anchor,onanchor,onchoose,photos=null,weekStartsOn=0}:{index:DayIndex;today:string;anchor:CalendarAnchor;onanchor:(anchor:CalendarAnchor)=>void;onchoose:(day:string)=>void;photos?:CalendarPhotos|null;weekStartsOn?:number}=$props();
  const HEIGHT=368,MAX=9999*12;
  let scroller:HTMLDivElement;
  let start=$state(untrack(()=>Math.max(0,monthOrdinal(anchor.month)-2)));
@@ -39,8 +40,8 @@
 <div class="calendar-scroll" bind:this={scroller} onscroll={scroll} tabindex="0" role="region" aria-label="Gratitude calendar" data-anchor={anchor.month}>
  {#each months as month (month)}
   <section class="calendar-month" aria-label={monthLabel(month)} data-month={month}>
-   <h2>{monthLabel(month)}</h2><div class="weekdays" aria-hidden="true">{#each ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as day}<span>{day}</span>{/each}</div>
-   <div class="month-dates">{#each monthCells(index,month,today) as cell,i (i)}{#if cell}<CalendarDay {cell} {onchoose} {photos} />{:else}<span></span>{/if}{/each}</div>
+   <h2>{monthLabel(month)}</h2><div class="weekdays" aria-hidden="true">{#each weekdayLabels(weekStartsOn) as day}<span>{day}</span>{/each}</div>
+   <div class="month-dates">{#each monthCells(index,month,today,weekStartsOn) as cell,i (i)}{#if cell}<CalendarDay {cell} {onchoose} {photos} />{:else}<span></span>{/if}{/each}</div>
   </section>
  {/each}
 </div>

@@ -3,6 +3,8 @@
   import {scheduledOffer,scheduledPrompt,scheduledPhase,occasionDeclined,LUNAR_VERSION} from '../ai/lunar-state';
   import PromptModePicker from './PromptModePicker.svelte';
   import {acceptedModeSource,requestMode,modeLabel,type PromptMode,type ModeInput} from '../ai/modes';
+  import {validWeekStart} from '../calendar-preferences';
+  import WeekStartSettings from './WeekStartSettings.svelte';
   import Classification from './Classification.svelte';
   import ReflectionTopic from './ReflectionTopic.svelte';
   import {reflectionTopic,topicChoices} from '../reflection-topics';
@@ -18,20 +20,21 @@
   let setupPromptComplete=$state(false),setupPhotoComplete=$state(false),setupFriendsComplete=$state(false),setupPromptReady=$state(false),setupAIReviewed=$state(false);
   $effect(() => {
     if ((setupOpen || settingsPage === 'answers') && answerReady) {
-      const saved = { flowVersion:2, answers: $state.snapshot(answerDraft), answersId: answerBase, step:setupStep, colour:setupColour,...(setupOpen?{repeating:setupRepeated,aiReviewed:setupAIReviewed,aiChoices:{enabled:choices.enabled,useJournal:choices.useJournal,useFeedback:choices.useFeedback,guidance:choices.guidance}}:{}) };
+      const saved = { flowVersion:2, answers: $state.snapshot(answerDraft), answersId: answerBase, step:setupStep, colour:setupColour,weekStartsOn:setupWeekStartsOn,weekStartId:setupWeekStartId,...(setupOpen?{repeating:setupRepeated,aiReviewed:setupAIReviewed,aiChoices:{enabled:choices.enabled,useJournal:choices.useJournal,useFeedback:choices.useFeedback,guidance:choices.guidance}}:{}) };
       untrack(() => { void repository?.writeOnboardingDraft(saved); });
     }
   });
   async function loadAnswers(savedDraft = true) {
     const active = repository; if (!active) return;
     answerReady = false; answerMessage = ''; clearAnswersOpen = false;
-    const stored = savedDraft ? await active.readOnboardingDraft() as {answers?:unknown;answersId?:unknown;step?:unknown;flowVersion?:unknown;colour?:unknown;aiChoices?:unknown;aiReviewed?:unknown}|null : null;
+    const stored = savedDraft ? await active.readOnboardingDraft() as {answers?:unknown;answersId?:unknown;step?:unknown;flowVersion?:unknown;colour?:unknown;weekStartsOn?:unknown;weekStartId?:unknown;aiChoices?:unknown;aiReviewed?:unknown}|null : null;
     if (repository !== active || !setupOpen && settingsPage !== 'answers') return;
     const raw = stored?.answers as Partial<OnboardingAnswers>|undefined;
     const useDraft = !!raw && typeof raw.preferredName === 'string' && typeof raw.pronouns === 'string' && raw.preferredName.length<=160 && raw.pronouns.length<=160 && validAnswers({...raw,preferredName:'',pronouns:''}) && (stored?.answersId === null || typeof stored?.answersId === 'string');
     answerDraft = structuredClone(useDraft ? stored!.answers as OnboardingAnswers : view.state.onboarding.answers);
     answerBase = useDraft ? stored!.answersId as string|null : view.state.onboarding.answersId;
     if(setupOpen){setupStep=useDraft?resumeSetupStep(stored?.step,stored?.flowVersion):0;setupColour=useDraft && Number.isInteger(stored?.colour) && Number(stored?.colour)>=0 && Number(stored?.colour)<=26 && Number(stored?.colour)%2===0 ? Number(stored?.colour):view.state.appearance.colourIndex;}
+    if(setupOpen){setupWeekStartsOn=useDraft&&validWeekStart(stored?.weekStartsOn)?stored.weekStartsOn:view.state.calendarPreferences.weekStartsOn;setupWeekStartId=useDraft&&(stored?.weekStartId===null||typeof stored?.weekStartId==='string')?stored.weekStartId:view.state.calendarPreferences.lastEventId;}
     if(setupOpen){const restored=useDraft?readSetupAI(stored?.aiChoices):null;if(restored)choices={...view.state.ai.choices,...restored};setupAIReviewed=useDraft&&typeof stored?.aiReviewed==='boolean'?stored.aiReviewed:setupStep>3;if(setupAIReviewed&&!choices.enabled&&(setupStep===4||setupStep===5))setupStep=6;}
     answerReady = true;
   }
@@ -51,8 +54,8 @@
     finally { answerBusy = false; }
   }
 
-  let setupOpen=$state(false),setupStep=$state(0),setupColour=$state(0),setupOnline=$state(true),setupRepeated=$state(false);
-  async function openSetup({manual=false,restart=false}:{manual?:boolean;restart?:boolean}={}){answerReady=false;choices={...view.state.ai.choices};setupRepeated=manual;setupOpen=true;await loadAnswers();if(restart){setupStep=0;setupAIReviewed=false;setupColour=view.state.appearance.colourIndex;choices={...view.state.ai.choices};}window.scrollTo(0,0);}
+  let setupOpen=$state(false),setupStep=$state(0),setupColour=$state(0),setupWeekStartsOn=$state(0),setupWeekStartId=$state<string|null>(null),setupOnline=$state(true),setupRepeated=$state(false);
+  async function openSetup({manual=false,restart=false}:{manual?:boolean;restart?:boolean}={}){answerReady=false;choices={...view.state.ai.choices};setupRepeated=manual;setupOpen=true;await loadAnswers();if(restart){setupStep=0;setupAIReviewed=false;setupColour=view.state.appearance.colourIndex;setupWeekStartsOn=view.state.calendarPreferences.weekStartsOn;setupWeekStartId=view.state.calendarPreferences.lastEventId;choices={...view.state.ai.choices};}window.scrollTo(0,0);}
   async function continueSetupAI():Promise<'ai'|'starter'|'stay'>{
     answerMessage='';
     if(!choices.enabled)return 'starter';
@@ -74,10 +77,12 @@
         if(answerBase!==view.state.onboarding.answersId)throw new Error('Your answers changed on another device. Skip for now to review them in Settings; your draft is kept.');
         const answers={...$state.snapshot(answerDraft),useAnswers:choices.enabled?answerDraft.useAnswers:view.state.onboarding.answers.useAnswers,preferredName:answerDraft.preferredName.trim(),pronouns:answerDraft.pronouns.trim()};
         if(!validAnswers(answers))throw new Error('Check the answers and their limits before saving.');
+        if(setupWeekStartsOn!==view.state.calendarPreferences.weekStartsOn&&setupWeekStartId!==view.state.calendarPreferences.lastEventId)throw new Error('Your week start changed on another device. Skip for now to review the latest choice in Settings.');
         await saveSetupAI();
         await repository.commitAI({eventId:crypto.randomUUID(),type:'OnboardingAnswersConfirmed',schemaVersion:1,payload:{...answersInput(answers),previousEventId:answerBase}});
         answerBase=view.state.onboarding.answersId;
         if(setupColour!==view.state.appearance.colourIndex)await chooseAccent(setupColour);
+        if(setupWeekStartsOn!==view.state.calendarPreferences.weekStartsOn){await chooseWeekStart(setupWeekStartsOn,setupWeekStartId);setupWeekStartId=view.state.calendarPreferences.lastEventId;}
       }
       try{if(view.state.onboarding.version<ONBOARDING_VERSION)await repository.finishOnboarding(skip?'skipped':'completed');}
       catch(cause){if(!view.onboardingPending)throw cause;}
@@ -722,6 +727,10 @@
     document.documentElement.style.setProperty('--accent-text-weight', theme.textWeight);
     document.documentElement.style.setProperty('--accent-highlight-weight', theme.highlightWeight);
   });
+  async function chooseWeekStart(weekStartsOn:number,previousEventId=view.state.calendarPreferences.lastEventId) {
+    if(!repository)throw new Error('Open your journal before changing your week start.');
+    await repository.commitAI({eventId:crypto.randomUUID(),type:'WeekStartChosen',schemaVersion:1,payload:{previousEventId,weekStartsOn}});
+  }
   async function chooseAccent(colourIndex: number) {
     if (!repository) throw new Error('Wait for your journal to open.');
     await repository.commitAI({ eventId: crypto.randomUUID(), type: 'AccentColourChosen', schemaVersion: 1, payload: { previousEventId: view.state.appearance.lastEventId, colourIndex } });
@@ -1048,7 +1057,7 @@
 {#if (landing && !setupOpen) || !user}
   <WelcomePage signedIn={!!user} onsignin={() => signIn(true)} signInDisabled={!initialized || busy} message={error}>
     {#snippet calendar()}
-      {#if user && view.ready}<LandingCalendar index={dayIndex} {today} anchor={homeAnchor} onanchor={rememberAnchor} onchoose={selectDate} photos={calendarPhotos} />{#if view.status!=='Synced'}<p class="hint">Saved on this device · waiting to sync</p>{/if}
+      {#if user && view.ready}<LandingCalendar index={dayIndex} {today} anchor={homeAnchor} onanchor={rememberAnchor} onchoose={selectDate} photos={calendarPhotos} weekStartsOn={view.state.calendarPreferences.weekStartsOn} />{#if view.status!=='Synced'}<p class="hint">Saved on this device · waiting to sync</p>{/if}
       {:else if !initialized || user}<p role="status">Opening your calendar…</p>{:else}<SignedOutCalendar {today} onsignin={() => signIn()} signInDisabled={busy} />{/if}
     {/snippet}
   </WelcomePage>
@@ -1058,7 +1067,7 @@
     <p role="status" class="loading">Opening Gratitude…</p>
   {:else if setupOpen}
     {#if answerReady}
-      <Onboarding bind:answers={answerDraft} bind:step={setupStep} bind:colour={setupColour} busy={answerBusy||aiBusy||photoBusy} message={answerMessage} stale={answerBase!==view.state.onboarding.answersId&&!answerBusy} online={setupOnline} aiComplete={setupPromptComplete&&setupPhotoComplete} friendsComplete={setupFriendsComplete} aiEnabled={choices.enabled} bind:aiReviewed={setupAIReviewed} onAIContinue={continueSetupAI} onfinish={()=>finishSetup()} onskip={()=>finishSetup(true)}>
+      <Onboarding bind:answers={answerDraft} bind:step={setupStep} bind:colour={setupColour} bind:weekStartsOn={setupWeekStartsOn} busy={answerBusy||aiBusy||photoBusy} message={answerMessage} stale={answerBase!==view.state.onboarding.answersId&&!answerBusy} online={setupOnline} aiComplete={setupPromptComplete&&setupPhotoComplete} friendsComplete={setupFriendsComplete} aiEnabled={choices.enabled} bind:aiReviewed={setupAIReviewed} onAIContinue={continueSetupAI} onfinish={()=>finishSetup()} onskip={()=>finishSetup(true)}>
         {#snippet ai()}
           <section class="glass preferences" aria-label="Onboarding AI choices"><div class="preference"><span>AI prompts</span><button class="switch" role="switch" aria-checked={choices.enabled} aria-label="AI prompts" onclick={()=>choices.enabled=!choices.enabled} disabled={aiBusy||answerBusy||uiReview}><span></span></button></div></section>
           {#if choices.enabled}
@@ -1082,7 +1091,7 @@
       <button class="back" onclick={backFlow}><Icon name="back" />{flow && flow.trail.length>1?'Journal':flow?.root.tab==='today'?'Today':'Journal'}</button>
       <h1 class="page-heading">Your calendar</h1>
       <CalendarStats streak={stretches} entries={view.state.entries.length} cached={view.status!=='Synced'} />
-      <GratitudeCalendar index={dayIndex} {today} anchor={frame.anchor} onanchor={rememberAnchor} onchoose={selectDate} photos={calendarPhotos} />
+      <GratitudeCalendar index={dayIndex} {today} anchor={frame.anchor} onanchor={rememberAnchor} onchoose={selectDate} photos={calendarPhotos} weekStartsOn={view.state.calendarPreferences.weekStartsOn} />
     {:else if tab === 'today'}
       {#if writing}
         <button class="back" onclick={returnFromEditor} disabled={busy}><Icon name="back" />{editorOrigin.label}</button>
@@ -1128,7 +1137,7 @@
         <div class="saved-actions"><button class="primary" onclick={done}>Done</button></div>
       {:else}
         <header class="today-header"><a class="brand" href={`${base}/`}>Gratitude<svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z" /></svg></a><div class="today-date"><span>{todayLabel}</span></div></header>
-        <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} photos={calendarPhotos} />
+        <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} photos={calendarPhotos} weekStartsOn={view.state.calendarPreferences.weekStartsOn} />
         <h1 class="today-heading">{privateName ? `Reflection time, ${privateName}!` : 'Reflection time'}</h1>
         {#if view.ready}
           <section class="tinted daily-prompt" style:--entry-colour={todayColour}><span class="badge">{currentPromptId === STARTER_ID || starterPrompt(currentPromptId) ? 'Starter prompt' : view.state.backups[currentPromptId] ? 'Backup prompt' : currentResponse ? 'AI prompt' : 'Your prompt'}{#if starterPrompt(currentPromptId)} · {starterPrompt(currentPromptId)!.category}{:else if currentResponse||view.state.backups[currentPromptId]}{#if currentRequest&&requestMode(currentRequest)!=='regular'}{' · '}{modeLabel(requestMode(currentRequest))}{/if}{' · '}{generatedPromptTopicLabel(view.state,currentPromptId)}{/if}</span><h2>{currentPromptId===STARTER_ID&&!daily.entry&&!hasTodayDraft&&!todayStarter?(starterAttemptDay===today?'No starter prompts remain today. You can write your own prompt.':'Choosing a starter prompt…'):currentPrompt}</h2></section>
@@ -1177,7 +1186,7 @@
       {:else}
         <h1 class="page-heading">{privateName ? `${privateName}’s Journal` : 'Your journal'}</h1>
         {#if dateFilter}<button class="back day-back" onclick={backFlow}><Icon name="back" />{flow?.trail.at(-2)?.kind==='calendar'?'Calendar':flow?.root.tab==='home'?'Home':flow?.root.tab==='today'?'Today':'Journal'}</button><h2 class="date-heading">{dayLabel(dateFilter)}</h2>{/if}
-        <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} photos={calendarPhotos} />
+        <WeekBox index={dayIndex} {today} bind:activeDay={weekDay} ready={view.ready} cached={view.status!=='Synced'} onopen={openCalendar} onchoose={selectDate} photos={calendarPhotos} weekStartsOn={view.state.calendarPreferences.weekStartsOn} />
         <button class="outline new-entry" onclick={newEntry} disabled={busy || !view.ready || !draftLoaded || !!view.pending}>New entry</button>
         <div class="search glass"><Icon name="search" /><input id="search" type="search" aria-label="Search reflections" bind:value={query} placeholder="Search reflections" />{#if query}<button class="icon-button" aria-label="Clear search" onclick={() => query = ''}><Icon name="close" /></button>{/if}</div>
         {#if query || view.status !== 'Synced'}<p class="result-count" aria-live="polite">{results.length} {results.length === 1 ? 'reflection' : 'reflections'}{view.status !== 'Synced' ? ' on this device' : ''}</p>{/if}
@@ -1217,6 +1226,7 @@
         <p class="hint">All questions are optional and you can change your answers later!</p>
         {#if answerReady}
           {#if answerBase !== view.state.onboarding.answersId && !answerBusy}<section class="glass preferences"><p role="alert">Your answers changed on another device. Your draft is kept.</p><button class="outline" onclick={() => loadAnswers(false)} disabled={answerBusy}>Use latest saved answers instead of this draft</button></section>{/if}
+          <WeekStartSettings current={view.state.calendarPreferences.weekStartsOn} disabled={answerBusy||!view.ready} onchoose={chooseWeekStart} />
           <Questionnaire bind:answers={answerDraft} disabled={answerBusy} />
           <label class="hint"><input type="checkbox" bind:checked={answerDraft.useAnswers} disabled={answerBusy} /> Use my questionnaire answers for AI prompts</label><p class="hint">Shares selected topic descriptions with your chosen provider when requesting a prompt. Your name and pronouns stay private in your journal. AI, journal and feedback sharing have separate switches.</p>
           <button class="primary" onclick={() => saveAnswers()} disabled={answerBusy || answerBase !== view.state.onboarding.answersId}>Save my answers</button>

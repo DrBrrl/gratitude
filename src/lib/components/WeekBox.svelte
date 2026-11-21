@@ -1,10 +1,11 @@
 <script lang="ts">
+ import {weekdayLabels} from '../calendar-preferences';
   import { onMount } from 'svelte';
   import { weekCells,summarizeStretches,civilDate,shiftDay,validDay,type DayIndex } from '$lib/calendar';
   import CalendarDay from './CalendarDay.svelte';
   import type {CalendarPhotos} from '$lib/calendar-photos';
-  let {index,today,activeDay=$bindable<string|null>(null),ready=true,cached=false,onopen,onchoose,photos=null}:{index:DayIndex;today:string;activeDay?:string|null;ready?:boolean;cached?:boolean;onopen:(day:string)=>void;onchoose:(day:string)=>void;photos?:CalendarPhotos|null}=$props();
-  const cells=$derived(weekCells(index,activeDay??today,today));const streak=$derived(summarizeStretches(index,today));
+  let {index,today,activeDay=$bindable<string|null>(null),ready=true,cached=false,onopen,onchoose,photos=null,weekStartsOn=0}:{index:DayIndex;today:string;activeDay?:string|null;ready?:boolean;cached?:boolean;onopen:(day:string)=>void;onchoose:(day:string)=>void;photos?:CalendarPhotos|null;weekStartsOn?:number}=$props();
+  const cells=$derived(weekCells(index,activeDay??today,today,weekStartsOn));const streak=$derived(summarizeStretches(index,today));
   const currentWeek=$derived(cells.some(cell=>cell.day===today));
   const range=$derived.by(()=>{const format=new Intl.DateTimeFormat('en-AU',{timeZone:'UTC',day:'numeric',month:'short',...(cells[0].day.slice(0,4)!==cells[6].day.slice(0,4)?{year:'numeric'}:{})});return `${format.format(civilDate(cells[0].day))} – ${format.format(civilDate(cells[6].day))}`;});
   let region:HTMLElement;
@@ -13,7 +14,7 @@
   let wheelDelta=0,wheelLocked=false,wheelTimer:ReturnType<typeof setTimeout>;
   function moveWeek(direction:number) {
     const next=shiftDay(activeDay??today,direction*7);
-    if(validDay(next))activeDay=weekCells(index,next,today).some(cell=>cell.today)?null:next;
+    if(validDay(next))activeDay=weekCells(index,next,today,weekStartsOn).some(cell=>cell.today)?null:next;
   }
   function pointerDown(event:PointerEvent) {
     suppressClick=false;
@@ -48,7 +49,7 @@
     <strong>{#if ready}{streak.current} {streak.current===1?'day':'days'} of gratitude in a row{:else}Opening your calendar…{/if}</strong><span aria-hidden="true">▦</span>
     <small aria-live="polite">{currentWeek?'This week':'Week'} · {range}</small>
   </button>
-  {#if ready}<div class="weekdays" aria-hidden="true">{#each ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as day}<span>{day}</span>{/each}</div>
+  {#if ready}<div class="weekdays" aria-hidden="true">{#each weekdayLabels(weekStartsOn) as day}<span>{day}</span>{/each}</div>
     <div class="dates">{#each cells as cell (cell.day)}<CalendarDay {cell} {onchoose} {photos} />{/each}</div>
     {#if cached}<p class="cache-note">Saved on this device · waiting to sync</p>{/if}
   {/if}

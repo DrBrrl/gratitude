@@ -2049,3 +2049,6 @@ Thank you Casey! :) While i go sleep - reckon you can get to work on implementin
 ### 2026-11-21 — PR #34 checks
 
 Got some failed tests on pr 34 Casey! 💛
+### 2026-11-21 — Week starts and portrait photographs
+
+Two things i would like to do in the next PR: Allow people to choose which day their week starts on (any day is fine - possibly should be added to the onboarding questionnaire too), and change the way portrait photos are treated - currently they are cropped into a landscape image for display and i would like them to remain portrait with the whole image visible.

@@ -30,12 +30,12 @@ export function summarizeStretches(index: DayIndex, today: DayKey) {
   return {current,longest,latest:length,total:days.length,latestDay:last||null};
 }
 export function cellFor(index: DayIndex, day: DayKey, today: DayKey): CalendarCell {return {day,number:Number(day.slice(-2)),future:day>today,today:day===today,entries:day>today?[]:index.get(day)??[]};}
-export function weekCells(index: DayIndex,anchor: DayKey,today: DayKey=anchor) {
-  const weekday=civilDate(anchor).getUTCDay();
+export function weekCells(index: DayIndex,anchor: DayKey,today: DayKey=anchor,weekStartsOn=0) {
+  const weekday=(civilDate(anchor).getUTCDay()-weekStartsOn+7)%7;
   return Array.from({length:7},(_,i)=>cellFor(index,shiftDay(anchor,i-weekday),today));
 }
-export function monthCells(index: DayIndex, month: string,today: DayKey): (CalendarCell|null)[] {
-  const first=civilDate(`${month}-01`), offset=first.getUTCDay();
+export function monthCells(index: DayIndex, month: string,today: DayKey,weekStartsOn=0): (CalendarCell|null)[] {
+  const first=civilDate(`${month}-01`), offset=(first.getUTCDay()-weekStartsOn+7)%7;
   const end=new Date(+first);end.setUTCMonth(end.getUTCMonth()+1);end.setUTCDate(0);
   return Array.from({length:42},(_,i)=>i<offset || i>=offset+end.getUTCDate()?null:cellFor(index,`${month}-${String(i-offset+1).padStart(2,'0')}`,today));
 }

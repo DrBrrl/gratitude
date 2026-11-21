@@ -398,6 +398,22 @@ service cloud.firestore {
             && n.outcomeId == (e.type == 'OnboardingFinished' ? e.eventId : b.outcomeId);
         }
       }
+      function calendarPreferencePath() { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/calendarPreferences/control; }
+      function validCalendarPreference(e) {
+        let p=e.payload;
+        return e.schemaVersion == 1 && p.keys().hasAll(['previousEventId','weekStartsOn'])
+          && p.keys().hasOnly(['previousEventId','weekStartsOn']) && p.weekStartsOn is int && p.weekStartsOn >= 0 && p.weekStartsOn <= 6
+          && p.previousEventId == (exists(calendarPreferencePath()) ? get(calendarPreferencePath()).data.lastEventId : null)
+          && getAfter(calendarPreferencePath()).data.lastEventId == e.eventId;
+      }
+      match /calendarPreferences/{id} {
+        allow read: if owns(uid);
+        allow create, update: if owns(uid) && generation == 'v1' && id == 'control'
+          && request.resource.data.keys().hasAll(['lastEventId']) && request.resource.data.keys().hasOnly(['lastEventId'])
+          && validId(request.resource.data.lastEventId) && !exists(eventPath(request.resource.data.lastEventId))
+          && getAfter(eventPath(request.resource.data.lastEventId)).data.type == 'WeekStartChosen';
+        allow delete: if false;
+      }
       function appearancePath() { return /databases/$(database)/documents/users/$(uid)/streams/$(generation)/appearance/control; }
       function validAppearance(e) {
         let p = e.payload;
@@ -570,6 +586,7 @@ service cloud.firestore {
         return kind in ['LunarScheduleChosen','LunarPromptDeclined'] ? validLunar(e) : kind == 'PromptRequested' && e.schemaVersion >= 28 ? validModernRequestAction(e) : kind in ['AIChoicesConfirmed','PromptRequested','PromptResponseReceived','AIRequestFailed','PromptFeedbackSubmitted','StarterPromptChosen'] ? validAI(e)
           : kind in ['PromptViewed','PromptAccepted'] ? validRotation(e)
           : kind in ['OnboardingAnswersConfirmed','OnboardingAnswersCleared','OnboardingFinished'] ? validSetup(e)
+          : kind == 'WeekStartChosen' ? validCalendarPreference(e)
           : kind == 'AccentColourChosen' ? validAppearance(e)
           : kind in ['BackupPromptImported','BackupPromptRemoved'] ? validBackup(e)
           : kind in ['ImportRecordConfirmed','ReflectionImported'] ? validImport(e)

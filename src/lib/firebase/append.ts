@@ -20,7 +20,7 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
   if(isClassificationAction(action))return appendClassification(db,uid,action);
   const stream = doc(db, `users/${uid}/streams/${GENERATION}`);
   const event = doc(db, `${stream.path}/events/${action.eventId}`);
-  const pointer = doc(db, isLunarAction(action)?`${stream.path}/lunar/control`:action.type==='ReflectionTopicChosen'?`${stream.path}/topics/${action.payload.entryId}`:isRotationAction(action)?`${stream.path}/rotation/control`:isOnboardingAction(action) ? `${stream.path}/onboarding/control` : action.type === 'AccentColourChosen' ? `${stream.path}/appearance/control` : action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
+  const pointer = doc(db, isLunarAction(action)?`${stream.path}/lunar/control`:action.type==='WeekStartChosen'?`${stream.path}/calendarPreferences/control`:action.type==='ReflectionTopicChosen'?`${stream.path}/topics/${action.payload.entryId}`:isRotationAction(action)?`${stream.path}/rotation/control`:isOnboardingAction(action) ? `${stream.path}/onboarding/control` : action.type === 'AccentColourChosen' ? `${stream.path}/appearance/control` : action.type === 'ReflectionWritten' || action.type === 'ReflectionImported' ? `${stream.path}/entries/${action.payload.entryId}` : action.type === 'ImportRecordConfirmed' ? `${stream.path}/imports/${action.payload.sourceKey}` : isBackupAction(action)?`${stream.path}/backups/${action.type==='BackupPromptImported'?action.eventId:action.payload.promptId}`:isPhotoAction(action) ? `${stream.path}/photos/${photoKey(action.payload.entryId, action.payload.slot)}` : `${stream.path}/ai/control`);
   const resultFromPrior = (value: DocumentData) => {
     const decoded = decodeEvent(value);
     const original = parseAction({ eventId: decoded.eventId, type: decoded.type, schemaVersion: decoded.schemaVersion, payload: decoded.payload });
@@ -65,6 +65,9 @@ export async function appendReflection(db: Firestore, uid: string, input: Source
           answersId: action.type === 'OnboardingFinished' ? answersId : action.eventId,
           version: action.type === 'OnboardingFinished' ? action.payload.version : version,
           outcomeId: action.type === 'OnboardingFinished' ? action.eventId : latest.get('outcomeId') ?? null };
+      } else if (action.type === 'WeekStartChosen') {
+        if ((latest.get('lastEventId') ?? null) !== action.payload.previousEventId) throw new Error('Your week start changed on another device. Please choose again.');
+        metadata = {lastEventId:action.eventId};
       } else if (action.type === 'AccentColourChosen') {
         if ((latest.get('lastEventId') ?? null) !== action.payload.previousEventId) throw new Error('Your accent colour changed on another device. Please choose again.');
         metadata = { lastEventId: action.eventId };

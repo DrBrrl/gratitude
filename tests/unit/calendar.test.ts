@@ -61,3 +61,38 @@ test('navigation context rejects other accounts, malformed dates and unsafe iden
  assert.equal(readCalendarFlow({...flow,root:{...flow.root,weekDay:'2026-02-30'}},flow.owner),null);
  assert.equal(readCalendarFlow({...flow,root:{...flow.root,weekDay:'2026-09-24'}},flow.owner)?.root.weekDay,'2026-09-24');
 });
+
+test('all seven week starts rotate labels and date positions without changing streaks or day credit',async()=>{
+ const {weekdayLabels,WEEKDAYS}=await import('../../src/lib/calendar-preferences.ts');
+ const index=indexCalendarDays([entry('2026-09-30'),entry('2026-10-01')],'UTC');
+ const before=summarizeStretches(index,'2026-10-01');
+ for(let start=0;start<7;start++){
+  assert.equal(weekdayLabels(start)[0],WEEKDAYS[start].slice(0,3));
+  const week=weekCells(index,'2026-10-01','2026-10-01',start);
+  assert.equal(new Date(week[0].day+'T12:00:00Z').getUTCDay(),start);
+  assert.equal(week.filter(cell=>cell.today).length,1);
+  assert.equal(week[6].day,shiftDay(week[0].day,6));
+  for(const month of ['2024-02','2026-10','2027-01']){
+   const cells=monthCells(index,month,'2026-10-01',start),days=cells.filter(c=>c!==null);
+   const offset=(new Date(month+'-01T12:00:00Z').getUTCDay()-start+7)%7;
+   assert.equal(cells[offset]?.number,1);assert.equal(cells.length,42);
+   assert.equal(days.length,month==='2024-02'?29:31);
+  }
+  assert.deepEqual(summarizeStretches(index,'2026-10-01'),before);
+ }
+ assert.equal(weekCells(index,'2027-01-01','2027-01-01',1)[0].day,'2026-12-28');
+ assert.equal(weekCells(index,'2026-10-04','2026-10-04',3)[0].day,'2026-09-30');
+});
+
+test('week choices are literal, validated, concurrency guarded and replayable without changing other preferences',async()=>{
+ const {parseAction,emptyProjection}=await import('../../src/lib/domain.ts');
+ assert.equal(emptyProjection().calendarPreferences.weekStartsOn,0);
+ const events:Extract<JournalEvent,{type:'WeekStartChosen'}>[]=Array.from({length:7},(_,i)=>({eventId:`week-${i}`,type:'WeekStartChosen',schemaVersion:1,payload:{previousEventId:i?`week-${i-1}`:null,weekStartsOn:i},sequence:i+1,recordedAt:'2026-10-01T04:31:07.000Z'}));
+ const full=replay(events);assert.deepEqual(full.calendarPreferences,{weekStartsOn:6,lastEventId:'week-6'});
+ assert.deepEqual(replay(events.slice(4),replay(events.slice(0,4))),full);
+ assert.deepEqual(full.appearance,emptyProjection().appearance);assert.deepEqual(full.onboarding,emptyProjection().onboarding);
+ const {sequence,recordedAt,...action}=events[0];
+ for(const weekStartsOn of [-1,7,1.5,'1',null])assert.throws(()=>parseAction({...action,payload:{previousEventId:null,weekStartsOn}}));
+ assert.throws(()=>parseAction({...action,payload:{...action.payload,computedWeekStart:'2026-09-27'}}));
+ assert.throws(()=>replay([{...events[0],payload:{previousEventId:'stale',weekStartsOn:1}}]),/another device/);
+});

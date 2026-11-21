@@ -4,9 +4,11 @@
   import Questionnaire from './Questionnaire.svelte';
   import AccentPicker from './AccentPicker.svelte';
   import Icon from './Icon.svelte';
+  import WeekStartPicker from './WeekStartPicker.svelte';
+  import {WEEKDAYS} from '../calendar-preferences';
   import { TOPICS, SCOPE_OPTIONS, type OnboardingAnswers } from '../onboarding';
-  let { answers=$bindable(), step=$bindable(0), colour=$bindable(0), busy=false, message='', stale=false, online=true, aiComplete=false, friendsComplete=false, aiEnabled=false, aiReviewed=$bindable(false), onAIContinue, sharing, onfinish, onskip, ai, friends }:
-    {answers:OnboardingAnswers;step?:number;colour?:number;busy?:boolean;message?:string;stale?:boolean;online?:boolean;aiComplete?:boolean;friendsComplete?:boolean;aiEnabled?:boolean;aiReviewed?:boolean;onAIContinue:()=>Promise<'ai'|'starter'|'stay'>;sharing:Snippet;onfinish:()=>Promise<void>;onskip:()=>Promise<void>;ai:Snippet;friends:Snippet}=$props();
+  let { answers=$bindable(), step=$bindable(0), colour=$bindable(0),weekStartsOn=$bindable(0), busy=false, message='', stale=false, online=true, aiComplete=false, friendsComplete=false, aiEnabled=false, aiReviewed=$bindable(false), onAIContinue, sharing, onfinish, onskip, ai, friends }:
+    {answers:OnboardingAnswers;step?:number;colour?:number;weekStartsOn?:number;busy?:boolean;message?:string;stale?:boolean;online?:boolean;aiComplete?:boolean;friendsComplete?:boolean;aiEnabled?:boolean;aiReviewed?:boolean;onAIContinue:()=>Promise<'ai'|'starter'|'stay'>;sharing:Snippet;onfinish:()=>Promise<void>;onskip:()=>Promise<void>;ai:Snippet;friends:Snippet}=$props();
   const topicTitles=$derived([...TOPICS.filter(([id])=>answers.selectedTopics.includes(id)).map(([,label])=>label),...answers.customTopics.filter(topic=>topic.selected).map(topic=>topic.label)]);
   const scopeTitle=$derived(SCOPE_OPTIONS.find(([value])=>value===answers.scope)?.[1]);
   const titles=['Welcome','About you','Your colour','Choose your AI','Your interests','Your prompts','Your friends profile','Ready to reflect?'];
@@ -38,15 +40,15 @@
     <details class="glass"><summary>What can I do here?</summary>{#each features as [label,text]}<p><strong>{label}:</strong> {text}</p>{/each}</details>
     <p>The following questions will personalise your journal.</p><p class="hint">All questions are optional and you can change your answers later!</p>
   {:else if step===1}<Questionnaire bind:answers part="identity" disabled={busy} />
-  {:else if step===2}<p>What's your favourite colour? Your choice will be used as your journal's main accent colour.</p><AccentPicker selected={colour} compact preview disabled={busy} onchange={async value=>{colour=value;}} />
+  {:else if step===2}<p>What's your favourite colour? Your choice will be used as your journal's main accent colour.</p><AccentPicker selected={colour} compact preview disabled={busy} onchange={async value=>{colour=value;}} /><WeekStartPicker bind:value={weekStartsOn} disabled={busy} />
   {:else if step===4}<Questionnaire bind:answers part="interests" disabled={busy} />
   {:else if step===5}<Questionnaire bind:answers part="prompts" disabled={busy} />
   {:else if step===3}<p>You can get an AI to generate personalised daily gratitude prompts for you using your prompt preferences, explicit general and prompt-specific feedback, and/or your previous journal entries!</p><p>If you would like to use an AI, you can configure it below now, or in Settings → AI Settings later. To reflect on a set of starter prompts instead of AI generated ones, skip this step.</p>{@render ai()}
   {:else if step===6}<p>You can find your friends in Gratitude and send them little hugs to encourage them to reflect with you every day! You can set your profile up below, or skip this step for now and set it up later in the Friends tab.</p><p class="hint">Friends are optional. Your public display name and username are separate from your private answers. You can set up later in the Friends tab.</p><p class="hint">Saving a Friends profile takes effect separately, even if you skip the questionnaire afterwards.</p>{@render friends()}
   {:else}
     <section class="glass review" aria-label="Review your answers">
-      <h2>Your private answers</h2><dl><dt>Name</dt><dd>{answers.preferredName.trim()||'Not provided'}</dd><dt>Pronouns</dt><dd>{answers.pronouns.trim()||'Not provided'}</dd>{#if aiEnabled}<dt>Topics</dt><dd>{topicTitles.length?topicTitles.join(', '):'None selected'}</dd><dt>Prompt scope</dt><dd>{scopeTitle}</dd><dt>Word limit</dt><dd>Under {answers.wordLimit} words</dd>{/if}</dl>
-      <p class="hint">Your colour will be saved when you finish. Separately saved connections and Friends profiles already apply.</p>
+      <h2>Your private answers</h2><dl><dt>Week starts on</dt><dd>{WEEKDAYS[weekStartsOn]}</dd><dt>Name</dt><dd>{answers.preferredName.trim()||'Not provided'}</dd><dt>Pronouns</dt><dd>{answers.pronouns.trim()||'Not provided'}</dd>{#if aiEnabled}<dt>Topics</dt><dd>{topicTitles.length?topicTitles.join(', '):'None selected'}</dd><dt>Prompt scope</dt><dd>{scopeTitle}</dd><dt>Word limit</dt><dd>Under {answers.wordLimit} words</dd>{/if}</dl>
+      <p class="hint">Your colour and week start will be saved when you finish. Separately saved connections and Friends profiles already apply.</p>
     </section>
     {#if aiEnabled}<section class="glass" aria-label="What informs your prompts"><h2>What informs your prompts</h2><p>The gratitude prompts generated by the AI can be informed by your answers to this questionnaire, by your gratitude reflections as you fill out your journal (it will learn more about your preferences and priorities in time!), and by direct prompt feedback that you can provide when faced with a particular prompt. Use the switches below to decide what you would like to provide to the AI for prompt generation - you can change this at any time in Settings → AI Settings.</p><label class="sharing"><input type="checkbox" bind:checked={answers.useAnswers} disabled={busy} /><span>Use my questionnaire answers for AI prompts</span></label><p class="hint">When AI prompts are enabled, your selected topic descriptions will be sent to your chosen provider. Your name and pronouns stay private in your journal. Your choices will be saved when you finish setup. No AI request is made during setup.</p>{@render sharing()}</section>{/if}
     {#if !online}<p class="hint">Your draft stays on this device. Reconnect to confirm your answers, or skip for now and keep writing.</p>{/if}
