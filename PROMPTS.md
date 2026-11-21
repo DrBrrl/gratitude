@@ -2052,3 +2052,15 @@ Got some failed tests on pr 34 Casey! 💛
 ### 2026-11-21 — Week starts and portrait photographs
 
 Two things i would like to do in the next PR: Allow people to choose which day their week starts on (any day is fine - possibly should be added to the onboarding questionnaire too), and change the way portrait photos are treated - currently they are cropped into a landscape image for display and i would like them to remain portrait with the whole image visible.
+
+### 2026-11-21 — AI involvement in Discovery and Monthly review
+
+Thank you so much Casey! :) A question for you - is the AI involved at all for the monthly review/discovery prompts? I couldn't find anything explaining the prompt sent to the AI for these special gratitude prompt generations and wanted to check in
+
+### 2026-11-21 — Keep the current AI behaviour for review
+
+You're a star, Casey! Thank you! :) Let's leave it like that for now, and i'll merge both PRs once i've reviewed the second one too! ^_^
+
+### 2026-11-21 — Retarget PR #39
+
+Ready for you to retarget 39 to main while i start my review!
