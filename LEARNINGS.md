@@ -1641,3 +1641,11 @@ Maintenance lesson: generated walkthrough image paths begin with `./screenshots/
 - Personalise saves this account preference separately from private questionnaire answers. Onboarding stages it alongside the accent colour, restores the device draft after reload, checks the original preference reference before replacing a different saved value, and applies it only on final confirmation. The onboarding rollout version is unchanged, so completed users are not forced to repeat setup.
 - Stored images already preserve their contents. The display issue was a fixed 4:3 frame. Image loading now detects portrait dimensions and lets those frames use natural height, including entry thumbnails; selection previews do the same. Landscape frames keep their existing layout, and circular calendar markers remain compact. Previously saved portraits benefit without re-uploading or new AI calls.
 - This branch is stacked on PR #34 to retain its versioned prompt actions and the compatible Rules already deployed. Preview Rules include both features; production retains hash `00808a0e2ca18544780616bda9c42d257d94da08c77ebb860191b84dd8a4dbbd`. Verified preview source hash: `ec232f88f566c97c57760fbe0b7e5076bf6cc0d4b09daf06d2b717f541ad1711`.
+
+### 2026-11-21 — Discovery and Review instruction review
+
+- Jamie confirmed leaving the current AI behaviour unchanged after reviewing the explanation: Monthly review has a dedicated instruction and matching-topic thirty-day context; Discovery shares Regular's fresh-invitation instruction while choosing topics from thirty-day counts. Both PRs remain for Jamie's review and merge; #39 is stacked on #34 and needs retargeting to main after #34 merges.
+
+### 2026-11-21 — PR #39 follows merged main
+
+- PR #34 was rebased and merged as `07e7d359`. Its merged tree exactly matches the old parent tip `4e6a0560`, so rebasing #39's own commits onto main changes ancestry without changing application code or screenshot baselines. Retarget #39 to main and remove the obsolete stacking instructions from its description.
